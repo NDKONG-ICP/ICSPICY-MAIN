@@ -1,6 +1,7 @@
 import Common "../types/common";
 import Types "../types/community";
 import Map "mo:core/Map";
+import Array "mo:core/Array";
 import Set "mo:core/Set";
 import Iter "mo:core/Iter";
 import Time "mo:core/Time";

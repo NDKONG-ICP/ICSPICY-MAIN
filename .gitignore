@@ -7,6 +7,7 @@ node_modules/
 
 # IC build artifacts
 .dfx/
+.mops/
 src/backend/dist/
 .old/
 

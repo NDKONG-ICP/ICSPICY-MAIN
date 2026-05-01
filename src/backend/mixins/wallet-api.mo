@@ -2,6 +2,7 @@ import Map "mo:core/Map";
 import List "mo:core/List";
 import WalletTypes "../types/wallet";
 import WalletLib "../lib/wallet";
+import Principal "mo:core/Principal";
 
 mixin (
   wallets : Map.Map<Principal, WalletTypes.WalletState>,

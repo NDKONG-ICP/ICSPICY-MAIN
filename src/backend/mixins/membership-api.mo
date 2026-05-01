@@ -1,6 +1,6 @@
 import Map "mo:core/Map";
 import Runtime "mo:core/Runtime";
-import AccessControl "mo:caffeineai-authorization/access-control";
+import AccessControl "../lib/access-control";
 import Common "../types/common";
 import MembershipTypes "../types/membership";
 import MembershipLib "../lib/membership";

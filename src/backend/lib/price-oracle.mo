@@ -1,5 +1,6 @@
 import PriceOracleTypes "../types/price-oracle";
 import Common "../types/common";
+import Array "mo:core/Array";
 
 module {
   /// Return the cached ICP-equivalent price for a given token (in e8s).

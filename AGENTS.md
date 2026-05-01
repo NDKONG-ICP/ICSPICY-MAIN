@@ -36,7 +36,7 @@ This four-step process is not optional. The user has explicitly chosen plan-then
 
 ### Backend (run from `src/backend/`)
 - **install:** `mops install`
-- **typecheck:** `mops check --fix`
+- **typecheck:** `$(mops toolchain bin moc) $(mops sources) --actor-idl system-idl main.mo --check`
 - **build:** `mops build`
 
 ### Local replica (run from project root)
@@ -187,7 +187,14 @@ transient let icpLedger : ICRC1Ledger = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
 > Append to this section as you discover project-specific gotchas during development.
 
-[No learnings yet]
+### Phase 0.5 — Caffeine → standard moc migration (2025-05)
+
+- **`--implicit-package=core` was masking dozens of missing imports.** Every lib/*.mo file that used `Map<NatKey>`, dot-methods (`.toText()`, `.concat()`, `.filter()`, `.toArray()`), or `Principal.isAnonymous` needed explicit imports added. Pattern: `Nat` for Nat-keyed maps and Nat methods; `Text` for Text-keyed maps and string methods; `Principal` for Principal-keyed maps; `Array` for `.concat()`/`.map()`/`.filter()`/`.sliceToArray()` on arrays; `Iter` for `.filter()`/`.toArray()` on iterators/lists.
+- **M0236 is a hard error in standard moc.** `Array.concat(a, b)` triggers it; use dot notation `a.concat(b)` instead (but still import `Array` so the method resolves).
+- **`--actor-idl` path is relative to CWD.** When running moc from `src/backend/`, use `--actor-idl system-idl` — not `--actor-idl src/backend/system-idl`.
+- **`mops check --fix` does not exist in standard mops.** The correct typecheck command is `$(mops toolchain bin moc) $(mops sources) --actor-idl system-idl main.mo --check` run from `src/backend/`.
+- **`is_replicated = null` (replicated) for all HTTP outcalls that mutate state.** Non-replicated (`?false`) must never be used for state-mutating calls.
+- **Project root path has a space (`IC SPICY MAIN`).** `dfx deploy` via `moc-wrapper` emits spurious path warnings but still succeeds. Not a real error — canister installs cleanly.
 
 ---
 

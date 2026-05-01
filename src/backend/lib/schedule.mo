@@ -1,7 +1,12 @@
 import Common "../types/common";
 import ClaimTypes "../types/claim";
 import Map "mo:core/Map";
+import Text "mo:core/Text";
+import Nat "mo:core/Nat";
 import Int "mo:core/Int";
+import Array "mo:core/Array";
+import Principal "mo:core/Principal";
+import Iter "mo:core/Iter";
 
 module {
 

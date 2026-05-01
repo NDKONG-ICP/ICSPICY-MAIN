@@ -1,6 +1,6 @@
 import Map "mo:core/Map";
 import Runtime "mo:core/Runtime";
-import AccessControl "mo:caffeineai-authorization/access-control";
+import AccessControl "../lib/access-control";
 import Common "../types/common";
 import CommunityTypes "../types/community";
 import CommunityLib "../lib/community";

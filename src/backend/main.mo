@@ -6,8 +6,8 @@ import Text "mo:core/Text";
 import Blob "mo:core/Blob";
 import Array "mo:core/Array";
 import CertifiedData "mo:core/CertifiedData";
-import AccessControl "mo:caffeineai-authorization/access-control";
-import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
+import AccessControl "lib/access-control";
+import MixinAuthorization "lib/mixin-authorization";
 import Common "types/common";
 import PlantTypes "types/plants";
 import MarketTypes "types/marketplace";
@@ -44,15 +44,12 @@ import ArtworkUploadAPI "mixins/artwork-upload-api";
 import PoolAPI "mixins/pool-api";
 import PoolLib "lib/pool";
 import PoolTypes "types/pool";
-import Migration "migration";
 
 
 
 
 
-
-(with migration = Migration.run)
-actor ICSpicy {
+persistent actor ICSpicy {
   // Authorization
   let accessControlState = AccessControl.initState();
 

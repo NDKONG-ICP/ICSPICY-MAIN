@@ -1,7 +1,7 @@
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
 import List "mo:core/List";
-import AccessControl "mo:caffeineai-authorization/access-control";
+import AccessControl "../lib/access-control";
 import TreasuryTypes "../types/treasury";
 import TreasuryLib "../lib/treasury";
 import Common "../types/common";

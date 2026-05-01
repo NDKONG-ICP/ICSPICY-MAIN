@@ -3,7 +3,7 @@ import List      "mo:core/List";
 import Nat       "mo:core/Nat";
 import Text      "mo:core/Text";
 import Principal "mo:core/Principal";
-import AccessControl "mo:caffeineai-authorization/access-control";
+import AccessControl "../lib/access-control";
 import PoolTypes  "../types/pool";
 import PoolLib    "../lib/pool";
 

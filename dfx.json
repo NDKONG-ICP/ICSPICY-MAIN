@@ -1,0 +1,26 @@
+{
+  "canisters": {
+    "backend": {
+      "type": "motoko",
+      "main": "src/backend/main.mo",
+      "args": "--actor-idl src/backend/system-idl"
+    },
+    "frontend": {
+      "type": "assets",
+      "source": ["src/frontend/dist"],
+      "dependencies": ["backend"]
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": "mops sources"
+    }
+  },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:4943",
+      "type": "ephemeral"
+    }
+  },
+  "version": 1
+}

@@ -2,6 +2,11 @@ import Map "mo:core/Map";
 import Runtime "mo:core/Runtime";
 import OfferTypes "../types/offers";
 import Common "../types/common";
+import Nat "mo:core/Nat";
+import Text "mo:core/Text";
+import Array "mo:core/Array";
+import Iter "mo:core/Iter";
+import Principal "mo:core/Principal";
 
 module {
   public type OffersMap = Map.Map<Text, OfferTypes.Offer>;

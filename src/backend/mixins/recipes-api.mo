@@ -1,5 +1,5 @@
 import Map "mo:core/Map";
-import AccessControl "mo:caffeineai-authorization/access-control";
+import AccessControl "../lib/access-control";
 import Runtime "mo:core/Runtime";
 import Common "../types/common";
 import RecipeTypes "../types/recipes";

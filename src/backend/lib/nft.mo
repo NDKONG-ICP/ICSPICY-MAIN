@@ -1,6 +1,8 @@
 import Common "../types/common";
 import PlantTypes "../types/plants";
 import Map "mo:core/Map";
+import Array "mo:core/Array";
+import Text "mo:core/Text";
 import Iter "mo:core/Iter";
 import Int "mo:core/Int";
 import Nat "mo:core/Nat";

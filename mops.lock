@@ -1,10 +1,8 @@
 {
   "version": 3,
-  "mopsTomlDepsHash": "ddc83f0b976077cdc887e2c697069696f61021974c0ff85c68234578b06d2e9c",
+  "mopsTomlDepsHash": "a82497d581efbd0ce845284ff64ff1d18e7277223c42720c6b478795b2fa0cb0",
   "deps": {
-    "core": "2.2.0",
-    "caffeineai-authorization": "0.1.0",
-    "caffeineai-http-outcalls": "0.1.0"
+    "core": "2.2.0"
   },
   "hashes": {
     "core@2.2.0": {
@@ -62,22 +60,6 @@
       "core@2.2.0/src/pure/Map.mo": "e9868fc4dd5e8e6272382e33241c59f8664e3de2e618cbf62fa8b20beabecfab",
       "core@2.2.0/src/pure/RealTimeQueue.mo": "af133ae61c69ce4e00db5e9db53ddeccad84373fef82a156c85360c2426349dd",
       "core@2.2.0/src/pure/Set.mo": "f0155b1d548cbc8889fcff75ef52f0cab7998b034621e4faac8d3b79d7bbac07"
-    },
-    "caffeineai-authorization@0.1.0": {
-      "caffeineai-authorization@0.1.0/rules/mixin-authorization-included.toml": "57fa6a81594ea8c12e0a3315c36dec4adf718444b8ef70a11cda1aaa1b11624a",
-      "caffeineai-authorization@0.1.0/rules/no-redeclare-is-caller-admin.toml": "10a57bed38437b1db5624f3b7261ee5f5922311b0bd30e01e2007a7edb274946",
-      "caffeineai-authorization@0.1.0/README.md": "9ec8eb5aefb7c96cd48d7b4111707dcb01d3f991a12dfd6b98f2e73b97b3758b",
-      "caffeineai-authorization@0.1.0/src/MixinAuthorization.mo": "818108e2188d91637eef39e6a9f0358f9958aa38ecec1e34b46fc7376cb6c09c",
-      "caffeineai-authorization@0.1.0/rules/no-redeclare-get-caller-user-role.toml": "934befe7ed91e8b7b8d7e9ec583730cbd2965b5f77354cea2770b709c1558093",
-      "caffeineai-authorization@0.1.0/mops.toml": "35c677e24b6ce03eed10e255a2a6dcccc5239f81f154d137cb9410236136d6cc",
-      "caffeineai-authorization@0.1.0/rules/no-redeclare-initialize-access-control.toml": "1ecedde0d8fe2b3d71fa46a20fa721754fcb0591bdb8b6b668b69f2593e120a4",
-      "caffeineai-authorization@0.1.0/rules/no-redeclare-assign-caller-user-role.toml": "e8669dfe4931aaa4268682877388255342ce2cb2cdafd21a121ddf22ef42b500",
-      "caffeineai-authorization@0.1.0/src/access-control.mo": "e517d2a028b510d804a633631a15981160def610ea9410dd5a122f92af3c04d8"
-    },
-    "caffeineai-http-outcalls@0.1.0": {
-      "caffeineai-http-outcalls@0.1.0/mops.toml": "61c8139f22321dc49fc3cc9f166dab98db916fedacbdcd6acec9635ae940312d",
-      "caffeineai-http-outcalls@0.1.0/README.md": "54180a48ca662e620269d9453dd5b1dc5bbe4929067e39298f692d59926747de",
-      "caffeineai-http-outcalls@0.1.0/src/outcall.mo": "f5e1eec3b12a04244856f99358e8766a2b5eedc0bf8d9abbebe372c1a3eaca58"
     }
   }
 }

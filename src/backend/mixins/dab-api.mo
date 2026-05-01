@@ -1,13 +1,18 @@
 import Runtime "mo:core/Runtime";
-import AccessControl "mo:caffeineai-authorization/access-control";
-import OutCall "mo:caffeineai-http-outcalls/outcall";
+import Text "mo:core/Text";
+import AccessControl "../lib/access-control";
+import IC "ic:aaaaa-aa";
+import Blob "mo:core/Blob";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
 ) {
-  // Transform callback required by IC HTTP outcalls
-  public query func dabTransform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
-    OutCall.transform(input);
+  // Transform callback required by IC HTTP outcalls — strips headers for replica consensus
+  public query func dabTransform({
+    context : Blob;
+    response : IC.http_request_result;
+  }) : async IC.http_request_result {
+    { response with headers = [] };
   };
 
   /// Admin: manually submit the NFT collection to the DAB registry.
@@ -33,13 +38,26 @@ mixin (
     let payload = buildDABPayload(canisterId, collectionName, collectionDescription, standard);
 
     let url = "https://dab-ooo.vercel.app/api/submit";
-    let headers : [OutCall.Header] = [
-      { name = "Content-Type"; value = "application/json" },
-      { name = "Accept";       value = "application/json" },
-    ];
 
     try {
-      let responseBody = await OutCall.httpPostRequest(url, headers, payload, dabTransform);
+      let httpResponse = await (with cycles = 231_000_000_000) IC.http_request({
+        url;
+        max_response_bytes = ?(10_000 : Nat64);
+        headers = [
+          { name = "Content-Type";    value = "application/json" },
+          { name = "Accept";          value = "application/json" },
+          { name = "User-Agent";      value = "ic-canister" },
+          { name = "Idempotency-Key"; value = "dab-submit" },
+        ];
+        body = ?payload.encodeUtf8();
+        method = #post;
+        transform = ?{ function = dabTransform; context = Blob.fromArray([]) };
+        is_replicated = null;
+      });
+      let responseBody = switch (httpResponse.body.decodeUtf8()) {
+        case null Runtime.trap("empty HTTP response");
+        case (?text) text;
+      };
       #ok(responseBody)
     } catch (_) {
       #err("DAB registry submission failed. Verify the canister ID and retry.")

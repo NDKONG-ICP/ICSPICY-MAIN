@@ -3,6 +3,9 @@ import Common "../types/common";
 import Map "mo:core/Map";
 import List "mo:core/List";
 import Array "mo:core/Array";
+import Text "mo:core/Text";
+import Nat "mo:core/Nat";
+import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Prim "mo:⛔";
 

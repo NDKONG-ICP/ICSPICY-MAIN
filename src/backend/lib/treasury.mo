@@ -2,6 +2,8 @@ import Runtime "mo:core/Runtime";
 import List "mo:core/List";
 import TreasuryTypes "../types/treasury";
 import Common "../types/common";
+import Nat "mo:core/Nat";
+import Text "mo:core/Text";
 
 module {
   public type TxLog = List.List<TreasuryTypes.TreasuryTransaction>;

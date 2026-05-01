@@ -1,7 +1,10 @@
 import Map "mo:core/Map";
 import Time "mo:core/Time";
+import Text "mo:core/Text";
+import Nat "mo:core/Nat";
+import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
-import AccessControl "mo:caffeineai-authorization/access-control";
+import AccessControl "../lib/access-control";
 import Types "../types/artwork-upload";
 import ArtworkLib "../lib/artwork-upload";
 

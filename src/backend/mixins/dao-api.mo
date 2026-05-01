@@ -1,7 +1,7 @@
 import Map "mo:core/Map";
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
-import AccessControl "mo:caffeineai-authorization/access-control";
+import AccessControl "../lib/access-control";
 import Common "../types/common";
 import DAOTypes "../types/dao";
 import PlantTypes "../types/plants";

@@ -1,8 +1,13 @@
 import WalletTypes "../types/wallet";
 import Map "mo:core/Map";
+import Text "mo:core/Text";
+import Principal "mo:core/Principal";
 import List "mo:core/List";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
+import Nat "mo:core/Nat";
+import Int "mo:core/Int";
+import Array "mo:core/Array";
 
 module {
   // Default simulated balances (realistic values):

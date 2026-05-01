@@ -2,6 +2,11 @@ import Common "../types/common";
 import ClaimTypes "../types/claim";
 import PlantTypes "../types/plants";
 import Map "mo:core/Map";
+import Text "mo:core/Text";
+import Nat "mo:core/Nat";
+import Int "mo:core/Int";
+import Principal "mo:core/Principal";
+import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 
 module {

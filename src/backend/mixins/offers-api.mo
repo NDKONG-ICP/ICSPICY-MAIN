@@ -3,7 +3,7 @@ import Time "mo:core/Time";
 import Map "mo:core/Map";
 import List "mo:core/List";
 import Principal "mo:core/Principal";
-import AccessControl "mo:caffeineai-authorization/access-control";
+import AccessControl "../lib/access-control";
 import OfferTypes "../types/offers";
 import TreasuryTypes "../types/treasury";
 import PriceOracleTypes "../types/price-oracle";

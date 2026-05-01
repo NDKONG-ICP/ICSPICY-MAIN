@@ -1,9 +1,11 @@
 import Map "mo:core/Map";
 import Time "mo:core/Time";
 import Nat "mo:core/Nat";
+import Text "mo:core/Text";
 import Runtime "mo:core/Runtime";
-import OutCall "mo:caffeineai-http-outcalls/outcall";
-import AccessControl "mo:caffeineai-authorization/access-control";
+import IC "ic:aaaaa-aa";
+import Blob "mo:core/Blob";
+import AccessControl "../lib/access-control";
 import Common "../types/common";
 import PlantTypes "../types/plants";
 import PlantsLib "../lib/plants";
@@ -15,9 +17,12 @@ mixin (
   icrc37Tokens : Map.Map<Text, NFTLib.ICRC37Metadata>,
   extTokens : Map.Map<Text, NFTLib.EXTMetadata>,
 ) {
-  // Transform callback required by IC HTTP outcalls
-  public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
-    OutCall.transform(input);
+  // Transform callback required by IC HTTP outcalls — strips headers for replica consensus
+  public query func transform({
+    context : Blob;
+    response : IC.http_request_result;
+  }) : async IC.http_request_result {
+    { response with headers = [] };
   };
 
   // Admin: mint an ICRC-37 NFT for a plant (stored on-chain)
@@ -73,11 +78,24 @@ mixin (
         // Use configurable tokenId — default testnet token
         let hederaTokenId = "0.0.5981874";
         let url = "https://testnet.mirrornode.hedera.com/api/v1/tokens/" # hederaTokenId # "/nfts";
-        let headers : [OutCall.Header] = [
-          { name = "Content-Type"; value = "application/json" },
-          { name = "Accept"; value = "application/json" },
-        ];
-        let response = await OutCall.httpPostRequest(url, headers, payload, transform);
+        let httpResponse = await (with cycles = 231_000_000_000) IC.http_request({
+          url;
+          max_response_bytes = ?(10_000 : Nat64);
+          headers = [
+            { name = "Content-Type";    value = "application/json" },
+            { name = "Accept";          value = "application/json" },
+            { name = "User-Agent";      value = "ic-canister" },
+            { name = "Idempotency-Key"; value = "hedera-mint-" # Nat.toText(plant_id) },
+          ];
+          body = ?payload.encodeUtf8();
+          method = #post;
+          transform = ?{ function = transform; context = Blob.fromArray([]) };
+          is_replicated = null;
+        });
+        let response = switch (httpResponse.body.decodeUtf8()) {
+          case null Runtime.trap("empty HTTP response");
+          case (?text) text;
+        };
         // Associate NFT token ID from Hedera response with plant
         PlantsLib.setPlantNFT(plants, plant_id, hederaTokenId # "-" # plant_id.toText());
         response;

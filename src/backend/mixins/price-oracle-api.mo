@@ -1,8 +1,9 @@
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
 import Text "mo:core/Text";
-import AccessControl "mo:caffeineai-authorization/access-control";
-import OutCall "mo:caffeineai-http-outcalls/outcall";
+import AccessControl "../lib/access-control";
+import IC "ic:aaaaa-aa";
+import Blob "mo:core/Blob";
 import PriceOracleTypes "../types/price-oracle";
 import PriceOracleLib "../lib/price-oracle";
 
@@ -13,9 +14,12 @@ mixin (
   // 5-minute cache TTL in nanoseconds
   let CACHE_TTL_NS : Int = 300_000_000_000;
 
-  // Transform callback required by IC HTTP outcalls
-  public query func priceOracleTransform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
-    OutCall.transform(input);
+  // Transform callback required by IC HTTP outcalls — strips headers for replica consensus
+  public query func priceOracleTransform({
+    context : Blob;
+    response : IC.http_request_result;
+  }) : async IC.http_request_result {
+    { response with headers = [] };
   };
 
   /// Get all cached token prices.
@@ -49,12 +53,24 @@ mixin (
   // Called by refreshTokenPrices() and the auto-refresh timer.
   func fetchAndCachePrices() : async Bool {
     let url = "https://uvevg-iqaaa-aaaak-ac27q-cai.raw.icp0.io/allPairs";
-    let headers : [OutCall.Header] = [
-      { name = "Accept"; value = "application/json" },
-    ];
     let now = Time.now();
     try {
-      let responseBody = await OutCall.httpGetRequest(url, headers, priceOracleTransform);
+      let httpResponse = await (with cycles = 231_000_000_000) IC.http_request({
+        url;
+        max_response_bytes = ?(50_000 : Nat64);
+        headers = [
+          { name = "Accept";      value = "application/json" },
+          { name = "User-Agent";  value = "ic-canister" },
+        ];
+        body = null;
+        method = #get;
+        transform = ?{ function = priceOracleTransform; context = Blob.fromArray([]) };
+        is_replicated = null;
+      });
+      let responseBody = switch (httpResponse.body.decodeUtf8()) {
+        case null Runtime.trap("empty HTTP response");
+        case (?text) text;
+      };
       let parsed = parseICPSwapPrices(responseBody, now);
       if (parsed.size() > 0) {
         PriceOracleLib.replaceAllPrices(priceOracleState, parsed, now);

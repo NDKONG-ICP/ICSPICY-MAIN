@@ -1,7 +1,7 @@
 import Map "mo:core/Map";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
-import AccessControl "mo:caffeineai-authorization/access-control";
+import AccessControl "../lib/access-control";
 import Common "../types/common";
 import MarketTypes "../types/marketplace";
 import PlantTypes "../types/plants";
