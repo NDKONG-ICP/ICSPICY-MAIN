@@ -1,0 +1,29 @@
+{
+  "overview": "IC SPICY is a full-stack E-commerce and RWA NFT platform for a Florida nursery specializing in rare and hot chili plants. Features a 8888-NFT pre-generated composite pool, admin pool dashboard, plant lifecycle NFTs, NIMS tray management, DAO governance, multi-token wallet, and a marketplace for plants and artisan products.",
+  "features": [
+    "8888 pre-generated composite NFT pool (5K Common / 2.8K Uncommon / 1K Rare)",
+    "Admin pool dashboard with Ready/Airdropped/Shop/QR inventory counters",
+    "Batch and individual NFT assignment to airdrop, shop, or QR pickup",
+    "Zip file artwork upload to dedicated on-chain asset canister",
+    "10-layer composite NFT artwork with rarity-based discounts",
+    "Founders Collection (50 unique membership NFTs with badge overlay)",
+    "NIMS 72-cell tray management with lifecycle tracking",
+    "Multi-token wallet (ICP, ckBTC, ckETH, ckUSDC, ckUSDT)",
+    "DAO governance for NFT holders",
+    "Marketplace with offer/counter-offer negotiation"
+  ],
+  "category": "e-commerce-nft-platform",
+  "tags": [
+    "nft",
+    "icp",
+    "ecommerce",
+    "nursery",
+    "rwa",
+    "dao",
+    "wallet",
+    "icrc7",
+    "composite-nft",
+    "admin-panel"
+  ],
+  "last_updated": "2026-04-12T13:34:28.948Z"
+}

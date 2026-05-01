@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# IC build artifacts
+.dfx/
+src/backend/dist/
+.old/
+
+# Distributed builds
+dist/
+build/
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*identity*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# NFT assets — too large for git, uploaded to asset canister directly
+nft_collection/
+
+# Caffeine pnpm lock — will regenerate after migration
+# pnpm-lock.yaml
