@@ -1,0 +1,27 @@
+[
+  {
+    "match": "**/*",
+    "security_policy": "standard",
+    "allow_raw_access": false,
+    "headers": {
+      "Cache-Control": "public, max-age=0, must-revalidate",
+      "Access-Control-Allow-Origin": "*"
+    }
+  },
+  {
+    "match": "images/**",
+    "allow_raw_access": false,
+    "headers": {
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "Access-Control-Allow-Origin": "*"
+    }
+  },
+  {
+    "match": "metadata/**",
+    "allow_raw_access": false,
+    "headers": {
+      "Cache-Control": "public, max-age=86400, must-revalidate",
+      "Access-Control-Allow-Origin": "*"
+    }
+  }
+]

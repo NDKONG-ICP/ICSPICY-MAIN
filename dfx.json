@@ -9,6 +9,11 @@
       "type": "assets",
       "source": ["src/frontend/dist"],
       "dependencies": ["backend"]
+    },
+    "nft_assets": {
+      "type": "assets",
+      "source": ["nft_assets_src"],
+      "build": []
     }
   },
   "defaults": {

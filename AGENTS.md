@@ -217,6 +217,28 @@ transient let icpLedger : ICRC1Ledger = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 - **Variant tag for `_initializeAccessControl` preserves the leading underscore.** If Motoko's inspect_message codegen has issues with leading-underscore variant names, it will surface at typecheck time.
 - **Five `plants-api.mo` methods lack mixin-level `requireAuthenticated` — guarded only in lib.** `updateCellData`, `toggleCooked`, `transplantCell`, `addPlantPhoto`, `removePlantPhoto` pass `caller` into lib functions that check owner-or-admin. Anonymous always fails in the lib, but inspect_message blocks them at ingress before any lib code runs.
 
+### Phase 2 — Asset infrastructure (2026-05)
+
+- **`"build": []` in dfx.json does NOT suppress dfx 0.29.1's `npm run build` for asset canisters.** Symptom: `dfx deploy nft_assets` fails with `The post-build step failed… "npm" "run" "build"… sh: pnpm: command not found`. Diagnosis: dfx 0.29.1 always runs the project-root `npm run build` as the "post-build" step for `type: assets` canisters, even when `"build": []` is set. The root `package.json` `build` script calls `pnpm`, which is installed only as a corepack shim and is not in the subprocess PATH. **Workaround — use `dfx canister install` directly instead of `dfx deploy` for asset canisters:**
+
+  ```bash
+  dfx canister create --network <net> nft_assets           # registers canister, gets ID
+  dfx build --network <net> nft_assets                      # builds wasm into .dfx/<net>/canisters/nft_assets/
+  dfx canister install --network <net> nft_assets \
+    --wasm ".dfx/<net>/canisters/nft_assets/nft_assets.wasm.gz" \
+    --argument '(null)'                                      # installs wasm, skips npm run build
+  # Then use upload-nft-assets.js to push actual files
+
+  ```
+
+  If `dfx build` also triggers the npm run build failure, fetch the wasm from the already-built local path (`.dfx/local/canisters/nft_assets/nft_assets.wasm.gz`) and install it with the explicit `--wasm` flag. Verified on dfx 0.29.1; may be fixed in later versions.
+- **Asset canister `"unmatched configuration"` warnings are expected on first install.** `.ic-assets.json5` rules for `images/**` and `metadata/**` emit WARN at install time because those directories don't exist in the source folder yet. Warnings are harmless — rules apply correctly once the upload script populates the paths.
+- **`@dfinity/identity` v3.4.3 has a deprecated stub `Secp256k1KeyIdentity` with no `fromPem`.** Use `@dfinity/identity-secp256k1` (separate package, same version `3.4.3`) for Secp256k1 PEM loading. `dfx` identities created with default settings use `EC PRIVATE KEY` (Secp256k1), not Ed25519. Check with `head -1 ~/.config/dfx/identity/<name>/identity.pem`.
+- **`AssetManager.list()` returns keys with a leading slash** (e.g. `/images/nft_1.png`). The resume skip-set must use the same format — compare with leading slash on both sides.
+- **`batch.store()` for `Uint8Array` requires `fileName` in config.** Omitting it causes a type error at runtime. `path` is the directory portion (e.g. `/images`); `fileName` is the filename (e.g. `nft_1.png`). The resulting asset key is `{path}/{fileName}`.
+- **Metadata image URL path uses bare number in originals (`/1.png`), not the `nft_` prefix.** Template script replaces the full URL as a unit using the NFT number extracted from the filename, before the bare `YOUR_ICP_CANISTER_ID` substring replacement runs. Order matters — doing it the other way breaks the URL replacement.
+- **`nft_collection_templated/` must be regenerated for mainnet with real canister IDs.** The local smoke-test run writes IDs for local replica canisters. Delete and re-run `template-metadata.js` with mainnet IDs before the mainnet upload. The templated output directory is gitignored.
+
 ---
 
 ## Last updated

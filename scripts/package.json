@@ -1,0 +1,16 @@
+{
+  "name": "icspicy-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "IC SPICY deployment scripts",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@dfinity/agent": "3.4.3",
+    "@dfinity/assets": "3.4.3",
+    "@dfinity/identity": "3.4.3",
+    "@dfinity/identity-secp256k1": "3.4.3",
+    "@dfinity/principal": "3.4.3"
+  }
+}

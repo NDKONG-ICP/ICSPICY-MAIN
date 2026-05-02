@@ -30,5 +30,8 @@ build/
 # NFT assets — too large for git, uploaded to asset canister directly
 nft_collection/
 
+# Templated metadata — regenerated per environment with real canister IDs; not committed
+nft_collection_templated/
+
 # Caffeine pnpm lock — will regenerate after migration
 # pnpm-lock.yaml
