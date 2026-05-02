@@ -27,11 +27,12 @@ mixin (
     #ok(BatchLib.createBatchGiftPack(batchGiftPacks, claimTokens, plants, rwaTokens, plant_ids, caller, Time.now()));
   };
 
-  // Public: redeem a claim token that may be either a single-plant or batch gift pack claim
+  // Authenticated: redeem a claim token that may be either a single-plant or batch gift pack claim
   // If the token references a BatchGiftPack, all plants are minted to caller with highest rarity membership
   public shared ({ caller }) func redeemBatchClaim(
     token_id : Common.ClaimTokenId,
   ) : async { #ok : BatchTypes.BatchGiftPackPublic; #err : Text } {
+    AccessControl.requireAuthenticated(caller);
     #ok(BatchLib.redeemBatchGiftPack(batchGiftPacks, claimTokens, plants, rwaTokens, claimMemberships, token_id, caller, Time.now()));
   };
 
@@ -48,6 +49,7 @@ mixin (
     plant_id : Common.PlantId,
     price_icp : Float,
   ) : async { #ok : BatchTypes.ResaleListingPublic; #err : Text } {
+    AccessControl.requireAuthenticated(caller);
     #ok(BatchLib.listNFTForResale(resaleListings, plants, claimTokens, plant_id, price_icp, caller, Time.now()));
   };
 
@@ -55,6 +57,7 @@ mixin (
   public shared ({ caller }) func cancelResaleListing(
     listing_id : Text,
   ) : async { #ok; #err : Text } {
+    AccessControl.requireAuthenticated(caller);
     BatchLib.cancelResaleListing(resaleListings, listing_id, caller);
     #ok;
   };
@@ -63,6 +66,7 @@ mixin (
   public shared ({ caller }) func buyResaleListing(
     listing_id : Text,
   ) : async { #ok; #err : Text } {
+    AccessControl.requireAuthenticated(caller);
     BatchLib.buyResaleListing(resaleListings, plants, claimMemberships, claimTokens, listing_id, caller, Time.now());
     #ok;
   };

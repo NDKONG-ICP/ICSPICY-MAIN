@@ -1,5 +1,6 @@
 import Map "mo:core/Map";
 import List "mo:core/List";
+import Runtime "mo:core/Runtime";
 import WalletTypes "../types/wallet";
 import WalletLib "../lib/wallet";
 import Principal "mo:core/Principal";
@@ -10,6 +11,7 @@ mixin (
 ) {
   // Authenticated: get wallet balances for caller (initialises on first call)
   public shared ({ caller }) func getWalletBalances() : async [WalletTypes.WalletToken] {
+    if (caller.isAnonymous()) Runtime.trap("anonymous caller not allowed");
     let state = switch (wallets.get(caller)) {
       case (?s) { s };
       case null {
@@ -28,6 +30,7 @@ mixin (
 
   // Authenticated: send tokens — simulates transfer, deducts balance, logs tx
   public shared ({ caller }) func sendToken(input : WalletTypes.SendTokenInput) : async { #ok : Text; #err : Text } {
+    if (caller.isAnonymous()) Runtime.trap("anonymous caller not allowed");
     WalletLib.send(wallets, txLog, caller, input);
   };
 

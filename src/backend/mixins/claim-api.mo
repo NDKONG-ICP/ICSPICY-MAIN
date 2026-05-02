@@ -25,11 +25,11 @@ mixin (
     ClaimLib.generateClaimToken(claimTokens, plants, rwaTokens, plant_id, rarity_tier, Time.now());
   };
 
-  // Public (unauthenticated allowed for QR scan): redeem a claim token
-  // Caller receives the NFT and a tiered discount membership entry
+  // Authenticated: redeem a claim token — caller claims the NFT and a tiered discount membership
   public shared ({ caller }) func redeemClaim(
     token_id : Common.ClaimTokenId,
   ) : async ClaimTypes.ClaimTokenPublic {
+    AccessControl.requireAuthenticated(caller);
     ClaimLib.redeemClaim(claimTokens, plants, memberships, token_id, caller, Time.now());
   };
 

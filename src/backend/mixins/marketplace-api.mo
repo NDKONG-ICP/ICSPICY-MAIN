@@ -107,9 +107,7 @@ mixin (
 
   // Authenticated: buyer places their own order
   public shared ({ caller }) func placeOrder(input : MarketTypes.CreateOrderInput) : async MarketTypes.OrderPublic {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
+    AccessControl.requireAuthenticated(caller);
     let order = MarketLib.createOrder(orders, plants, memberships, claimTokens, nextOrderId.value, caller, input);
     nextOrderId.value += 1;
     MarketLib.toPublicOrder(order);

@@ -35,9 +35,7 @@ mixin (
 
   // Any authenticated user: create a new 72-cell tray
   public shared ({ caller }) func createTray(input : PlantTypes.CreateTrayInput) : async PlantTypes.TrayPublic {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
+    AccessControl.requireAuthenticated(caller);
     let currentId = nextTrayId.value;
     let tray = PlantsLib.createTray(trays, currentId, input);
     trayOwners.add(currentId, caller);
@@ -47,49 +45,37 @@ mixin (
 
   // Any authenticated user: rename a tray
   public shared ({ caller }) func updateTrayName(tray_id : Common.TrayId, new_name : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
-    PlantsLib.updateTrayName(trays, tray_id, new_name);
+    AccessControl.requireAuthenticated(caller);
+    PlantsLib.updateTrayName(trays, caller, trayOwners, isAdmin, tray_id, new_name);
   };
 
   // Any authenticated user: delete a tray (no active plants)
   public shared ({ caller }) func deleteTray(tray_id : Common.TrayId) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
-    PlantsLib.deleteTray(trays, plants, tray_id);
+    AccessControl.requireAuthenticated(caller);
+    PlantsLib.deleteTray(trays, plants, caller, trayOwners, isAdmin, tray_id);
   };
 
   // Owner or admin: update the sort order of a zone in the floor plan
   public shared ({ caller }) func updateTrayOrder(tray_id : Common.TrayId, new_order : Nat) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
+    AccessControl.requireAuthenticated(caller);
     PlantsLib.updateTrayOrder(trays, caller, trayOwners, isAdmin, tray_id, new_order);
   };
 
   // Owner or admin: set freeform notes on a zone
   public shared ({ caller }) func updateZoneNotes(tray_id : Common.TrayId, notes : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
+    AccessControl.requireAuthenticated(caller);
     PlantsLib.updateZoneNotes(trays, caller, trayOwners, isAdmin, tray_id, notes);
   };
 
   // Owner or admin: attach a photo (object-storage key) to a zone
   public shared ({ caller }) func addZonePhoto(tray_id : Common.TrayId, photo_key : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
+    AccessControl.requireAuthenticated(caller);
     PlantsLib.addZonePhoto(trays, caller, trayOwners, isAdmin, tray_id, photo_key);
   };
 
   // Owner or admin: remove a photo key from a zone
   public shared ({ caller }) func removeZonePhoto(tray_id : Common.TrayId, photo_key : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
+    AccessControl.requireAuthenticated(caller);
     PlantsLib.removeZonePhoto(trays, caller, trayOwners, isAdmin, tray_id, photo_key);
   };
 
@@ -97,9 +83,7 @@ mixin (
 
   // Any authenticated user: register a new plant in a tray cell
   public shared ({ caller }) func createPlant(input : PlantTypes.CreatePlantInput) : async PlantTypes.PlantPublic {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
+    AccessControl.requireAuthenticated(caller);
     let plant = PlantsLib.createPlant(plants, trays, stageHistory, nextPlantId.value, input, caller);
     nextPlantId.value += 1;
     PlantsLib.toPublic(plant);
@@ -196,9 +180,7 @@ mixin (
 
   // Any authenticated user: store a weather data point (deduped by date)
   public shared ({ caller }) func addWeatherRecord(input : PlantTypes.AddWeatherRecordInput) : async PlantTypes.WeatherRecord {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
+    AccessControl.requireAuthenticated(caller);
     let record = PlantsLib.addWeatherRecord(weatherRecords, weatherIndex, nextWeatherRecordId.value, caller, input);
     // Only increment if a new record was actually created
     if (record.id == nextWeatherRecordId.value) {
@@ -209,9 +191,7 @@ mixin (
 
   // Authenticated user: get their own weather records (latest N)
   public shared ({ caller }) func getMyWeatherRecords(limit : Nat) : async [PlantTypes.WeatherRecord] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
+    AccessControl.requireAuthenticated(caller);
     PlantsLib.getWeatherRecords(weatherRecords, caller, limit);
   };
 
@@ -269,9 +249,7 @@ mixin (
 
   // Authenticated: list plants owned by the caller
   public shared ({ caller }) func listMyPlants() : async [PlantTypes.PlantPublic] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Must be authenticated");
-    };
+    AccessControl.requireAuthenticated(caller);
     PlantsLib.listMyPlants(plants, caller);
   };
 

@@ -196,6 +196,18 @@ transient let icpLedger : ICRC1Ledger = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 - **`is_replicated = null` (replicated) for all HTTP outcalls that mutate state.** Non-replicated (`?false`) must never be used for state-mutating calls.
 - **Project root path has a space (`IC SPICY MAIN`).** `dfx deploy` via `moc-wrapper` emits spurious path warnings but still succeeds. Not a real error — canister installs cleanly.
 
+### Phase 1 — Security foundations (2025-05)
+
+- **Actor class signature change requires `--mode reinstall` locally.** Switching from `persistent actor ICSpicy {` to `shared(msg) persistent actor class ICSpicy() = Self {` is upgrade-incompatible. Use `dfx deploy --network local --mode reinstall backend --yes` for local. On mainnet this requires a canister wipe — schedule only during a planned migration window.
+- **`msg.caller` via `shared(msg)` captures the DEPLOYING identity.** For local deploys with `dfx deploy`, that is the current `dfx identity`. Verify with `dfx identity get-principal` before deploying to confirm admin #1 is correct.
+- **Two-admin minimum must be verified locally before phase is considered complete.** Call `getAdmins()` and assert length ≥ 2. Single-admin is a single point of failure regardless of environment.
+- **`hasPermission(state, caller, #user)` was the auth check for "authenticated user" actions.** Removed entirely in Phase 1 — replaced by `requireAuthenticated(caller)`. The new function does NOT accept `#guest` or `#admin` role — it only rejects anonymous.
+- **`refreshTokenPrices` is admin-only — causes stale prices during checkout.** TODO Phase 4: convert to timer-driven refresh or rate-limited public call. Admin-only is a temporary convenience guard.
+- **`deleteTray` and `updateTrayName` had no ownership check in lib/plants.mo.** Any authenticated user could delete/rename another user's tray. Fixed in Phase 1 E.0 by adding the `caller, trayOwners, adminCheck` pattern matching all other tray mutation functions.
+- **QR claim attack surface (Phase 3 design note).** `redeemClaim` correctly binds to `caller`, but anyone who physically scans a QR code can redeem the claim if they are authenticated. No secret or hold-time check prevents early redemption. Phase 3 NFT design should add either: (a) hold-time lock on claim tokens, or (b) admin-cosign requirement before redemption.
+- **DAO subsystem is a Phase 8 deletion target.** `voteOnProposal`, `createDAOProposal`, `listDAOProposals`, `getDAOProposal`, `hasDAOAccess` — the real DAO lives on OHSHII (per PROJECT_CONTEXT.md). This custom on-canister DAO is dead code. Remove in Phase 8 when OHSHII integration is built.
+- **Simulated wallet is a Phase 4 deletion target.** `mixins/wallet-api.mo` and `lib/wallet.mo` simulate ICP/ckBTC/ckETH balances. Replaced by real ICRC-2 ledger integration in Phase 4. Guards are applied in Phase 1 for correctness, but the entire subsystem will be deleted.
+
 ---
 
 ## Last updated

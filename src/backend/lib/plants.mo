@@ -35,11 +35,21 @@ module {
 
   public func updateTrayName(
     trays : Map.Map<Common.TrayId, Types.Tray>,
+    caller : Principal,
+    trayOwners : Map.Map<Common.TrayId, Principal>,
+    adminCheck : Principal -> Bool,
     tray_id : Common.TrayId,
     new_name : Text,
   ) : () {
     switch (trays.get(tray_id)) {
-      case (?tray) { tray.name := new_name };
+      case (?tray) {
+        let ownerOk = switch (trayOwners.get(tray_id)) {
+          case (?owner) { owner == caller or adminCheck(caller) };
+          case null { adminCheck(caller) };
+        };
+        if (not ownerOk) { Runtime.trap("Unauthorized: must be tray owner or admin") };
+        tray.name := new_name;
+      };
       case null { Runtime.trap("Tray not found") };
     };
   };
@@ -131,10 +141,18 @@ module {
   public func deleteTray(
     trays : Map.Map<Common.TrayId, Types.Tray>,
     plants : Map.Map<Common.PlantId, Types.Plant>,
+    caller : Principal,
+    trayOwners : Map.Map<Common.TrayId, Principal>,
+    adminCheck : Principal -> Bool,
     tray_id : Common.TrayId,
   ) : () {
     switch (trays.get(tray_id)) {
       case (?_tray) {
+        let ownerOk = switch (trayOwners.get(tray_id)) {
+          case (?owner) { owner == caller or adminCheck(caller) };
+          case null { adminCheck(caller) };
+        };
+        if (not ownerOk) { Runtime.trap("Unauthorized: must be tray owner or admin") };
         // Check no active (non-transplanted, non-cooked) plants remain
         let hasActive = plants.values().any(func(p : Types.Plant) : Bool {
           p.tray_id == tray_id and not p.is_transplanted and not p.is_cooked

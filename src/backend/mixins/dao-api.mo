@@ -27,6 +27,7 @@ mixin (
 
   // Member: vote on a DAO proposal (requires plant NFT or membership NFT)
   public shared ({ caller }) func voteOnProposal(proposal_id : Common.ProposalId, option_index : Nat) : async () {
+    AccessControl.requireAuthenticated(caller);
     DAOLib.vote(proposals, plants, memberships, caller, proposal_id, option_index);
   };
 

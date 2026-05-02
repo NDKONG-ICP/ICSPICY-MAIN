@@ -1,6 +1,5 @@
 import Map "mo:core/Map";
 import Time "mo:core/Time";
-import Runtime "mo:core/Runtime";
 import AccessControl "../lib/access-control";
 import Common "../types/common";
 import ClaimTypes "../types/claim";
@@ -24,17 +23,13 @@ mixin (
     stage : Text,
     inputs : [Text],
   ) : async Common.ScheduleId {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in to save schedules");
-    };
+    AccessControl.requireAuthenticated(caller);
     ScheduleLib.saveSchedule(savedSchedules, shareIndex, caller, stage, inputs, Time.now());
   };
 
   // Authenticated: list all saved schedules owned by the caller
   public shared ({ caller }) func getMySchedules() : async [ClaimTypes.SavedSchedule] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in");
-    };
+    AccessControl.requireAuthenticated(caller);
     ScheduleLib.getMySchedules(savedSchedules, caller);
   };
 

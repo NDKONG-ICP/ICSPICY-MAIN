@@ -1,5 +1,4 @@
 import Map "mo:core/Map";
-import Runtime "mo:core/Runtime";
 import AccessControl "../lib/access-control";
 import Common "../types/common";
 import CommunityTypes "../types/community";
@@ -15,9 +14,7 @@ mixin (
 ) {
   // Authenticated: create a community post
   public shared ({ caller }) func createPost(input : CommunityTypes.CreatePostInput) : async CommunityTypes.PostPublic {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in to post");
-    };
+    AccessControl.requireAuthenticated(caller);
     let post = CommunityLib.createPost(posts, nextPostId.value, caller, input);
     nextPostId.value += 1;
     post;
@@ -25,41 +22,31 @@ mixin (
 
   // Authenticated: edit own post within 48 hours of creation
   public shared ({ caller }) func editPost(post_id : Common.PostId, new_content : Text) : async CommunityTypes.PostPublic {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in to edit posts");
-    };
+    AccessControl.requireAuthenticated(caller);
     CommunityLib.editPost(posts, caller, post_id, new_content);
   };
 
   // Authenticated: delete own post within 48 hours of creation
   public shared ({ caller }) func deletePost(post_id : Common.PostId) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in to delete posts");
-    };
+    AccessControl.requireAuthenticated(caller);
     CommunityLib.deletePost(posts, caller, post_id);
   };
 
   // Authenticated: like a post — returns updated like count
   public shared ({ caller }) func likePost(post_id : Common.PostId) : async Nat {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in to like posts");
-    };
+    AccessControl.requireAuthenticated(caller);
     CommunityLib.likePost(posts, post_id, caller);
   };
 
   // Authenticated: unlike a post — returns updated like count
   public shared ({ caller }) func unlikePost(post_id : Common.PostId) : async Nat {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in to unlike posts");
-    };
+    AccessControl.requireAuthenticated(caller);
     CommunityLib.unlikePost(posts, post_id, caller);
   };
 
   // Authenticated: add a comment to a post
   public shared ({ caller }) func createComment(input : CommunityTypes.CreateCommentInput) : async CommunityTypes.CommentPublic {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in to comment");
-    };
+    AccessControl.requireAuthenticated(caller);
     let comment = CommunityLib.createComment(comments, profiles, nextCommentId.value, caller, input);
     nextCommentId.value += 1;
     comment;
@@ -67,34 +54,26 @@ mixin (
 
   // Authenticated: follow another user
   public shared ({ caller }) func followUser(target : Principal) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in to follow users");
-    };
+    AccessControl.requireAuthenticated(caller);
     CommunityLib.followUser(profiles, caller, target);
   };
 
   // Authenticated: unfollow a user
   public shared ({ caller }) func unfollowUser(target : Principal) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in to unfollow users");
-    };
+    AccessControl.requireAuthenticated(caller);
     CommunityLib.unfollowUser(profiles, caller, target);
   };
 
   // Authenticated: save caller's profile
   public shared ({ caller }) func saveCallerUserProfile(input : CommunityTypes.SaveProfileInput) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in to save profile");
-    };
+    AccessControl.requireAuthenticated(caller);
     CommunityLib.saveProfile(profiles, caller, input);
   };
 
   // Authenticated: ensure caller has a profile, creating one if absent.
   // Idempotent — safe to call on every sign-in for any user.
   public shared ({ caller }) func ensureCallerProfile() : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Must be logged in");
-    };
+    AccessControl.requireAuthenticated(caller);
     CommunityLib.ensureCallerProfile(profiles, caller);
   };
 
