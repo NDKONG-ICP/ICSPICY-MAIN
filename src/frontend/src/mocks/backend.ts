@@ -964,8 +964,7 @@ export const mockBackend: backendInterface = {
   preGenerateNFTPool: async () => ({ ok: true, total: BigInt(8888) }),
   resetOrphanPoolNFT: async () => false,
   resetPoolNFT: async () => ({ __kind__: "ok" as const, ok: "reset" }),
-  _immutableObjectStorageCreateCertificate: async () => new Uint8Array(),
-  _immutableObjectStorageGetCertificate: async () => null,
+
   _initializeAccessControl: async () => undefined,
   getAdminPrincipals: async () => [
     "lgjjr-4bwun-koggr-pornj-ltxia-m4xxo-iy7mg-cct7e-okxub-mbxku-tae",

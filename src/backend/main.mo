@@ -4,9 +4,6 @@ import Set "mo:core/Set";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
-import Blob "mo:core/Blob";
-import Array "mo:core/Array";
-import CertifiedData "mo:core/CertifiedData";
 import AccessControl "lib/access-control";
 import CallerGuard "lib/caller-guard";
 import Common "types/common";
@@ -77,7 +74,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // ── Deprecated Caffeine auth shims — frontend compat until Phase 1.5 ───────
 
   // no-op; deployer is captured via msg.caller at actor construction.
-  public shared({ caller = _ }) func _initializeAccessControl() : async () {};
+  public query func _initializeAccessControl() : async () {};
 
   // Computed from admin set — no longer stored per-user.
   public query({ caller }) func getCallerUserRole() : async AccessControl.UserRole {
@@ -93,23 +90,6 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   public query func getCanisterId() : async Text {
     Principal.fromActor(Self).toText()
-  };
-
-  // ── Caffeine object-storage cert compat (blob-tree upload) ─────────────────
-
-  public shared func _immutableObjectStorageCreateCertificate(hash : Text) : async Blob {
-    let hashBlob = hash.encodeUtf8();
-    let bytes = hashBlob.toArray();
-    let truncated : [Nat8] = if (bytes.size() <= 32) bytes else Array.tabulate<Nat8>(32, func i = bytes[i]);
-    CertifiedData.set(Blob.fromArray(truncated));
-    switch (CertifiedData.getCertificate()) {
-      case (?cert) cert;
-      case null Blob.fromArray([]);
-    };
-  };
-
-  public query func _immutableObjectStorageGetCertificate() : async ?Blob {
-    CertifiedData.getCertificate();
   };
 
   // ── Counter wrappers (shared mutable references) ───────────────────────────
@@ -294,4 +274,17 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include DABAPI(accessControlState);
   include ArtworkUploadAPI(accessControlState, artworkUploadSession, storedFiles, poolNFTs, selfPrincipalText);
   include PoolAPI(accessControlState, nftPool, nextPoolProductId);
+
+  // ── Ingress filter ─────────────────────────────────────────────────────────
+
+  // Block anonymous callers at ingress before consensus — no cycles burned on rejection.
+  // All update calls from anonymous principals are rejected. Query calls (including
+  // _initializeAccessControl, which is now a query) bypass this filter entirely.
+  system func inspect({
+    caller : Principal;
+    arg    : Blob;
+  }) : Bool {
+    ignore arg;
+    not caller.isAnonymous()
+  };
 };
