@@ -31,18 +31,28 @@ These are the result of a multi-session design process. Do not deviate without e
 - **`dfx` for deployment**, `mops` for dependencies, `dfx generate` for Candid bindings.
 - **Local replica testing required** before any mainnet deploy.
 
-### Multi-canister target architecture (Phase 6 split)
-The current single-canister backend is split into:
-- `frontend` (asset canister): React UI
-- `nft_assets` (asset canister): 8888 PNGs + JSON metadata, ~1.33GB
-- `nft_canister`: ICRC-7/37 ledger for the 8888 NFTs
-- `marketplace_canister`: products, orders, offers, discount engine
-- `treasury_canister`: SPICY/ICP/ckBTC custody, buybacks, burns
-- `community_canister`: posts, recipes, profiles
-- `nims_canister`: plants, trays, lifecycle, weather
-- `spicy_ai_canister`: chatbot via `mo:llm`
+### Multi-canister target architecture (Phase 6 extraction)
 
-Phases 0–5 happen in the existing single-canister structure; the split is Phase 6.
+**The `backend` canister created in Phase 2 is permanent infrastructure.** It is the forever home of all 8888 ICRC-7 NFTs. In Phase 3, NFTs are minted to `Account { owner = Principal.fromActor(Self); subaccount = null }` — the backend canister's own principal. They transfer out to buyers/claimants from there. NFTs are never bulk-moved to a new canister; doing so would require re-minting or breaking ownership history.
+
+Phase 6 is correctly described as **extraction of other concerns out of backend**, not a "split" that moves NFTs. The backend canister stays; everything else moves out:
+
+| Canister | Description | Relation to `backend` |
+| --- | --- | --- |
+| `backend` / `nft_canister` | ICRC-7/37 NFT ledger — **same canister, two names** | Permanent; code upgraded in place |
+| `frontend` | React UI asset canister | Independent; already exists |
+| `nft_assets` | 8888 PNGs + JSON metadata, ~1.33GB asset canister | Independent; created Phase 2 |
+| `marketplace_canister` | Products, orders, offers, discount engine | Extracted from backend Phase 6 |
+| `treasury_canister` | ICP/ckBTC/SPICY custody, buybacks, burns | Extracted from backend Phase 6 |
+| `community_canister` | Posts, recipes, profiles | Extracted from backend Phase 6 |
+| `nims_canister` | Plants, trays, lifecycle, weather | Extracted from backend Phase 6 |
+| `spicy_ai_canister` | Chatbot via `mo:llm` | New canister Phase 6.5 |
+
+**SPICY token flow note:** SPICY tokens don't exist until Phase 8 LGE. By then `treasury_canister` already exists (created Phase 6). The LGE allocation goes directly to `treasury_canister` — no intermediate hop through `backend`.
+
+**NFT initial ownership:** `Account { owner = Principal.fromActor(Self); subaccount = null }` — the backend canister holds all unminted NFTs. This is the correct ICRC-7 pattern; the canister is both the ledger and the initial owner.
+
+Phases 0–5 happen in the existing single-canister `backend`; Phase 6 extracts other concerns out, leaving `backend` as the permanent NFT ledger.
 
 ---
 
