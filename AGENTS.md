@@ -238,6 +238,18 @@ transient let icpLedger : ICRC1Ledger = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 - **`batch.store()` for `Uint8Array` requires `fileName` in config.** Omitting it causes a type error at runtime. `path` is the directory portion (e.g. `/images`); `fileName` is the filename (e.g. `nft_1.png`). The resulting asset key is `{path}/{fileName}`.
 - **Metadata image URL path uses bare number in originals (`/1.png`), not the `nft_` prefix.** Template script replaces the full URL as a unit using the NFT number extracted from the filename, before the bare `YOUR_ICP_CANISTER_ID` substring replacement runs. Order matters — doing it the other way breaks the URL replacement.
 - **`nft_collection_templated/` must be regenerated for mainnet with real canister IDs.** The local smoke-test run writes IDs for local replica canisters. Delete and re-run `template-metadata.js` with mainnet IDs before the mainnet upload. The templated output directory is gitignored.
+- **Asset canister `dfx deploy` auto-build also fails on mainnet** with `pnpm: command not found` — same root cause as local (config-only source folder, no `package.json` of its own), but the error only surfaces when attempting `dfx deploy --network ic`. Workaround is the same manual install path documented above, using the mainnet network flag:
+
+  ```bash
+  dfx canister create --network ic nft_assets
+  dfx build --network ic nft_assets
+  dfx canister install --network ic nft_assets \
+    --wasm ".dfx/ic/canisters/nft_assets/assetstorage.wasm.gz" \
+    --argument '(null)'
+  ```
+
+- **Bulk upload cycle sizing: provision 9–10T before starting, not 6T.** The initial 6T allocation was sized for steady-state storage (~14 months runway) but bulk-upload-time consumption hit the 90-day freezing threshold buffer at ~96% completion. Upload exited with an "out of cycles" error (misleading — canister had cycles, but not enough to maintain the freezing-threshold buffer above the minimum). Fixed by topping up an additional 3T mid-upload. For future bulk uploads of similar volume (1.3GB / ~17K assets), top up to 9–10T before starting to avoid mid-run interruption.
+- **Identity migration `--storage-mode plaintext → keyring` is safe mid-deploy.** `ic_deploy` identity successfully migrated after Phase 2; principal was preserved (`gqkko-43bbx-...`), wallet re-associated via `dfx identity --network ic set-wallet daf6l-...`. Per-keychain prompts now appear during `dfx` operations — allow them. Plaintext PEM should be securely deleted post-migration.
 
 ---
 

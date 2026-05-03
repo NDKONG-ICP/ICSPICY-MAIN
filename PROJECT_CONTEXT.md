@@ -454,14 +454,20 @@ URL pattern: `https://skills.internetcomputer.org/.well-known/skills/<skill-name
 
 ### Project canister IDs
 
-**Locked in today (Phase 2 mainnet deploy):**
+**Locked in (Phase 2 mainnet deploy — complete):**
 
-- `nft_assets` mainnet canister ID: TBD (capture immediately after `dfx canister create nft_assets`)
-- `backend` mainnet canister ID: TBD (capture immediately after `dfx canister create backend`)
-  - Empty placeholder; code installed in Phase 3+
+- `nft_assets` mainnet canister ID: `gawk3-2qaaa-aaaao-ba4sa-cai`
+  - 8888 PNGs at `/images/nft_<N>.png`
+  - 8888 JSON metadata at `/metadata/nft_<N>.json`
+  - Upload completed in two passes (resume capability proved during cycle exhaustion event)
+  - 6T cycles allocation, 90-day freezing threshold
+  - Controllers: `gqkko-43bbx-...` (deployer identity) + `daf6l-jyaaa-aaaao-a4nba-cai` (cycles wallet)
+
+- `backend` mainnet canister ID: `ghxmp-xiaaa-aaaao-ba4sq-cai`
+  - Empty placeholder; code installed in Phase 7 after audit
   - Becomes permanent ICRC-7 NFT ledger; do NOT replace this canister
-  - 1T cycles initial allocation, freezing threshold 90 days
-  - Initial controllers: gqkko-43bbx-nwsp4-it2rg-pc2dy-w2pt2-fa5om-4y6es-oyhz2-5i5oh-5ae
+  - 3T cycles initial allocation, 90-day freezing threshold
+  - Controllers: same as nft_assets
 
 **Pending (created in later phases):**
 
