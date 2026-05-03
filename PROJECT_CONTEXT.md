@@ -349,7 +349,7 @@ Domain expertise covering:
 | 4 | Real payments (ICP+ckBTC+Stripe+SPICY pay) | 2.8 |
 | 5 | ckBTC integration (deposit/sweep/withdraw) | 0.7 |
 | 5.5 | Weather provenance (per-plant, backfill, sale/claim) | 0.7 |
-| 6 | Multi-canister split + ops + transparency dashboard | 2.3 |
+| 6 | Extract canisters from backend + ops + transparency dashboard | 2.3 |
 | 6.5 | SpicyAI chatbot + badges + recipe burn | 1.2 |
 | 7 | Audit & polish | ongoing |
 | 8 | OHSHII integration + treasury structure + buybacks | 2.7 |
@@ -376,7 +376,7 @@ Before writing code that touches any of these areas, **fetch the relevant SKILL.
 | `internet-identity` | Auth flows, delegation handling |
 | `wallet-integration` | OISY/Plug ICRC-25/49 |
 | `stable-memory` | State persistence across upgrades |
-| `multi-canister` | Phase 6 split, inter-canister calls |
+| `multi-canister` | Phase 6 extraction, inter-canister calls |
 | `cycles-management` | Production ops, freeze thresholds, top-ups |
 | `certified-variables` | Verifiable provenance queries on NFT metadata |
 | `custom-domains` | Future: serving under nft.icspicy.app |
@@ -396,12 +396,32 @@ URL pattern: `https://skills.internetcomputer.org/.well-known/skills/<skill-name
 - ckUSDC ledger: `xevnm-gaaaa-aaaar-qafnq-cai`
 - ckUSDT ledger: `cngnf-vqaaa-aaaar-qag4q-cai`
 
-### Pending (set after LGE)
-- SPICY ledger canister ID — TBD post-LGE via OHSHII
-- SPICY/ICP ICPSwap pool canister ID — TBD post-LP creation
-- nft_assets canister ID — TBD post-Phase 2 deploy
+### Project canister IDs
 
-Verify all of these via the relevant skill's SKILL.md before hardcoding.
+**Locked in today (Phase 2 mainnet deploy):**
+
+- `nft_assets` mainnet canister ID: TBD (capture immediately after `dfx canister create nft_assets`)
+- `backend` mainnet canister ID: TBD (capture immediately after `dfx canister create backend`)
+  - Empty placeholder; code installed in Phase 3+
+  - Becomes permanent ICRC-7 NFT ledger; do NOT replace this canister
+  - 1T cycles initial allocation, freezing threshold 90 days
+  - Initial controllers: gqkko-43bbx-nwsp4-it2rg-pc2dy-w2pt2-fa5om-4y6es-oyhz2-5i5oh-5ae
+
+**Pending (created in later phases):**
+
+- `frontend` asset canister — Phase 7 deployment
+- `marketplace_canister` — Phase 6 extraction
+- `treasury_canister` — Phase 6 extraction
+- `community_canister` — Phase 6 extraction
+- `nims_canister` — Phase 6 extraction
+- `spicy_ai_canister` — Phase 6.5
+
+**Pending (external to project, post-LGE):**
+
+- SPICY ICRC-1 ledger — TBD post-LGE via OHSHII
+- SPICY/ICP ICPSwap pool — TBD post-LP creation
+
+Verify all canister IDs via the relevant skill's SKILL.md before hardcoding.
 
 ---
 
