@@ -68,11 +68,11 @@ Phases 0–5 happen in the existing single-canister `backend`; Phase 6 extracts 
   - Founder's 18M is voluntarily locked for 24 months via OHSHII Locker (6-month cliff + 18-month linear vest)
 - **ICPSwap LP: 200M (20%)** — locked 4 years via OHSHII Locker
 - **IC SPICY Treasury: 100M (10%)** — held by treasury_canister, structured by subaccount:
-  - 40M NFT redemption pool
-  - 5M quarterly burn reserve
+  - 25M NFT redemption pool (PepperHeads excluded from burn redemption reduces required pool)
+  - 10M quarterly burn reserve
   - 25M marketing/community
-  - 10M operational reserve
-  - 20M strategic reserve
+  - 15M operational reserve
+  - 25M strategic reserve
 
 ### Burn destination
 - **Burn account: anonymous principal `2vxsx-fae`** — universal black hole, no governance handle.
@@ -120,7 +120,26 @@ Original metadata files contain placeholders that must be replaced before upload
 - Common: 5%
 - **Discount must be computed server-side at checkout. NEVER trust frontend-claimed discount.**
 
+### Membership NFTs (PepperHeads)
+
+- **888 of the 8888 NFTs are designated PepperHeads** — a membership-bearing subset of the main collection.
+- **Composition:** 50 Founder + 838 Rare
+  - Rare PepperHead range: pool IDs 7888–8725 (first 838 of the 1000 Rare tier, 0-indexed per lib/pool.mo)
+  - Corresponding token files: nft\_7889–nft\_8726 (pool.mo uses 0-indexed IDs; artwork-upload sets id = i + 1)
+  - Remaining 162 Rare (pool IDs 8726–8887 → nft\_8727–nft\_8888): standard Rare, burn-eligible
+- **Acquisition:** digital-only purchase at flat $25; no physical plant bundled. Available via all three payment paths (Stripe, ICPay, Wallet).
+- **Cannot be burned for SPICY tokens** — see NFT burn redemption section for guard details.
+- **Holder benefits:**
+  - Whitelist for future NFT drops: 24-hour early access window, reserved allocation, and discount on drop pricing (specific percentages set per drop)
+  - Chatbot tier: 2500 calls/24h (between standard NFT-holder 1000 and SPICY-bonus maximum)
+  - All standard discount benefits: Founder gets 30% off plants, Rare gets 20% off plants
+- **On-chain metadata (Phase 3):** every PepperHead token carries `is_pepperhead: Bool = true` as a per-token attribute. Collection-level metadata includes PepperHead total (888) alongside other tier counts.
+- **`isPepperHead(tokenId : Nat) : Bool` helper:** returns true if token is in the Founder set OR in the Rare PepperHead range (pool IDs 7888–8725, 0-indexed).
+- **`isPepperHeadAvailable() : async Nat` query:** returns count of unsold PepperHead tokens — used for "X of 888 remaining" UI display.
+
 ### NFT burn redemption (one-way conversion to SPICY)
+
+- **PepperHead exclusion (Phase 8):** `redeemNftForSpicy` must call `isPepperHead(tokenId : Nat)` first. If true, trap: `"PepperHead NFTs cannot be redeemed for SPICY. They confer membership benefits instead — discount, whitelist, premium chatbot."`
 - Common: 1,000 SPICY
 - Uncommon: 3,500 SPICY
 - Rare: 12,000 SPICY
@@ -146,10 +165,36 @@ ICRC-7 `icrc7_token_metadata` returns both static traits (from JSON) and live pr
 
 ## Payment model (LOCKED IN)
 
-### Primary path: ICRC-2 transferFrom via OISY/Plug
+### Three parallel payment paths (Phase 4)
+
+**Default checkout ordering (mass-market first):** Stripe → ICPay → Wallet
+
+**Wallet-detection reordering:** if `window.ic` (OISY/Plug provider) is detected at page load, reorder to Wallet → Stripe → ICPay so IC-native users see their preferred flow first.
+
+### Path 1: Stripe (fiat card)
+
+- HTTPS outcall verification — NOT a webhook receiver
+- Frontend redirects to Stripe Checkout hosted page
+- After return, frontend calls `confirmStripePayment(orderId, sessionId)`
+- Backend HTTPS outcall to `GET /v1/checkout/sessions/:id`
+- Verify: `payment_status == "paid"`, amount matches order, currency matches, `metadata.order_id` matches
+- Idempotency: each `session_id` can mark only one order paid (recorded in `stripeSessionsConsumed` map)
+- USD settles to bank account; off-chain reconciliation for ICP/SPICY equivalent
+- Stripe secret key stored in canister state (admin-settable, never in source); Stripe publishable key (`pk_` prefix) embedded in frontend
+
+### Path 2: ICPay (ICP-native card processor)
+
+- ICP-native card processor; settles crypto directly to canister
+- Uses publishable `pk_` API key embedded in frontend — designed for client-side exposure per ICPay docs (same model as Stripe's `pk_test_`/`pk_live_`)
+- Publishable key goes in `.env` config, not hardcoded in source committed to git
+- Integration pattern TBD when ICPay docs confirmed; follow same HTTPS outcall verification structure as Stripe
+
+### Path 3: Wallet (OISY/Plug ICRC-25/49)
+
 - User pre-approves canister via wallet's signer popup (ICRC-25/49)
 - Backend pulls funds via `icrc2_transfer_from` on order placement
 - Supported tokens: ICP, ckBTC, ckETH, ckUSDC, ckUSDT
+- Lowest fees; no off-chain dependency
 - Look up `icrc1_fee()` per ledger — never hardcode fees
 - Always set `created_at_time` for dedup
 - Handle every variant of `TransferFromError` (BadFee, InsufficientFunds, Duplicate)
@@ -277,6 +322,7 @@ Domain expertise covering:
 | Anonymous | 20 | 10 |
 | Authenticated (II logged in) | 200 | 50 |
 | NFT holder | 1000 | 100 |
+| PepperHead holder | 2500 | 100 |
 | + SPICY balance bonus | +50 per 100 SPICY held | (no change) |
 | Bonus cap | +2000 | — |
 
@@ -324,6 +370,12 @@ Domain expertise covering:
 - Operational fixes (pause sales, hot-fix bug): admin-only, no timelock
 - All admin actions logged to public audit trail
 
+### API key handling
+
+- **ICPay publishable keys (`pk_` prefix)** are designed for client-side exposure — safe to embed in frontend bundle, analogous to Stripe's `pk_test_`/`pk_live_`. These are not secrets.
+- Publishable keys still go in `.env` config, not hardcoded in source committed to git.
+- **Rule for all credentials:** secrets, private keys, and API keys are loaded from environment variables or admin-set canister state. Never committed to source control. Never pasted into chat.
+
 ### Anti-patterns (DO NOT)
 - Hardcode admin principals in source code
 - Store images or large blobs in backend canister heap
@@ -346,13 +398,17 @@ Domain expertise covering:
 | 2 | Asset infrastructure (nft_assets canister, 1.33GB upload) | 0.7 |
 | 3 | ICRC-7 + certified provenance | 1.7 |
 | 3.6 | NFT detail page at `icspicy.app/nft/{N}` — lifecycle timeline, weather chart, provenance chain, on-chain certification verification, trait display; plus Provenance UX (lifecycle history, claim chain) | 1.0 |
-| 4 | Real payments (ICP+ckBTC+Stripe+SPICY pay) | 2.8 |
+| 4 | Real payments (ICP+ckBTC+Stripe+ICPay+SPICY pay) + PepperHead purchase flow | 3.5 |
 | 5 | ckBTC integration (deposit/sweep/withdraw) | 0.7 |
 | 5.5 | Weather provenance (per-plant, backfill, sale/claim) | 0.7 |
 | 6 | Extract canisters from backend + ops + transparency dashboard | 2.3 |
 | 6.5 | SpicyAI chatbot + badges + recipe burn | 1.2 |
 | 7 | Audit & polish | ongoing |
 | 8 | OHSHII integration + treasury structure + buybacks | 2.7 |
+
+**Phase 3 implementation note:** ICRC-7 must include `is_pepperhead: Bool` per-token attribute and collection-level PepperHead count (888) in metadata.
+
+**Phase 4 implementation note:** PepperHead purchase flow — $25 fixed-price digital-only purchase that mints/transfers a PepperHead from the unsold pool to the buyer. Available via all three payment paths. Distinct from plant-bundled NFT acquisition. Include `isPepperHeadAvailable() : async Nat` query for "X of 888 remaining" UI.
 
 Phases 0–7 ship to mainnet ~week 11. Phase 8 layers on after SPICY LGE.
 
