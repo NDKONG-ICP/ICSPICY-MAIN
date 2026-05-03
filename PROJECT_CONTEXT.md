@@ -345,7 +345,7 @@ Domain expertise covering:
 | 1 | Security foundations (anonymous reject, owner, CallerGuard, inspect_message) | 0.7 |
 | 2 | Asset infrastructure (nft_assets canister, 1.33GB upload) | 0.7 |
 | 3 | ICRC-7 + certified provenance | 1.7 |
-| 3.6 | Provenance UX (lifecycle history, claim chain) | 0.3 |
+| 3.6 | NFT detail page at `icspicy.app/nft/{N}` — lifecycle timeline, weather chart, provenance chain, on-chain certification verification, trait display; plus Provenance UX (lifecycle history, claim chain) | 1.0 |
 | 4 | Real payments (ICP+ckBTC+Stripe+SPICY pay) | 2.8 |
 | 5 | ckBTC integration (deposit/sweep/withdraw) | 0.7 |
 | 5.5 | Weather provenance (per-plant, backfill, sale/claim) | 0.7 |

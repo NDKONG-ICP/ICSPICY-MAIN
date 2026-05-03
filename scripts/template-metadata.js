@@ -81,6 +81,13 @@ for (const file of files) {
   text = text.replaceAll('The NFT Matrix',       'IC SPICY');
   text = text.replaceAll('raw.ic0.app',          'icp0.io');  // catch-all for any remaining
 
+  // Insert external_url (after image, before attributes) so wallets/marketplaces
+  // have a clickable link as soon as icspicy.app/nft/{N} goes live in Phase 3.6.
+  text = text.replace(
+    '    "attributes":',
+    `    "external_url": "https://icspicy.app/nft/${nftNum}",\n    "attributes":`,
+  );
+
   if (dryRun) {
     console.log(`\n--- ${file} (original)`);
     console.log(original.slice(0, 600));
