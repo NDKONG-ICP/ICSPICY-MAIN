@@ -107,6 +107,11 @@ mixin (
 
   // Authenticated: buyer places their own order
   public shared ({ caller }) func placeOrder(input : MarketTypes.CreateOrderInput) : async MarketTypes.OrderPublic {
+    // PHASE 4 TODO: When async ICRC-2 transferFrom is added below for crypto
+    // payments, wrap the async settlement section with:
+    //   CallerGuard.acquire(callerGuards, caller) → try { ... } finally { release }
+    // The mixin signature will need callerGuards : CallerGuard.GuardMap added.
+    // See main.mo _callerGuards declaration and AGENTS.md "Phase 4 wiring".
     AccessControl.requireAuthenticated(caller);
     let order = MarketLib.createOrder(orders, plants, memberships, claimTokens, nextOrderId.value, caller, input);
     nextOrderId.value += 1;

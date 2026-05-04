@@ -49,8 +49,20 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // Admin set — initialized with deployer at first deploy; persists across upgrades.
   let accessControlState : AccessControl.AccessControlState = AccessControl.initState(initialDeployer);
 
-  // Reentrancy guard map — transient so stale in-flight locks are cleared on upgrade.
-  transient let callerGuards : CallerGuard.GuardMap = Map.empty<Principal, Bool>();
+  // Reentrancy lock state for settlement methods.
+  //
+  // Currently unused because no settlement method in the current backend has
+  // an async suspension point — Motoko's single-threaded execution model
+  // guarantees atomic execution of methods without awaits.
+  //
+  // PHASE 4: When ICRC-2 transferFrom awaits are added to placeOrder and
+  // acceptOffer (and any other Phase 4 settlement paths), wire this state
+  // through to the relevant mixin and wrap the async body with:
+  //   CallerGuard.acquire(_callerGuards, caller) → try { ... } finally { release }
+  //
+  // See lib/caller-guard.mo for the API and AGENTS.md "Phase 4 wiring
+  // requirements" for the full integration pattern.
+  transient let _callerGuards : CallerGuard.GuardMap = CallerGuard.empty();
 
   // ── Admin management ───────────────────────────────────────────────────────
 

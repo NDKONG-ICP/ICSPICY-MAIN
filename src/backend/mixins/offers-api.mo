@@ -84,6 +84,11 @@ mixin (
   public shared ({ caller }) func acceptOffer(
     offerId : Text,
   ) : async OfferTypes.Offer {
+    // PHASE 4 TODO: When async ICRC-2 transferFrom is added below for offer
+    // settlement, wrap the async settlement section with:
+    //   CallerGuard.acquire(callerGuards, caller) → try { ... } finally { release }
+    // The mixin signature will need callerGuards : CallerGuard.GuardMap added.
+    // See main.mo _callerGuards declaration and AGENTS.md "Phase 4 wiring".
     if (caller.isAnonymous()) Runtime.trap("Anonymous callers cannot accept offers");
     let now = Time.now();
     let accepted = OffersLib.acceptOffer(offers, caller, offerId, now);

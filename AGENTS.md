@@ -217,6 +217,53 @@ transient let icpLedger : ICRC1Ledger = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 - **Variant tag for `_initializeAccessControl` preserves the leading underscore.** If Motoko's inspect_message codegen has issues with leading-underscore variant names, it will surface at typecheck time.
 - **Five `plants-api.mo` methods lack mixin-level `requireAuthenticated` — guarded only in lib.** `updateCellData`, `toggleCooked`, `transplantCell`, `addPlantPhoto`, `removePlantPhoto` pass `caller` into lib functions that check owner-or-admin. Anonymous always fails in the lib, but inspect_message blocks them at ingress before any lib code runs.
 
+## Phase 4 wiring requirements (set up in Phase 1, deferred for completion)
+
+### CallerGuard reentrancy protection
+
+Phase 1 established the CallerGuard infrastructure (`lib/caller-guard.mo`)
+and declared the state variable (`main.mo` `_callerGuards`). The wiring to
+mixins was deferred because no settlement method currently has an async
+`await` — Motoko's single-threaded model makes the guard a no-op on synchronous
+code, so wiring now would add complexity without protection.
+
+Phase 4 introduces async ICRC-2 `transferFrom` calls in:
+
+- `mixins/marketplace-api.mo`: `placeOrder` (when crypto payment path is added)
+- `mixins/offers-api.mo`: `acceptOffer` (when offer settlement triggers transfer)
+- Any new payment confirmation methods (`confirmStripePayment`, `purchaseWithSpicy`)
+
+When wiring in Phase 4:
+
+1. Rename `_callerGuards` → `callerGuards` in `main.mo` (drop the unused-marker prefix)
+2. Add `callerGuards : CallerGuard.GuardMap` to the relevant mixin's parameter signature
+3. Update `main.mo`'s mixin `include` to pass `callerGuards`
+4. Wrap each async-settlement method body:
+
+```motoko
+AccessControl.requireAuthenticated(caller);
+switch (CallerGuard.acquire(callerGuards, caller)) {
+  case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+  case (#ok) {};
+};
+try {
+  // existing method body, INCLUDING the new async transferFrom await
+} finally {
+  CallerGuard.release(callerGuards, caller);
+};
+```
+
+**Critical:** the `try/finally` is non-negotiable. If `release` doesn't run on every
+code path, the lock leaks and the caller is permanently locked out.
+
+Smoke test for Phase 4 to verify guard works:
+
+1. Legit single call succeeds
+2. Two overlapping calls from same caller — second is rejected with "Request already in flight"
+3. After first call completes, third call from same caller succeeds (lock was released)
+
+---
+
 ### Phase 2 — Asset infrastructure (2026-05)
 
 - **`"build": []` in dfx.json does NOT suppress dfx 0.29.1's `npm run build` for asset canisters.** Symptom: `dfx deploy nft_assets` fails with `The post-build step failed… "npm" "run" "build"… sh: pnpm: command not found`. Diagnosis: dfx 0.29.1 always runs the project-root `npm run build` as the "post-build" step for `type: assets` canisters, even when `"build": []` is set. The root `package.json` `build` script calls `pnpm`, which is installed only as a corepack shim and is not in the subprocess PATH. **Workaround — use `dfx canister install` directly instead of `dfx deploy` for asset canisters:**
