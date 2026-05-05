@@ -183,6 +183,32 @@ These rules are LOCKED IN as part of the Phase 3 sub-plan approval. Code reviewe
 
 ---
 
+## NFT certification scope
+
+ICRC-7 certified data per Phase 3.6 covers:
+- Static metadata (the 10 trait layers from initial templating)
+- Collection-level metadata (name, supply cap, PepperHead total)
+- Token ownership (`icrc7_owner_of` returns are certified)
+- Token transfers (state transitions update the certified tree)
+
+ICRC-7 certified data does NOT cover:
+- Plant lifecycle stage history (germination → seedling → mature)
+- Weather records per plant (Phase 5.5 weather provenance)
+- Per-plant location data
+- Stage-transition timestamps
+
+The marketing story "cryptographically certified RWA provenance" is precise as
+applied to ownership and static identity. Dynamic provenance (weather, stages)
+is on-chain and queryable but uncertified — the canister state is authoritative
+via standard query, not via subnet-signed certificate.
+
+Future enhancement (out of scope for Phase 3): periodic certification of
+lifecycle snapshots could be added in Phase 5.5+ if the weather provenance
+work surfaces a need. Cost would be re-certifying tree on every snapshot,
+which is meaningful at scale.
+
+---
+
 ## Payment model (LOCKED IN)
 
 ### Three parallel payment paths (Phase 4)
