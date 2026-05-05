@@ -123,10 +123,20 @@ Original metadata files contain placeholders that must be replaced before upload
 ### Membership NFTs (PepperHeads)
 
 - **888 of the 8888 NFTs are designated PepperHeads** — a membership-bearing subset of the main collection.
-- **Composition:** 50 Founder + 838 Rare
-  - Rare PepperHead range: pool IDs 7888–8725 (first 838 of the 1000 Rare tier, 0-indexed per lib/pool.mo)
-  - Corresponding token files: nft\_7889–nft\_8726 (pool.mo uses 0-indexed IDs; artwork-upload sets id = i + 1)
-  - Remaining 162 Rare (pool IDs 8726–8887 → nft\_8727–nft\_8888): standard Rare, burn-eligible
+- **Composition:** 50 Founder + 838 Rare = 888 PepperHeads.
+- **Locked-in tier and PepperHead ID ranges** (1-indexed token IDs match the `nft_<N>.png` artwork files; pool record IDs are 0-indexed = tokenId − 1):
+
+  | Tier | Token IDs (1-indexed) | Pool IDs (0-indexed) | Count | PepperHead? |
+  |---|---|---|---|---|
+  | Common | 1–5000 | 0–4999 | 5000 | no |
+  | Uncommon | 5001–7838 | 5000–7837 | 2838 | no |
+  | Founder | 7839–7888 | 7838–7887 | 50 | **yes** |
+  | Rare PepperHead | 7889–8726 | 7888–8725 | 838 | **yes** |
+  | Rare standard | 8727–8888 | 8726–8887 | 162 | no |
+  | **Total** | | | **8888** | **888** |
+
+- **Predicate rule:** PepperHeads occupy a contiguous pool-ID block, so `isPepperHead(tokenId)` is the single range check `7838 ≤ tokenId − 1 < 8726`. No tier-flag lookup needed.
+- **Remaining 162 standard Rare** (pool IDs 8726–8887 → tokens 8727–8888) are burn-eligible per the burn-redemption section.
 - **Acquisition:** digital-only purchase at flat $25; no physical plant bundled. Available via all three payment paths (Stripe, ICPay, Wallet).
 - **Cannot be burned for SPICY tokens** — see NFT burn redemption section for guard details.
 - **Holder benefits:**
@@ -160,6 +170,16 @@ ICRC-7 `icrc7_token_metadata` returns both static traits (from JSON) and live pr
 - Stage history (germination, transplant, sale, claim) with weather snapshots
 - Current owner principal
 - "Authentic IC SPICY plant grown in Port Charlotte, FL — FDACS registered"
+
+### ICRC-7 implementation rules (Phase 3)
+
+These rules are LOCKED IN as part of the Phase 3 sub-plan approval. Code reviewers must reject changes that violate them.
+
+- **Atomic ownership helper.** `lib/icrc7.mo` exposes a single `assignOwnership(tokenId, fromAccount?, toAccount)` helper that is the **sole entry point** for owner-map mutations. It updates `icrc7Owners` and `icrc7Balances` atomically. Direct writes to either map from any other site are forbidden — every state-mutating method (`initializeNFTPool`, `icrc7_transfer`, `icrc37_transfer_from`) goes through it. Module-level comment in `lib/icrc7.mo` documents the rule. This makes the two-map invariant defensively unbreakable.
+- **Subaccount normalization.** `subaccount = null` and `subaccount = ?<32-zero-bytes>` are the same logical identity. Inputs are normalized to `null` at the helper boundary; storage uses the normalized form everywhere.
+- **Spec compliance.** `icrc7_token_metadata` stays spec-pure (returns metadata only). A separate `icrc7_token_metadata_certified` query returns the `{value, certificate, witness}` envelope for verifier clients (Phase 3.6 frontend), so off-spec callers don't pay the certificate-overhead cost.
+- **Static-trait source.** Per-token static traits are bulk-loaded from the templated JSON metadata into canister state at admin-triggered initialization (option (b) from the Phase 3 plan). Live provenance is composed at query time on top of the static map.
+- **Self-principal capture.** `Principal.fromActor(Self)` is called only inside method bodies (e.g., `initializeNFTPool`), never at actor body level — see Phase 0.5 learning in AGENTS.md for the trap rationale.
 
 ---
 
@@ -414,6 +434,34 @@ Phases 0–7 ship to mainnet ~week 11. Phase 8 layers on after SPICY LGE.
 
 ---
 
+## Phase 3 sub-plan (LOCKED IN)
+
+Approved 2026-05-05. Effort estimate 7.8 working days (target 6.9, ceiling 9) against an 8.5-day budget. Quality over speed; not under deadline pressure.
+
+| Sub-phase | Description | Effort | Hard deps |
+|---|---|---|---|
+| 3.0 | Prep: pin ICRC-7/37 spec hashes, frontend pre-deletion grep, audit `mixins/membership-api.mo` for `icrc37Tokens`/`extTokens` usage, delete legacy `lib/nft.mo` + `mixins/nft-api.mo` (incl. Hedera mint), align `lib/pool.mo` rarity tiers with spec (add `#Founder` band) | 0.5 d | none |
+| 3.1 | Type defs + stable state (`types/icrc7.mo`, `icrc7Owners`/`icrc7Balances` maps, rename `_callerGuards` → `callerGuards`) | 0.5 d | 3.0 |
+| 3.2 | ICRC-7 standard query methods (8 methods); option (b) bulk-load static traits from JSON metadata at init | 1.5 d | 3.1 |
+| 3.3 | `icrc7_transfer` update method + reentrancy wiring per AGENTS.md "Phase 4 wiring requirements" | 1.0 d | 3.2 |
+| 3.4 | ICRC-37 approval extension — `icrc37_approve_tokens`, `icrc37_transfer_from`, `icrc37_is_approved`, `icrc37_get_token_approvals`, plus `icrc37_revoke_token_approvals` if budget allows ≤ 0.2 d (else defer to Phase 4 with TODO) | 1.0 d | 3.3 |
+| 3.5 | Initial pool population — admin-triggered `initializeNFTPool()` mints 8888 tokens to `Account { owner = Principal.fromActor(Self); subaccount = null }`. Idempotent skip on re-run. PepperHead boundary smoke at 7 token IDs | 0.7 d | 3.1 (parallel with 3.2–3.4) |
+| 3.6 | Certified provenance — `mops add ic-certification`, `CertTree` state, `postupgrade` hook re-sets certified data, new `icrc7_token_metadata_certified` query (two-method shape, spec stays pure) | 1.5 d | 3.2, 3.5 |
+| 3.7 | Local end-to-end smoke (`scripts/phase3-smoke.{sh,mjs}`): mint → transfer → approve → transfer_from → certified-verify → upgrade → re-verify | 0.7 d | 3.0–3.6 |
+
+**Locked decisions (do not relitigate):**
+- Founder ID range: pool IDs 7838–7887 (token IDs 7839–7888) — carved from upper Uncommon, contiguous with Rare PepperHead so `isPepperHead` is one range check.
+- Static-trait source: option (b) — bulk-load JSON metadata into canister state at init.
+- Certified envelope: two-method shape (`icrc7_token_metadata` spec-pure + `icrc7_token_metadata_certified`).
+- ICRC-37 revocation: include if ≤ 0.2 d, else Phase 4 with TODO.
+- Membership API legacy state cleanup: in scope for 3.0; no punt.
+
+**Required pre-3.0 hash pinning** (Refinement 2): ICRC-7 and ICRC-37 spec commit hashes from `github.com/dfinity/ICRC-1/tree/main/standards` are pinned in this document under "ICRC standards version pins" before any ICRC-7 code is written. Spec evolution during Phase 3 is handled with an explicit upgrade commit + diff, never silently.
+
+**Required pre-deletion gate** (Refinement 3): grep frontend (`src/frontend/src/`) for callers of `mintICRC37`, `mintEXT`, `mintHederaNFT`, `airdropNFT`, `listAllNFTs` before deleting `lib/nft.mo` and `mixins/nft-api.mo`. If callers exist, decide between defer-to-Phase-4 vs. graceful-error stubs. If clean, proceed with deletion.
+
+---
+
 ## Skills repository (USE THESE)
 
 The DFINITY-maintained ICP skills index lives at:
@@ -484,6 +532,17 @@ URL pattern: `https://skills.internetcomputer.org/.well-known/skills/<skill-name
 - SPICY/ICP ICPSwap pool — TBD post-LP creation
 
 Verify all canister IDs via the relevant skill's SKILL.md before hardcoding.
+
+### ICRC standards version pins
+
+The DFINITY skills index has no ICRC-7 or ICRC-37 skill (only `icrc-ledger` for ICRC-1/2 fungibles). Phase 3 implementation works directly from the official spec repository, with commit hashes pinned here so spec evolution is handled deliberately, not silently.
+
+| Spec | Repository | Commit hash | Retrieved | Notes |
+|---|---|---|---|---|
+| ICRC-7 | `github.com/dfinity/ICRC-1` (path `standards/ICRC-7`) | TBD — pinned during Phase 3.0 | TBD | Base NFT standard |
+| ICRC-37 | `github.com/dfinity/ICRC-1` (path `standards/ICRC-37`) | TBD — pinned during Phase 3.0 | TBD | Approval extension |
+
+Update protocol: if either spec evolves during Phase 3 implementation, upgrade in a dedicated commit titled `Phase 3: bump ICRC-7/ICRC-37 spec pin (<old>→<new>)` with a brief diff note in the commit body. No silent floating-version implementations.
 
 ---
 
