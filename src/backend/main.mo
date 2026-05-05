@@ -17,6 +17,8 @@ import RecipeTypes "types/recipes";
 import ClaimTypes "types/claim";
 import ArtworkUploadTypes "types/artwork-upload";
 import RecipesLib "lib/recipes";
+import ICRC7 "types/icrc7";
+import ICRC7API "mixins/icrc7-api";
 import PlantsAPI "mixins/plants-api";
 import MarketplaceAPI "mixins/marketplace-api";
 import DAOAPI "mixins/dao-api";
@@ -50,18 +52,17 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   // Reentrancy lock state for settlement methods.
   //
-  // Currently unused because no settlement method in the current backend has
-  // an async suspension point — Motoko's single-threaded execution model
-  // guarantees atomic execution of methods without awaits.
+  // Phase 3.1 renamed `_callerGuards` → `callerGuards` (step 1 of the Phase 4
+  // wiring sequence in AGENTS.md). The lock is consumed by the ICRC-7 mixin
+  // from Phase 3.3 onwards (icrc7_transfer / icrc37_transfer_from), and by
+  // Phase 4 payment-settlement methods (placeOrder, acceptOffer,
+  // confirmStripePayment, etc.).
   //
-  // PHASE 4: When ICRC-2 transferFrom awaits are added to placeOrder and
-  // acceptOffer (and any other Phase 4 settlement paths), wire this state
-  // through to the relevant mixin and wrap the async body with:
-  //   CallerGuard.acquire(_callerGuards, caller) → try { ... } finally { release }
+  // Usage pattern (per AGENTS.md "Code patterns to follow"):
+  //   CallerGuard.acquire(callerGuards, caller) → try { ... } finally { release }
   //
-  // See lib/caller-guard.mo for the API and AGENTS.md "Phase 4 wiring
-  // requirements" for the full integration pattern.
-  transient let _callerGuards : CallerGuard.GuardMap = CallerGuard.empty();
+  // See lib/caller-guard.mo for the API.
+  transient let callerGuards : CallerGuard.GuardMap = CallerGuard.empty();
 
   // ── Admin management ───────────────────────────────────────────────────────
 
@@ -134,6 +135,30 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   // RWA Provenance NFT tokens (ICRC-37 with full lifecycle metadata)
   let rwaTokens      = Map.empty<Text, PlantTypes.RWATokenMetadata>();
+
+  // ── ICRC-7 NFT collection state (8888 tokens) ──────────────────────────────
+  //
+  // Source of truth for token ownership. icrc7Owners maps token_id → owning
+  // Account; icrc7Balances is a denormalized owner-principal → set-of-token-ids
+  // index for O(k) icrc7_balance_of / icrc7_tokens_of lookups.
+  //
+  // ATOMIC INVARIANT (per PROJECT_CONTEXT.md "ICRC-7 implementation rules"):
+  // both maps are mutated only through lib/icrc7.mo's assignOwnership helper
+  // (added in Phase 3.2). Direct writes from other call sites are forbidden.
+  //
+  // Both are persistent (`let` defaults to stable in a persistent actor) so
+  // ownership survives upgrades.
+  let icrc7Owners   : Map.Map<Nat, ICRC7.Account>             = Map.empty<Nat, ICRC7.Account>();
+  let icrc7Balances : Map.Map<Principal, Set.Set<Nat>>        = Map.empty<Principal, Set.Set<Nat>>();
+
+  // Collection-level configuration constants. `transient` because they are
+  // compile-time literals — no migration story needed across upgrades.
+  // Leading underscore follows the `_callerGuards` pattern established in
+  // Phase 1: signals "declared but intentionally not yet wired to its
+  // consumer". Phase 3.2 drops the underscore when icrc7_collection_metadata
+  // starts consuming both constants.
+  transient let _collectionName : Text = "IC SPICY";
+  transient let _totalSupplyCap : Nat  = 8888;
 
   // ── Marketplace state ──────────────────────────────────────────────────────
 
@@ -267,6 +292,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include CommunityAPI(accessControlState, posts, comments, profiles, nextPostId, nextCommentId);
   include MembershipAPI(accessControlState, memberships, nextMembershipId);
   include NFTAPI(plants);
+  include ICRC7API(accessControlState, callerGuards, icrc7Owners, icrc7Balances);
   include WalletAPI(wallets, txLog);
   include RecipesAPI(accessControlState, recipes, nextRecipeId);
   include ClaimAPI(accessControlState, claimTokens, plants, rwaTokens, claimMemberships);
