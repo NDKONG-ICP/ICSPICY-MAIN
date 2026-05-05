@@ -405,10 +405,6 @@ export interface ICSpicy {
   'submitOffer' : ActorMethod<[SubmitOfferInput], Offer>,
   'toggleCooked' : ActorMethod<[PlantId], undefined>,
   'toggleRecipeFeatured' : ActorMethod<[RecipeId], [] | [Recipe]>,
-  'transform' : ActorMethod<
-    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
-    http_request_result
-  >,
   'transplantCell' : ActorMethod<[TransplantInput], PlantPublic>,
   'treasuryDeposit' : ActorMethod<
     [TreasuryToken, bigint, [] | [string]],
@@ -627,7 +623,12 @@ export type PoolNFTStatus__1 = { 'Shop' : null } |
   { 'Airdropped' : null };
 export interface PoolStats {
   'shop' : bigint,
-  'totalByRarity' : { 'rare' : bigint, 'common' : bigint, 'uncommon' : bigint },
+  'totalByRarity' : {
+    'rare' : bigint,
+    'founder' : bigint,
+    'common' : bigint,
+    'uncommon' : bigint,
+  },
   'qrAssigned' : bigint,
   'airdropped' : bigint,
   'ready' : bigint,
@@ -688,6 +689,7 @@ export interface QRAssignmentResult {
   'nftId' : bigint,
 }
 export type RarityTier = { 'Rare' : null } |
+  { 'Founder' : null } |
   { 'Uncommon' : null } |
   { 'Common' : null };
 export interface Recipe {

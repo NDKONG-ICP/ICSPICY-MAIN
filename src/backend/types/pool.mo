@@ -48,6 +48,7 @@ module {
     totalByRarity : {
       common   : Nat;
       uncommon : Nat;
+      founder  : Nat;
       rare     : Nat;
     };
   };

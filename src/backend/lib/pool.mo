@@ -11,18 +11,30 @@ import ClaimTypes "../types/claim";
 module {
   public type PoolMap = Map.Map<Nat, PoolTypes.PoolNFTRecord>;
 
-  // Total pool size and rarity boundaries (first 5000 = Common, next 2888 = Uncommon, last 1000 = Rare)
-  let POOL_SIZE  : Nat = 8888;
-  let COMMON_END : Nat = 5000;   // ids 0..4999
-  let UNCOMMON_END : Nat = 7888; // ids 5000..7887
-  // ids 7888..8887 = Rare
+  // Total pool size and rarity boundaries — locked-in per PROJECT_CONTEXT.md
+  // "Membership NFTs (PepperHeads)" tier and PepperHead ID ranges table.
+  // Pool record IDs are 0-indexed; user-facing token IDs are 1-indexed.
+  //
+  //   ids 0..4999     → 5000 Common
+  //   ids 5000..7837  → 2838 Uncommon
+  //   ids 7838..7887  →   50 Founder        ← PepperHead
+  //   ids 7888..8725  →  838 Rare           ← PepperHead (contiguous with Founder)
+  //   ids 8726..8887  →  162 Rare           ← standard Rare (burn-eligible)
+  //
+  // PepperHead predicate is the single contiguous range [7838, 8726).
+  let POOL_SIZE    : Nat = 8888;
+  let COMMON_END   : Nat = 5000; // ids 0..4999
+  let UNCOMMON_END : Nat = 7838; // ids 5000..7837
+  let FOUNDER_END  : Nat = 7888; // ids 7838..7887
+  // ids 7888..8887 = Rare (PepperHead first 838, standard last 162)
 
   // ── Rarity helpers ────────────────────────────────────────────────────────
 
   func rarityFor(id : Nat) : ClaimTypes.RarityTier {
-    if (id < COMMON_END)   #Common
+    if (id < COMMON_END)        #Common
     else if (id < UNCOMMON_END) #Uncommon
-    else #Rare;
+    else if (id < FOUNDER_END)  #Founder
+    else                        #Rare;
   };
 
   // Simple deterministic pseudo-random number generator (LCG).
@@ -108,6 +120,7 @@ module {
     var qrAssigned : Nat = 0;
     var common : Nat = 0;
     var uncommon : Nat = 0;
+    var founder : Nat = 0;
     var rare : Nat = 0;
 
     for ((_, r) in pool.entries()) {
@@ -120,6 +133,7 @@ module {
       switch (r.rarityTier) {
         case (#Common)   { common   += 1 };
         case (#Uncommon) { uncommon += 1 };
+        case (#Founder)  { founder  += 1 };
         case (#Rare)     { rare     += 1 };
       };
     };
@@ -129,7 +143,7 @@ module {
       airdropped;
       shop;
       qrAssigned;
-      totalByRarity = { common; uncommon; rare };
+      totalByRarity = { common; uncommon; founder; rare };
     };
   };
 

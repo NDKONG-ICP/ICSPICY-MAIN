@@ -16,7 +16,6 @@ import WalletTypes "types/wallet";
 import RecipeTypes "types/recipes";
 import ClaimTypes "types/claim";
 import ArtworkUploadTypes "types/artwork-upload";
-import NFTLib "lib/nft";
 import RecipesLib "lib/recipes";
 import PlantsAPI "mixins/plants-api";
 import MarketplaceAPI "mixins/marketplace-api";
@@ -135,12 +134,6 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   // RWA Provenance NFT tokens (ICRC-37 with full lifecycle metadata)
   let rwaTokens      = Map.empty<Text, PlantTypes.RWATokenMetadata>();
-
-  // ICRC-37 on-chain NFT tokens
-  let icrc37Tokens   = Map.empty<Text, NFTLib.ICRC37Metadata>();
-
-  // EXT on-chain NFT tokens (Entrepot Token eXtension — backward compatibility)
-  let extTokens      = Map.empty<Text, NFTLib.EXTMetadata>();
 
   // ── Marketplace state ──────────────────────────────────────────────────────
 
@@ -272,8 +265,8 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include MarketplaceAPI(accessControlState, products, orders, plants, memberships, claimTokens, nextProductId, nextOrderId);
   include DAOAPI(accessControlState, proposals, plants, memberships, nextProposalId);
   include CommunityAPI(accessControlState, posts, comments, profiles, nextPostId, nextCommentId);
-  include MembershipAPI(accessControlState, memberships, nextMembershipId, icrc37Tokens, extTokens);
-  include NFTAPI(accessControlState, plants, icrc37Tokens, extTokens);
+  include MembershipAPI(accessControlState, memberships, nextMembershipId);
+  include NFTAPI(plants);
   include WalletAPI(wallets, txLog);
   include RecipesAPI(accessControlState, recipes, nextRecipeId);
   include ClaimAPI(accessControlState, claimTokens, plants, rwaTokens, claimMemberships);

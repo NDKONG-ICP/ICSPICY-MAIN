@@ -1,15 +1,9 @@
-import Common "../types/common";
 import Types "../types/membership";
-import PlantTypes "../types/plants";
 import ClaimTypes "../types/claim";
-import NFTLib "nft";
 import Map "mo:core/Map";
-import Text "mo:core/Text";
 import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
-import List "mo:core/List";
 import Time "mo:core/Time";
-import Runtime "mo:core/Runtime";
 
 module {
   public func issueMembershipNFT(
@@ -67,88 +61,6 @@ module {
         price_cents - price_cents * pct / 100;
       };
     };
-  };
-
-  // Batch-mint the Founders Collection.
-  // For each entry: mint an EXT or ICRC37 NFT token, store membership with Founders metadata.
-  public func batchMintFounders(
-    memberships : Map.Map<Principal, Types.MembershipNFT>,
-    icrc37Tokens : Map.Map<Text, NFTLib.ICRC37Metadata>,
-    extTokens : Map.Map<Text, NFTLib.EXTMetadata>,
-    nextIdRef : { var value : Nat },
-    entries : [Types.FoundersMintInput],
-  ) : [Types.FoundersMintResult] {
-    let results = List.empty<Types.FoundersMintResult>();
-    let now = Time.now();
-
-    for (entry in entries.vals()) {
-      let discountPct = ClaimTypes.rarityDiscountPct(entry.rarityTier);
-      let rarityText = switch (entry.rarityTier) {
-        case (#Common)   "Common";
-        case (#Uncommon) "Uncommon";
-        case (#Rare)     "Rare";
-      };
-
-      // Build attributes including Founders badge and rarity info
-      let layerText = debug_show(entry.layerCombination);
-      let attrs : [(Text, Text)] = [
-        ("isFounder", "true"),
-        ("rarityTier", rarityText),
-        ("discount", discountPct.toText() # "%"),
-        ("badgeImageKey", entry.badgeImageKey),
-        ("layerCombination", layerText),
-        ("collection", "IC SPICY Founders Collection"),
-      ];
-
-      // Mint based on requested standard
-      let tokenId : Text = switch (entry.nft_standard) {
-        case (#EXT) {
-          NFTLib.mintEXT(extTokens, nextIdRef.value, entry.compositeImageKey, attrs, now);
-        };
-        case (#ICRC37) {
-          // Build a synthetic PlantPublic-like token ID directly
-          let tid = "icspicy-founders-" # nextIdRef.value.toText();
-          let meta : NFTLib.ICRC37Metadata = {
-            token_id = tid;
-            plant_id = nextIdRef.value;
-            variety = "Founders NFT #" # nextIdRef.value.toText();
-            stage = #Mature;
-            image_key = ?entry.compositeImageKey;
-            attributes = attrs;
-            minted_at = now;
-          };
-          icrc37Tokens.add(tid, meta);
-          tid;
-        };
-        case (#Hedera) {
-          // Hedera Founders NFTs use the same token ID pattern; actual Hedera mint is async/off-chain
-          "icspicy-founders-hedera-" # nextIdRef.value.toText();
-        };
-      };
-
-      // Upsert membership record with Founders metadata
-      let membership : Types.MembershipNFT = {
-        id = nextIdRef.value;
-        owner = entry.recipient;
-        tier = #Premium;
-        issued_at = now;
-        nft_standard = entry.nft_standard;
-        var nft_id = ?tokenId;
-        var is_founder = true;
-        var rarity_tier = ?entry.rarityTier;
-        var layer_combination = entry.layerCombination;
-      };
-      memberships.add(entry.recipient, membership);
-      nextIdRef.value += 1;
-
-      results.add({
-        recipient = entry.recipient;
-        tokenId = tokenId;
-        standard = entry.nft_standard;
-      });
-    };
-
-    results.toArray();
   };
 
   public func toPublic(m : Types.MembershipNFT) : Types.MembershipNFTPublic {

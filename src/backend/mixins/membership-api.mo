@@ -1,17 +1,13 @@
 import Map "mo:core/Map";
 import Runtime "mo:core/Runtime";
 import AccessControl "../lib/access-control";
-import Common "../types/common";
 import MembershipTypes "../types/membership";
 import MembershipLib "../lib/membership";
-import NFTLib "../lib/nft";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
   memberships : Map.Map<Principal, MembershipTypes.MembershipNFT>,
   nextMembershipId : { var value : Nat },
-  icrc37Tokens : Map.Map<Text, NFTLib.ICRC37Metadata>,
-  extTokens : Map.Map<Text, NFTLib.EXTMetadata>,
 ) {
   // Admin: airdrop a membership NFT to any address
   public shared ({ caller }) func issueMembership(
@@ -37,15 +33,23 @@ mixin (
     MembershipLib.getMembership(memberships, caller);
   };
 
-  // Admin: batch-mint the Founders Collection (up to 50 unique NFTs).
-  // Each entry specifies recipient, rarity tier, badge/composite image keys, layer combo, and NFT standard.
-  // Returns an array of {recipient, tokenId, standard} results — one per minted NFT.
-  public shared ({ caller }) func batchMintFoundersCollection(
-    entries : [MembershipTypes.FoundersMintInput],
+  // ── Deprecated stub (Phase 4 removal) ──────────────────────────────────────
+  //
+  // batchMintFoundersCollection minted the 50 Founder NFTs through a per-entry
+  // admin card-builder UI. Phase 3 unifies Founder tokens (IDs 7839-7888) into
+  // the 8888-token ICRC-7 pool, populated atomically via initializeNFTPool
+  // (Phase 3.5). The legacy Founders card-builder UI in Admin.tsx is scheduled
+  // for removal in Phase 4. See PROJECT_CONTEXT.md "Pre-existing technical
+  // debt" item B8 for the migration plan.
+
+  public shared func batchMintFoundersCollection(
+    _entries : [MembershipTypes.FoundersMintInput],
   ) : async [MembershipTypes.FoundersMintResult] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
-    };
-    MembershipLib.batchMintFounders(memberships, icrc37Tokens, extTokens, nextMembershipId, entries);
+    Runtime.trap(
+      "batchMintFoundersCollection is deprecated as of Phase 3.0. " #
+      "The Founders tier (token IDs 7839-7888) is now part of the unified 8888 ICRC-7 pool, populated atomically via initializeNFTPool (admin-only, Phase 3.5). " #
+      "To mint the Founders tier, call initializeNFTPool — it mints the entire 8888 collection including the 50 Founder PepperHeads in one operation. " #
+      "Legacy Founders card-builder admin UI in Admin.tsx will be removed in Phase 4."
+    );
   };
 };

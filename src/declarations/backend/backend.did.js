@@ -114,6 +114,7 @@ export const idlFactory = ({ IDL }) => {
   const ShopAssignment = IDL.Record({ 'nftId' : IDL.Nat, 'price' : IDL.Nat });
   const RarityTier = IDL.Variant({
     'Rare' : IDL.Null,
+    'Founder' : IDL.Null,
     'Uncommon' : IDL.Null,
     'Common' : IDL.Null,
   });
@@ -544,6 +545,7 @@ export const idlFactory = ({ IDL }) => {
     'shop' : IDL.Nat,
     'totalByRarity' : IDL.Record({
       'rare' : IDL.Nat,
+      'founder' : IDL.Nat,
       'common' : IDL.Nat,
       'uncommon' : IDL.Nat,
     }),
@@ -1048,16 +1050,6 @@ export const idlFactory = ({ IDL }) => {
     'submitOffer' : IDL.Func([SubmitOfferInput], [Offer], []),
     'toggleCooked' : IDL.Func([PlantId], [], []),
     'toggleRecipeFeatured' : IDL.Func([RecipeId], [IDL.Opt(Recipe)], []),
-    'transform' : IDL.Func(
-        [
-          IDL.Record({
-            'context' : IDL.Vec(IDL.Nat8),
-            'response' : http_request_result,
-          }),
-        ],
-        [http_request_result],
-        ['query'],
-      ),
     'transplantCell' : IDL.Func([TransplantInput], [PlantPublic], []),
     'treasuryDeposit' : IDL.Func(
         [TreasuryToken, IDL.Nat, IDL.Opt(IDL.Text)],

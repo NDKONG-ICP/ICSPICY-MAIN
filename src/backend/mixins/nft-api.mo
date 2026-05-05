@@ -1,118 +1,84 @@
 import Map "mo:core/Map";
-import Time "mo:core/Time";
 import Nat "mo:core/Nat";
-import Text "mo:core/Text";
 import Runtime "mo:core/Runtime";
-import IC "ic:aaaaa-aa";
-import Blob "mo:core/Blob";
-import AccessControl "../lib/access-control";
 import Common "../types/common";
 import PlantTypes "../types/plants";
 import PlantsLib "../lib/plants";
-import NFTLib "../lib/nft";
+
+// Phase 3.0: legacy plant-NFT mint flow stubbed.
+//
+// Until Phase 3, this mixin minted per-plant NFTs in three different formats
+// (ICRC-37 misnamed, EXT, Hedera-mirror-node via HTTPS outcall). Phase 3
+// replaces that architecture: plant lifecycle data becomes provenance metadata
+// on the 8888-NFT ICRC-7 collection (see PROJECT_CONTEXT.md "Provenance
+// metadata"). The four deprecated methods remain as trap stubs to preserve
+// the Candid surface during the transition; `generatePickupQRPayload` stays
+// functional because the active admin flow uses it.
+//
+// The legacy NFTMintingTab in src/frontend/src/pages/Admin.tsx (lines
+// 2323-2400) calls these stubs and will trap with a deprecation message when
+// invoked. Phase 4 removes both the tab and these stubs, replacing them with
+// an ICRC-7-aware admin flow that uses icrc7_transfer to assign pool tokens
+// to plant owners. See PROJECT_CONTEXT.md "Pre-existing technical debt" item
+// B7 for the full migration plan.
 
 mixin (
-  accessControlState : AccessControl.AccessControlState,
   plants : Map.Map<Common.PlantId, PlantTypes.Plant>,
-  icrc37Tokens : Map.Map<Text, NFTLib.ICRC37Metadata>,
-  extTokens : Map.Map<Text, NFTLib.EXTMetadata>,
 ) {
-  // Transform callback required by IC HTTP outcalls — strips headers for replica consensus
-  public query func transform({
-    context : Blob;
-    response : IC.http_request_result;
-  }) : async IC.http_request_result {
-    { response with headers = [] };
-  };
 
-  // Admin: mint an ICRC-37 NFT for a plant (stored on-chain)
-  public shared ({ caller }) func mintICRC37(
-    plant_id : Common.PlantId,
-    image_key : ?Text,
-    attributes : [(Text, Text)],
+  // ── Deprecated stubs (Phase 4 removal) ────────────────────────────────────
+
+  public shared func mintICRC37(
+    _plant_id : Common.PlantId,
+    _image_key : ?Text,
+    _attributes : [(Text, Text)],
   ) : async Text {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
-    };
-    switch (PlantsLib.getPlant(plants, plant_id)) {
-      case (?plant) {
-        let token_id = NFTLib.mintICRC37(icrc37Tokens, plant, image_key, attributes, Time.now());
-        // Associate NFT with plant record
-        PlantsLib.setPlantNFT(plants, plant_id, token_id);
-        token_id;
-      };
-      case null { Runtime.trap("Plant not found: " # plant_id.toText()) };
-    };
+    Runtime.trap(
+      "mintICRC37 is deprecated as of Phase 3.0. " #
+      "Per-plant NFTs have been replaced by lifecycle provenance on the 8888-token ICRC-7 collection. " #
+      "To bind a pool token to a plant owner in the new architecture, use icrc7_transfer (available from Phase 3.3) to move a pool token from the canister-owned inventory to the plant owner's principal. " #
+      "The legacy NFTMintingTab admin UI will be removed in Phase 4."
+    );
   };
 
-  // Admin: mint an EXT-format NFT for a plant (stored on-chain, backward compatible)
-  public shared ({ caller }) func mintEXT(
-    plantId : Nat,
-    imageKey : Text,
-    attributes : [(Text, Text)],
+  public shared func mintEXT(
+    _plantId : Nat,
+    _imageKey : Text,
+    _attributes : [(Text, Text)],
   ) : async Text {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
-    };
-    let tokenId = NFTLib.mintEXT(extTokens, plantId, imageKey, attributes, Time.now());
-    // Associate EXT token ID with the plant record if the plant exists
-    switch (PlantsLib.getPlant(plants, plantId)) {
-      case (?_) { PlantsLib.setPlantNFT(plants, plantId, tokenId) };
-      case null {}; // plant may not exist for standalone EXT mints
-    };
-    tokenId;
+    Runtime.trap(
+      "mintEXT is deprecated as of Phase 3.0. " #
+      "The Entrepot Token eXtension format is no longer used; the project standardizes on ICRC-7 for the 8888-token NFT collection. " #
+      "To bind a pool token to a plant owner, use icrc7_transfer (available from Phase 3.3) to move a pool token to the plant owner's principal. " #
+      "The legacy NFTMintingTab admin UI will be removed in Phase 4."
+    );
   };
 
-  // Admin: mint a Hedera RWA NFT via HTTP outcall
-  public shared ({ caller }) func mintHederaNFT(
-    plant_id : Common.PlantId,
-    image_key : ?Text,
-    attributes : [(Text, Text)],
+  public shared func mintHederaNFT(
+    _plant_id : Common.PlantId,
+    _image_key : ?Text,
+    _attributes : [(Text, Text)],
   ) : async Text {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
-    };
-    switch (PlantsLib.getPlant(plants, plant_id)) {
-      case (?plant) {
-        let payload = NFTLib.buildHederaRWAPayload(plant, image_key, attributes);
-        // Use configurable tokenId — default testnet token
-        let hederaTokenId = "0.0.5981874";
-        let url = "https://testnet.mirrornode.hedera.com/api/v1/tokens/" # hederaTokenId # "/nfts";
-        let httpResponse = await (with cycles = 231_000_000_000) IC.http_request({
-          url;
-          max_response_bytes = ?(10_000 : Nat64);
-          headers = [
-            { name = "Content-Type";    value = "application/json" },
-            { name = "Accept";          value = "application/json" },
-            { name = "User-Agent";      value = "ic-canister" },
-            { name = "Idempotency-Key"; value = "hedera-mint-" # Nat.toText(plant_id) },
-          ];
-          body = ?payload.encodeUtf8();
-          method = #post;
-          transform = ?{ function = transform; context = Blob.fromArray([]) };
-          is_replicated = null;
-        });
-        let response = switch (httpResponse.body.decodeUtf8()) {
-          case null Runtime.trap("empty HTTP response");
-          case (?text) text;
-        };
-        // Associate NFT token ID from Hedera response with plant
-        PlantsLib.setPlantNFT(plants, plant_id, hederaTokenId # "-" # plant_id.toText());
-        response;
-      };
-      case null { Runtime.trap("Plant not found: " # plant_id.toText()) };
-    };
+    Runtime.trap(
+      "mintHederaNFT is deprecated as of Phase 3.0. " #
+      "The Hedera bridge has been removed in favor of single-chain ICP per the architecture decision in PROJECT_CONTEXT.md. " #
+      "RWA provenance is now ICRC-7 metadata on the 8888-token collection, certified via the IC certified-data subsystem (Phase 3.6). " #
+      "The HTTPS outcall to the Hedera mirror node was removed for security. " #
+      "The legacy NFTMintingTab admin UI will be removed in Phase 4."
+    );
   };
 
-  // Admin: airdrop an ICRC-37 NFT to any address
-  public shared ({ caller }) func airdropNFT(token_id : Text, recipient : Principal) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin only");
-    };
-    NFTLib.airdropNFT(icrc37Tokens, token_id, recipient);
+  public shared func airdropNFT(_token_id : Text, _recipient : Principal) : async () {
+    Runtime.trap(
+      "airdropNFT is deprecated as of Phase 3.0. " #
+      "Airdrops in the new architecture are batch transfers from the canister-owned pool: use icrc7_transfer (available from Phase 3.3) to move a pool token from Account { owner = Principal.fromActor(Self); subaccount = null } to the recipient's principal. " #
+      "Batch airdrop tooling for the 8888-token pool is planned for Phase 4. " #
+      "The legacy NFTMintingTab admin UI will be removed in Phase 4."
+    );
   };
 
-  // Public: generate a QR code claim payload for pickup
+  // ── Functional: plant pickup QR payload (kept; used by active admin UI) ───
+
   public query func generatePickupQRPayload(plant_id : Common.PlantId) : async Text {
     switch (PlantsLib.getPlant(plants, plant_id)) {
       case (?plant) {

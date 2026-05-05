@@ -1,11 +1,17 @@
 import Common "common";
 
 module {
-  // Rarity tier for RWA NFTs — determines holder discount percentage
+  // Rarity tier for RWA NFTs — determines holder discount percentage.
+  //
+  // Phase 3.0: #Founder added for the 50 Founder PepperHeads (token IDs
+  // 7839-7888 per PROJECT_CONTEXT.md). The discount values in
+  // rarityDiscountPct below (10/12/15%) DO NOT match the locked-in spec
+  // (5/10/20/30%). Phase 4 rebalances the full table.
   public type RarityTier = {
-    #Common;    // 10% discount
-    #Uncommon;  // 12% discount
-    #Rare;      // 15% discount
+    #Common;
+    #Uncommon;
+    #Rare;
+    #Founder;
   };
 
   // One-time claimable token linked to a specific plant NFT (printed on QR label)
@@ -60,12 +66,17 @@ module {
     upgraded_at : Common.Timestamp;
   };
 
-  // Rarity tier helper — returns the integer discount percentage for a tier
+  // Rarity tier helper — returns the integer discount percentage for a tier.
+  // TODO Phase 4: rebalance to spec (Common 5%, Uncommon 10%, Rare 20%,
+  // Founder 30%) per PROJECT_CONTEXT.md "Discount tiers" section. Current
+  // values are legacy and known-incorrect; #Founder is set to its spec
+  // value here only because there is no legacy value to preserve.
   public func rarityDiscountPct(tier : RarityTier) : Nat {
     switch tier {
       case (#Common)   10;
       case (#Uncommon) 12;
       case (#Rare)     15;
+      case (#Founder)  30;
     };
   };
 

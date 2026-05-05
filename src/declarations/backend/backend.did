@@ -271,6 +271,7 @@ type Recipe =
 type RarityTier = 
  variant {
    Common;
+   Founder;
    Rare;
    Uncommon;
  };
@@ -347,6 +348,7 @@ type PoolStats =
    shop: nat;
    totalByRarity: record {
                     common: nat;
+                    founder: nat;
                     rare: nat;
                     uncommon: nat;
                   };
@@ -610,7 +612,7 @@ type ICSpicy =
        err: text;
        ok: text;
      });
-   airdropNFT: (token_id: text, recipient: principal) -> ();
+   airdropNFT: (_token_id: text, _recipient: principal) -> ();
    assignCallerUserRole: (_user: principal, _role: UserRole) -> ();
    assignPoolNFT: (nftId: nat, action: AssignAction) -> ();
    batchAirdropFromPool: (assignments: vec AirdropAssignment) ->
@@ -625,7 +627,7 @@ type ICSpicy =
        failed: nat;
        succeeded: nat;
      });
-   batchMintFoundersCollection: (entries: vec FoundersMintInput) ->
+   batchMintFoundersCollection: (_entries: vec FoundersMintInput) ->
     (vec FoundersMintResult);
    beginArtworkUpload: (totalChunks: nat) -> ();
    bulkCreateProducts: (inputs: vec CreateProductInput) ->
@@ -763,17 +765,17 @@ type ICSpicy =
    listTrays: () -> (vec TrayPublic) query;
    markPlantGerminated: (plant_id: PlantId, germination_date: Timestamp) ->
     ();
-   mintEXT: (plantId: nat, imageKey: text, attributes:
+   mintEXT: (_plantId: nat, _imageKey: text, _attributes:
     vec record {
           text;
           text;
         }) -> (text);
-   mintHederaNFT: (plant_id: PlantId, image_key: opt text, attributes:
+   mintHederaNFT: (_plant_id: PlantId, _image_key: opt text, _attributes:
     vec record {
           text;
           text;
         }) -> (text);
-   mintICRC37: (plant_id: PlantId, image_key: opt text, attributes:
+   mintICRC37: (_plant_id: PlantId, _image_key: opt text, _attributes:
     vec record {
           text;
           text;
@@ -820,10 +822,6 @@ type ICSpicy =
    submitOffer: (input: SubmitOfferInput) -> (Offer);
    toggleCooked: (plant_id: PlantId) -> ();
    toggleRecipeFeatured: (id: RecipeId) -> (opt Recipe);
-   transform: (record {
-                 context: blob;
-                 response: http_request_result;
-               }) -> (http_request_result) query;
    transplantCell: (input: TransplantInput) -> (PlantPublic);
    treasuryDeposit: (token: TreasuryToken, amount: nat, memo: opt text) ->
     (TreasuryTransaction);

@@ -537,12 +537,16 @@ Verify all canister IDs via the relevant skill's SKILL.md before hardcoding.
 
 The DFINITY skills index has no ICRC-7 or ICRC-37 skill (only `icrc-ledger` for ICRC-1/2 fungibles). Phase 3 implementation works directly from the official spec repository, with commit hashes pinned here so spec evolution is handled deliberately, not silently.
 
-| Spec | Repository | Commit hash | Retrieved | Notes |
-|---|---|---|---|---|
-| ICRC-7 | `github.com/dfinity/ICRC-1` (path `standards/ICRC-7`) | TBD — pinned during Phase 3.0 | TBD | Base NFT standard |
-| ICRC-37 | `github.com/dfinity/ICRC-1` (path `standards/ICRC-37`) | TBD — pinned during Phase 3.0 | TBD | Approval extension |
+The specs live in `github.com/dfinity/ICRC` (NOT `dfinity/ICRC-1` — that repo only hosts ICRC-1/2/3). Both specs were accepted via NNS vote in May 2024 and have been stable since. The pinned hash is the **latest commit touching each spec's directory** at retrieval time.
 
-Update protocol: if either spec evolves during Phase 3 implementation, upgrade in a dedicated commit titled `Phase 3: bump ICRC-7/ICRC-37 spec pin (<old>→<new>)` with a brief diff note in the commit body. No silent floating-version implementations.
+| Spec | Repository | Path | Pinned commit | Spec file blob SHA | Retrieved | Notes |
+|---|---|---|---|---|---|---|
+| ICRC-7 | `dfinity/ICRC` | `ICRCs/ICRC-7/` | `860bfe5e03cf45b8c3d99caa4126916da55cca2f` (2024-07-07) | `ICRC-7.md` blob `bfb2ad5130f42681116d2f5ce11f6ca23986ab32`; `ICRC-7.did` blob `ad169520ceef22d0e5b2a3051933217d4564fffd` | 2026-05-05 | Base NFT standard; status: accepted (NNS vote 2024-05-07) |
+| ICRC-37 | `dfinity/ICRC` | `ICRCs/ICRC-37/` | `7258c8a57628a99e01a1838e1391a4f5401aad0a` (2024-07-07) | `ICRC-37.md` blob `b3d8fcefffd5ddcd4a80ab71e254b196247050e8`; `ICRC-37.did` blob `e93d3867ebc81f784303e4eea920b3706b094e14` | 2026-05-05 | Approval extension; status: accepted (NNS vote 2024-05-10) |
+
+Permalink format: `https://github.com/dfinity/ICRC/blob/<commit>/ICRCs/ICRC-<n>/ICRC-<n>.md`.
+
+Update protocol: if either spec evolves during Phase 3 implementation, upgrade in a dedicated commit titled `Phase 3: bump ICRC-<n> spec pin (<old>→<new>)` with a brief diff note in the commit body. No silent floating-version implementations.
 
 ---
 
@@ -554,6 +558,8 @@ Tracked from the Phase 1.5 frontend regression check. Each item has a target pha
 - **B2 — Always-on `console.log` of principal in `useIsAdmin`.** [src/frontend/src/hooks/useBackend.ts:937-950](src/frontend/src/hooks/useBackend.ts#L937-L950). Scheduled for **anytime convenient** — gate on `import.meta.env.DEV`. Cosmetic privacy hardening; the principal is not a secret but does not need to appear in production logs.
 - **B5 — DAO hooks (`useProposals`, `useProposal`, `useCreateProposal`, `useVoteOnProposal`).** Scheduled for **Phase 8** deletion alongside backend DAO subsystem removal (governance moves to OHSHII per the OHSHII / DAO integration section).
 - **B6 — Wallet page hooks wired to simulated wallet.** Scheduled for **Phase 4** deletion alongside `mixins/wallet-api.mo` and `lib/wallet.mo` when real ICP/ckBTC/Stripe/ICPay payment paths land.
+- **B7 — `NFTMintingTab` admin UI in `Admin.tsx` (lines 2323–2400) hits Phase-3.0-stubbed backend methods.** The tab calls `useMintICRC37`, `useMintEXT`, `useMintHederaNFT`, `useAirdropNFT` ([useBackend.ts:983-1034](src/frontend/src/hooks/useBackend.ts#L983-L1034)). After Phase 3.0 stubs those backend methods with deprecation traps, an admin attempting to use the tab will see a browser error UI (toast `"Minting failed."` plus a stack trace in devtools) rather than a graceful in-page deprecation banner. **Acceptable interim state** — Phase 4 removes `NFTMintingTab` entirely alongside the backend deprecation stubs, replacing it with an ICRC-7-aware admin flow (assign-pool-token-to-plant via `icrc7_transfer`). Until then, admins should not click "Mint NFT" in the tab.
+- **B8 — Founders card-builder admin UI in `Admin.tsx` traps from Phase 3.0 until Phase 4 replaces it.** The card-builder calls `batchMintFoundersCollection` via `useBatchMintFoundersCollection` ([useBackend.ts:1440-1446](src/frontend/src/hooks/useBackend.ts#L1440-L1446); used at [Admin.tsx:5710,5800](src/frontend/src/pages/Admin.tsx#L5710-L5800)). Phase 3.0 unifies Founders into the 8888-token ICRC-7 pool (token IDs 7839–7888) populated atomically by `initializeNFTPool` (Phase 3.5), so the per-entry card-builder is no longer the right shape. Admin attempting to use it will see browser error UI rather than a graceful deprecation banner. **Acceptable interim state** — Phase 4 admin UI rebuild removes the card-builder tab entirely, replacing it with an `initializeNFTPool` + tier-aware metadata flow.
 
 ### Phase 1.5 Frontend Regression Check
 
