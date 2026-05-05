@@ -487,6 +487,21 @@ Verify all canister IDs via the relevant skill's SKILL.md before hardcoding.
 
 ---
 
+## Pre-existing technical debt
+
+Tracked from the Phase 1.5 frontend regression check. Each item has a target phase and rationale.
+
+- **B1 — Hardcoded admin PIDs in two frontend files.** [src/frontend/src/hooks/useBackend.ts:866-870](src/frontend/src/hooks/useBackend.ts#L866-L870) (`ADMIN_PIDS` Set, source of truth for `useIsAdmin`) and [src/frontend/src/components/ActorReadyProvider.tsx:42-46](src/frontend/src/components/ActorReadyProvider.tsx#L42-L46) (`ADMIN_PIDS` array, used to gate the admin-actor probe). Scheduled for **Phase 1.5** — replace with a `useAdmins()` hook backed by `actor.getAdmins()` query. **Security-relevant:** frontend currently cannot observe backend admin rotation. Both files contain the same three legacy II-derived PIDs (`lgjjr-…-tae`, `7qhp3-…-4o5gh`, `7qhp3-…-qae`); these do **not** match the current deployer/admin principal `gqkko-43bbx-nwsp4-it2rg-pc2dy-w2pt2-fa5om-4y6es-oyhz2-5i5oh-5ae` recorded under Project owner / admin principals — frontend admin gating is currently divorced from the backend admin set.
+- **B2 — Always-on `console.log` of principal in `useIsAdmin`.** [src/frontend/src/hooks/useBackend.ts:937-950](src/frontend/src/hooks/useBackend.ts#L937-L950). Scheduled for **anytime convenient** — gate on `import.meta.env.DEV`. Cosmetic privacy hardening; the principal is not a secret but does not need to appear in production logs.
+- **B5 — DAO hooks (`useProposals`, `useProposal`, `useCreateProposal`, `useVoteOnProposal`).** Scheduled for **Phase 8** deletion alongside backend DAO subsystem removal (governance moves to OHSHII per the OHSHII / DAO integration section).
+- **B6 — Wallet page hooks wired to simulated wallet.** Scheduled for **Phase 4** deletion alongside `mixins/wallet-api.mo` and `lib/wallet.mo` when real ICP/ckBTC/Stripe/ICPay payment paths land.
+
+### Phase 1.5 Frontend Regression Check
+
+Ran the regression check against the Phase 1 backend changes. Results: **1 Phase 1 latent regression (6d, retired)**, **1 local-dev blocker (`env.json` placeholders, separate config issue)**, **4 pre-existing debt items** (tracked above), and a **large Phase 3.6 sizing signal** (NFT image rendering machinery confirmed as from-scratch work). Finding 6d (`_initializeAccessControl` IDL annotation) was retired by regenerating `src/declarations/backend/` against the current `.did` (commit b34b99f had already regenerated; a fresh `dfx generate backend` produces no diff, confirming declarations are in sync with the backend's `query` annotation).
+
+---
+
 ## Open / non-blocking items
 
 1. **External audit firm** (Phase 7) — Trail of Bits, Vespertine, OAK Security, Hacken. Budget $30–60K. Schedule early; firms book months out.
