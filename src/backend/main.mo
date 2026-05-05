@@ -148,17 +148,19 @@ shared(msg) persistent actor class ICSpicy() = Self {
   //
   // Both are persistent (`let` defaults to stable in a persistent actor) so
   // ownership survives upgrades.
-  let icrc7Owners   : Map.Map<Nat, ICRC7.Account>             = Map.empty<Nat, ICRC7.Account>();
-  let icrc7Balances : Map.Map<Principal, Set.Set<Nat>>        = Map.empty<Principal, Set.Set<Nat>>();
+  let icrc7Owners           : Map.Map<Nat, ICRC7.Account>      = Map.empty<Nat, ICRC7.Account>();
+  let icrc7Balances         : Map.Map<Principal, Set.Set<Nat>> = Map.empty<Principal, Set.Set<Nat>>();
+  // Static metadata: token_id → raw JSON bytes from the templated mainnet
+  // metadata files. Bulk-loaded by admin via loadStaticMetadata (Phase 3.2);
+  // parsed lazily by icrc7_token_metadata at query time. Storage as raw
+  // bytes is the byte-deterministic foundation for the certified envelope
+  // in Phase 3.6 (no re-serialization round-trip needed).
+  let icrc7TokenMetadataRaw : Map.Map<Nat, Blob>               = Map.empty<Nat, Blob>();
 
   // Collection-level configuration constants. `transient` because they are
   // compile-time literals — no migration story needed across upgrades.
-  // Leading underscore follows the `_callerGuards` pattern established in
-  // Phase 1: signals "declared but intentionally not yet wired to its
-  // consumer". Phase 3.2 drops the underscore when icrc7_collection_metadata
-  // starts consuming both constants.
-  transient let _collectionName : Text = "IC SPICY";
-  transient let _totalSupplyCap : Nat  = 8888;
+  transient let collectionName : Text = "IC SPICY";
+  transient let totalSupplyCap : Nat  = 8888;
 
   // ── Marketplace state ──────────────────────────────────────────────────────
 
@@ -292,7 +294,16 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include CommunityAPI(accessControlState, posts, comments, profiles, nextPostId, nextCommentId);
   include MembershipAPI(accessControlState, memberships, nextMembershipId);
   include NFTAPI(plants);
-  include ICRC7API(accessControlState, callerGuards, icrc7Owners, icrc7Balances);
+  include ICRC7API(
+    accessControlState,
+    callerGuards,
+    icrc7Owners,
+    icrc7Balances,
+    icrc7TokenMetadataRaw,
+    func() : Principal { Principal.fromActor(Self) },
+    collectionName,
+    totalSupplyCap,
+  );
   include WalletAPI(wallets, txLog);
   include RecipesAPI(accessControlState, recipes, nextRecipeId);
   include ClaimAPI(accessControlState, claimTokens, plants, rwaTokens, claimMemberships);

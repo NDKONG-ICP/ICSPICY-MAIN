@@ -1,4 +1,5 @@
 export const idlFactory = ({ IDL }) => {
+  const Result = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const OfferStatus = IDL.Variant({
     'Countered' : IDL.Null,
     'Rejected' : IDL.Null,
@@ -698,6 +699,7 @@ export const idlFactory = ({ IDL }) => {
     'ingredients' : IDL.Opt(IDL.Vec(IDL.Text)),
   });
   const ICSpicy = IDL.Service({
+    '_debugParseMetadata' : IDL.Func([IDL.Vec(IDL.Nat8)], [Result], []),
     '_initializeAccessControl' : IDL.Func([], [], ['query']),
     'acceptOffer' : IDL.Func([IDL.Text], [Offer], []),
     'addAdmin' : IDL.Func([IDL.Principal], [], []),

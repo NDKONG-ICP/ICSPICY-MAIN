@@ -175,6 +175,7 @@ export interface FoundersMintResult {
   'standard' : NFTStandard,
 }
 export interface ICSpicy {
+  '_debugParseMetadata' : ActorMethod<[Uint8Array | number[]], Result>,
   '_initializeAccessControl' : ActorMethod<[], undefined>,
   'acceptOffer' : ActorMethod<[string], Offer>,
   'addAdmin' : ActorMethod<[Principal], undefined>,
@@ -718,6 +719,8 @@ export interface ResaleListingPublic {
   'listed_at' : Timestamp,
   'plant_id' : PlantId,
 }
+export type Result = { 'ok' : string } |
+  { 'err' : string };
 export interface SaveProfileInput {
   'bio' : string,
   'username' : string,

@@ -240,6 +240,11 @@ type SaveProfileInput =
    bio: text;
    username: text;
  };
+type Result = 
+ variant {
+   err: text;
+   ok: text;
+ };
 type ResaleListingPublic = 
  record {
    id: text;
@@ -597,6 +602,7 @@ type InventoryCategory =
  };
 type ICSpicy = 
  service {
+   _debugParseMetadata: ("blob": blob) -> (Result);
    _initializeAccessControl: () -> () query;
    acceptOffer: (offerId: text) -> (Offer);
    addAdmin: (p: principal) -> ();
