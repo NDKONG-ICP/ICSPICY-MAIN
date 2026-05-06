@@ -9,6 +9,9 @@ args = [ "--release" ]
 [canisters.backend]
 main = "src/backend/main.mo"
 
+[canisters.docs_backend]
+main = "src/docs_backend/main.mo"
+
 [toolchain]
 moc = "1.3.0"
 lintoko = "0.7.0"
@@ -17,9 +20,8 @@ lintoko = "0.7.0"
 extends = true
 
 [moc]
-args = [
-  "--actor-idl=src/backend/system-idl"
-]
+args = [ "--actor-idl=src/backend/system-idl" ]
 
 [dependencies]
 core = "2.2.0"
+llm = "2.1.0"

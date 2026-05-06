@@ -1,0 +1,1026 @@
+{
+  "generatedAt": "2026-05-06T21:30:21.528Z",
+  "categories": [
+    {
+      "id": "vision",
+      "name": "Vision",
+      "description": "The flagship narrative: whitepaper, roadmap, pitch, and the one-page brand thesis."
+    },
+    {
+      "id": "investor",
+      "name": "Investor",
+      "description": "Investor memo, due-diligence index, strategic partner brief, and grant application materials."
+    },
+    {
+      "id": "retail",
+      "name": "Retail & Wholesale",
+      "description": "Buyer sell sheets, wholesale line sheets, distributor decks, demo scripts, and retail launch planning."
+    },
+    {
+      "id": "brand",
+      "name": "Brand & Product",
+      "description": "SKU concepts, packaging copy, brand voice, product naming, and chef-built recipe cards."
+    },
+    {
+      "id": "marketing",
+      "name": "Marketing & Content",
+      "description": "Market analysis, marketing strategy, content calendar, scripts, threads, video, email, and press."
+    },
+    {
+      "id": "community",
+      "name": "Community",
+      "description": "X Spaces hosting and community moderation playbooks for live rooms and member channels."
+    },
+    {
+      "id": "token",
+      "name": "NFT & Token",
+      "description": "PepperHead membership, NFT collector guidance, and SPICY token utility explainers."
+    },
+    {
+      "id": "operations",
+      "name": "Operations",
+      "description": "Founder operating plan, food-safety claims, mainnet launch checklist, and the risk register."
+    }
+  ],
+  "documents": [
+    {
+      "slug": "branded-whitepaper",
+      "title": "IC SPICY Branded Whitepaper",
+      "subtitle": "Real chili peppers. Real provenance. On chain.",
+      "audience": "For partners, strategic backers, premium food buyers, and ICP ecosystem audiences.",
+      "summary": "IC SPICY is a real-world-asset commerce and provenance platform for a Florida rare-pepper nursery. The finished product combines a direct-to-consumer plant and spice business, an on-chain nursery inventory system, ICRC-7 NFTs, weather provenance, premium community, and future SPICY token utility on the Internet Comp…",
+      "collection": "brand-pack",
+      "category": "vision",
+      "pdfPath": "/documents/brand-pack/IC_SPICY_Branded_Whitepaper.pdf",
+      "markdownPath": "/documents/brand-pack/IC_SPICY_Branded_Whitepaper.md",
+      "tags": [
+        "whitepaper",
+        "thesis",
+        "rwa",
+        "icp",
+        "vision"
+      ],
+      "featured": true,
+      "sortOrder": 1,
+      "wordCount": 562,
+      "readingMinutes": 2,
+      "pdfBytes": 12198
+    },
+    {
+      "slug": "roadmap",
+      "title": "IC SPICY Roadmap",
+      "subtitle": "From rare pepper nursery to premium grocery-shelf heat brand.",
+      "audience": "For internal execution, partners, advisors, and launch planning.",
+      "summary": "IC SPICY ships as a real business first: rare plants, premium spices, verified provenance, and community. The Web3 layer strengthens trust, membership, and transparency without confusing mainstream customers.",
+      "collection": "brand-pack",
+      "category": "vision",
+      "pdfPath": "/documents/brand-pack/IC_SPICY_Roadmap.pdf",
+      "markdownPath": "/documents/brand-pack/IC_SPICY_Roadmap.md",
+      "tags": [
+        "roadmap",
+        "phases",
+        "execution"
+      ],
+      "featured": true,
+      "sortOrder": 2,
+      "wordCount": 375,
+      "readingMinutes": 2,
+      "pdfBytes": 11154
+    },
+    {
+      "slug": "pitch-deck",
+      "title": "IC SPICY Pitch Deck",
+      "subtitle": "A 12-slide narrative for partners, buyers, and strategic backers.",
+      "audience": "Use this as speaker-ready deck copy for Keynote, Pitch, Canva, or investor calls.",
+      "summary": "IC SPICY. Rare. Hot. Alive. Farm-grown heat, chef-built flavor, blockchain-backed provenance.",
+      "collection": "brand-pack",
+      "category": "vision",
+      "pdfPath": "/documents/brand-pack/IC_SPICY_Pitch_Deck.pdf",
+      "markdownPath": "/documents/brand-pack/IC_SPICY_Pitch_Deck.md",
+      "tags": [
+        "pitch",
+        "deck",
+        "investor"
+      ],
+      "featured": true,
+      "sortOrder": 3,
+      "wordCount": 336,
+      "readingMinutes": 1,
+      "pdfBytes": 9712
+    },
+    {
+      "slug": "executive-summary",
+      "title": "IC SPICY One-Page Executive Summary",
+      "subtitle": "The fastest shareable overview of the brand, product, and opportunity.",
+      "audience": "For intros, text-message followups, quick partner review, and warm investor forwards.",
+      "summary": "IC SPICY is a premium rare-pepper nursery and artisan seasoning brand from Zone 10a Southwest Florida, using ICP-native provenance to connect real plants, chef-built flavor, NFTs, community, and future token utility.",
+      "collection": "expanded-library",
+      "category": "vision",
+      "pdfPath": "/documents/expanded-library/01_Executive_Summary.pdf",
+      "markdownPath": "/documents/expanded-library/01_Executive_Summary.md",
+      "tags": [
+        "executive",
+        "summary",
+        "intro"
+      ],
+      "featured": true,
+      "sortOrder": 4,
+      "wordCount": 139,
+      "readingMinutes": 1,
+      "pdfBytes": 5866
+    },
+    {
+      "slug": "brand-voice-guide",
+      "title": "IC SPICY Brand Voice Guide",
+      "subtitle": "How the brand should sound everywhere.",
+      "audience": "For labels, social, website copy, decks, and founder scripts.",
+      "summary": "Grounded, fiery, culinary, premium, direct, transparent, and a little rebellious.",
+      "collection": "expanded-library",
+      "category": "brand",
+      "pdfPath": "/documents/expanded-library/13_Brand_Voice_Guide.pdf",
+      "markdownPath": "/documents/expanded-library/13_Brand_Voice_Guide.md",
+      "tags": [
+        "voice",
+        "tone",
+        "brand"
+      ],
+      "featured": true,
+      "sortOrder": 5,
+      "wordCount": 104,
+      "readingMinutes": 1,
+      "pdfBytes": 5463
+    },
+    {
+      "slug": "pepperhead-membership-guide",
+      "title": "IC SPICY PepperHead Membership Guide",
+      "subtitle": "A clear guide to the 888 membership NFTs.",
+      "audience": "For collectors, early supporters, and Web3 community members.",
+      "summary": "PepperHeads are 888 membership-bearing NFTs inside the 8888-token IC SPICY collection. They are designed for early supporters who want deeper access to the brand, future drops, and premium community features.",
+      "collection": "expanded-library",
+      "category": "token",
+      "pdfPath": "/documents/expanded-library/22_PepperHead_Membership_Guide.pdf",
+      "markdownPath": "/documents/expanded-library/22_PepperHead_Membership_Guide.md",
+      "tags": [
+        "pepperhead",
+        "membership",
+        "nft"
+      ],
+      "featured": true,
+      "sortOrder": 6,
+      "wordCount": 137,
+      "readingMinutes": 1,
+      "pdfBytes": 5728
+    },
+    {
+      "slug": "nft-collector-guide",
+      "title": "IC SPICY NFT Collector Guide",
+      "subtitle": "NFT collection, rarity, provenance, and utility explained.",
+      "audience": "For NFT buyers and IC-native users.",
+      "summary": "8888 ICRC-7 NFTs with rarity tiers: Common, Uncommon, Rare, and Founder. Static art and metadata are paired with future live provenance and ownership history.",
+      "collection": "expanded-library",
+      "category": "token",
+      "pdfPath": "/documents/expanded-library/23_NFT_Collector_Guide.pdf",
+      "markdownPath": "/documents/expanded-library/23_NFT_Collector_Guide.md",
+      "tags": [
+        "nft",
+        "collector",
+        "icrc-7"
+      ],
+      "featured": true,
+      "sortOrder": 7,
+      "wordCount": 105,
+      "readingMinutes": 1,
+      "pdfBytes": 5481
+    },
+    {
+      "slug": "spicy-utility-explainer",
+      "title": "SPICY Utility Explainer",
+      "subtitle": "A non-legal consumer-friendly utility overview.",
+      "audience": "For community education before deeper legal disclosure.",
+      "summary": "SPICY is planned as an ICRC-1 utility token for IC SPICY ecosystem functions. Formal token details require legal review and should be governed by the token disclosure document when published.",
+      "collection": "expanded-library",
+      "category": "token",
+      "pdfPath": "/documents/expanded-library/24_SPICY_Utility_Explainer.pdf",
+      "markdownPath": "/documents/expanded-library/24_SPICY_Utility_Explainer.md",
+      "tags": [
+        "spicy",
+        "token",
+        "utility"
+      ],
+      "featured": true,
+      "sortOrder": 8,
+      "wordCount": 115,
+      "readingMinutes": 1,
+      "pdfBytes": 5557
+    },
+    {
+      "slug": "marketing-strategy",
+      "title": "IC SPICY Marketing Strategy",
+      "subtitle": "Professional enough for buyers. Casual enough for X.",
+      "audience": "For solo-founder execution across social, DTC, retail, and community channels.",
+      "summary": "IC SPICY should be marketed as a premium food brand with a Web3 trust layer. The mainstream headline is not NFTs. The mainstream headline is rare Florida peppers turned into chef-built seasonings with traceable origin.",
+      "collection": "brand-pack",
+      "category": "marketing",
+      "pdfPath": "/documents/brand-pack/IC_SPICY_Marketing_Strategy.pdf",
+      "markdownPath": "/documents/brand-pack/IC_SPICY_Marketing_Strategy.md",
+      "tags": [
+        "strategy",
+        "marketing",
+        "go-to-market"
+      ],
+      "featured": false,
+      "sortOrder": 10,
+      "wordCount": 395,
+      "readingMinutes": 2,
+      "pdfBytes": 10016
+    },
+    {
+      "slug": "market-analysis",
+      "title": "IC SPICY Market Analysis",
+      "subtitle": "Why premium heat has room for a Florida-grown challenger.",
+      "audience": "For strategic planning, retail pitches, and investor conversations.",
+      "summary": "Public market estimates vary, but the global spices and seasonings market is commonly estimated around the high-twenties to low-thirties billions of dollars in 2025, with mid-single-digit growth projected through the next decade.",
+      "collection": "brand-pack",
+      "category": "marketing",
+      "pdfPath": "/documents/brand-pack/IC_SPICY_Market_Analysis.pdf",
+      "markdownPath": "/documents/brand-pack/IC_SPICY_Market_Analysis.md",
+      "tags": [
+        "market",
+        "analysis",
+        "category"
+      ],
+      "featured": false,
+      "sortOrder": 11,
+      "wordCount": 435,
+      "readingMinutes": 2,
+      "pdfBytes": 10614
+    },
+    {
+      "slug": "marketing-scripts",
+      "title": "IC SPICY Marketing Scripts",
+      "subtitle": "Shill hard. Sound real. Stay professional.",
+      "audience": "For videos, demos, buyer calls, and casual community promotion.",
+      "summary": "Most seasoning brands start in a boardroom. IC SPICY starts in the soil.",
+      "collection": "brand-pack",
+      "category": "marketing",
+      "pdfPath": "/documents/brand-pack/IC_SPICY_Marketing_Scripts.pdf",
+      "markdownPath": "/documents/brand-pack/IC_SPICY_Marketing_Scripts.md",
+      "tags": [
+        "scripts",
+        "social",
+        "voice"
+      ],
+      "featured": false,
+      "sortOrder": 12,
+      "wordCount": 508,
+      "readingMinutes": 2,
+      "pdfBytes": 10614
+    },
+    {
+      "slug": "x-spaces-script",
+      "title": "IC SPICY X Spaces Script",
+      "subtitle": "A one-hour room for casual conviction and professional credibility.",
+      "audience": "For founder-hosted X Spaces, AMAs, and ICP community rooms.",
+      "summary": "Can a Florida Pepper Nursery Outshine Big Seasoning?",
+      "collection": "brand-pack",
+      "category": "community",
+      "pdfPath": "/documents/brand-pack/IC_SPICY_X_Spaces_Script.pdf",
+      "markdownPath": "/documents/brand-pack/IC_SPICY_X_Spaces_Script.md",
+      "tags": [
+        "x-spaces",
+        "live",
+        "script"
+      ],
+      "featured": false,
+      "sortOrder": 20,
+      "wordCount": 456,
+      "readingMinutes": 2,
+      "pdfBytes": 11045
+    },
+    {
+      "slug": "x-spaces-shilling-scripts-extended",
+      "title": "IC SPICY X Spaces Shilling Scripts",
+      "subtitle": "Professional enough for partners. Casual enough for live rooms.",
+      "audience": "For X Spaces intros, closings, community rooms, ICP AMAs, retail ambition talks, and PepperHead pitches.",
+      "summary": "Appreciate everyone coming through. I am building IC SPICY, and the simplest way to explain it is this: I am taking a real rare-pepper nursery in Southwest Florida and turning it into a premium seasoning, plant, NFT, and provenance brand.",
+      "collection": "brand-pack",
+      "category": "community",
+      "pdfPath": "/documents/brand-pack/IC_SPICY_X_Spaces_Shilling_Scripts_Extended.pdf",
+      "markdownPath": "/documents/brand-pack/IC_SPICY_X_Spaces_Shilling_Scripts_Extended.md",
+      "tags": [
+        "x-spaces",
+        "shilling",
+        "live",
+        "extended"
+      ],
+      "featured": false,
+      "sortOrder": 21,
+      "wordCount": 864,
+      "readingMinutes": 4,
+      "pdfBytes": 15491
+    },
+    {
+      "slug": "x-spaces-host-pack",
+      "title": "IC SPICY X Spaces Host Pack",
+      "subtitle": "A reusable host toolkit for live audio rooms.",
+      "audience": "For founder-hosted X Spaces and partner AMAs.",
+      "summary": "Welcome everyone. IC SPICY is a rare pepper nursery and premium seasoning brand from Southwest Florida, building chef-designed heat with ICP-backed provenance.",
+      "collection": "expanded-library",
+      "category": "community",
+      "pdfPath": "/documents/expanded-library/25_X_Spaces_Host_Pack.pdf",
+      "markdownPath": "/documents/expanded-library/25_X_Spaces_Host_Pack.md",
+      "tags": [
+        "x-spaces",
+        "host",
+        "pack"
+      ],
+      "featured": false,
+      "sortOrder": 22,
+      "wordCount": 125,
+      "readingMinutes": 1,
+      "pdfBytes": 5524
+    },
+    {
+      "slug": "community-moderation-guide",
+      "title": "IC SPICY Community Moderation Guide",
+      "subtitle": "Rules and tone for a healthy community.",
+      "audience": "For X, Discord/OpenChat, Telegram, comments, and future community channels.",
+      "summary": "Food first, respect always, no scams, no price manipulation, no harassment, no medical claims, and no pretending speculation is utility.",
+      "collection": "expanded-library",
+      "category": "community",
+      "pdfPath": "/documents/expanded-library/26_Community_Moderation_Guide.pdf",
+      "markdownPath": "/documents/expanded-library/26_Community_Moderation_Guide.md",
+      "tags": [
+        "community",
+        "moderation",
+        "guide"
+      ],
+      "featured": false,
+      "sortOrder": 23,
+      "wordCount": 96,
+      "readingMinutes": 1,
+      "pdfBytes": 5544
+    },
+    {
+      "slug": "investor-memo",
+      "title": "IC SPICY Investor Memo",
+      "subtitle": "A deeper written narrative than the pitch deck.",
+      "audience": "For strategic backers, grant reviewers, and ecosystem partners.",
+      "summary": "IC SPICY has two linked opportunities: a premium physical CPG brand and an ICP-native RWA provenance platform. The physical products create mainstream demand; the blockchain layer creates trust, membership, transparency, and defensible community infrastructure.",
+      "collection": "expanded-library",
+      "category": "investor",
+      "pdfPath": "/documents/expanded-library/02_Investor_Memo.pdf",
+      "markdownPath": "/documents/expanded-library/02_Investor_Memo.md",
+      "tags": [
+        "investor",
+        "memo",
+        "diligence"
+      ],
+      "featured": false,
+      "sortOrder": 30,
+      "wordCount": 172,
+      "readingMinutes": 1,
+      "pdfBytes": 6279
+    },
+    {
+      "slug": "data-room-index",
+      "title": "IC SPICY Due Diligence Data Room Index",
+      "subtitle": "A clean map of materials for serious reviewers.",
+      "audience": "For organizing investor, partner, legal, retail, and technical diligence.",
+      "summary": "Branded whitepaper, pitch deck, roadmap, executive summary, market analysis, marketing strategy, founder bio, press kit, and retail sell sheet.",
+      "collection": "expanded-library",
+      "category": "investor",
+      "pdfPath": "/documents/expanded-library/03_Data_Room_Index.pdf",
+      "markdownPath": "/documents/expanded-library/03_Data_Room_Index.md",
+      "tags": [
+        "data-room",
+        "diligence",
+        "index"
+      ],
+      "featured": false,
+      "sortOrder": 31,
+      "wordCount": 124,
+      "readingMinutes": 1,
+      "pdfBytes": 5823
+    },
+    {
+      "slug": "strategic-partner-brief",
+      "title": "IC SPICY Strategic Partner Brief",
+      "subtitle": "Why IC SPICY is useful to food, retail, and ICP partners.",
+      "audience": "For DFINITY, OISY, Plug, ICPSwap, OHSHII, chefs, distributors, and regional retailers.",
+      "summary": "IC SPICY is a practical RWA showcase: real products, real customers, on-chain identity, NFTs, payment rails, provenance, and a narrative normal people can understand.",
+      "collection": "expanded-library",
+      "category": "investor",
+      "pdfPath": "/documents/expanded-library/04_Strategic_Partner_Brief.pdf",
+      "markdownPath": "/documents/expanded-library/04_Strategic_Partner_Brief.md",
+      "tags": [
+        "partners",
+        "brief",
+        "strategic"
+      ],
+      "featured": false,
+      "sortOrder": 32,
+      "wordCount": 118,
+      "readingMinutes": 1,
+      "pdfBytes": 5570
+    },
+    {
+      "slug": "grant-application-packet",
+      "title": "IC SPICY Grant Application Packet",
+      "subtitle": "A reusable narrative for ecosystem and small-business funding.",
+      "audience": "For ICP grants, agriculture innovation programs, local business support, and pitch competitions.",
+      "summary": "IC SPICY combines specialty agriculture, premium food CPG, and blockchain provenance to modernize how rare plants and pepper products are sold, verified, and experienced.",
+      "collection": "expanded-library",
+      "category": "investor",
+      "pdfPath": "/documents/expanded-library/05_Grant_Application_Packet.pdf",
+      "markdownPath": "/documents/expanded-library/05_Grant_Application_Packet.md",
+      "tags": [
+        "grants",
+        "application",
+        "agriculture"
+      ],
+      "featured": false,
+      "sortOrder": 33,
+      "wordCount": 120,
+      "readingMinutes": 1,
+      "pdfBytes": 5917
+    },
+    {
+      "slug": "retail-buyer-sell-sheet",
+      "title": "IC SPICY Retail Buyer Sell Sheet",
+      "subtitle": "The one-page grocery buyer pitch.",
+      "audience": "For specialty grocers, regional grocery buyers, co-ops, and gourmet shops.",
+      "summary": "IC SPICY is a premium Florida rare-pepper brand delivering chef-built heat from Zone 10a Southwest Florida. The line is designed for shoppers who want bold flavor, origin, and a story stronger than another generic spice jar.",
+      "collection": "expanded-library",
+      "category": "retail",
+      "pdfPath": "/documents/expanded-library/06_Retail_Buyer_Sell_Sheet.pdf",
+      "markdownPath": "/documents/expanded-library/06_Retail_Buyer_Sell_Sheet.md",
+      "tags": [
+        "retail",
+        "sell-sheet",
+        "buyer"
+      ],
+      "featured": false,
+      "sortOrder": 40,
+      "wordCount": 157,
+      "readingMinutes": 1,
+      "pdfBytes": 6002
+    },
+    {
+      "slug": "wholesale-line-sheet",
+      "title": "IC SPICY Wholesale Line Sheet",
+      "subtitle": "SKU, pricing, case, and ordering framework.",
+      "audience": "For wholesale conversations before final UPC and case-pack data is locked.",
+      "summary": "This is a planning template. Final wholesale prices, MSRP, UPCs, net weight, case packs, minimum order quantities, payment terms, and lead times should be confirmed after packaging and COGS are finalized.",
+      "collection": "expanded-library",
+      "category": "retail",
+      "pdfPath": "/documents/expanded-library/07_Wholesale_Line_Sheet.pdf",
+      "markdownPath": "/documents/expanded-library/07_Wholesale_Line_Sheet.md",
+      "tags": [
+        "wholesale",
+        "line-sheet"
+      ],
+      "featured": false,
+      "sortOrder": 41,
+      "wordCount": 153,
+      "readingMinutes": 1,
+      "pdfBytes": 6046
+    },
+    {
+      "slug": "distributor-pitch-deck",
+      "title": "IC SPICY Distributor Pitch Deck Copy",
+      "subtitle": "Operational pitch language for distributors.",
+      "audience": "For brokers, specialty distributors, and regional food distribution meetings.",
+      "summary": "IC SPICY: rare Florida peppers, chef-built seasonings, and shelf-ready premium heat.",
+      "collection": "expanded-library",
+      "category": "retail",
+      "pdfPath": "/documents/expanded-library/08_Distributor_Pitch_Deck.pdf",
+      "markdownPath": "/documents/expanded-library/08_Distributor_Pitch_Deck.md",
+      "tags": [
+        "distributor",
+        "pitch",
+        "wholesale"
+      ],
+      "featured": false,
+      "sortOrder": 42,
+      "wordCount": 121,
+      "readingMinutes": 1,
+      "pdfBytes": 5639
+    },
+    {
+      "slug": "grocery-demo-script",
+      "title": "IC SPICY Grocery Demo Script",
+      "subtitle": "What to say during tastings without sounding pushy.",
+      "audience": "For in-store demos, farmers markets, pop-ups, and chef events.",
+      "summary": "Want to taste a Florida-grown rare pepper seasoning? IC SPICY is built from peppers grown in Zone 10a Southwest Florida and blended for flavor first, not just heat.",
+      "collection": "expanded-library",
+      "category": "retail",
+      "pdfPath": "/documents/expanded-library/09_Grocery_Demo_Script.pdf",
+      "markdownPath": "/documents/expanded-library/09_Grocery_Demo_Script.md",
+      "tags": [
+        "grocery",
+        "demo",
+        "script"
+      ],
+      "featured": false,
+      "sortOrder": 43,
+      "wordCount": 169,
+      "readingMinutes": 1,
+      "pdfBytes": 5805
+    },
+    {
+      "slug": "retail-launch-calendar",
+      "title": "IC SPICY Retail Launch Calendar",
+      "subtitle": "A practical 90-day retail support plan.",
+      "audience": "For specialty retail launches and small regional account pilots.",
+      "summary": "Deliver product, verify shelf placement, provide sell sheet and recipe cards, announce account on social, and schedule first demo.",
+      "collection": "expanded-library",
+      "category": "retail",
+      "pdfPath": "/documents/expanded-library/10_Retail_Launch_Calendar.pdf",
+      "markdownPath": "/documents/expanded-library/10_Retail_Launch_Calendar.md",
+      "tags": [
+        "retail",
+        "launch",
+        "calendar"
+      ],
+      "featured": false,
+      "sortOrder": 44,
+      "wordCount": 106,
+      "readingMinutes": 1,
+      "pdfBytes": 5468
+    },
+    {
+      "slug": "sku-concept-sheets",
+      "title": "IC SPICY SKU Concept Sheets",
+      "subtitle": "Concepts for the first four seasoning products.",
+      "audience": "For product development, label planning, tastings, and buyer previews.",
+      "summary": "Everyday finishing salt with citrus, smoke, mineral crunch, and controlled chili warmth. Best on eggs, grilled vegetables, chicken, fries, avocado, and seafood.",
+      "collection": "expanded-library",
+      "category": "brand",
+      "pdfPath": "/documents/expanded-library/11_SKU_Concept_Sheets.pdf",
+      "markdownPath": "/documents/expanded-library/11_SKU_Concept_Sheets.md",
+      "tags": [
+        "sku",
+        "concepts",
+        "product"
+      ],
+      "featured": false,
+      "sortOrder": 50,
+      "wordCount": 142,
+      "readingMinutes": 1,
+      "pdfBytes": 5728
+    },
+    {
+      "slug": "packaging-copy-guide",
+      "title": "IC SPICY Packaging Copy Guide",
+      "subtitle": "Words for labels, backs, QR callouts, and claim discipline.",
+      "audience": "For designers, label review, and packaging production.",
+      "summary": "Brand name, SKU name, short flavor promise, heat level, net weight, and one concise origin phrase such as Zone 10a Florida Pepper Blend.",
+      "collection": "expanded-library",
+      "category": "brand",
+      "pdfPath": "/documents/expanded-library/12_Packaging_Copy_Guide.pdf",
+      "markdownPath": "/documents/expanded-library/12_Packaging_Copy_Guide.md",
+      "tags": [
+        "packaging",
+        "copy",
+        "label"
+      ],
+      "featured": false,
+      "sortOrder": 51,
+      "wordCount": 114,
+      "readingMinutes": 1,
+      "pdfBytes": 5630
+    },
+    {
+      "slug": "product-naming-system",
+      "title": "IC SPICY Product Naming System",
+      "subtitle": "Rules for naming core blends and future drops.",
+      "audience": "For keeping the product line premium and coherent.",
+      "summary": "Use names that combine place, flavor, technique, and heat. The name should feel like food, not a novelty dare.",
+      "collection": "expanded-library",
+      "category": "brand",
+      "pdfPath": "/documents/expanded-library/14_Product_Naming_System.pdf",
+      "markdownPath": "/documents/expanded-library/14_Product_Naming_System.md",
+      "tags": [
+        "naming",
+        "product",
+        "system"
+      ],
+      "featured": false,
+      "sortOrder": 52,
+      "wordCount": 113,
+      "readingMinutes": 1,
+      "pdfBytes": 5538
+    },
+    {
+      "slug": "recipe-cards",
+      "title": "IC SPICY Recipe Card Pack",
+      "subtitle": "Starter recipe copy for early content and printed cards.",
+      "audience": "For demos, packaging inserts, social posts, and email campaigns.",
+      "summary": "Soft scrambled eggs, butter, chives, and Zone 10a Fire Salt. Finish lightly after cooking so the citrus and pepper stay bright.",
+      "collection": "expanded-library",
+      "category": "brand",
+      "pdfPath": "/documents/expanded-library/15_Recipe_Cards.pdf",
+      "markdownPath": "/documents/expanded-library/15_Recipe_Cards.md",
+      "tags": [
+        "recipes",
+        "chef",
+        "cards"
+      ],
+      "featured": false,
+      "sortOrder": 53,
+      "wordCount": 118,
+      "readingMinutes": 1,
+      "pdfBytes": 5499
+    },
+    {
+      "slug": "thirty-day-content-calendar",
+      "title": "IC SPICY 30-Day Launch Content Calendar",
+      "subtitle": "A realistic posting plan for a solo founder.",
+      "audience": "For X, Instagram, TikTok, Facebook, and email.",
+      "summary": "Day 1 founder story, Day 2 Zone 10a grow post, Day 3 rare pepper photo, Day 4 chef blend teaser, Day 5 X thread on why grocery spices are anonymous, Day 6 behind-the-scenes, Day 7 email signup push.",
+      "collection": "expanded-library",
+      "category": "marketing",
+      "pdfPath": "/documents/expanded-library/16_Thirty_Day_Content_Calendar.pdf",
+      "markdownPath": "/documents/expanded-library/16_Thirty_Day_Content_Calendar.md",
+      "tags": [
+        "content",
+        "calendar",
+        "30-day"
+      ],
+      "featured": false,
+      "sortOrder": 60,
+      "wordCount": 137,
+      "readingMinutes": 1,
+      "pdfBytes": 5658
+    },
+    {
+      "slug": "x-thread-bank",
+      "title": "IC SPICY X Thread Bank",
+      "subtitle": "Prewritten thread ideas for the next 30 posts.",
+      "audience": "For founder-led X growth and ICP community education.",
+      "summary": "Hook: Most spice jars tell you a flavor. They do not tell you a story. IC SPICY is changing that.",
+      "collection": "expanded-library",
+      "category": "marketing",
+      "pdfPath": "/documents/expanded-library/17_X_Thread_Bank.pdf",
+      "markdownPath": "/documents/expanded-library/17_X_Thread_Bank.md",
+      "tags": [
+        "threads",
+        "x",
+        "bank"
+      ],
+      "featured": false,
+      "sortOrder": 61,
+      "wordCount": 157,
+      "readingMinutes": 1,
+      "pdfBytes": 5803
+    },
+    {
+      "slug": "short-form-video-scripts",
+      "title": "IC SPICY Short-Form Video Script Pack",
+      "subtitle": "Hooks and shot lists for Reels, TikTok, and Shorts.",
+      "audience": "For fast content production from the farm, kitchen, and desk.",
+      "summary": "Hook: Most seasoning brands start in a boardroom. Mine starts here. Shot: hand in soil, pepper plants, drying peppers, seasoning jar. CTA: follow IC SPICY.",
+      "collection": "expanded-library",
+      "category": "marketing",
+      "pdfPath": "/documents/expanded-library/18_Short_Form_Video_Scripts.pdf",
+      "markdownPath": "/documents/expanded-library/18_Short_Form_Video_Scripts.md",
+      "tags": [
+        "video",
+        "shortform",
+        "scripts"
+      ],
+      "featured": false,
+      "sortOrder": 62,
+      "wordCount": 145,
+      "readingMinutes": 1,
+      "pdfBytes": 5675
+    },
+    {
+      "slug": "email-launch-sequence",
+      "title": "IC SPICY Email Launch Sequence",
+      "subtitle": "Email copy structure for waitlist and drop campaigns.",
+      "audience": "For Mailchimp, Beehiiv, ConvertKit, or manual email sends.",
+      "summary": "Subject: Welcome to IC SPICY. Body: founder story, rare peppers, chef-built flavor, and what subscribers will get first.",
+      "collection": "expanded-library",
+      "category": "marketing",
+      "pdfPath": "/documents/expanded-library/19_Email_Launch_Sequence.pdf",
+      "markdownPath": "/documents/expanded-library/19_Email_Launch_Sequence.md",
+      "tags": [
+        "email",
+        "launch",
+        "sequence"
+      ],
+      "featured": false,
+      "sortOrder": 63,
+      "wordCount": 110,
+      "readingMinutes": 1,
+      "pdfBytes": 5457
+    },
+    {
+      "slug": "press-kit",
+      "title": "IC SPICY Press Kit",
+      "subtitle": "Copy for media, blogs, podcasts, and local press.",
+      "audience": "For outreach to food, agriculture, local, and Web3 media.",
+      "summary": "IC SPICY is a Southwest Florida rare-pepper nursery and premium seasoning brand building farm-grown heat, chef-built flavor, and blockchain-backed provenance on the Internet Computer.",
+      "collection": "expanded-library",
+      "category": "marketing",
+      "pdfPath": "/documents/expanded-library/20_Press_Kit.pdf",
+      "markdownPath": "/documents/expanded-library/20_Press_Kit.md",
+      "tags": [
+        "press",
+        "media",
+        "kit"
+      ],
+      "featured": false,
+      "sortOrder": 64,
+      "wordCount": 123,
+      "readingMinutes": 1,
+      "pdfBytes": 5726
+    },
+    {
+      "slug": "influencer-chef-outreach-kit",
+      "title": "IC SPICY Influencer and Chef Outreach Kit",
+      "subtitle": "DMs, collaboration framing, and sample-box copy.",
+      "audience": "For chefs, grill creators, pepper reviewers, and local food influencers.",
+      "summary": "Hey [Name], I am building IC SPICY - a Southwest Florida rare-pepper seasoning brand with chef-built blends and provenance-backed storytelling. I would love to send you an early sample box and get your honest take.",
+      "collection": "expanded-library",
+      "category": "marketing",
+      "pdfPath": "/documents/expanded-library/21_Influencer_Chef_Outreach_Kit.pdf",
+      "markdownPath": "/documents/expanded-library/21_Influencer_Chef_Outreach_Kit.md",
+      "tags": [
+        "influencer",
+        "chef",
+        "outreach"
+      ],
+      "featured": false,
+      "sortOrder": 65,
+      "wordCount": 141,
+      "readingMinutes": 1,
+      "pdfBytes": 5834
+    },
+    {
+      "slug": "founder-operating-plan",
+      "title": "IC SPICY Founder Operating Plan",
+      "subtitle": "A weekly cadence for a solo grower-builder.",
+      "audience": "For balancing code, farming, production, marketing, and retail.",
+      "summary": "Two focused coding blocks, two farm/production blocks, one content batch block, one sales/outreach block, and one admin/compliance block.",
+      "collection": "expanded-library",
+      "category": "operations",
+      "pdfPath": "/documents/expanded-library/27_Founder_Operating_Plan.pdf",
+      "markdownPath": "/documents/expanded-library/27_Founder_Operating_Plan.md",
+      "tags": [
+        "founder",
+        "operations",
+        "plan"
+      ],
+      "featured": false,
+      "sortOrder": 70,
+      "wordCount": 98,
+      "readingMinutes": 1,
+      "pdfBytes": 5460
+    },
+    {
+      "slug": "retail-readiness-checklist",
+      "title": "IC SPICY Retail Readiness Checklist",
+      "subtitle": "What must be ready before serious grocery outreach.",
+      "audience": "For CPG operations and buyer conversations.",
+      "summary": "Final recipes, stable batch process, ingredient sourcing, shelf life, packaging, labels, net weight, UPCs, case packs, and quality checks.",
+      "collection": "expanded-library",
+      "category": "operations",
+      "pdfPath": "/documents/expanded-library/28_Retail_Readiness_Checklist.pdf",
+      "markdownPath": "/documents/expanded-library/28_Retail_Readiness_Checklist.md",
+      "tags": [
+        "retail",
+        "readiness",
+        "checklist"
+      ],
+      "featured": false,
+      "sortOrder": 71,
+      "wordCount": 101,
+      "readingMinutes": 1,
+      "pdfBytes": 5520
+    },
+    {
+      "slug": "food-safety-claims-checklist",
+      "title": "IC SPICY Food Safety and Claims Checklist",
+      "subtitle": "A practical guardrail for labels and marketing.",
+      "audience": "For packaging, ads, web copy, and public claims.",
+      "summary": "Organic, pesticide-free, non-GMO, gluten-free, allergen-free, health benefits, medical effects, lab-tested, award-winning, chef-certified, and provenance-certified claims should be reviewed before publishing.",
+      "collection": "expanded-library",
+      "category": "operations",
+      "pdfPath": "/documents/expanded-library/29_Food_Safety_Claims_Checklist.pdf",
+      "markdownPath": "/documents/expanded-library/29_Food_Safety_Claims_Checklist.md",
+      "tags": [
+        "food-safety",
+        "claims",
+        "checklist"
+      ],
+      "featured": false,
+      "sortOrder": 72,
+      "wordCount": 106,
+      "readingMinutes": 1,
+      "pdfBytes": 5606
+    },
+    {
+      "slug": "mainnet-launch-checklist",
+      "title": "IC SPICY Mainnet Launch Checklist",
+      "subtitle": "Operational checklist for production deployment readiness.",
+      "audience": "For ICP launch planning and internal discipline.",
+      "summary": "Read PROJECT_CONTEXT.md and AGENTS.md, fetch relevant ICP skills, complete local tests, verify admins, verify canister IDs, confirm cycles, and review upgrade risks.",
+      "collection": "expanded-library",
+      "category": "operations",
+      "pdfPath": "/documents/expanded-library/30_Mainnet_Launch_Checklist.pdf",
+      "markdownPath": "/documents/expanded-library/30_Mainnet_Launch_Checklist.md",
+      "tags": [
+        "mainnet",
+        "launch",
+        "checklist"
+      ],
+      "featured": false,
+      "sortOrder": 73,
+      "wordCount": 111,
+      "readingMinutes": 1,
+      "pdfBytes": 5600
+    },
+    {
+      "slug": "risk-register",
+      "title": "IC SPICY Risk Register",
+      "subtitle": "Market, technical, retail, legal, and founder-dependency risks.",
+      "audience": "For planning, diligence, and sober decision-making.",
+      "summary": "Canister bugs, payment settlement issues, wallet signer UX, HTTPS outcall failures, cycle exhaustion, upgrade mistakes, and untested edge cases.",
+      "collection": "expanded-library",
+      "category": "operations",
+      "pdfPath": "/documents/expanded-library/31_Risk_Register.pdf",
+      "markdownPath": "/documents/expanded-library/31_Risk_Register.md",
+      "tags": [
+        "risk",
+        "register",
+        "operations"
+      ],
+      "featured": false,
+      "sortOrder": 74,
+      "wordCount": 103,
+      "readingMinutes": 1,
+      "pdfBytes": 5602
+    }
+  ],
+  "markdowns": [
+    [
+      "branded-whitepaper",
+      "## Executive Thesis\n\nIC SPICY is a real-world-asset commerce and provenance platform for a Florida rare-pepper nursery. The finished product combines a direct-to-consumer plant and spice business, an on-chain nursery inventory system, ICRC-7 NFTs, weather provenance, premium community, and future SPICY token utility on the Internet Computer.\n\nThe brand story should lead with agriculture and flavor: 30 years of Zone 10a Southwest Florida growing experience, rare chili genetics, regenerative KNF/JADAM practice, and artisan seasoning blends designed with luxury fine-dining discipline. ICP is the proof layer, not the first sentence for grocery customers.\n\nThe commercial ambition is simple: build the premium heat brand that belongs on specialty shelves first, regional grocery shelves next, and eventually national grocery shelves beside incumbents like McCormick and challengers like Kinder's.\n\n## Problem\n\nCommodity spice shelves are crowded with familiar but anonymous products. Most shoppers cannot identify where the peppers came from, when they were harvested, who grew them, or why one blend deserves a premium price.\n\nAt the same time, Web3 RWA products often lack a physical product people can taste, gift, reorder, and talk about at dinner. IC SPICY solves both sides: physical peppers and seasoning products with digital provenance, membership, and community layered in.\n\n## Solution\n\nIC SPICY creates a farm-to-flame product stack. The nursery grows rare peppers and plants. NIMS tracks trays, cells, transplants, photos, and weather records. The storefront sells plants, spices, and membership NFTs. ICRC-7 NFTs carry ownership and provenance. QR flows connect physical products to digital records.\n\nFor normal customers, this feels like a premium pepper nursery and artisan spice brand. For crypto-native users, it is an ICP-native RWA system with certified assets, Internet Identity login, wallet signer payments, ICRC standards, and canister-resident business logic.\n\n## Brand Positioning\n\nPosition IC SPICY as luxury heat, not novelty heat. The line should promise balanced, chef-built flavor from real peppers rather than pain-for-clicks spice gimmicks.\n\nCore language: farm-grown heat, chef-built flavor, traceable origin, rare Florida peppers, living provenance, luxury pantry fire.\n\nTagline: Rare. Hot. Alive.\n\n## Product Pillars\n\nRare plants: seedlings, 1-gallon plants, 5-gallon mature plants, and garden inputs sourced from real nursery operations.\n\nArtisan seasonings: chef-designed blends using IC SPICY-grown peppers, smoked salts, citrus, garlic, and global heat profiles.\n\nPepperHead membership: 888 NFTs inside the 8888-token collection with discounts, whitelist access, and premium future utility.\n\nNIMS provenance: plant lifecycle, photos, QR claims, weather snapshots, and owner-controlled privacy.\n\nSpicyAI: a future zero-log assistant for KNF, JADAM, pepper cultivation, recipes, and Florida growing conditions.\n\n## Why ICP\n\nICP allows the dapp to host a frontend, certified NFT assets, Motoko canister logic, HTTPS outcalls, Internet Identity, ICRC ledgers, and self-custody wallet integrations on one chain.\n\nThe strategic benefit is not speculative language; it is operational proof. Customers can scan, verify, claim, and interact with a real product story that lives beyond the label.\n\n## Go-To-Market Summary\n\n- Phase one should prioritize DTC and local credibility: farmers markets, chef tastings, pepper community drops, short-form grow content, and early PepperHead collectors.\n\n- Phase two should build retail proof: top three to four seasoning SKUs, sell-through data, reorder rates, demo feedback, and regional specialty accounts.\n\n- Phase three should attack grocery distribution with velocity data, clean unit economics, trade-spend planning, broker relationships, and a disciplined SKU count."
+    ],
+    [
+      "market-analysis",
+      "## Category Size\n\nPublic market estimates vary, but the global spices and seasonings market is commonly estimated around the high-twenties to low-thirties billions of dollars in 2025, with mid-single-digit growth projected through the next decade.\n\nThe U.S. market is mature but still attractive because premiumization, clean-label demand, global flavors, grilling culture, and hot/spicy products create room for challengers with stronger stories than commodity jars.\n\n## Trend Support\n\nMcCormick's 2025 Flavor Forecast naming Aji Amarillo as flavor of the year validates chili-forward, fruit-forward, global heat profiles.\n\nSpecialty Food Association trend language supports flavor boosters, chef-inspired pantry upgrades, global convenience, sauces, seasonings, marinades, and bold flavors.\n\nSpiceology's 2025 trend framing around swicy, big and bold, smoke, char, and modern nostalgia aligns with IC SPICY's potential product line.\n\nPremium spice brands such as Burlap & Barrel and La Boite prove that origin, chef credibility, direct sourcing, and elevated storytelling can command attention beyond commodity spice pricing.\n\n## Competitive Set\n\nMcCormick: massive trust, distribution, brand recall, category management, and retail leverage. Weakness: mainstream, corporate, less founder-led, less rare-pepper romance.\n\nKinder's: modern, approachable, grill-friendly, fast-growing, strong retail presence. Weakness: not farm-origin, not rare-pepper-native, not provenance-led.\n\nBurlap & Barrel: premium origin and direct trade. Weakness: less focused on hot-pepper culture and grocery-grill crossover.\n\nSpiceology: chef-forward innovation. Weakness: less tied to a single grower/farm mythology.\n\nIC SPICY: can own the intersection of rare peppers, Florida terroir, chef-built heat, and digital provenance.\n\n## Opportunity\n\nThe opening is not to copy McCormick's shelf. The opening is to make a high-conviction premium heat brand that customers remember, gift, post, scan, and reorder.\n\nDTC and specialty retail are the proof grounds. Regional grocery is the scaling bridge. National grocery comes after velocity, supply reliability, margins, compliance, packaging, and buyer relationships are proven.\n\n## Risks\n\nRetail slotting and trade spend can drain cash if pursued too early.\n\nToo many SKUs can dilute focus and complicate production.\n\nOverleading with crypto can confuse mainstream food buyers.\n\nHeat without culinary balance becomes novelty, not repeat purchase.\n\nFounder capacity is a real constraint, so the strategy must favor repeatable content and disciplined SKU focus.\n\n## Sources Consulted\n\nMcCormick 2025 Flavor Forecast; Specialty Food Association 2025 trends; Spiceology 2025 trend report; Burlap & Barrel brand positioning; public search summaries for McCormick annual reporting, Kinder's retail growth, and seasoning market-size reports from Grand View, Mordor, Expert Market Research, Fact.MR, and related publishers.\n\nMarket figures from public snippets should be treated as directional until replaced with paid syndicated data such as NIQ, SPINS, Circana, or retailer scan data."
+    ],
+    [
+      "marketing-scripts",
+      "## 90-Second Hero Script\n\nMost seasoning brands start in a boardroom. IC SPICY starts in the soil.\n\nIn Zone 10a Southwest Florida, we grow rare chili peppers under real sun, real weather, and real pressure. These are not anonymous commodity peppers blended into another generic shaker. These are living plants with a story.\n\nEvery seedling, every transplant, every harvest, and every batch begins with grower discipline built over 30 years.\n\nThen the flavor goes into the hands of culinary craft: artisan spice blends designed with the mindset of luxury fine dining and an ACF award-winning chef. The goal is not just heat. Heat is easy. The goal is balance, depth, smoke, fruit, salt, acid, aroma, and finish.\n\nThis is where rare peppers become pantry weapons.\n\nIC SPICY is building the next generation of seasonings: farm-grown, chef-built, digitally transparent. From plants to peppers, from peppers to blends, from blends to your table.\n\nMcCormick made spices mainstream. Kinder's made seasoning fun. IC SPICY is here to make heat collectible, traceable, and unforgettable.\n\nRare. Hot. Alive. Welcome to IC SPICY.\n\n## 30-Second Casual Script\n\nIC SPICY is a rare pepper nursery in Southwest Florida turning real peppers into chef-designed artisan seasonings and on-chain provenance products. Think farm-grown heat, luxury flavor, and QR-backed origin instead of another anonymous grocery-store spice jar. We are building for pepper heads, cooks, chefs, and anyone who wants a seasoning brand with a real story behind it.\n\n## Retail Buyer Script\n\nIC SPICY gives your shelf a premium heat brand with a real origin story. The line is built around rare peppers grown in Zone 10a Southwest Florida, chef-designed flavor profiles, clean premium positioning, and QR-enabled provenance storytelling.\n\nIt speaks to three fast-moving shoppers: grilling enthusiasts, global flavor explorers, and younger consumers looking for bold, authentic, traceable products.\n\nWe would launch with a disciplined three-to-four-SKU set, support it with social content, demos, QR education, and velocity-focused promotions. The goal is not to flood the shelf. The goal is to prove turns, reorders, and shopper excitement.\n\n## X / Community Shill\n\nIC SPICY is what happens when a rare pepper nursery, 30 years of Zone 10a growing experience, chef-built seasoning blends, and ICP provenance all collide.\n\nWe are not making another random spice jar. We are building a farm-to-flame brand that can live online, in kitchens, at farmers markets, and eventually on grocery shelves next to the giants.\n\n## Founder Intro\n\nI am building IC SPICY because I believe the next great seasoning brand should come from the grower, not the boardroom. I want customers to taste rare peppers, understand where they came from, and feel the difference between commodity heat and intentional flavor.\n\n## McCormick / Kinder's Comparison\n\nRespect to McCormick: they built the category. Respect to Kinder's: they proved modern seasoning brands can move fast. IC SPICY is coming from a different angle. We are smaller, sharper, more origin-driven, more chef-led, and built around rare peppers people can actually trace."
+    ],
+    [
+      "marketing-strategy",
+      "## Positioning\n\nIC SPICY should be marketed as a premium food brand with a Web3 trust layer. The mainstream headline is not NFTs. The mainstream headline is rare Florida peppers turned into chef-built seasonings with traceable origin.\n\nPrimary phrase: farm-grown heat, chef-built flavor. Secondary phrase: blockchain-backed provenance. Use the second phrase only after the audience understands the physical product.\n\n## Audience Segments\n\nPepper heads: care about rare cultivars, heat levels, grow methods, and authenticity.\n\nHome cooks and grillers: want easy flavor upgrades that beat boring grocery blends.\n\nFoodies and chefs: want origin, ingredient quality, balance, and culinary storytelling.\n\nICP/Web3 users: want a real RWA case study with NFTs, provenance, and token utility.\n\nRetail buyers: want clean unit economics, tight SKU count, velocity proof, and margin.\n\n## Core Channels\n\nX: build-in-public, ICP threads, market takes, founder story, launch updates.\n\nInstagram: product photography, grow shots, recipe reels, chef plating, farm visuals.\n\nTikTok: short grow updates, pepper reactions, seasoning demos, behind-the-scenes blending.\n\nFacebook: local Florida buyers, pepper groups, farmers-market updates, community trust.\n\nEmail: drop calendar, limited batches, recipes, PepperHead updates, retail milestones.\n\nIn-person: farmers markets, chef pop-ups, tastings, grocery demos, local press.\n\n## Content Pillars\n\nFrom tray to token: lifecycle and provenance storytelling.\n\nChef-built blends: tasting notes, pairings, technique, plating, and recipe applications.\n\nFlorida terroir: Zone 10a heat, sun, rain, humidity, and rare pepper adaptation.\n\nFounder journey: solo developer, grower, chef network, and real build progress.\n\nRetail conquest: transparent journey from DTC to specialty shelves to grocery chains.\n\n## Weekly Solo-Founder Cadence\n\nThree short videos per week: grow update, cooking demo, packaging/product update.\n\nTwo X threads per week: one ICP/build thread, one food/market/brand thread.\n\nOne email per week: drop, story, recipe, or behind-the-scenes note.\n\nOne live touchpoint per month: X Space, tasting, farmers market, or AMA.\n\nOne retail progress update per month: new account, sell-through, demo, or buyer conversation.\n\n## Retail Strategy\n\nDo not approach national grocery first. Build DTC demand, local proof, specialty retail sell-through, and reorder data.\n\nLaunch with three to four hero SKUs. Buyers dislike unfocused founders with twelve unproven blends.\n\nTrack units per store per week, repeat purchase, demo conversion, customer reviews, gross margin, case pack economics, and production capacity.\n\nUse a premium sell sheet that explains the founder, the chef angle, the farm source, and the reason the product deserves shelf space."
+    ],
+    [
+      "pitch-deck",
+      "## Slide 1 - Title\n\nIC SPICY. Rare. Hot. Alive. Farm-grown heat, chef-built flavor, blockchain-backed provenance.\n\n## Slide 2 - The Problem\n\nSeasoning shelves are full of anonymous commodity blends. Premium buyers want origin, craft, bold flavor, and trust. Web3 RWAs need real products people can taste and reorder.\n\n## Slide 3 - The Insight\n\nA living plant can have a digital history as rich as a collectible. A spice jar can carry a story deeper than a label.\n\n## Slide 4 - The Product\n\nRare pepper plants, artisan spice blends, NIMS plant tracking, QR claims, ICRC-7 NFTs, PepperHead membership, community, recipes, and future SpicyAI.\n\n## Slide 5 - Why Now\n\nPremium seasonings, bold heat, global flavors, clean-label products, and chef-inspired pantry upgrades are all growing. Kinder's proved challengers can take shelf share. McCormick's own flavor forecast validates chili-forward global flavor trends.\n\n## Slide 6 - Why IC SPICY Wins\n\nReal Florida nursery operations. 30 years of Zone 10a growing experience. Chef-designed flavor. Digital provenance. ICP-native infrastructure. Community-owned energy without hiding behind crypto jargon.\n\n## Slide 7 - First SKU Line\n\nZone 10a Fire Salt, Reaper Reserve, Smoked Datil Citrus, and Chef's Charred Garlic Pepper. Four SKUs: one everyday, one extreme, one Florida-signature, one mass-market grill competitor.\n\n## Slide 8 - NFT and Membership Layer\n\n8888 NFTs, 888 PepperHeads, discount tiers, whitelist access, premium AI tier, and future provenance-linked product experiences.\n\n## Slide 9 - Business Model\n\nDTC plant sales, artisan spice sales, membership NFTs, marketplace fees, premium drops, future SPICY utility, chef collaborations, and retail distribution.\n\n## Slide 10 - Go-To-Market\n\nStart with DTC and local proof. Build content and community. Prove sell-through in specialty retail. Approach regional grocery with velocity data. Scale only the strongest SKUs.\n\n## Slide 11 - Founder Advantage\n\nOwner-operator credibility: luxury fine dining perspective, ACF award-winning chef input, 30 years growing experience, rare pepper genetics, and hands-on solo-builder execution.\n\n## Slide 12 - The Ask\n\nFollow, taste, partner, stock, collect, and help turn a Florida pepper nursery into the next great premium heat brand."
+    ],
+    [
+      "roadmap",
+      "## North Star\n\nIC SPICY ships as a real business first: rare plants, premium spices, verified provenance, and community. The Web3 layer strengthens trust, membership, and transparency without confusing mainstream customers.\n\nThe finished product is a premium food and agriculture brand with on-chain infrastructure: storefront, plant records, NFT membership, weather provenance, wallet payments, SPICY utility, and future AI assistance.\n\n## Technical Roadmap\n\n- Phase 3: finish ICRC-7 core, initialize the 8888-token pool, implement transfers, approvals, certified metadata, and local smoke tests.\n\n- Phase 4: replace simulated wallet/payment flows with Stripe, ICPay, wallet signer, ICRC-2 settlement, PepperHead purchases, and server-side discount enforcement.\n\n- Phase 5: add ckBTC deposit, sweep, and withdrawal logic with proper subaccount handling.\n\n- Phase 5.5: add weather provenance through grouped Open-Meteo outcalls, backfills, claim-time privacy, and lifecycle snapshots.\n\n- Phase 6: extract marketplace, treasury, community, NIMS, and AI concerns into dedicated canisters while preserving the backend as the permanent NFT ledger.\n\n- Phase 6.5: launch SpicyAI with zero-log policy and tiered usage based on identity, NFT ownership, PepperHead status, and SPICY balance bonus.\n\n- Phase 7: audit, polish, legal review, privacy policy, terms, runbooks, monitoring, and production launch.\n\n- Phase 8: OHSHII LGE, SPICY ledger, treasury structure, buybacks, burns, and public transparency dashboard.\n\n## Brand Roadmap\n\n- Stage 1: establish founder authority through grow videos, chef blend development, Florida nursery credibility, and early community content.\n\n- Stage 2: launch the first seasoning line with four hero SKUs and collect customer feedback, UGC, repeat purchase data, and food photos.\n\n- Stage 3: build retail assets: sell sheet, wholesale pricing, UPCs, case packs, labels, nutrition/ingredient panels, insurance, and production SOPs.\n\n- Stage 4: enter specialty stores and local/regional accounts before pursuing larger grocery chains.\n\n- Stage 5: use retail velocity, demo performance, reorder data, and community proof to approach larger distributors and chains.\n\n## First 12 Months\n\n- Month 1-2: finish technical NFT and provenance foundation; finalize brand identity and packaging direction.\n\n- Month 3-4: pilot seasoning batches with chef tasting notes, content capture, and limited DTC release.\n\n- Month 5-6: launch PepperHead membership and provenance storytelling; begin farmers-market and chef-collab demos.\n\n- Month 7-9: formalize wholesale line, pitch local specialty grocers, and collect sell-through data.\n\n- Month 10-12: expand regional retail, publish transparency updates, and prepare national-buyer materials."
+    ],
+    [
+      "x-spaces-script",
+      "## Room Title\n\nCan a Florida Pepper Nursery Outshine Big Seasoning?\n\nSubtitle: rare peppers, chef-built flavor, ICP provenance, and the mission to take IC SPICY from farm trays to grocery shelves.\n\n## 0:00-3:00 - Welcome\n\nAppreciate everyone pulling up. Tonight I am talking IC SPICY: rare peppers, chef-designed artisan seasonings, ICP provenance, and the mission to build a seasoning brand that can stand next to McCormick and Kinder's without blinking.\n\nThis room is casual, but the mission is serious. We are talking food, farming, flavor, retail, and blockchain as a proof layer.\n\n## 3:00-8:00 - Founder Story\n\nTalk about the 30 years of growing experience, Zone 10a Southwest Florida, FDACS nursery credibility, rare pepper genetics, and why heat became a personal obsession.\n\nExplain the chef angle: luxury fine dining mindset, ACF award-winning chef influence, and the idea that heat should be balanced, not just painful.\n\n## 8:00-15:00 - Market Setup\n\nSpices and seasonings are a massive global category. Premium, bold, spicy, smoked, swicy, clean-label, and global flavors are all trending.\n\nMcCormick naming Aji Amarillo flavor of the year validates the chili-forward direction. Kinder's proves that a modern seasoning brand can capture grocery attention quickly.\n\nThe opportunity is to bring origin, chef craft, and digital proof to a category that still has too many anonymous jars.\n\n## 15:00-25:00 - Product Vision\n\nExplain the full stack: seedlings, plants, spices, salts, PepperHead NFTs, QR provenance, weather/lifecycle history, community, CookBook, and future SpicyAI.\n\nKeep repeating the plain-English value: this is a real food brand with technology that proves the story.\n\n## 25:00-35:00 - Why ICP\n\nICP lets the project host the app, assets, identity, wallet flows, NFTs, provenance records, and canister logic on-chain.\n\nDo not over-technicalize. Say: the chain helps us make claims verifiable instead of asking customers to just trust a label.\n\n## 35:00-45:00 - The Big Ambition\n\nSay the bold part clearly: McCormick owns legacy. Kinder's owns modern mass-market seasoning energy. IC SPICY is going after luxury heat: chef-built flavor from real peppers with proof behind the plant.\n\nAcknowledge the climb: national grocery shelves require retail proof, margins, compliance, packaging, production, and velocity. The strategy is DTC first, specialty retail second, regional grocery third, national after proof.\n\n## 45:00-55:00 - Q&A Prompts\n\n- What flavors would you want first?\n\n- Would you scan a QR code on a spice jar to see where the peppers came from?\n\n- What makes you trust a premium seasoning brand?\n\n- Would you rather buy plants, spices, or membership first?\n\n- What would make you replace your current seasoning brand?\n\n## 55:00-60:00 - Close\n\nIf you want early access, follow IC SPICY, share the room, and watch the build. This starts with rare peppers in Florida, but the goal is grocery shelves everywhere.\n\nRare. Hot. Alive."
+    ],
+    [
+      "x-spaces-shilling-scripts-extended",
+      "## 1. Confident Founder Intro\n\nAppreciate everyone coming through. I am building IC SPICY, and the simplest way to explain it is this: I am taking a real rare-pepper nursery in Southwest Florida and turning it into a premium seasoning, plant, NFT, and provenance brand.\n\nThis is not a random meme project. This starts in the soil. Rare peppers, Zone 10a growing conditions, chef-built blends, and a long-term vision to compete on grocery shelves with brands like Kinder's and eventually stand next to McCormick.\n\nThe blockchain piece is not the product. The product is flavor. The chain gives us proof, membership, and transparency.\n\n## 2. Casual Why This Is Different\n\nMost spice brands are anonymous. You pick up a jar and it says garlic, pepper, BBQ, whatever. But where did the peppers come from? Who grew them? Was there any craft behind it?\n\nIC SPICY is different because it has a real origin. These peppers come from a real grower, a real climate, a real process. Then we take that and build flavor like a chef would, not like a boardroom would.\n\nSo when I say I want to go after Kinder's, I mean it. Kinder's made seasoning fun. IC SPICY is going to make heat feel premium.\n\n## 3. ICP and Web3 Crowd Pitch\n\nFor the ICP crowd, IC SPICY is one of the cleanest RWA stories we can tell because it is not abstract.\n\nIt is not tokenized real estate. It is not a PDF saying something exists somewhere. It is a plant. A pepper. A spice blend. A QR code. A provenance record. A customer.\n\nICP gives us the storefront, identity, certified assets, NFT standards, wallet rails, and canister logic. That means the product and the proof can live in the same ecosystem.\n\nThis is the kind of app normal people can understand: scan the jar, see the story, taste the product.\n\n## 4. Retail Ambition Script\n\nI will say the big goal out loud: I want IC SPICY on grocery shelves.\n\nNot just a little Etsy spice brand. Not just a crypto novelty. I want this brand to earn shelf space.\n\nBut the way to do that is not by pretending we are McCormick on day one. The way is DTC first, local proof, specialty retail, demos, reorder data, and then regional grocery.\n\nI want buyers to look at IC SPICY and say: this has a real founder, a real story, strong flavor, premium packaging, social energy, and customers asking for it.\n\n## 5. McCormick vs Kinders vs IC SPICY\n\nMcCormick is legacy. They built the spice aisle. Respect.\n\nKinder's is modern mass-market seasoning. They made blends feel fun, accessible, and grill-friendly. Respect.\n\nIC SPICY is coming from a different lane: luxury heat, rare peppers, chef-built blends, Florida origin, and provenance.\n\nI do not need to beat McCormick at being McCormick. I need to beat everyone at being IC SPICY.\n\n## 6. PepperHead NFT Pitch\n\nPepperHeads are the membership layer.\n\nThe easiest way to explain it: if IC SPICY is the brand, PepperHeads are the early firekeepers. They get deeper access, future whitelist benefits, premium AI usage, and membership status inside the ecosystem.\n\nBut I am being clear: do not buy because you think number go up. Buy because you want to be early to a real food brand, a real nursery, and a real long-term build.\n\nThis is about membership, identity, and access around the brand.\n\n## 7. Spice Buyer Hook\n\nIf you cook, grill, meal prep, or just want your food to stop tasting boring, IC SPICY is being built for you.\n\nThe goal is not just hot. Hot is easy. Anybody can dump ghost pepper powder into a jar.\n\nThe goal is flavor: smoke, citrus, garlic, fruit, salt, umami, finish, and controlled heat. Something you can put on eggs, shrimp, steak, potatoes, rice bowls, chicken, popcorn, whatever.\n\nThat is how you get repeat purchase. Not pain. Flavor.\n\n## 8. Origin Story Script\n\nI have been around peppers and growing for decades. Zone 10a Southwest Florida is a serious environment: heat, humidity, sun, storms, pests, pressure.\n\nThat is part of the story. These peppers are not just ingredients; they are adapted to a place.\n\nIC SPICY is my way of turning that growing knowledge into a brand people can taste, collect, scan, and follow from the farm to the shelf.\n\n## 9. Short Hype Close\n\nIf you are here early, you are watching the start of something real.\n\nA rare pepper nursery. A premium seasoning brand. A Web3 provenance layer. A community of pepper heads, chefs, growers, collectors, and ICP builders.\n\nI am not here to build another temporary hype cycle. I am here to build a brand that can sit on a grocery shelf and make people pick it up.\n\nRare. Hot. Alive.\n\n## 10. Professional Close For Partners\n\nIf you are a chef, retailer, ICP builder, creator, or potential partner, I want to talk.\n\nIC SPICY has a rare combination: real product, strong founder story, premium food positioning, Web3 infrastructure, and a category with massive mainstream demand.\n\nThis is still early, but the direction is clear: build the product, prove the velocity, grow the community, and earn the shelf."
+    ],
+    [
+      "executive-summary",
+      "## The One-Liner\n\nIC SPICY is a premium rare-pepper nursery and artisan seasoning brand from Zone 10a Southwest Florida, using ICP-native provenance to connect real plants, chef-built flavor, NFTs, community, and future token utility.\n\n## Why It Matters\n\nSeasoning shelves are full of anonymous commodity blends. IC SPICY brings origin, grower credibility, culinary craft, and digital proof to a category where premium heat, global flavor, and clean-label products are gaining momentum.\n\n## What Exists\n\nThe project has a React storefront, Motoko backend, NIMS plant inventory system, marketplace, community, CookBook, NFT infrastructure, and a mainnet NFT asset canister strategy. The brand story is anchored by 30 years of growing experience and rare pepper genetics.\n\n## The Ask\n\nFollow, taste, partner, stock, introduce, and help turn a Florida rare-pepper nursery into a premium heat brand with grocery-shelf ambition."
+    ],
+    [
+      "investor-memo",
+      "## Thesis\n\nIC SPICY has two linked opportunities: a premium physical CPG brand and an ICP-native RWA provenance platform. The physical products create mainstream demand; the blockchain layer creates trust, membership, transparency, and defensible community infrastructure.\n\n## Market Timing\n\nPremium seasoning, bold heat, global flavor, chef-inspired pantry upgrades, and specialty food discovery are all moving in IC SPICY's direction. McCormick validates chili-forward trends; Kinder's validates that challengers can grow quickly with the right flavor and retail strategy.\n\n## Moat\n\nThe moat is founder-market fit: 30 years of Zone 10a growing experience, rare pepper access, chef-built blend development, a real nursery operation, and a software system that turns agricultural lifecycle data into customer-facing provenance.\n\n## Risks\n\nRetail distribution is expensive, token claims require legal discipline, solo-founder bandwidth is finite, and national grocery ambitions require production, insurance, packaging, compliance, trade spend, and velocity proof.\n\n## Use of Support\n\nStrategic support should focus on audit readiness, retail packaging, production SOPs, chef collaborations, community growth, and warm introductions to ICP and specialty food partners."
+    ],
+    [
+      "data-room-index",
+      "## Core Brand Docs\n\nBranded whitepaper, pitch deck, roadmap, executive summary, market analysis, marketing strategy, founder bio, press kit, and retail sell sheet.\n\n## Technical Docs\n\nPROJECT_CONTEXT.md, AGENTS.md, canister architecture, ICRC-7 plan, asset upload notes, security posture, audit plan, local test results, and canister IDs as they are finalized.\n\n## Commercial Docs\n\nWholesale line sheet, SKU sheets, packaging guide, pricing model, margin assumptions, demo scripts, launch calendar, and retail readiness checklist.\n\n## Legal and Risk Docs\n\nToken disclosure draft, claims checklist, food safety checklist, privacy policy, terms, risk register, audit scope, and counsel review notes when available.\n\n## Open Items\n\nPopulate legal entity details, finalized UPCs, insurance, production certifications, lab tests where needed, audit firm selection, LGE dates, SPICY ledger ID, and post-launch retail scan data."
+    ],
+    [
+      "strategic-partner-brief",
+      "## Partner Fit\n\nIC SPICY is a practical RWA showcase: real products, real customers, on-chain identity, NFTs, payment rails, provenance, and a narrative normal people can understand.\n\n## ICP Ecosystem Value\n\nThe project can demonstrate certified assets, ICRC-7 NFTs, wallet signer flows, HTTPS outcalls, Internet Identity, and future ICRC-1 token utility in a consumer-facing brand.\n\n## Food Partner Value\n\nChefs, grocers, and distributors get a differentiated premium heat line with a Florida origin story, rare peppers, chef-designed blends, and digital storytelling that can activate shoppers at shelf.\n\n## Collaboration Ideas\n\nCo-branded chef blends, limited NFT-backed drops, retail tasting events, provenance demos, ICP community spaces, hot-sauce or seasoning pairing kits, and regional specialty-food pilots."
+    ],
+    [
+      "grant-application-packet",
+      "## Project Summary\n\nIC SPICY combines specialty agriculture, premium food CPG, and blockchain provenance to modernize how rare plants and pepper products are sold, verified, and experienced.\n\n## Innovation\n\nThe project applies ICP-native infrastructure to living agricultural assets: plant lifecycle records, certified NFT assets, self-custody wallet payments, QR claims, and weather provenance.\n\n## Economic Impact\n\nThe project can support local agriculture, specialty food production, chef collaborations, online sales, retail accounts, and digital community growth from Southwest Florida.\n\n## Funding Priorities\n\nAudit readiness, food packaging and compliance, production scale-up, retail demo support, provenance UX, and public education around RWA utility.\n\n## Outcomes\n\nDeliver a working dapp, launch premium seasoning SKUs, establish early retail accounts, document provenance use cases, and publish transparent progress updates."
+    ],
+    [
+      "retail-buyer-sell-sheet",
+      "## Brand Snapshot\n\nIC SPICY is a premium Florida rare-pepper brand delivering chef-built heat from Zone 10a Southwest Florida. The line is designed for shoppers who want bold flavor, origin, and a story stronger than another generic spice jar.\n\n## Why It Belongs On Shelf\n\nPremium heat is culturally hot, global flavor is growing, shoppers want better pantry upgrades, and IC SPICY gives the category a founder-led farm origin with modern QR storytelling.\n\n## Launch Assortment\n\nRecommended first four SKUs: Zone 10a Fire Salt, Reaper Reserve, Smoked Datil Citrus, and Chef's Charred Garlic Pepper. This creates an everyday SKU, an extreme SKU, a Florida signature SKU, and a grill-friendly mass appeal SKU.\n\n## Retail Support\n\nFounder-led demos, social content, recipe cards, QR provenance story, limited drops, local press, seasonal pepper tie-ins, and buyer-specific launch promotions.\n\n## Buyer Promise\n\nStart tight, support the shelf, measure velocity, earn reorders, and scale only the SKUs that prove themselves."
+    ],
+    [
+      "wholesale-line-sheet",
+      "## Wholesale Policy\n\nThis is a planning template. Final wholesale prices, MSRP, UPCs, net weight, case packs, minimum order quantities, payment terms, and lead times should be confirmed after packaging and COGS are finalized.\n\n## Proposed Line\n\nZone 10a Fire Salt: everyday finishing and grilling salt. Reaper Reserve: controlled superhot chef blend. Smoked Datil Citrus: Florida seafood and poultry blend. Chef's Charred Garlic Pepper: broad grill and roasted vegetable blend.\n\n## Suggested Structure\n\nTarget premium MSRP range: 9.99 to 14.99 depending on jar size and ingredients. Wholesale should preserve enough margin for retailer and brand after packaging, labor, spoilage, freight, demos, and trade spend.\n\n## Order Terms To Define\n\nCase pack, opening order, reorder minimum, shelf life, storage requirements, lead time, freight policy, damaged goods policy, seasonal availability, and demo support.\n\n## Buyer Notes\n\nKeep the first line focused. Retailers need proof of turns, not a huge catalog. Use early DTC and local sell-through to justify expansion."
+    ],
+    [
+      "distributor-pitch-deck",
+      "## Slide 1 - Brand\n\nIC SPICY: rare Florida peppers, chef-built seasonings, and shelf-ready premium heat.\n\n## Slide 2 - Category Fit\n\nPremium seasoning, bold heat, global flavor, and clean-label pantry upgrades are growing. IC SPICY gives buyers a differentiated challenger brand with a real farm story.\n\n## Slide 3 - Assortment\n\nFour-SKU launch: everyday, extreme, Florida signature, and grill-friendly. Focused enough for clean placement; broad enough to test shopper demand.\n\n## Slide 4 - Support\n\nFounder demos, social campaigns, QR storytelling, recipe cards, limited seasonal drops, and regional content tied to Southwest Florida growing.\n\n## Slide 5 - Distributor Need\n\nWe need partners who can help with regional account access, shelf strategy, buyer feedback, reorder discipline, and operational scaling without overextending the brand too early."
+    ],
+    [
+      "grocery-demo-script",
+      "## Opening Line\n\nWant to taste a Florida-grown rare pepper seasoning? IC SPICY is built from peppers grown in Zone 10a Southwest Florida and blended for flavor first, not just heat.\n\n## Sampling Flow\n\nStart with the approachable blend, then offer a hotter option only after asking the customer's heat comfort level. Never surprise someone with superhot spice.\n\n## Core Talking Points\n\nFarm-grown peppers, chef-designed blends, Florida origin, small-batch production, QR story, and the goal of bringing a better premium heat brand to grocery shelves.\n\n## Objection Handling\n\nIf they say it is too hot: explain the line has levels. If they ask about crypto: say the tech is mostly for provenance and membership, while the product is real seasoning. If they compare to Kinder's: say IC SPICY is more origin-driven and chef-led.\n\n## Close\n\nIf you like it, grab a jar today and follow the QR for the story behind the brand. We are building this from a real Florida pepper nursery, one batch at a time."
+    ],
+    [
+      "retail-launch-calendar",
+      "## Days 1-15\n\nDeliver product, verify shelf placement, provide sell sheet and recipe cards, announce account on social, and schedule first demo.\n\n## Days 16-30\n\nRun first demo, capture customer reactions, post store-specific content, check shelf condition, and record early sell-through.\n\n## Days 31-60\n\nRun second demo, test a small promo, send buyer progress update, gather staff feedback, and identify best-performing SKU.\n\n## Days 61-90\n\nRequest reorder, refine assortment, propose secondary placement if velocity supports it, and package results for the next retail pitch.\n\n## Metrics\n\nUnits sold, units per store per week, demo conversion, reorder timing, customer comments, social engagement, and SKU ranking."
+    ],
+    [
+      "sku-concept-sheets",
+      "## Zone 10a Fire Salt\n\nEveryday finishing salt with citrus, smoke, mineral crunch, and controlled chili warmth. Best on eggs, grilled vegetables, chicken, fries, avocado, and seafood.\n\n## Reaper Reserve\n\nA luxury superhot blend designed for tiny-dose use. The goal is precision heat with depth, not a prank product. Best for chili, wings, sauces, marinades, and brave pepper heads.\n\n## Smoked Datil Citrus\n\nFlorida signature profile with bright citrus, smoked pepper, subtle sweetness, and coastal energy. Best on shrimp, fish, chicken, rice bowls, and roasted corn.\n\n## Chef's Charred Garlic Pepper\n\nBroadest mass-market contender: roasted garlic, char, pepper, salt, chili warmth, and savory finish. Best on steak, burgers, potatoes, mushrooms, and grilled vegetables.\n\n## Future Limited Drops\n\nAji Amarillo Mango Smoke, Scotch Bonnet Lime Salt, Charapita Gold Dust, and Death Spiral Black Garlic should be seasonal or collector releases after the core line proves demand."
+    ],
+    [
+      "packaging-copy-guide",
+      "## Front Label Formula\n\nBrand name, SKU name, short flavor promise, heat level, net weight, and one concise origin phrase such as Zone 10a Florida Pepper Blend.\n\n## Back Label Formula\n\nOne founder-origin paragraph, tasting notes, use cases, ingredient list, QR callout, batch number, website, and required regulatory information.\n\n## QR Callout\n\nScan for the IC SPICY story, batch notes, pepper origin, recipes, and membership updates. Avoid promising investment, token upside, medical effects, or unverifiable claims.\n\n## Claims To Avoid\n\nDo not claim organic, pesticide-free, health benefits, disease treatment, guaranteed provenance certification, or token economics unless legally reviewed and factually supported.\n\n## Tone\n\nPremium but not stiff. Confident but not hype-drunk. Culinary, farm-rooted, and specific."
+    ],
+    [
+      "brand-voice-guide",
+      "## Voice Attributes\n\nGrounded, fiery, culinary, premium, direct, transparent, and a little rebellious.\n\n## What To Say\n\nFarm-grown heat. Chef-built flavor. Rare Florida peppers. Real provenance. Luxury pantry fire. Built from soil, not a boardroom.\n\n## What To Avoid\n\nMoon language, guaranteed financial upside, empty Web3 jargon, macho pain challenges, fake scarcity, and vague wellness claims.\n\n## Audience Adjustments\n\nFor grocery buyers: margin, velocity, shopper fit. For chefs: flavor, origin, technique. For X: founder conviction and build-in-public. For local customers: plants, taste, community, and trust.\n\n## Signature Lines\n\nRare. Hot. Alive. Farm-grown heat. Chef-built flavor. From tray to table. From soil to shelf."
+    ],
+    [
+      "product-naming-system",
+      "## Core Naming Rule\n\nUse names that combine place, flavor, technique, and heat. The name should feel like food, not a novelty dare.\n\n## Core Line Families\n\nFire Salts for finishing salts, Chef's Reserve for culinary blends, Smokehouse for grill blends, Florida Gold for local citrus and datil profiles, and Superhot Reserve for extreme blends.\n\n## Limited Drop Names\n\nUse rare cultivar names sparingly: Charapita Gold, Death Spiral Reserve, Apocalypse Smoke, Aji Amarillo Sunfire, Scotch Bonnet Lime Fire.\n\n## Avoid\n\nDo not overuse skulls, death jokes, or shock names. Keep extreme heat sophisticated.\n\n## Decision Test\n\n- Would a chef, a grocery buyer, and a pepper head all understand why this product exists? If yes, the name is working."
+    ],
+    [
+      "recipe-cards",
+      "## Fire Salt Eggs\n\nSoft scrambled eggs, butter, chives, and Zone 10a Fire Salt. Finish lightly after cooking so the citrus and pepper stay bright.\n\n## Datil Citrus Shrimp\n\nToss shrimp with olive oil, lime, garlic, Smoked Datil Citrus, and a pinch of salt. Sear hot and finish with fresh herbs.\n\n## Charred Garlic Potatoes\n\nRoast potatoes with oil and Chef's Charred Garlic Pepper until crisp. Finish with lemon and parsley.\n\n## Reaper Reserve Chili Oil\n\nWarm neutral oil with garlic, paprika, and a tiny pinch of Reaper Reserve. Rest, strain if desired, and use carefully over pizza, noodles, or beans.\n\n## Retail Demo Bite\n\nUse plain popcorn, roasted potatoes, or grilled chicken bites as neutral carriers so customers taste the seasoning clearly."
+    ],
+    [
+      "thirty-day-content-calendar",
+      "## Week 1 - Origin\n\nDay 1 founder story, Day 2 Zone 10a grow post, Day 3 rare pepper photo, Day 4 chef blend teaser, Day 5 X thread on why grocery spices are anonymous, Day 6 behind-the-scenes, Day 7 email signup push.\n\n## Week 2 - Product\n\nShow each hero SKU, tasting notes, recipe use, heat level, packaging direction, and one customer/friend tasting reaction.\n\n## Week 3 - Proof\n\nPost QR provenance demo, NIMS grow tracking, ICP explanation in plain English, farmers-market prep, and a retail ambition thread.\n\n## Week 4 - Launch\n\nAnnounce limited batch, run countdown, post demo video, share recipe cards, host X Space, publish founder note, and ask for reviews and shares.\n\n## Cadence Rule\n\nDo not wait for perfect visuals. Ship useful content consistently, capture the real process, and let the audience watch the brand become real."
+    ],
+    [
+      "x-thread-bank",
+      "## Thread 1 - Why Seasoning Needs Origin\n\nHook: Most spice jars tell you a flavor. They do not tell you a story. IC SPICY is changing that.\n\n## Thread 2 - McCormick, Kinder's, and the Opening\n\nHook: McCormick owns legacy. Kinder's owns modern grill energy. The next lane is farm-origin luxury heat.\n\n## Thread 3 - What RWA Means Here\n\nHook: RWA does not have to mean real estate or treasuries. Sometimes it means a living pepper plant with a history.\n\n## Thread 4 - Zone 10a Advantage\n\nHook: Southwest Florida is not just a location. For peppers, climate is character.\n\n## Thread 5 - Heat Is Easy\n\nHook: Anyone can make something hot. The hard part is making heat taste expensive.\n\n## More Thread Hooks\n\nFrom tray to token; Why I am building on ICP; What PepperHeads are; Why QR labels matter; How to beat commodity spices; Why retail velocity matters; What a chef-built pepper blend needs; Why solo-founder brands can move fast."
+    ],
+    [
+      "short-form-video-scripts",
+      "## Video 1 - Boardroom vs Soil\n\nHook: Most seasoning brands start in a boardroom. Mine starts here. Shot: hand in soil, pepper plants, drying peppers, seasoning jar. CTA: follow IC SPICY.\n\n## Video 2 - Heat Is Easy\n\nHook: Making food hot is easy. Making heat taste expensive is the work. Shot: chef tasting, ingredients, plated food. CTA: join the waitlist.\n\n## Video 3 - Scan The Jar\n\nHook: What if your spice jar could tell you where the peppers came from? Shot: QR mockup, NIMS screen, plant photo. CTA: watch the provenance build.\n\n## Video 4 - Kinder's Challenge\n\nHook: I respect Kinder's. But I think a Florida rare-pepper brand can hit harder. Shot: shelf, blend test, founder talking. CTA: which flavor should launch first?\n\n## Video 5 - Superhot Discipline\n\nHook: This is not a prank blend. This is controlled fire. Shot: tiny pinch, sauce, tasting reaction. CTA: PepperHeads are coming."
+    ],
+    [
+      "email-launch-sequence",
+      "## Email 1 - Welcome\n\nSubject: Welcome to IC SPICY. Body: founder story, rare peppers, chef-built flavor, and what subscribers will get first.\n\n## Email 2 - The Mission\n\nSubject: From soil to shelf. Body: explain the grocery-shelf ambition, why the category needs origin, and how customers can help early.\n\n## Email 3 - The First Blends\n\nSubject: Meet the first four fires. Body: introduce each SKU with tasting notes and use cases.\n\n## Email 4 - Provenance\n\nSubject: Why the QR matters. Body: explain traceability, plant records, and ICP in simple customer language.\n\n## Email 5 - Drop Day\n\nSubject: The first IC SPICY batch is live. Body: product link, limited quantity, recipe idea, and share CTA."
+    ],
+    [
+      "press-kit",
+      "## Boilerplate\n\nIC SPICY is a Southwest Florida rare-pepper nursery and premium seasoning brand building farm-grown heat, chef-built flavor, and blockchain-backed provenance on the Internet Computer.\n\n## Founder Bio\n\nFounder/operator with 30 years of growing experience in Zone 10a Southwest Florida, focused on rare peppers, regenerative growing practices, artisan spice products, and practical RWA technology.\n\n## Press Angles\n\nFlorida nursery takes on seasoning giants; rare peppers meet blockchain provenance; chef-designed heat brand targets grocery shelves; solo founder builds farm-to-flame CPG company.\n\n## Media Assets Needed\n\nFounder headshot, farm photos, pepper macro shots, seasoning jars, QR demo, NIMS screenshot, product lifestyle shots, and short brand video.\n\n## Contact Block\n\nAdd email, website, social links, city/state, press contact, and product availability once finalized."
+    ],
+    [
+      "influencer-chef-outreach-kit",
+      "## DM Script\n\nHey [Name], I am building IC SPICY - a Southwest Florida rare-pepper seasoning brand with chef-built blends and provenance-backed storytelling. I would love to send you an early sample box and get your honest take.\n\n## Chef Collaboration Offer\n\nLimited co-branded blend, recipe content, tasting notes, launch livestream, and revenue-share or flat collaboration terms depending on partner fit.\n\n## Sample Box Insert\n\nYou are tasting an early IC SPICY batch. Please try it on a neutral food first, then on your favorite protein or vegetable. Honest feedback is more valuable than hype.\n\n## Creator Guidelines\n\nNo fake praise required. Disclose gifted product. Focus on flavor, use case, aroma, balance, and heat level. Tag IC SPICY and share recipe ideas.\n\n## Best Targets\n\nPepper reviewers, BBQ creators, chefs, Florida food accounts, regenerative farming creators, ICP creators, and premium pantry reviewers."
+    ],
+    [
+      "pepperhead-membership-guide",
+      "## What PepperHeads Are\n\nPepperHeads are 888 membership-bearing NFTs inside the 8888-token IC SPICY collection. They are designed for early supporters who want deeper access to the brand, future drops, and premium community features.\n\n## Benefits\n\nFuture NFT drop whitelist, early access windows, product discounts by rarity, premium SpicyAI tier, community status, and access to member-first updates.\n\n## What They Are Not\n\nThey are not equity, securities, guaranteed profit instruments, or claims on treasury or nursery assets. Benefits are product and community utility.\n\n## Why 888\n\nThe limited supply makes membership legible and scarce without making it the entire brand. The physical products and community remain accessible to normal customers.\n\n## Plain-English Pitch\n\nIf you want to be early to IC SPICY as it grows from rare pepper nursery to premium heat brand, PepperHeads are the member lane."
+    ],
+    [
+      "nft-collector-guide",
+      "## Collection\n\n8888 ICRC-7 NFTs with rarity tiers: Common, Uncommon, Rare, and Founder. Static art and metadata are paired with future live provenance and ownership history.\n\n## Utility\n\nDiscount tiers, claim flows, PepperHead benefits, future burn redemption, and access to provenance-linked experiences.\n\n## Provenance\n\nThe long-term goal is for plant-linked NFTs to show lifecycle data such as variety, germination, transplant, sale, claim, and weather snapshots where applicable.\n\n## Custody\n\nSelf-custody is central. Internet Identity handles app login, while wallet connection handles explicit financial actions.\n\n## Collector Reminder\n\nBuy because you value the brand, art, utility, and community. Do not buy based on expectations of profit."
+    ],
+    [
+      "spicy-utility-explainer",
+      "## What SPICY Is\n\nSPICY is planned as an ICRC-1 utility token for IC SPICY ecosystem functions. Formal token details require legal review and should be governed by the token disclosure document when published.\n\n## Planned Utility\n\nPay-with-SPICY burns, recipe submission gate and burn, SpicyAI bonus calls, Legend badge, NFT redemption pool mechanics, and treasury transparency surfaces.\n\n## What SPICY Is Not\n\nSPICY is not equity, profit share, a dividend right, a claim on treasury assets, or a guarantee of future value.\n\n## Customer Framing\n\nFor mainstream customers, SPICY should be secondary. The physical products and brand experience come first.\n\n## Compliance Reminder\n\nDo not publish token claims, launch dates, pricing, or financial language without legal review."
+    ],
+    [
+      "x-spaces-host-pack",
+      "## Opening\n\nWelcome everyone. IC SPICY is a rare pepper nursery and premium seasoning brand from Southwest Florida, building chef-designed heat with ICP-backed provenance.\n\n## Transitions\n\nFrom the farm story, move to product. From product, move to market. From market, move to ICP. From ICP, move back to how customers actually taste and buy the brand.\n\n## Guest Questions\n\n- What makes a spice brand premium? What flavor trends are you watching? Would QR provenance matter at shelf? What would make you replace your current seasoning?\n\n## Moderation\n\nKeep token talk compliant, stop price speculation, redirect hype into product utility, and keep the room welcoming to non-crypto food people.\n\n## Close\n\nFollow IC SPICY, join the waitlist, share the room, and watch the build from soil to shelf."
+    ],
+    [
+      "community-moderation-guide",
+      "## Principles\n\nFood first, respect always, no scams, no price manipulation, no harassment, no medical claims, and no pretending speculation is utility.\n\n## Allowed\n\nGrow tips, recipes, product feedback, pepper photos, ICP questions, NFT utility discussion, retail ideas, and constructive criticism.\n\n## Not Allowed\n\nToken price pumping, guaranteed profit claims, hate speech, doxxing, spam, fake giveaways, impersonation, unsafe food advice, and harassment.\n\n## Escalation\n\nWarn, mute, remove, ban, and document depending on severity. Security issues should go to a dedicated disclosure path once available.\n\n## Tone\n\nCasual, direct, helpful, spicy but not toxic. The brand can have heat without becoming hostile."
+    ],
+    [
+      "founder-operating-plan",
+      "## Weekly Blocks\n\nTwo focused coding blocks, two farm/production blocks, one content batch block, one sales/outreach block, and one admin/compliance block.\n\n## Daily Minimums\n\nCapture one useful piece of content, answer customer/community messages, check priority tasks, and move one revenue or launch item forward.\n\n## Do Not Overbuild\n\nAvoid adding features that do not help launch, sell, verify, or support the product. Focus on revenue, trust, and proof.\n\n## Monthly Review\n\nReview cash, inventory, content output, DTC sales, retail leads, technical progress, and next bottleneck.\n\n## Founder Health\n\nA solo founder cannot run at emergency pace forever. Build repeatable systems, not constant heroics."
+    ],
+    [
+      "retail-readiness-checklist",
+      "## Product\n\nFinal recipes, stable batch process, ingredient sourcing, shelf life, packaging, labels, net weight, UPCs, case packs, and quality checks.\n\n## Business\n\nWholesale pricing, MSRP, margin model, opening order terms, reorder terms, lead times, freight policy, insurance, W-9/entity info, and invoicing process.\n\n## Compliance\n\nNutrition facts if required, ingredient/allergen review, claims review, food safety process, local/state requirements, and any needed facility or co-packer documentation.\n\n## Sales\n\nSell sheet, line sheet, sample kit, demo plan, product photos, buyer email, retail launch calendar, and reorder tracking sheet.\n\n## Proof\n\nDTC sales, reviews, demo conversion, local account reorders, social engagement, and units per store per week."
+    ],
+    [
+      "food-safety-claims-checklist",
+      "## Review Required\n\nOrganic, pesticide-free, non-GMO, gluten-free, allergen-free, health benefits, medical effects, lab-tested, award-winning, chef-certified, and provenance-certified claims should be reviewed before publishing.\n\n## Food Safety Basics\n\nDocument batch dates, ingredients, suppliers, sanitation, packaging, storage, complaints, recalls, and lot codes.\n\n## Label Basics\n\nProduct identity, net weight, ingredients, allergens, business name/address, nutrition panel if required, UPC, lot code, and best-by guidance.\n\n## Marketing Discipline\n\nSay what is true and provable. If a claim depends on future tech, say planned or future, not live.\n\n## Legal Reminder\n\nThis checklist is not legal advice. Use qualified food compliance and legal review before retail scale."
+    ],
+    [
+      "mainnet-launch-checklist",
+      "## Before Deploy\n\nRead PROJECT_CONTEXT.md and AGENTS.md, fetch relevant ICP skills, complete local tests, verify admins, verify canister IDs, confirm cycles, and review upgrade risks.\n\n## Security\n\nAuthenticated methods guarded, admin methods protected, CallerGuard on async settlement, no hardcoded secrets, no frontend-trusted prices, and no user content in Debug.print.\n\n## Assets\n\nFrontend built, NFT assets verified, certified paths used, raw access policy reviewed, metadata templating correct, and upload scripts tested.\n\n## Comms\n\nPublish launch notes, privacy policy, terms, risk notes, support channel, known limitations, and no token claims beyond reviewed disclosures.\n\n## After Deploy\n\nRun smoke tests, verify queries, check cycle balances, record module hashes, archive release notes, and monitor errors and customer reports."
+    ],
+    [
+      "risk-register",
+      "## Technical Risks\n\nCanister bugs, payment settlement issues, wallet signer UX, HTTPS outcall failures, cycle exhaustion, upgrade mistakes, and untested edge cases.\n\n## Market Risks\n\nSeasoning competition, slow retail adoption, weak repeat purchase, poor SKU focus, pricing mismatch, or content failing to reach the right buyers.\n\n## Operational Risks\n\nSolo-founder bottleneck, production capacity, packaging delays, ingredient sourcing, batch consistency, shipping, demos, and customer support.\n\n## Legal and Compliance Risks\n\nToken regulation, food labeling, claims, privacy, sales tax, entity structure, insurance, and retail requirements.\n\n## Mitigation\n\nLaunch in stages, keep claims reviewed, prove velocity before scale, audit before funds, document operations, and maintain a clear public risk posture."
+    ]
+  ]
+}

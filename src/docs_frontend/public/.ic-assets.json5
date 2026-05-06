@@ -1,0 +1,32 @@
+[
+  // Default for everything: standard hardened security headers from the
+  // dfx asset canister, modest cache to keep the SPA shell fresh, and no
+  // raw access (raw.icp0.io is unverified — see asset-canister SKILL.md).
+  {
+    "match": "**/*",
+    "security_policy": "standard",
+    "headers": {
+      "Cache-Control": "public, max-age=0, must-revalidate"
+    },
+    "allow_raw_access": false
+  },
+  // Hashed Vite build assets: long-cache forever (file names contain a
+  // content hash, so a new build emits new file names and busts cache).
+  {
+    "match": "assets/**/*",
+    "headers": {
+      "Cache-Control": "public, max-age=31536000, immutable"
+    }
+  },
+  // NOTE: documents/**/*.pdf and documents/**/*.md rules removed.
+  // Document blobs are now served directly from the docs_backend canister
+  // via getDocumentMarkdown() and getDocumentPdf() query methods.
+  // The /documents/* directory is no longer copied into dist/ during build.
+
+  // SPA fallback — any path with no explicit asset falls back to index.html
+  // so client-side routing works on hard refresh.
+  {
+    "match": "**/*",
+    "enable_aliasing": true
+  }
+]

@@ -1,5 +1,5 @@
 export const idlFactory = ({ IDL }) => {
-  const Result = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
+  const Value = IDL.Rec();
   const OfferStatus = IDL.Variant({
     'Countered' : IDL.Null,
     'Rejected' : IDL.Null,
@@ -625,6 +625,26 @@ export const idlFactory = ({ IDL }) => {
     'txType' : TxType,
     'amount' : IDL.Nat,
   });
+  const Subaccount = IDL.Vec(IDL.Nat8);
+  const Account = IDL.Record({
+    'owner' : IDL.Principal,
+    'subaccount' : IDL.Opt(Subaccount),
+  });
+  Value.fill(
+    IDL.Variant({
+      'Int' : IDL.Int,
+      'Map' : IDL.Vec(IDL.Tuple(IDL.Text, Value)),
+      'Nat' : IDL.Nat,
+      'Blob' : IDL.Vec(IDL.Nat8),
+      'Text' : IDL.Text,
+      'Array' : IDL.Vec(Value),
+    })
+  );
+  const LoadStaticMetadataResult = IDL.Record({
+    'skipped' : IDL.Nat,
+    'errors' : IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Text)),
+    'loaded' : IDL.Nat,
+  });
   const MintRWAProvenanceInput = IDL.Record({
     'custom_notes' : IDL.Text,
     'artwork_layer_id' : ArtworkLayerId,
@@ -699,7 +719,6 @@ export const idlFactory = ({ IDL }) => {
     'ingredients' : IDL.Opt(IDL.Vec(IDL.Text)),
   });
   const ICSpicy = IDL.Service({
-    '_debugParseMetadata' : IDL.Func([IDL.Vec(IDL.Nat8)], [Result], []),
     '_initializeAccessControl' : IDL.Func([], [], ['query']),
     'acceptOffer' : IDL.Func([IDL.Text], [Offer], []),
     'addAdmin' : IDL.Func([IDL.Principal], [], []),
@@ -857,6 +876,7 @@ export const idlFactory = ({ IDL }) => {
     'getFollowersCount' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
     'getFollowingCount' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
     'getForSalePlants' : IDL.Func([], [IDL.Vec(PlantPublic)], ['query']),
+    'getLoadedMetadataCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getMembershipPriceInToken' : IDL.Func([OracleToken], [IDL.Nat], ['query']),
     'getMyOffers' : IDL.Func([], [IDL.Vec(Offer)], ['query']),
     'getMyResaleListings' : IDL.Func(
@@ -930,7 +950,57 @@ export const idlFactory = ({ IDL }) => {
       ),
     'hasDAOAccess' : IDL.Func([], [IDL.Bool], ['query']),
     'hasMembership' : IDL.Func([], [IDL.Bool], ['query']),
+    'icrc7_atomic_batch_transfers' : IDL.Func(
+        [],
+        [IDL.Opt(IDL.Bool)],
+        ['query'],
+      ),
+    'icrc7_balance_of' : IDL.Func(
+        [IDL.Vec(Account)],
+        [IDL.Vec(IDL.Nat)],
+        ['query'],
+      ),
+    'icrc7_collection_metadata' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, Value))],
+        ['query'],
+      ),
+    'icrc7_default_take_value' : IDL.Func([], [IDL.Opt(IDL.Nat)], ['query']),
+    'icrc7_description' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
+    'icrc7_logo' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
+    'icrc7_max_memo_size' : IDL.Func([], [IDL.Opt(IDL.Nat)], ['query']),
+    'icrc7_max_query_batch_size' : IDL.Func([], [IDL.Opt(IDL.Nat)], ['query']),
+    'icrc7_max_take_value' : IDL.Func([], [IDL.Opt(IDL.Nat)], ['query']),
+    'icrc7_max_update_batch_size' : IDL.Func([], [IDL.Opt(IDL.Nat)], ['query']),
+    'icrc7_name' : IDL.Func([], [IDL.Text], ['query']),
+    'icrc7_owner_of' : IDL.Func(
+        [IDL.Vec(IDL.Nat)],
+        [IDL.Vec(IDL.Opt(Account))],
+        ['query'],
+      ),
+    'icrc7_permitted_drift' : IDL.Func([], [IDL.Opt(IDL.Nat)], ['query']),
+    'icrc7_supply_cap' : IDL.Func([], [IDL.Opt(IDL.Nat)], ['query']),
+    'icrc7_symbol' : IDL.Func([], [IDL.Text], ['query']),
+    'icrc7_token_metadata' : IDL.Func(
+        [IDL.Vec(IDL.Nat)],
+        [IDL.Vec(IDL.Opt(IDL.Vec(IDL.Tuple(IDL.Text, Value))))],
+        ['query'],
+      ),
+    'icrc7_tokens' : IDL.Func(
+        [IDL.Opt(IDL.Nat), IDL.Opt(IDL.Nat)],
+        [IDL.Vec(IDL.Nat)],
+        ['query'],
+      ),
+    'icrc7_tokens_of' : IDL.Func(
+        [Account, IDL.Opt(IDL.Nat), IDL.Opt(IDL.Nat)],
+        [IDL.Vec(IDL.Nat)],
+        ['query'],
+      ),
+    'icrc7_total_supply' : IDL.Func([], [IDL.Nat], ['query']),
+    'icrc7_tx_window' : IDL.Func([], [IDL.Opt(IDL.Nat)], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isPepperHead' : IDL.Func([IDL.Nat], [IDL.Bool], ['query']),
+    'isPepperHeadAvailable' : IDL.Func([], [IDL.Nat], ['query']),
     'issueMembership' : IDL.Func(
         [
           IDL.Principal,
@@ -984,6 +1054,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'listRecipes' : IDL.Func([], [IDL.Vec(Recipe)], ['query']),
     'listTrays' : IDL.Func([], [IDL.Vec(TrayPublic)], ['query']),
+    'loadStaticMetadata' : IDL.Func(
+        [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Vec(IDL.Nat8)))],
+        [LoadStaticMetadataResult],
+        [],
+      ),
     'markPlantGerminated' : IDL.Func([PlantId, Timestamp], [], []),
     'mintEXT' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],

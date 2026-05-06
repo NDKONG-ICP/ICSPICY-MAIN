@@ -2,6 +2,10 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
+export interface Account {
+  'owner' : Principal,
+  'subaccount' : [] | [Subaccount],
+}
 export interface AddFeedingInput {
   'dosage_amount' : string,
   'date' : Timestamp,
@@ -175,7 +179,6 @@ export interface FoundersMintResult {
   'standard' : NFTStandard,
 }
 export interface ICSpicy {
-  '_debugParseMetadata' : ActorMethod<[Uint8Array | number[]], Result>,
   '_initializeAccessControl' : ActorMethod<[], undefined>,
   'acceptOffer' : ActorMethod<[string], Offer>,
   'addAdmin' : ActorMethod<[Principal], undefined>,
@@ -276,6 +279,7 @@ export interface ICSpicy {
   'getFollowersCount' : ActorMethod<[Principal], bigint>,
   'getFollowingCount' : ActorMethod<[Principal], bigint>,
   'getForSalePlants' : ActorMethod<[], Array<PlantPublic>>,
+  'getLoadedMetadataCount' : ActorMethod<[], bigint>,
   'getMembershipPriceInToken' : ActorMethod<[OracleToken], bigint>,
   'getMyOffers' : ActorMethod<[], Array<Offer>>,
   'getMyResaleListings' : ActorMethod<[], Array<ResaleListingPublic>>,
@@ -315,7 +319,35 @@ export interface ICSpicy {
   'getWalletTransactions' : ActorMethod<[], Array<WalletTransaction>>,
   'hasDAOAccess' : ActorMethod<[], boolean>,
   'hasMembership' : ActorMethod<[], boolean>,
+  'icrc7_atomic_batch_transfers' : ActorMethod<[], [] | [boolean]>,
+  'icrc7_balance_of' : ActorMethod<[Array<Account>], Array<bigint>>,
+  'icrc7_collection_metadata' : ActorMethod<[], Array<[string, Value]>>,
+  'icrc7_default_take_value' : ActorMethod<[], [] | [bigint]>,
+  'icrc7_description' : ActorMethod<[], [] | [string]>,
+  'icrc7_logo' : ActorMethod<[], [] | [string]>,
+  'icrc7_max_memo_size' : ActorMethod<[], [] | [bigint]>,
+  'icrc7_max_query_batch_size' : ActorMethod<[], [] | [bigint]>,
+  'icrc7_max_take_value' : ActorMethod<[], [] | [bigint]>,
+  'icrc7_max_update_batch_size' : ActorMethod<[], [] | [bigint]>,
+  'icrc7_name' : ActorMethod<[], string>,
+  'icrc7_owner_of' : ActorMethod<[Array<bigint>], Array<[] | [Account]>>,
+  'icrc7_permitted_drift' : ActorMethod<[], [] | [bigint]>,
+  'icrc7_supply_cap' : ActorMethod<[], [] | [bigint]>,
+  'icrc7_symbol' : ActorMethod<[], string>,
+  'icrc7_token_metadata' : ActorMethod<
+    [Array<bigint>],
+    Array<[] | [Array<[string, Value]>]>
+  >,
+  'icrc7_tokens' : ActorMethod<[[] | [bigint], [] | [bigint]], Array<bigint>>,
+  'icrc7_tokens_of' : ActorMethod<
+    [Account, [] | [bigint], [] | [bigint]],
+    Array<bigint>
+  >,
+  'icrc7_total_supply' : ActorMethod<[], bigint>,
+  'icrc7_tx_window' : ActorMethod<[], [] | [bigint]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isPepperHead' : ActorMethod<[bigint], boolean>,
+  'isPepperHeadAvailable' : ActorMethod<[], bigint>,
   'issueMembership' : ActorMethod<
     [
       Principal,
@@ -352,6 +384,10 @@ export interface ICSpicy {
   >,
   'listRecipes' : ActorMethod<[], Array<Recipe>>,
   'listTrays' : ActorMethod<[], Array<TrayPublic>>,
+  'loadStaticMetadata' : ActorMethod<
+    [Array<[bigint, Uint8Array | number[]]>],
+    LoadStaticMetadataResult
+  >,
   'markPlantGerminated' : ActorMethod<[PlantId, Timestamp], undefined>,
   'mintEXT' : ActorMethod<[bigint, string, Array<[string, string]>], string>,
   'mintHederaNFT' : ActorMethod<
@@ -456,6 +492,11 @@ export interface LifecycleUpgradeEvent {
   'upgraded_at' : Timestamp,
   'new_nft_id' : string,
   'plant_id' : PlantId,
+}
+export interface LoadStaticMetadataResult {
+  'skipped' : bigint,
+  'errors' : Array<[bigint, string]>,
+  'loaded' : bigint,
 }
 export interface MembershipNFTPublic {
   'id' : bigint,
@@ -719,8 +760,6 @@ export interface ResaleListingPublic {
   'listed_at' : Timestamp,
   'plant_id' : PlantId,
 }
-export type Result = { 'ok' : string } |
-  { 'err' : string };
 export interface SaveProfileInput {
   'bio' : string,
   'username' : string,
@@ -763,6 +802,7 @@ export interface StoredFile {
   'filename' : string,
   'uploaded_at' : Timestamp,
 }
+export type Subaccount = Uint8Array | number[];
 export interface SubmitOfferInput {
   'nft_id' : string,
   'offered_token' : OfferToken,
@@ -881,6 +921,12 @@ export interface UserProfilePublic {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export type Value = { 'Int' : bigint } |
+  { 'Map' : Array<[string, Value]> } |
+  { 'Nat' : bigint } |
+  { 'Blob' : Uint8Array | number[] } |
+  { 'Text' : string } |
+  { 'Array' : Array<Value> };
 export interface WalletToken {
   'decimals' : number,
   'balance' : bigint,

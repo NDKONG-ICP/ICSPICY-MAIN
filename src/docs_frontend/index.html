@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d0805" />
+    <meta name="description" content="IC SPICY — luxury document showcase. Whitepaper, roadmap, pitch deck, brand pack, NFT and SPICY token utility, and the full operating library for a Florida rare-pepper nursery on the Internet Computer." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='28'%3E%F0%9F%8C%B6%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+    <title>IC SPICY — Document Library</title>
+    <script>
+      // Hydrate the saved theme before React mounts so there is no flash.
+      (function () {
+        try {
+          var stored = localStorage.getItem("ic-spicy-docs-theme");
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: light)").matches
+              ? "light"
+              : "dark";
+          document.documentElement.classList.add(theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (_) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

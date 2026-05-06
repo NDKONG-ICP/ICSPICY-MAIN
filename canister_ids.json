@@ -2,6 +2,12 @@
   "backend": {
     "ic": "ghxmp-xiaaa-aaaao-ba4sq-cai"
   },
+  "docs_backend": {
+    "ic": "pyyki-iiaaa-aaaao-ba5aq-cai"
+  },
+  "docs_frontend": {
+    "ic": "pr3bu-6aaaa-aaaao-ba5ba-cai"
+  },
   "nft_assets": {
     "ic": "gawk3-2qaaa-aaaao-ba4sa-cai"
   }

@@ -42,6 +42,18 @@ type WalletToken =
    symbol: text;
    usdValue: float64;
  };
+type Value = 
+ variant {
+   Array: vec Value;
+   Blob: blob;
+   Int: int;
+   Map: vec record {
+              text;
+              Value;
+            };
+   Nat: nat;
+   Text: text;
+ };
 type UserRole = 
  variant {
    admin;
@@ -188,6 +200,7 @@ type SubmitOfferInput =
    offered_amount: nat;
    offered_token: OfferToken;
  };
+type Subaccount = blob;
 type StoredFile = 
  record {
    data: vec nat8;
@@ -239,11 +252,6 @@ type SaveProfileInput =
    avatar_key: opt text;
    bio: text;
    username: text;
- };
-type Result = 
- variant {
-   err: text;
-   ok: text;
  };
 type ResaleListingPublic = 
  record {
@@ -576,6 +584,15 @@ type MembershipNFTPublic =
    rarity_tier: opt RarityTier;
    tier: MembershipTier;
  };
+type LoadStaticMetadataResult = 
+ record {
+   errors: vec record {
+                 nat;
+                 text;
+               };
+   loaded: nat;
+   skipped: nat;
+ };
 type LifecycleUpgradeEvent = 
  record {
    new_nft_id: text;
@@ -602,7 +619,6 @@ type InventoryCategory =
  };
 type ICSpicy = 
  service {
-   _debugParseMetadata: ("blob": blob) -> (Result);
    _initializeAccessControl: () -> () query;
    acceptOffer: (offerId: text) -> (Offer);
    addAdmin: (p: principal) -> ();
@@ -701,6 +717,7 @@ type ICSpicy =
    getFollowersCount: (user: principal) -> (nat) query;
    getFollowingCount: (user: principal) -> (nat) query;
    getForSalePlants: () -> (vec PlantPublic) query;
+   getLoadedMetadataCount: () -> (nat) query;
    getMembershipPriceInToken: (token: OracleToken) -> (nat) query;
    getMyOffers: () -> (vec Offer) query;
    getMyResaleListings: () -> (vec ResaleListingPublic) query;
@@ -737,7 +754,37 @@ type ICSpicy =
    getWalletTransactions: () -> (vec WalletTransaction) query;
    hasDAOAccess: () -> (bool) query;
    hasMembership: () -> (bool) query;
+   icrc7_atomic_batch_transfers: () -> (opt bool) query;
+   icrc7_balance_of: (accounts: vec Account) -> (vec nat) query;
+   icrc7_collection_metadata: () -> (vec record {
+                                           text;
+                                           Value;
+                                         }) query;
+   icrc7_default_take_value: () -> (opt nat) query;
+   icrc7_description: () -> (opt text) query;
+   icrc7_logo: () -> (opt text) query;
+   icrc7_max_memo_size: () -> (opt nat) query;
+   icrc7_max_query_batch_size: () -> (opt nat) query;
+   icrc7_max_take_value: () -> (opt nat) query;
+   icrc7_max_update_batch_size: () -> (opt nat) query;
+   icrc7_name: () -> (text) query;
+   icrc7_owner_of: (token_ids: vec nat) -> (vec opt Account) query;
+   icrc7_permitted_drift: () -> (opt nat) query;
+   icrc7_supply_cap: () -> (opt nat) query;
+   icrc7_symbol: () -> (text) query;
+   icrc7_token_metadata: (token_ids: vec nat) ->
+    (vec opt vec record {
+                   text;
+                   Value;
+                 }) query;
+   icrc7_tokens: (prev: opt nat, take: opt nat) -> (vec nat) query;
+   icrc7_tokens_of: (account: Account, prev: opt nat, take: opt nat) ->
+    (vec nat) query;
+   icrc7_total_supply: () -> (nat) query;
+   icrc7_tx_window: () -> (opt nat) query;
    isCallerAdmin: () -> (bool) query;
+   isPepperHead: (tokenId: nat) -> (bool) query;
+   isPepperHeadAvailable: () -> (nat) query;
    issueMembership: (owner: principal, tier: MembershipTier, nft_standard:
     variant {
       EXT;
@@ -769,6 +816,10 @@ type ICSpicy =
     (vec ProductPublic) query;
    listRecipes: () -> (vec Recipe) query;
    listTrays: () -> (vec TrayPublic) query;
+   loadStaticMetadata: (entries: vec record {
+                                       nat;
+                                       blob;
+                                     }) -> (LoadStaticMetadataResult);
    markPlantGerminated: (plant_id: PlantId, germination_date: Timestamp) ->
     ();
    mintEXT: (_plantId: nat, _imageKey: text, _attributes:
@@ -1060,5 +1111,10 @@ type AddFeedingInput =
    nutrient_type: text;
    plant_id: PlantId;
    product_name: text;
+ };
+type Account = 
+ record {
+   owner: principal;
+   subaccount: opt Subaccount;
  };
 service : () -> ICSpicy

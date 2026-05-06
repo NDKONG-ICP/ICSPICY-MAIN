@@ -1,0 +1,317 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light: warm parchment, deep ink, fire-red accent, gold gleam */
+    --c-bg: 250 246 240;
+    --c-surface: 255 251 245;
+    --c-elevated: 255 255 255;
+    --c-ink: 24 18 14;
+    --c-muted: 86 74 64;
+    --c-line: 224 212 196;
+    --c-ember: 214 49 22;
+    --c-gold: 184 138 53;
+    --c-sage: 90 110 80;
+  }
+
+  :root.dark {
+    /* Dark: smoked espresso, ember glow, gold leaf */
+    --c-bg: 13 8 5;
+    --c-surface: 22 16 12;
+    --c-elevated: 30 22 17;
+    --c-ink: 244 234 220;
+    --c-muted: 158 144 130;
+    --c-line: 60 46 36;
+    --c-ember: 245 92 50;
+    --c-gold: 226 178 90;
+    --c-sage: 160 178 132;
+  }
+
+  html,
+  body {
+    background-color: rgb(var(--c-bg));
+    color: rgb(var(--c-ink));
+    font-family: theme("fontFamily.body");
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-image: theme("backgroundImage.ember-radial"),
+      theme("backgroundImage.gold-radial");
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background-color: rgb(var(--c-ember) / 0.35);
+    color: rgb(var(--c-ink));
+  }
+
+  /* Focus rings — accessible, on-brand, not chrome blue */
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+    outline: 2px solid rgb(var(--c-ember) / 0.85);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Honor reduced-motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Glassmorphism cards — different recipes for light vs dark */
+  .glass {
+    background-color: rgb(var(--c-surface) / 0.65);
+    border: 1px solid rgb(var(--c-line) / 0.65);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: theme("boxShadow.glass");
+  }
+
+  .glass-elevated {
+    background-color: rgb(var(--c-elevated) / 0.78);
+    border: 1px solid rgb(var(--c-line) / 0.85);
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    box-shadow: theme("boxShadow.glass");
+  }
+
+  .glass-strong {
+    background-color: rgb(var(--c-elevated));
+    border: 1px solid rgb(var(--c-line));
+    box-shadow: theme("boxShadow.soft");
+  }
+
+  /* Hairline divider that adapts to theme */
+  .hairline {
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(var(--c-line) / 0.95) 18%,
+      rgb(var(--c-line)) 50%,
+      rgb(var(--c-line) / 0.95) 82%,
+      transparent 100%
+    );
+    height: 1px;
+  }
+
+  /* Display-style heading with optical kerning */
+  .display {
+    font-family: theme("fontFamily.display");
+    letter-spacing: -0.02em;
+    font-feature-settings: "ss01", "ss02";
+  }
+
+  /* Shimmer text — for marquee/headline accent */
+  .shimmer-text {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--c-ink)) 0%,
+      rgb(var(--c-gold)) 30%,
+      rgb(var(--c-ember)) 50%,
+      rgb(var(--c-gold)) 70%,
+      rgb(var(--c-ink)) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 6s linear infinite;
+  }
+
+  /* Tile gradient frame — used for animated document tiles */
+  .tile-frame {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .tile-frame::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgb(var(--c-gold) / 0.55),
+      rgb(var(--c-ember) / 0.45) 35%,
+      transparent 65%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.55;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  .tile-frame:hover::before {
+    opacity: 1;
+  }
+
+  /* Pill chip used for categories and tags */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgb(var(--c-muted));
+    background-color: rgb(var(--c-elevated) / 0.6);
+    border: 1px solid rgb(var(--c-line));
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      border-color 0.2s;
+  }
+
+  .chip:hover {
+    color: rgb(var(--c-ink));
+    border-color: rgb(var(--c-gold));
+  }
+
+  .chip-active {
+    color: rgb(var(--c-elevated));
+    background: linear-gradient(
+      135deg,
+      rgb(var(--c-ember)),
+      rgb(var(--c-gold))
+    );
+    border-color: transparent;
+  }
+
+  /* Reading column used in document detail */
+  .reading-column {
+    max-width: 70ch;
+  }
+
+  .reading-column h1,
+  .reading-column h2,
+  .reading-column h3 {
+    font-family: theme("fontFamily.display");
+    letter-spacing: -0.02em;
+    color: rgb(var(--c-ink));
+  }
+
+  .reading-column h2 {
+    margin-top: 2.2rem;
+  }
+
+  .reading-column p,
+  .reading-column li {
+    color: rgb(var(--c-ink) / 0.86);
+    line-height: 1.7;
+  }
+
+  .reading-column blockquote {
+    border-left: 3px solid rgb(var(--c-gold));
+    padding-left: 1rem;
+    color: rgb(var(--c-muted));
+    font-style: italic;
+  }
+
+  .reading-column code {
+    background-color: rgb(var(--c-elevated));
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.35rem;
+    font-family: theme("fontFamily.mono");
+    font-size: 0.85em;
+    border: 1px solid rgb(var(--c-line));
+  }
+
+  .reading-column hr {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(var(--c-line)) 50%,
+      transparent 100%
+    );
+    margin: 2.5rem 0;
+  }
+
+  .reading-column a {
+    color: rgb(var(--c-ember));
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+}
+
+@layer utilities {
+  .ember-text {
+    color: rgb(var(--c-ember));
+  }
+
+  .gold-text {
+    color: rgb(var(--c-gold));
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--c-line));
+    border-radius: 999px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  /* Admin form field utility */
+  .input-field {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(var(--c-line) / 0.6);
+    background-color: rgb(var(--c-elevated) / 0.4);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: rgb(var(--c-ink));
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+  }
+
+  .input-field::placeholder {
+    color: rgb(var(--c-muted) / 0.6);
+  }
+
+  .input-field:focus {
+    border-color: rgb(var(--c-ember) / 0.5);
+    box-shadow: 0 0 0 2px rgb(var(--c-ember) / 0.12);
+  }
+
+  .input-field:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
