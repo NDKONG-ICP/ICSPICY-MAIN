@@ -84,23 +84,10 @@ const agent = await HttpAgent.create({
 
 const assetManager = new AssetManager({ canisterId, agent });
 
-// List already-uploaded assets for resume support
-console.log('Listing existing assets…');
-const existing = new Set((await assetManager.list()).map(a => a.key));
-console.log(`  ${existing.size} already uploaded.`);
-
-// Collect all dist files
+// Collect all dist files — always upload everything (canister is cleared before upload)
 const allFiles = await collectFiles(DIST_DIR);
-const toUpload = allFiles.filter(f => {
-  const rel = '/' + relative(DIST_DIR, f).replace(/\\/g, '/');
-  return !existing.has(rel);
-});
-
-console.log(`Files to upload: ${toUpload.length} / ${allFiles.length}`);
-if (toUpload.length === 0) {
-  console.log('All assets already uploaded. Done.');
-  process.exit(0);
-}
+const toUpload = allFiles;
+console.log(`Files to upload: ${toUpload.length}`);
 
 // Upload in batches of 20 files per commit
 const BATCH = 20;
@@ -108,32 +95,34 @@ let uploaded = 0;
 
 for (let i = 0; i < toUpload.length; i += BATCH) {
   const chunk = toUpload.slice(i, i + BATCH);
-  const batch = assetManager.batch();
-  for (const fullPath of chunk) {
-    const rel = relative(DIST_DIR, fullPath).replace(/\\/g, '/');
-    const parts = rel.split('/');
-    const fileName = parts.pop();
-    const path = parts.length > 0 ? '/' + parts.join('/') : '/';
-    const bytes = await readFile(fullPath);
-    await batch.store(new Uint8Array(bytes), {
-      path,
-      fileName,
-      contentType: contentType(fullPath),
-    });
-  }
-  let attempts = 0;
-  while (attempts < 5) {
+  let committed = false;
+  for (let attempt = 1; attempt <= 5; attempt++) {
     try {
-      await batch.commit();
+      // Recreate batch each attempt — @dfinity/assets hash objects are single-use
+      const freshBatch = assetManager.batch();
+      for (const fullPath of chunk) {
+        const rel = relative(DIST_DIR, fullPath).replace(/\\/g, '/');
+        const parts = rel.split('/');
+        const fileName = parts.pop();
+        const path = parts.length > 0 ? '/' + parts.join('/') : '/';
+        const bytes = await readFile(fullPath);
+        await freshBatch.store(new Uint8Array(bytes), {
+          path,
+          fileName,
+          contentType: contentType(fullPath),
+        });
+      }
+      await freshBatch.commit();
+      committed = true;
       break;
     } catch (e) {
-      attempts++;
-      if (attempts >= 5) throw e;
-      const delay = Math.min(2000 * 2 ** attempts, 30000);
-      console.warn(`  Batch failed (attempt ${attempts}), retrying in ${delay}ms…`);
+      if (attempt >= 5) throw e;
+      const delay = Math.min(2000 * 2 ** attempt, 30000);
+      console.warn(`  Batch failed (attempt ${attempt}), retrying in ${delay}ms…`);
       await new Promise(r => setTimeout(r, delay));
     }
   }
+  if (!committed) throw new Error('Failed to commit batch after 5 attempts');
   uploaded += chunk.length;
   console.log(`  Uploaded ${uploaded}/${toUpload.length} files`);
 }

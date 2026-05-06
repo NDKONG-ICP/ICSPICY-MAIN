@@ -1,4 +1,4 @@
-import { Flame, Library, Search } from "lucide-react";
+import { Flame, Library, Search, Lock } from "lucide-react";
 import { motion } from "motion/react";
 import { Link, NavLink } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
@@ -72,6 +72,13 @@ export function Header({ onOpenCommand }: HeaderProps) {
           >
             <Library className="h-3.5 w-3.5" />
             Browse Library
+          </Link>
+          <Link
+            to="/admin"
+            title="Admin panel"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted transition-colors hover:bg-elevated/60 hover:text-ink"
+          >
+            <Lock className="h-3.5 w-3.5" />
           </Link>
           <ThemeToggle />
         </div>

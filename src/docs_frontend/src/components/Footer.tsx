@@ -10,6 +10,12 @@ export function Footer() {
           Florida-grown rare peppers. On-chain provenance on the Internet
           Computer. © {year} IC SPICY.
         </p>
+        <a
+          href="/admin"
+          className="opacity-40 transition-opacity hover:opacity-100"
+        >
+          Admin
+        </a>
       </div>
     </footer>
   );
