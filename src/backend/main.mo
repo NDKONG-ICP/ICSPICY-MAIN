@@ -18,6 +18,7 @@ import ClaimTypes "types/claim";
 import ArtworkUploadTypes "types/artwork-upload";
 import RecipesLib "lib/recipes";
 import ICRC7 "types/icrc7";
+import ICRC37 "types/icrc37";
 import ICRC7API "mixins/icrc7-api";
 import PlantsAPI "mixins/plants-api";
 import MarketplaceAPI "mixins/marketplace-api";
@@ -179,6 +180,20 @@ shared(msg) persistent actor class ICSpicy() = Self {
     var next   = 0;
   };
 
+  // Phase 3.4: ICRC-37 approval state.
+  //
+  // Nested map: tokenId → (spender principal → ApprovalInfo). Inner map is
+  // keyed by spender PRINCIPAL only, not full Account — see lib/icrc37.mo
+  // module comment for the rationale (Phase 3 simplification, locked in
+  // PROJECT_CONTEXT.md "ICRC-37 implementation rules" Q1).
+  //
+  // PERSISTENT: approvals must survive upgrades. They expire only on
+  // explicit revocation, on token transfer (which clears them), or on
+  // their expires_at timestamp. Lib/icrc37.mo's mutation helpers are the
+  // SOLE entry points for writes — no direct map access from the mixin.
+  let icrc37Approvals : Map.Map<Nat, Map.Map<Principal, ICRC37.ApprovalInfo>> =
+    Map.empty<Nat, Map.Map<Principal, ICRC37.ApprovalInfo>>();
+
   // Collection-level configuration constants. `transient` because they are
   // compile-time literals — no migration story needed across upgrades.
   transient let collectionName : Text = "IC SPICY";
@@ -329,6 +344,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     recentTxLookup,
     recentTxByOrder,
     recentTxCursor,
+    icrc37Approvals,
   );
   include WalletAPI(wallets, txLog);
   include RecipesAPI(accessControlState, recipes, nextRecipeId);

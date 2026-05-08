@@ -304,24 +304,29 @@ module {
   // `now` is the canister's current time in nanoseconds (Nat). The mixin
   // computes it once per batch via `Int.abs(Time.now())` so all batch
   // elements see a consistent "now".
+  //
+  // `isApprovedSpender` is the result of an ICRC-37 approval lookup —
+  // computed by the mixin using lib/icrc37.mo before calling this helper.
+  // Auth passes if caller is the direct owner OR is approved. Phase 3.4
+  // widening of the original 3.3 behavior (which was direct-owner only).
+  // Returns the resolved owner on success so callers don't re-fetch.
   public func validateTransferArg(
-    args         : ICRC7.TransferArgs,
-    caller       : Principal,
-    currentOwner : ?ICRC7.Account,
-    now          : Nat,
-  ) : Result.Result<(), ICRC7.TransferError> {
+    args              : ICRC7.TransferArgs,
+    caller            : Principal,
+    isApprovedSpender : Bool,
+    currentOwner      : ?ICRC7.Account,
+    now               : Nat,
+  ) : Result.Result<ICRC7.Account, ICRC7.TransferError> {
     let owner = switch currentOwner {
       case null { return #err(#NonExistingTokenId) };
       case (?o) o;
     };
 
-    // Caller must be the direct owner. Phase 3.4 widens this to approved
-    // operators; for now, only the owner principal itself can transfer.
-    // The from_subaccount in the arg must match the owner's subaccount
-    // after normalization (null and 32-zero-bytes are equivalent).
-    if (not Principal.equal(caller, owner.owner)) {
+    if (not Principal.equal(caller, owner.owner) and not isApprovedSpender) {
       return #err(#Unauthorized);
     };
+    // The from_subaccount in the arg must match the owner's subaccount
+    // after normalization (null and 32-zero-bytes are equivalent).
     let fromSub = normalizeSubaccount(args.from_subaccount);
     let ownerSub = normalizeSubaccount(owner.subaccount);
     let subsMatch = switch (fromSub, ownerSub) {
@@ -373,7 +378,7 @@ module {
       };
     };
 
-    #ok;
+    #ok(owner);
   };
 
   // ── Canonical hash for dedup ──────────────────────────────────────────────
@@ -382,6 +387,7 @@ module {
   // field-boundary ambiguity (which would happen with a separator-only
   // scheme since Principal/memo bytes can contain any byte value).
   //
+  //   [1-byte method tag = 0x01]
   //   [4-byte caller-len BE]  [caller bytes]
   //   [8-byte token_id BE]
   //   [4-byte to.owner-len BE][to.owner bytes]
@@ -393,9 +399,12 @@ module {
   // Subaccounts are normalized first so null and 32-zero collapse to the
   // same encoding. token_id is fixed at 8 bytes — far above the collection
   // cap (8888 fits in 13 bits), and ICRC-7 token_ids are unbounded Nat in
-  // principle but the cap keeps this safe.
+  // principle but the cap keeps this safe. Method tag at the front so an
+  // ICRC-37 approve / transfer_from / revoke with otherwise-identical bytes
+  // can never collide with a transfer; tags 0x02..0x04 live in lib/icrc37.mo.
   public func computeTxHash(caller : Principal, args : ICRC7.TransferArgs) : Blob {
     let buf = List.empty<Nat8>();
+    List.add(buf, 0x01 : Nat8);
     appendLengthPrefixed(buf, Principal.toBlob(caller));
     appendNat64BE(buf, Nat64.fromNat(args.token_id));
     appendLengthPrefixed(buf, Principal.toBlob(args.to.owner));
@@ -415,13 +424,16 @@ module {
     Blob.fromArray(List.toArray(buf));
   };
 
-  func appendLengthPrefixed(buf : List.List<Nat8>, b : Blob) {
+  // The byte-writing helpers below are public so lib/icrc37.mo can build
+  // its own canonical hashes for approve / transfer_from / revoke args
+  // using the same length-prefixed encoding scheme.
+  public func appendLengthPrefixed(buf : List.List<Nat8>, b : Blob) {
     let bytes = Blob.toArray(b);
     appendUint32BE(buf, bytes.size());
     for (byte in bytes.vals()) { List.add(buf, byte) };
   };
 
-  func appendOptSubaccount(buf : List.List<Nat8>, sub : ?Blob) {
+  public func appendOptSubaccount(buf : List.List<Nat8>, sub : ?Blob) {
     switch (normalizeSubaccount(sub)) {
       case null { List.add(buf, 0 : Nat8) };
       case (?b) {
@@ -431,19 +443,47 @@ module {
     };
   };
 
-  func appendUint32BE(buf : List.List<Nat8>, n : Nat) {
+  public func appendUint32BE(buf : List.List<Nat8>, n : Nat) {
     List.add(buf, Nat8.fromNat((n / 0x1000000) % 0x100));
     List.add(buf, Nat8.fromNat((n / 0x10000) % 0x100));
     List.add(buf, Nat8.fromNat((n / 0x100) % 0x100));
     List.add(buf, Nat8.fromNat(n % 0x100));
   };
 
-  func appendNat64BE(buf : List.List<Nat8>, n : Nat64) {
+  public func appendNat64BE(buf : List.List<Nat8>, n : Nat64) {
     var i : Nat = 8;
     while (i > 0) {
       i -= 1;
       let shift : Nat64 = Nat64.fromNat(i * 8);
       List.add(buf, Nat8.fromNat(Nat64.toNat((n >> shift) & 0xFF)));
+    };
+  };
+
+  public func appendOptNat64(buf : List.List<Nat8>, n : ?Nat64) {
+    switch n {
+      case null { List.add(buf, 0 : Nat8) };
+      case (?v) {
+        List.add(buf, 1 : Nat8);
+        appendNat64BE(buf, v);
+      };
+    };
+  };
+
+  public func appendOptBlob(buf : List.List<Nat8>, b : ?Blob) {
+    switch b {
+      case null { appendUint32BE(buf, 0); List.add(buf, 0 : Nat8) };
+      case (?bytes) { appendUint32BE(buf, Blob.toArray(bytes).size()); List.add(buf, 1 : Nat8); for (byte in Blob.toArray(bytes).vals()) { List.add(buf, byte) } };
+    };
+  };
+
+  public func appendOptAccount(buf : List.List<Nat8>, a : ?ICRC7.Account) {
+    switch a {
+      case null { List.add(buf, 0 : Nat8) };
+      case (?account) {
+        List.add(buf, 1 : Nat8);
+        appendLengthPrefixed(buf, Principal.toBlob(account.owner));
+        appendOptSubaccount(buf, account.subaccount);
+      };
     };
   };
 

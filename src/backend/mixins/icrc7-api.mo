@@ -46,9 +46,11 @@ import Set "mo:core/Set";
 import Time "mo:core/Time";
 
 import ICRC7 "../types/icrc7";
+import ICRC37 "../types/icrc37";
 import AccessControl "../lib/access-control";
 import CallerGuard "../lib/caller-guard";
 import IcrcLib "../lib/icrc7";
+import Icrc37Lib "../lib/icrc37";
 import JsonMini "../lib/json-mini";
 
 mixin (
@@ -64,6 +66,7 @@ mixin (
   recentTxLookup         : Map.Map<Blob, Nat>,
   recentTxByOrder        : Map.Map<Nat, Blob>,
   recentTxCursor         : { var oldest : Nat; var next : Nat },
+  icrc37Approvals        : Map.Map<Nat, Map.Map<Principal, ICRC37.ApprovalInfo>>,
 ) {
 
   // ── Admin: bulk-load static metadata ──────────────────────────────────────
@@ -253,9 +256,17 @@ mixin (
   ) : ICRC7.TransferResult {
     let currentOwner = icrc7Owners.get(arg.token_id);
 
-    switch (IcrcLib.validateTransferArg(arg, caller, currentOwner, now)) {
+    // Phase 3.4: caller may be the direct owner OR an approved spender.
+    // The lookup is skipped if currentOwner is null (validateTransferArg
+    // will return NonExistingTokenId in that case).
+    let isApprovedSpender = switch currentOwner {
+      case null false;
+      case (?_) Icrc37Lib.isApproved(icrc37Approvals, arg.token_id, caller, now);
+    };
+
+    let owner = switch (IcrcLib.validateTransferArg(arg, caller, isApprovedSpender, currentOwner, now)) {
       case (#err e) { return #Err(e) };
-      case (#ok) {};
+      case (#ok o) o;
     };
 
     // Dedup is opt-in via created_at_time per ICRC-7 spec. If null, the
@@ -273,13 +284,6 @@ mixin (
       };
     };
 
-    // currentOwner is non-null here — validateTransferArg returns
-    // NonExistingTokenId before we reach this point if it's null.
-    let owner = switch currentOwner {
-      case (?o) o;
-      case null { Runtime.trap("processTransferOne invariant: validateTransferArg should have rejected null owner") };
-    };
-
     switch (IcrcLib.assignOwnership(icrc7Owners, icrc7Balances, arg.token_id, ?owner, arg.to)) {
       case (#err msg) {
         // assignOwnership only returns #err for prior-state mismatch, which
@@ -291,6 +295,12 @@ mixin (
       case (#ok) {};
     };
 
+    // Phase 3.4: token changed owner — invalidate every approval the prior
+    // owner granted on this token. Done HERE (in the transfer flow), not
+    // inside assignOwnership, because assignOwnership is an ICRC-7 concept
+    // that must not depend on ICRC-37.
+    ignore Icrc37Lib.removeAllApprovals(icrc37Approvals, arg.token_id);
+
     let blockIndex = nextBlockIndex.value;
     nextBlockIndex.value += 1;
     if (arg.created_at_time != null) {
@@ -298,6 +308,256 @@ mixin (
     };
 
     #Ok(blockIndex);
+  };
+
+  // ── ICRC-37 approval surface (Phase 3.4) ──────────────────────────────────
+  //
+  // Approvals let an owner authorize a third-party "spender" to transfer
+  // a specific token via icrc37_transfer_from. Approvals are cleared on
+  // any ownership change (see removeAllApprovals call in processTransferOne
+  // and processTransferFromOne) — the new owner did not grant them and
+  // must not honor them.
+  //
+  // SOLE-entry-point invariant: approvals map is mutated only via
+  // Icrc37Lib.{addApproval, removeApproval, removeAllApprovals}. No direct
+  // map writes anywhere in this mixin.
+  //
+  // Reentrancy: all three update methods (approve / transfer_from / revoke)
+  // share the icrc7_transfer CallerGuard so a single caller can have at
+  // most one in-flight ICRC-7 / ICRC-37 mutation at a time.
+
+  // Spec config getters — Phase 4 settlement methods may tighten these.
+  public query func icrc37_max_approvals_per_token_or_collection() : async ?Nat {
+    ?(IcrcLib.MAX_TAKE);
+  };
+  public query func icrc37_max_revoke_approvals() : async ?Nat {
+    ?(IcrcLib.MAX_TAKE);
+  };
+
+  // ── icrc37_approve_tokens ────────────────────────────────────────────────
+  public shared({caller}) func icrc37_approve_tokens(
+    args : [ICRC37.ApproveTokenArg],
+  ) : async [?ICRC37.ApproveTokenResult] {
+    AccessControl.requireAuthenticated(caller);
+
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err msg) { Runtime.trap("Request already in flight: " # msg) };
+      case (#ok) {};
+    };
+
+    try {
+      let now : Nat = Int.abs(Time.now());
+      let results = List.empty<?ICRC37.ApproveTokenResult>();
+      for (arg in args.vals()) {
+        List.add(results, ?processApproveOne(arg, caller, now));
+      };
+      List.toArray(results);
+    } finally {
+      CallerGuard.release(callerGuards, caller);
+    };
+  };
+
+  func processApproveOne(
+    arg    : ICRC37.ApproveTokenArg,
+    caller : Principal,
+    now    : Nat,
+  ) : ICRC37.ApproveTokenResult {
+    let currentOwner = icrc7Owners.get(arg.token_id);
+
+    switch (Icrc37Lib.validateApproveArg(arg, caller, currentOwner, now)) {
+      case (#err e) { return #Err(e) };
+      case (#ok _) {};
+    };
+
+    // Dedup uses the shared recent-tx buffer — approve and transfer hashes
+    // are method-tagged so they cannot collide.
+    let hash = Icrc37Lib.computeApproveHash(caller, arg);
+    switch (arg.approval_info.created_at_time) {
+      case null {};
+      case (?_) {
+        switch (IcrcLib.checkDedup(recentTxLookup, hash)) {
+          case (?existing) { return #Err(#Duplicate { duplicate_of = existing }) };
+          case null {};
+        };
+      };
+    };
+
+    // Mutation: replaces any prior approval for the same (token, spender
+    // principal) pair. Prior approval expiry / memo / created_at_time is
+    // overwritten — the new approval is authoritative.
+    Icrc37Lib.addApproval(icrc37Approvals, arg.token_id, arg.approval_info);
+
+    let blockIndex = nextBlockIndex.value;
+    nextBlockIndex.value += 1;
+    if (arg.approval_info.created_at_time != null) {
+      IcrcLib.recordRecentTx(recentTxLookup, recentTxByOrder, recentTxCursor, hash, blockIndex);
+    };
+
+    #Ok(blockIndex);
+  };
+
+  // ── icrc37_transfer_from ─────────────────────────────────────────────────
+  public shared({caller}) func icrc37_transfer_from(
+    args : [ICRC37.TransferFromArg],
+  ) : async [?ICRC37.TransferFromResult] {
+    AccessControl.requireAuthenticated(caller);
+
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err msg) { Runtime.trap("Request already in flight: " # msg) };
+      case (#ok) {};
+    };
+
+    try {
+      let now : Nat = Int.abs(Time.now());
+      let results = List.empty<?ICRC37.TransferFromResult>();
+      for (arg in args.vals()) {
+        List.add(results, ?processTransferFromOne(arg, caller, now));
+      };
+      List.toArray(results);
+    } finally {
+      CallerGuard.release(callerGuards, caller);
+    };
+  };
+
+  func processTransferFromOne(
+    arg    : ICRC37.TransferFromArg,
+    caller : Principal,
+    now    : Nat,
+  ) : ICRC37.TransferFromResult {
+    let currentOwner = icrc7Owners.get(arg.token_id);
+    let isApprovedSpender = Icrc37Lib.isApproved(icrc37Approvals, arg.token_id, caller, now);
+
+    let owner = switch (Icrc37Lib.validateTransferFromArg(arg, isApprovedSpender, currentOwner, now)) {
+      case (#err e) { return #Err(e) };
+      case (#ok o) o;
+    };
+
+    let hash = Icrc37Lib.computeTransferFromHash(caller, arg);
+    switch (arg.created_at_time) {
+      case null {};
+      case (?_) {
+        switch (IcrcLib.checkDedup(recentTxLookup, hash)) {
+          case (?existing) { return #Err(#Duplicate { duplicate_of = existing }) };
+          case null {};
+        };
+      };
+    };
+
+    switch (IcrcLib.assignOwnership(icrc7Owners, icrc7Balances, arg.token_id, ?owner, arg.to)) {
+      case (#err msg) {
+        return #Err(#GenericError { error_code = 2; message = msg });
+      };
+      case (#ok) {};
+    };
+
+    // Same approval-invalidation rule as icrc7_transfer.
+    ignore Icrc37Lib.removeAllApprovals(icrc37Approvals, arg.token_id);
+
+    let blockIndex = nextBlockIndex.value;
+    nextBlockIndex.value += 1;
+    if (arg.created_at_time != null) {
+      IcrcLib.recordRecentTx(recentTxLookup, recentTxByOrder, recentTxCursor, hash, blockIndex);
+    };
+
+    #Ok(blockIndex);
+  };
+
+  // ── icrc37_revoke_token_approvals ────────────────────────────────────────
+  public shared({caller}) func icrc37_revoke_token_approvals(
+    args : [ICRC37.RevokeTokenApprovalArg],
+  ) : async [?ICRC37.RevokeTokenApprovalResult] {
+    AccessControl.requireAuthenticated(caller);
+
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err msg) { Runtime.trap("Request already in flight: " # msg) };
+      case (#ok) {};
+    };
+
+    try {
+      let now : Nat = Int.abs(Time.now());
+      let results = List.empty<?ICRC37.RevokeTokenApprovalResult>();
+      for (arg in args.vals()) {
+        List.add(results, ?processRevokeOne(arg, caller, now));
+      };
+      List.toArray(results);
+    } finally {
+      CallerGuard.release(callerGuards, caller);
+    };
+  };
+
+  func processRevokeOne(
+    arg    : ICRC37.RevokeTokenApprovalArg,
+    caller : Principal,
+    now    : Nat,
+  ) : ICRC37.RevokeTokenApprovalResult {
+    let currentOwner = icrc7Owners.get(arg.token_id);
+
+    switch (Icrc37Lib.validateRevokeArg(arg, caller, currentOwner, now)) {
+      case (#err e) { return #Err(e) };
+      case (#ok _) {};
+    };
+
+    let hash = Icrc37Lib.computeRevokeHash(caller, arg);
+    switch (arg.created_at_time) {
+      case null {};
+      case (?_) {
+        switch (IcrcLib.checkDedup(recentTxLookup, hash)) {
+          case (?existing) { return #Err(#Duplicate { duplicate_of = existing }) };
+          case null {};
+        };
+      };
+    };
+
+    // Spec semantics: spender = null revokes all; spender = ?account
+    // revokes that specific (token, spender principal). If the targeted
+    // approval doesn't exist, return ApprovalDoesNotExist per spec.
+    let didRevoke = switch (arg.spender) {
+      case null {
+        let count = Icrc37Lib.removeAllApprovals(icrc37Approvals, arg.token_id);
+        count > 0;
+      };
+      case (?spenderAcct) {
+        Icrc37Lib.removeApproval(icrc37Approvals, arg.token_id, spenderAcct.owner);
+      };
+    };
+    if (not didRevoke) {
+      return #Err(#ApprovalDoesNotExist);
+    };
+
+    let blockIndex = nextBlockIndex.value;
+    nextBlockIndex.value += 1;
+    if (arg.created_at_time != null) {
+      IcrcLib.recordRecentTx(recentTxLookup, recentTxByOrder, recentTxCursor, hash, blockIndex);
+    };
+
+    #Ok(blockIndex);
+  };
+
+  // ── icrc37_is_approved ───────────────────────────────────────────────────
+  //
+  // Batch query: per element returns true iff (spender principal, token_id)
+  // has a non-expired approval. The from_subaccount field is currently
+  // ignored — Phase 3 keys approvals by spender principal only (see
+  // lib/icrc37.mo module comment).
+  public query func icrc37_is_approved(
+    args : [ICRC37.IsApprovedArg],
+  ) : async [Bool] {
+    let now : Nat = Int.abs(Time.now());
+    Array.map<ICRC37.IsApprovedArg, Bool>(
+      args,
+      func(a : ICRC37.IsApprovedArg) : Bool {
+        Icrc37Lib.isApproved(icrc37Approvals, a.token_id, a.spender.owner, now);
+      },
+    );
+  };
+
+  // ── icrc37_get_token_approvals ───────────────────────────────────────────
+  public query func icrc37_get_token_approvals(
+    token_id : Nat,
+    prev     : ?ICRC37.TokenApproval,
+    take     : ?Nat,
+  ) : async [ICRC37.TokenApproval] {
+    Icrc37Lib.getTokenApprovals(icrc37Approvals, token_id, prev, take);
   };
 
   // ── IC SPICY custom helpers ───────────────────────────────────────────────
