@@ -19,6 +19,7 @@ import List "mo:core/List";
 import Map "mo:core/Map";
 import Nat "mo:core/Nat";
 import Nat8 "mo:core/Nat8";
+import Nat64 "mo:core/Nat64";
 import Principal "mo:core/Principal";
 import Result "mo:core/Result";
 import Runtime "mo:core/Runtime";
@@ -269,5 +270,229 @@ module {
       case null DEFAULT_TAKE;
       case (?n) if (n > MAX_TAKE) MAX_TAKE else n;
     };
+  };
+
+  // ── Phase 3.3 transfer helpers ────────────────────────────────────────────
+  //
+  // Pure validation + canonical hashing + bounded dedup buffer. State maps
+  // and the cursor live in main.mo; this module owns only the logic. The
+  // SOLE-entry-point invariant for ownership mutation (assignOwnership above)
+  // is enforced by the mixin: validateTransferArg runs first, then the mixin
+  // calls assignOwnership; nothing else writes the maps.
+
+  // ICRC-7 spec windows; consumed by validateTransferArg below and surfaced
+  // through the icrc7_tx_window / icrc7_permitted_drift query getters.
+  // Pre-computed because Motoko forbids non-static expressions at module level.
+  public let TX_WINDOW_NS       : Nat = 86_400_000_000_000; // 24 * 60 * 60 * 1e9
+  public let PERMITTED_DRIFT_NS : Nat = 120_000_000_000;    //  2 * 60 * 1e9
+  public let MAX_MEMO_BYTES     : Nat = 32;
+  public let RECENT_TX_CAP      : Nat = 1000;
+
+  // FIFO cursor for the bounded dedup buffer. `oldest` is the slot index of
+  // the next entry to evict; `next` is the slot of the next insertion. Both
+  // are monotonically increasing — eviction does not compact the index space.
+  // The live count is `next - oldest`; once it reaches RECENT_TX_CAP, every
+  // insert evicts one entry from the oldest slot.
+  public type DedupCursor = { var oldest : Nat; var next : Nat };
+
+  // ── Validation ────────────────────────────────────────────────────────────
+  //
+  // Pure: returns the spec-shaped TransferError on failure. Does not mutate
+  // anything. Single source of truth for the per-element check order in
+  // icrc7_transfer.
+  //
+  // `now` is the canister's current time in nanoseconds (Nat). The mixin
+  // computes it once per batch via `Int.abs(Time.now())` so all batch
+  // elements see a consistent "now".
+  public func validateTransferArg(
+    args         : ICRC7.TransferArgs,
+    caller       : Principal,
+    currentOwner : ?ICRC7.Account,
+    now          : Nat,
+  ) : Result.Result<(), ICRC7.TransferError> {
+    let owner = switch currentOwner {
+      case null { return #err(#NonExistingTokenId) };
+      case (?o) o;
+    };
+
+    // Caller must be the direct owner. Phase 3.4 widens this to approved
+    // operators; for now, only the owner principal itself can transfer.
+    // The from_subaccount in the arg must match the owner's subaccount
+    // after normalization (null and 32-zero-bytes are equivalent).
+    if (not Principal.equal(caller, owner.owner)) {
+      return #err(#Unauthorized);
+    };
+    let fromSub = normalizeSubaccount(args.from_subaccount);
+    let ownerSub = normalizeSubaccount(owner.subaccount);
+    let subsMatch = switch (fromSub, ownerSub) {
+      case (null, null) true;
+      case (?a, ?b) Blob.equal(a, b);
+      case _ false;
+    };
+    if (not subsMatch) {
+      return #err(#Unauthorized);
+    };
+
+    // Recipient must not be the anonymous principal; self-transfers are
+    // rejected as InvalidRecipient (per ICRC-7 conformance tests — a no-op
+    // transfer wastes a block index and confuses dedup state).
+    if (Principal.isAnonymous(args.to.owner)) {
+      return #err(#InvalidRecipient);
+    };
+    if (accountsEqual(args.to, owner)) {
+      return #err(#InvalidRecipient);
+    };
+
+    switch (args.memo) {
+      case null {};
+      case (?b) {
+        if (Blob.toArray(b).size() > MAX_MEMO_BYTES) {
+          return #err(#GenericError({
+            error_code = 1;
+            message    = "memo exceeds 32 bytes";
+          }));
+        };
+      };
+    };
+
+    // created_at_time is the spec's dedup window key. If unset, no dedup
+    // window applies (and no Duplicate check). If set, validate it falls
+    // inside [now - TX_WINDOW, now + PERMITTED_DRIFT].
+    switch (args.created_at_time) {
+      case null {};
+      case (?t) {
+        let createdAt = Nat64.toNat(t);
+        if (createdAt > now + PERMITTED_DRIFT_NS) {
+          return #err(#CreatedInFuture { ledger_time = Nat64.fromNat(now) });
+        };
+        // Nat subtraction below is guarded by `now > createdAt` — the M0155
+        // warning is a static-analysis false positive; the runtime can't trap.
+        if (now > createdAt and now - createdAt > TX_WINDOW_NS) {
+          return #err(#TooOld);
+        };
+      };
+    };
+
+    #ok;
+  };
+
+  // ── Canonical hash for dedup ──────────────────────────────────────────────
+  //
+  // Length-prefixed binary encoding so distinct args cannot collide via
+  // field-boundary ambiguity (which would happen with a separator-only
+  // scheme since Principal/memo bytes can contain any byte value).
+  //
+  //   [4-byte caller-len BE]  [caller bytes]
+  //   [8-byte token_id BE]
+  //   [4-byte to.owner-len BE][to.owner bytes]
+  //   [1-byte to-sub-flag]    [32 bytes if flag=1]
+  //   [1-byte from-sub-flag]  [32 bytes if flag=1]
+  //   [4-byte memo-len BE]    [memo bytes]
+  //   [1-byte created-at-flag][8 bytes if flag=1]
+  //
+  // Subaccounts are normalized first so null and 32-zero collapse to the
+  // same encoding. token_id is fixed at 8 bytes — far above the collection
+  // cap (8888 fits in 13 bits), and ICRC-7 token_ids are unbounded Nat in
+  // principle but the cap keeps this safe.
+  public func computeTxHash(caller : Principal, args : ICRC7.TransferArgs) : Blob {
+    let buf = List.empty<Nat8>();
+    appendLengthPrefixed(buf, Principal.toBlob(caller));
+    appendNat64BE(buf, Nat64.fromNat(args.token_id));
+    appendLengthPrefixed(buf, Principal.toBlob(args.to.owner));
+    appendOptSubaccount(buf, args.to.subaccount);
+    appendOptSubaccount(buf, args.from_subaccount);
+    switch (args.memo) {
+      case null { appendUint32BE(buf, 0) };
+      case (?m) { appendLengthPrefixed(buf, m) };
+    };
+    switch (args.created_at_time) {
+      case null { List.add(buf, 0 : Nat8) };
+      case (?t) {
+        List.add(buf, 1 : Nat8);
+        appendNat64BE(buf, t);
+      };
+    };
+    Blob.fromArray(List.toArray(buf));
+  };
+
+  func appendLengthPrefixed(buf : List.List<Nat8>, b : Blob) {
+    let bytes = Blob.toArray(b);
+    appendUint32BE(buf, bytes.size());
+    for (byte in bytes.vals()) { List.add(buf, byte) };
+  };
+
+  func appendOptSubaccount(buf : List.List<Nat8>, sub : ?Blob) {
+    switch (normalizeSubaccount(sub)) {
+      case null { List.add(buf, 0 : Nat8) };
+      case (?b) {
+        List.add(buf, 1 : Nat8);
+        for (byte in Blob.toArray(b).vals()) { List.add(buf, byte) };
+      };
+    };
+  };
+
+  func appendUint32BE(buf : List.List<Nat8>, n : Nat) {
+    List.add(buf, Nat8.fromNat((n / 0x1000000) % 0x100));
+    List.add(buf, Nat8.fromNat((n / 0x10000) % 0x100));
+    List.add(buf, Nat8.fromNat((n / 0x100) % 0x100));
+    List.add(buf, Nat8.fromNat(n % 0x100));
+  };
+
+  func appendNat64BE(buf : List.List<Nat8>, n : Nat64) {
+    var i : Nat = 8;
+    while (i > 0) {
+      i -= 1;
+      let shift : Nat64 = Nat64.fromNat(i * 8);
+      List.add(buf, Nat8.fromNat(Nat64.toNat((n >> shift) & 0xFF)));
+    };
+  };
+
+  // ── Dedup buffer ──────────────────────────────────────────────────────────
+  //
+  // O(1) lookup via the hash→blockIndex map, O(1) FIFO eviction via a
+  // parallel insertion-ordered map keyed by cursor slot. Capacity is
+  // RECENT_TX_CAP (1000); on overflow the oldest slot is evicted.
+  //
+  // Both maps are transient in main.mo: tx_window is 24h and a canister
+  // upgrade typically takes seconds, so dropping the dedup state at
+  // upgrade is acceptable for the Phase 3 minimal impl. Phase 4 replaces
+  // this with a windowed eviction over the proper ICRC-3 transaction log.
+
+  public func checkDedup(lookup : Map.Map<Blob, Nat>, hash : Blob) : ?Nat {
+    lookup.get(hash);
+  };
+
+  public func recordRecentTx(
+    lookup     : Map.Map<Blob, Nat>,
+    order      : Map.Map<Nat, Blob>,
+    cursor     : DedupCursor,
+    hash       : Blob,
+    blockIndex : Nat,
+  ) {
+    // Nat subtraction below is safe by the cursor invariant `next >= oldest`
+    // (both start at 0; oldest only advances inside this function and never
+    // past `next`). M0155 warning is a static-analysis false positive.
+    let live = cursor.next - cursor.oldest;
+    if (live >= RECENT_TX_CAP) {
+      switch (order.get(cursor.oldest)) {
+        case (?oldHash) {
+          ignore lookup.delete(oldHash);
+          ignore order.delete(cursor.oldest);
+        };
+        case null {
+          // Cursor advanced past an empty slot — invariant violation; trap
+          // loudly so the bug surfaces (means recordRecentTx and the cursor
+          // got out of sync somewhere).
+          Runtime.trap(
+            "recordRecentTx invariant violation: cursor.oldest=" #
+            Nat.toText(cursor.oldest) # " has no entry in order map"
+          );
+        };
+      };
+      cursor.oldest += 1;
+    };
+    lookup.add(hash, blockIndex);
+    order.add(cursor.next, hash);
+    cursor.next += 1;
   };
 };

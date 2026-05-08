@@ -157,6 +157,28 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // in Phase 3.6 (no re-serialization round-trip needed).
   let icrc7TokenMetadataRaw : Map.Map<Nat, Blob>               = Map.empty<Nat, Blob>();
 
+  // Phase 3.3: ICRC-7 transfer transaction state.
+  //
+  // `nextBlockIndex` is the monotonic counter for transaction block IDs
+  // returned by icrc7_transfer. PERSISTENT: block IDs must never repeat
+  // across upgrades or the ICRC-3 transaction log invariant breaks (Phase
+  // 3.6 / 4 will populate the actual log; the counter alone reserves the
+  // ID space today).
+  //
+  // recentTxLookup / recentTxByOrder / recentTxCursor implement a bounded
+  // FIFO dedup buffer (capacity = IcrcLib.RECENT_TX_CAP). All three are
+  // TRANSIENT: the dedup window is bounded by tx_window (24h) and an
+  // upgrade is typically much faster than that, so dropping in-flight
+  // dedup state at upgrade is acceptable for Phase 3. Phase 4 replaces
+  // this with windowed eviction over the proper ICRC-3 transaction log.
+  let nextBlockIndex = { var value : Nat = 0 };
+  transient let recentTxLookup  : Map.Map<Blob, Nat> = Map.empty<Blob, Nat>();
+  transient let recentTxByOrder : Map.Map<Nat, Blob> = Map.empty<Nat, Blob>();
+  transient let recentTxCursor  : { var oldest : Nat; var next : Nat } = {
+    var oldest = 0;
+    var next   = 0;
+  };
+
   // Collection-level configuration constants. `transient` because they are
   // compile-time literals — no migration story needed across upgrades.
   transient let collectionName : Text = "IC SPICY";
@@ -303,6 +325,10 @@ shared(msg) persistent actor class ICSpicy() = Self {
     func() : Principal { Principal.fromActor(Self) },
     collectionName,
     totalSupplyCap,
+    nextBlockIndex,
+    recentTxLookup,
+    recentTxByOrder,
+    recentTxCursor,
   );
   include WalletAPI(wallets, txLog);
   include RecipesAPI(accessControlState, recipes, nextRecipeId);
