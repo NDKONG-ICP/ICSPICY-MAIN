@@ -21,6 +21,7 @@ const ROOT = path.resolve(__dirname, "..");
 
 const BRAND_PACK_DIR = path.join(ROOT, "docs", "brand-pack");
 const EXPANDED_DIR = path.join(BRAND_PACK_DIR, "expanded-library");
+const NATURAL_FARMING_DIR = path.join(ROOT, "docs", "natural-farming");
 
 const FRONTEND_PUBLIC_DOCS = path.join(
   ROOT,
@@ -90,6 +91,12 @@ const CATEGORIES = [
     name: "Operations",
     description:
       "Founder operating plan, food-safety claims, mainnet launch checklist, and the risk register.",
+  },
+  {
+    id: "natural-farming",
+    name: "Natural Farming",
+    description:
+      "KNF and JADAM methods for soil biology, fermented inputs, and growing rare peppers using Korean Natural Farming and JADAM organic techniques.",
   },
 ];
 
@@ -371,6 +378,112 @@ const CURATION = {
     sortOrder: 74,
     tags: ["risk", "register", "operations"],
   },
+  // ── Natural Farming library ────────────────────────────────────────────────
+  NF_01_KNF_Foundations: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: true,
+    sortOrder: 80,
+    tags: ["knf", "korean-natural-farming", "master-cho", "cgnf", "foundations", "inputs"],
+  },
+  NF_02_KNF_IMO: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: false,
+    sortOrder: 81,
+    tags: ["knf", "imo", "indigenous-microorganisms", "soil", "bacteria", "fungi"],
+  },
+  NF_03_KNF_LAB: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: false,
+    sortOrder: 82,
+    tags: ["knf", "lab", "lactic-acid-bacteria", "fermented", "probiotic"],
+  },
+  NF_04_KNF_FPJ_FFJ: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: false,
+    sortOrder: 83,
+    tags: ["knf", "fpj", "ffj", "fermented-plant-juice", "fermented-fruit-juice", "vegetative"],
+  },
+  NF_05_KNF_FAA: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: false,
+    sortOrder: 84,
+    tags: ["knf", "faa", "fish-amino-acid", "nitrogen", "fermented", "vegetative"],
+  },
+  NF_06_KNF_OHN: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: false,
+    sortOrder: 85,
+    tags: ["knf", "ohn", "oriental-herbal-nutrient", "herbs", "ginger", "garlic", "cinnamon"],
+  },
+  NF_07_KNF_WCA_WCP: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: false,
+    sortOrder: 86,
+    tags: ["knf", "wca", "wcp", "calcium", "phosphate", "blossom-end-rot", "eggshell"],
+  },
+  NF_08_KNF_Seawater_BRV: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: false,
+    sortOrder: 87,
+    tags: ["knf", "seawater", "brv", "brown-rice-vinegar", "minerals", "brix", "anthracnose"],
+  },
+  NF_09_KNF_Application_Guide: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: true,
+    sortOrder: 88,
+    tags: ["knf", "application", "schedule", "spray", "growth-stages", "calendar"],
+  },
+  NF_10_JADAM_Foundations: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: true,
+    sortOrder: 89,
+    tags: ["jadam", "youngsang-cho", "organic", "ultra-low-cost", "foundations"],
+  },
+  NF_11_JADAM_JMS: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: false,
+    sortOrder: 90,
+    tags: ["jadam", "jms", "microorganism-solution", "soil", "leaf-mold", "potato"],
+  },
+  NF_12_JADAM_JS_JHS_JWA: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: false,
+    sortOrder: 91,
+    tags: ["jadam", "js", "jadam-sulfur", "jhs", "herbal-solution", "jwa", "wetting-agent", "fungicide", "pesticide"],
+  },
+  NF_13_Pepper_Growing_Zone10a: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: true,
+    sortOrder: 92,
+    tags: ["pepper", "capsicum", "florida", "zone-10a", "growing", "varieties", "chinense", "baccatum"],
+  },
+  NF_14_Natural_Farming_For_Peppers: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: true,
+    sortOrder: 93,
+    tags: ["pepper", "knf", "jadam", "protocol", "superhot", "florida", "blossom-end-rot", "anthracnose"],
+  },
+  NF_15_Soil_Biology_Regenerative: {
+    collection: "natural-farming",
+    category: "natural-farming",
+    featured: false,
+    sortOrder: 94,
+    tags: ["soil", "biology", "regenerative", "food-web", "matt-powers", "mycorrhizal", "humus", "organic-matter"],
+  },
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -493,9 +606,9 @@ async function main() {
   await ensureDir(FRONTEND_PUBLIC_DOCS);
   await ensureDir(FRONTEND_GEN_DIR);
 
-  // Discover .md files in both source dirs.
+  // Discover .md files in all source dirs.
   const candidates = [];
-  for (const dir of [BRAND_PACK_DIR, EXPANDED_DIR]) {
+  for (const dir of [BRAND_PACK_DIR, EXPANDED_DIR, NATURAL_FARMING_DIR]) {
     const entries = await fs.readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
       if (!entry.isFile()) continue;

@@ -12,6 +12,9 @@ main = "src/backend/main.mo"
 [canisters.docs_backend]
 main = "src/docs_backend/main.mo"
 
+[canisters.spicy_ai_canister]
+main = "src/spicy_ai_canister/main.mo"
+
 [toolchain]
 moc = "1.3.0"
 lintoko = "0.7.0"

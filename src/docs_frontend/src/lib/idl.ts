@@ -47,6 +47,7 @@ export const idlFactory: IDL.InterfaceFactory = ({ IDL }) => {
     charming: IDL.Null,
     spec: IDL.Null,
     founder: IDL.Null,
+    gardener: IDL.Null,
   });
 
   const ChatbotConfig = IDL.Record({
@@ -153,7 +154,8 @@ export const idlFactory: IDL.InterfaceFactory = ({ IDL }) => {
 export type PersonaPresetCandid =
   | { charming: null }
   | { spec: null }
-  | { founder: null };
+  | { founder: null }
+  | { gardener: null };
 
 export type ChatbotConfigCandid = {
   systemPromptExtra: string;

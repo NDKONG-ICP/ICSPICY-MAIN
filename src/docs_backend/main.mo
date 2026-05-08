@@ -458,6 +458,16 @@ shared(msg) persistent actor class DocsBackend() = Self {
     }
   };
 
+  // ── BM25 retrieval query (called by spicy_ai_canister) ────────────────────
+  //
+  // Returns the top-K most relevant chunks for a query string.
+  // This is a query method so it's fast; inter-canister calls to query methods
+  // still go through consensus (replicated query) but have no update overhead.
+
+  public query func queryChunks(queryText : Text, topK : Nat) : async { chunks : [Text]; slugs : [Text] } {
+    BM25.retrieve(queryText, _chunks, _docs, topK)
+  };
+
   // ── Public query methods (catalog) ─────────────────────────────────────────
 
   public query func getCanisterId() : async Text {

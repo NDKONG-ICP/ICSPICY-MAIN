@@ -8,7 +8,13 @@
   "docs_frontend": {
     "ic": "pr3bu-6aaaa-aaaao-ba5ba-cai"
   },
+  "llama_cpp": {
+    "ic": "pw2ha-tyaaa-aaaao-ba5bq-cai"
+  },
   "nft_assets": {
     "ic": "gawk3-2qaaa-aaaao-ba4sa-cai"
+  },
+  "spicy_ai_canister": {
+    "ic": "pd5wn-sqaaa-aaaao-ba5ca-cai"
   }
 }

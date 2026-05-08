@@ -57,6 +57,9 @@ export default defineConfig({
     "process.env.CANISTER_ID_DOCS_BACKEND": JSON.stringify(
       process.env.CANISTER_ID_DOCS_BACKEND ?? "",
     ),
+    "process.env.CANISTER_ID_SPICY_AI_CANISTER": JSON.stringify(
+      process.env.CANISTER_ID_SPICY_AI_CANISTER ?? "",
+    ),
     "process.env.CANISTER_ID_INTERNET_IDENTITY": JSON.stringify(
       process.env.CANISTER_ID_INTERNET_IDENTITY ?? "",
     ),

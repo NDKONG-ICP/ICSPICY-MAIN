@@ -2,6 +2,7 @@ import { Flame, Library, Search, Lock } from "lucide-react";
 import { motion } from "motion/react";
 import { Link, NavLink } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
+import { SocialIcons } from "./SocialLinks";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -73,6 +74,12 @@ export function Header({ onOpenCommand }: HeaderProps) {
             <Library className="h-3.5 w-3.5" />
             Browse Library
           </Link>
+
+          {/* Social links — visible on medium screens and up */}
+          <span className="hidden h-4 w-px bg-line/50 md:block" aria-hidden="true" />
+          <SocialIcons className="hidden md:flex" />
+          <span className="hidden h-4 w-px bg-line/50 md:block" aria-hidden="true" />
+
           <Link
             to="/admin"
             title="Admin panel"

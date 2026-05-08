@@ -163,6 +163,48 @@ module {
 
   // ── Retrieval ────────────────────────────────────────────────────────────────
 
+  // ── Acronym expansion ────────────────────────────────────────────────────────
+
+  // Natural farming acronym expansions.  When the user types an abbreviation
+  // like "FPJ", we inject its expanded tokens so retrieval hits the full text.
+  let ACRONYM_MAP : [(Text, [Text])] = [
+    ("knf",     ["korean", "natural", "farming"]),
+    ("cgnf",    ["cho", "global", "natural", "farming"]),
+    ("jadam",   ["jadam", "organic", "farming"]),
+    ("imo",     ["indigenous", "microorganisms"]),
+    ("lab",     ["lactic", "acid", "bacteria"]),
+    ("fpj",     ["fermented", "plant", "juice"]),
+    ("ffj",     ["fermented", "fruit", "juice"]),
+    ("faa",     ["fish", "amino", "acid"]),
+    ("ohn",     ["oriental", "herbal", "nutrient"]),
+    ("wca",     ["water", "soluble", "calcium"]),
+    ("wcp",     ["water", "soluble", "calcium", "phosphate"]),
+    ("brv",     ["brown", "rice", "vinegar"]),
+    ("jms",     ["jadam", "microorganism", "solution"]),
+    ("js",      ["jadam", "sulfur"]),
+    ("jwa",     ["jadam", "wetting", "agent"]),
+    ("jhs",     ["jadam", "herbal", "solution"]),
+    ("jmp",     ["jadam", "microbial", "pesticide"]),
+    ("ber",     ["blossom", "end", "rot"]),
+    ("som",     ["soil", "organic", "matter"]),
+    ("sea",     ["seawater", "fermented"]),
+  ];
+
+  func expandAcronyms(terms : [Text]) : [Text] {
+    var expanded = terms;
+    for ((acronym, expansion) in ACRONYM_MAP.vals()) {
+      if (Array.find<Text>(terms, func(t) { t == acronym }) != null) {
+        // Add expansion terms that are not already present.
+        for (expTerm in expansion.vals()) {
+          if (Array.find<Text>(expanded, func(t) { t == expTerm }) == null) {
+            expanded := Array.concat(expanded, [expTerm]);
+          };
+        };
+      };
+    };
+    expanded
+  };
+
   // Returns the text of the top-K chunks most relevant to the query,
   // along with the unique doc slugs they came from.
   public func retrieve(
@@ -171,7 +213,8 @@ module {
     docs : [Types.DocumentRecord],
     topK : Nat,
   ) : { chunks : [Text]; slugs : [Text] } {
-    let queryTerms = tokenize(queryText);
+    let rawTerms = tokenize(queryText);
+    let queryTerms = expandAcronyms(rawTerms);
     if (queryTerms.size() == 0) {
       return { chunks = []; slugs = [] };
     };

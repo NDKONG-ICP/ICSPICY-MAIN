@@ -22,6 +22,7 @@ const PERSONA_OPTIONS: { value: ChatbotConfig["persona"]; label: string; desc: s
   { value: "charming", label: "Charming Concierge", desc: "Fiery, warm, witty. The IC SPICY brand voice." },
   { value: "spec", label: "Plain Spec", desc: "Precise and factual. Bullet points over prose." },
   { value: "founder", label: "Founder Voice", desc: "Personal, passionate, first-person 'we'." },
+  { value: "gardener", label: "Master Gardener", desc: "KNF & JADAM expert — natural farming recipes, soil biology, Florida pepper growing." },
 ];
 
 // Approx token count (GPT-style: ~4 chars per token).

@@ -76,15 +76,13 @@ export function HomePage() {
               Browse the library
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <a
-              href="/documents/brand-pack/IC_SPICY_Branded_Whitepaper.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to="/library/branded-whitepaper"
               className="inline-flex items-center gap-2 rounded-full border border-line/80 bg-elevated/60 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-gold"
             >
               <FileText className="h-4 w-4" />
               Read the whitepaper
-            </a>
+            </Link>
           </motion.div>
 
           <motion.dl

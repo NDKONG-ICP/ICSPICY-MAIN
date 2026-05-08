@@ -103,7 +103,7 @@ export interface DocumentStats {
   manifestVersion: string;
 }
 
-export type PersonaPreset = "charming" | "spec" | "founder";
+export type PersonaPreset = "charming" | "spec" | "founder" | "gardener";
 
 export interface ChatbotConfig {
   systemPromptExtra: string;
@@ -198,12 +198,14 @@ export function fromDocumentStats(c: DocumentStatsCandid): DocumentStats {
 export function fromPersonaPreset(c: PersonaPresetCandid): PersonaPreset {
   if ("charming" in c) return "charming";
   if ("spec" in c) return "spec";
+  if ("gardener" in c) return "gardener";
   return "founder";
 }
 
 export function toPersonaPresetCandid(p: PersonaPreset): PersonaPresetCandid {
   if (p === "charming") return { charming: null };
   if (p === "spec") return { spec: null };
+  if (p === "gardener") return { gardener: null };
   return { founder: null };
 }
 

@@ -13,7 +13,8 @@ import { readdir, readFile, stat } from 'fs/promises';
 import { readFileSync } from 'fs';
 import { join, relative, extname } from 'path';
 import { fileURLToPath } from 'url';
-import { HttpAgent } from '@dfinity/agent';
+import { HttpAgent, Actor } from '@dfinity/agent';
+import { IDL } from '@dfinity/candid';
 import { AssetManager } from '@dfinity/assets';
 import { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1';
 
@@ -89,6 +90,19 @@ const allFiles = await collectFiles(DIST_DIR);
 const toUpload = allFiles;
 console.log(`Files to upload: ${toUpload.length}`);
 
+// Delete ALL existing assets before uploading new ones.
+// This avoids "asset already exists" traps when Vite output hashes change between builds.
+const existingAssets = await assetManager.list();
+if (existingAssets.length > 0) {
+  console.log(`Deleting ${existingAssets.length} existing assets before re-upload…`);
+  const delBatch = assetManager.batch();
+  for (const asset of existingAssets) {
+    delBatch.delete(asset.key);
+  }
+  await delBatch.commit();
+  console.log('Existing assets cleared.');
+}
+
 // Upload in batches of 20 files per commit
 const BATCH = 20;
 let uploaded = 0;
@@ -104,12 +118,19 @@ for (let i = 0; i < toUpload.length; i += BATCH) {
         const rel = relative(DIST_DIR, fullPath).replace(/\\/g, '/');
         const parts = rel.split('/');
         const fileName = parts.pop();
-        const path = parts.length > 0 ? '/' + parts.join('/') : '/';
+        const path = parts.length > 0 ? '/' + parts.join('/') : '';
         const bytes = await readFile(fullPath);
+        // Headers must be in the CreateAsset operation so they're included in the
+        // certified tree built during commit_batch. Setting them via set_asset_properties
+        // after upload does NOT update the certified tree → 503 "Invalid tree root hash".
+        const isHashed = rel.startsWith('assets/');
         await freshBatch.store(new Uint8Array(bytes), {
           path,
           fileName,
           contentType: contentType(fullPath),
+          headers: [['Cache-Control', isHashed
+            ? 'public, max-age=31536000, immutable'
+            : 'public, max-age=0, must-revalidate']],
         });
       }
       await freshBatch.commit();
@@ -128,4 +149,41 @@ for (let i = 0; i < toUpload.length; i += BATCH) {
 }
 
 console.log(`\n✅ All ${uploaded} files uploaded to canister ${canisterId}`);
+
+// Enable SPA aliasing on /index.html so all routes (e.g. /library/branded-whitepaper)
+// fall back to index.html on direct navigation or hard refresh.
+// IMPORTANT: only is_aliased is set here — headers MUST be in the CreateAsset batch
+// operation above (already done via batch.store headers config). Setting headers via
+// set_asset_properties does NOT update the certified tree → "Invalid tree root hash" 503.
+console.log('\nEnabling SPA aliasing on /index.html…');
+
+const setAssetPropertiesIDL = IDL.Service({
+  set_asset_properties: IDL.Func(
+    [IDL.Record({
+      key: IDL.Text,
+      max_age: IDL.Opt(IDL.Opt(IDL.Nat64)),
+      headers: IDL.Opt(IDL.Opt(IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)))),
+      allow_raw_access: IDL.Opt(IDL.Opt(IDL.Bool)),
+      is_aliased: IDL.Opt(IDL.Opt(IDL.Bool)),
+    })],
+    [],
+    [],
+  ),
+});
+
+const rawActor = Actor.createActor(() => setAssetPropertiesIDL, {
+  agent,
+  canisterId,
+});
+
+await rawActor.set_asset_properties({
+  key: '/index.html',
+  max_age: [],          // don't change
+  headers: [],          // don't change — already set in CreateAsset batch
+  allow_raw_access: [], // don't change
+  is_aliased: [[true]],
+});
+console.log('  ✓ /index.html is_aliased = true');
+
+console.log(`\n✅ Done.`);
 console.log(`   Live at: https://${canisterId}.icp0.io`);

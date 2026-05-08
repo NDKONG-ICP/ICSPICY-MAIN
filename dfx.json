@@ -27,7 +27,17 @@
     "docs_frontend": {
       "type": "assets",
       "source": ["src/docs_frontend/dist"],
-      "dependencies": ["docs_backend"]
+      "dependencies": ["docs_backend", "spicy_ai_canister"]
+    },
+    "llama_cpp": {
+      "type": "custom",
+      "candid": "vendor/onicai/build/llama_cpp.did",
+      "wasm": "vendor/onicai/build/llama_cpp.wasm"
+    },
+    "spicy_ai_canister": {
+      "type": "motoko",
+      "main": "src/spicy_ai_canister/main.mo",
+      "wasm_memory_persistence": "keep"
     }
   },
   "defaults": {

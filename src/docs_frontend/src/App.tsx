@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
+import { getPrincipal } from "./lib/auth";
 import { AnimatedBackdrop } from "./components/AnimatedBackdrop";
 import { CommandPalette } from "./components/CommandPalette";
 import { Footer } from "./components/Footer";
@@ -106,17 +107,46 @@ export default function App() {
 }
 
 function AdminHeader() {
+  const [principal, setPrincipal] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    getPrincipal().then((p) => setPrincipal(p));
+  }, []);
+
+  const copy = () => {
+    if (!principal) return;
+    navigator.clipboard.writeText(principal).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
     <header className="sticky top-0 z-40 border-b border-line/60 backdrop-blur-xl">
       <div className="absolute inset-0 -z-10 bg-bg/70" />
-      <div className="container flex h-14 items-center gap-3">
-        <a href="/" className="text-sm text-muted hover:text-ink transition-colors">
+      <div className="container flex h-14 items-center gap-3 flex-wrap">
+        <a href="/" className="text-sm text-muted hover:text-ink transition-colors shrink-0">
           ← Back to Library
         </a>
         <span className="text-muted/40">/</span>
-        <span className="text-sm font-medium text-ink">
+        <span className="text-sm font-medium text-ink shrink-0">
           IC <span className="text-ember">SPICY</span> Admin
         </span>
+        {principal && (
+          <button
+            type="button"
+            onClick={copy}
+            title="Click to copy full principal ID"
+            className="ml-auto flex items-center gap-2 rounded-lg border border-line/60 bg-elevated/40 px-3 py-1.5 transition-colors hover:border-ember/60 hover:bg-elevated/70"
+          >
+            <span className="text-xs text-muted shrink-0">Principal:</span>
+            <span className="font-mono text-xs text-ink break-all">{principal}</span>
+            <span className="shrink-0 text-xs text-muted">
+              {copied ? "✓ copied" : "copy"}
+            </span>
+          </button>
+        )}
       </div>
     </header>
   );

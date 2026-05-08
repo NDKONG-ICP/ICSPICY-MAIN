@@ -71,9 +71,10 @@ module {
   // ── Chatbot config ──────────────────────────────────────────────────────────
 
   public type PersonaPreset = {
-    #charming;  // brand concierge (default)
-    #spec;      // plain informational
-    #founder;   // first-person founder voice
+    #charming;   // brand concierge (default)
+    #spec;       // plain informational
+    #founder;    // first-person founder voice
+    #gardener;   // master natural farmer / KNF-JADAM expert
   };
 
   // Mutable chatbot configuration (stored in stable record, updated via setters).
