@@ -45,25 +45,34 @@ export function useIcrc7Actor(): {
   const q = useQuery({
     queryKey: [ICRC7_ACTOR_QUERY_KEY, principalText],
     queryFn: async () => {
-      const config = await loadConfig();
-      const agentOpts =
-        isAuthenticated && identity ? { identity } : {};
-      const agent = new HttpAgent({
-        ...agentOpts,
-        host: config.backend_host,
-      });
-      if (config.backend_host?.includes("localhost")) {
-        // Local replica: fetch root key so the agent can verify queries.
-        // Failure here is expected when the replica is offline; the actor
-        // will simply error on first call.
-        await agent.fetchRootKey().catch(() => {
-          // intentional swallow — surfaced at call time
+      try {
+        const config = await loadConfig();
+        const agentOpts =
+          isAuthenticated && identity ? { identity } : {};
+        const agent = new HttpAgent({
+          ...agentOpts,
+          host: config.backend_host,
         });
+        // fetchRootKey is required for the local replica's self-signed cert.
+        // Checking config.backend_host is unreliable here because in Vite
+        // proxy mode backend_host is intentionally undefined (the agent
+        // defaults to window.location.origin and Vite forwards /api to 4943).
+        // Use DFX_NETWORK, exposed unconditionally by vite-plugin-environment
+        // in vite.config.js, as the authoritative local-vs-mainnet signal.
+        const isLocal =
+          process.env.DFX_NETWORK === "local" ||
+          !!config.backend_host?.match(/localhost|127\.0\.0\.1/);
+        if (isLocal) {
+          await agent.fetchRootKey().catch(() => {});
+        }
+        return Actor.createActor<_SERVICE>(idlFactory, {
+          agent,
+          canisterId: config.backend_canister_id,
+        });
+      } catch (e) {
+        console.error("[icrc7-actor] failed to create actor:", e);
+        throw e;
       }
-      return Actor.createActor<_SERVICE>(idlFactory, {
-        agent,
-        canisterId: config.backend_canister_id,
-      });
     },
     staleTime: Number.POSITIVE_INFINITY,
     enabled: true,

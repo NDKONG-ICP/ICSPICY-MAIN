@@ -3,6 +3,7 @@ import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createActor } from "../backend";
 import { useIcrc7Actor } from "../lib/icrc7-actor";
+
 import type {
   AddFeedingInput,
   AddWeatherRecordInput,
@@ -2052,7 +2053,8 @@ export function useTokenMetadata(tokenId: bigint | null) {
     queryKey: ["icrc7TokenMetadata", tokenId?.toString() ?? null],
     queryFn: async () => {
       if (!actor || tokenId == null) return null;
-      const [entry] = await actor.icrc7_token_metadata([tokenId]);
+      const raw = await actor.icrc7_token_metadata([tokenId]);
+      const [entry] = raw;
       // Candid optional decodes as a 0/1-element tuple.
       return entry.length === 0 ? null : entry[0];
     },
@@ -2066,7 +2068,8 @@ export function useTokenOwner(tokenId: bigint | null) {
     queryKey: ["icrc7Owner", tokenId?.toString() ?? null],
     queryFn: async () => {
       if (!actor || tokenId == null) return null;
-      const [entry] = await actor.icrc7_owner_of([tokenId]);
+      const raw = await actor.icrc7_owner_of([tokenId]);
+      const [entry] = raw;
       return entry.length === 0 ? null : entry[0];
     },
     enabled: !!actor && !isFetching && tokenId != null,
@@ -2096,8 +2099,7 @@ export function useTokenCertified(tokenId: bigint | null) {
       // consumers can do truthy checks without unwrapping.
       return {
         value: r.value.length === 0 ? null : r.value[0],
-        certificate:
-          r.certificate.length === 0 ? null : r.certificate[0],
+        certificate: r.certificate.length === 0 ? null : r.certificate[0],
         witness: r.witness,
       };
     },
