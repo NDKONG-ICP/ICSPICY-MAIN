@@ -187,11 +187,77 @@ type TransplantInput =
    container_size: ContainerSize;
    plant_id: PlantId;
  };
+type TransferResult = 
+ variant {
+   Err: TransferError;
+   Ok: nat;
+ };
+type TransferFromResult = 
+ variant {
+   Err: TransferFromError;
+   Ok: nat;
+ };
+type TransferFromError = 
+ variant {
+   CreatedInFuture: record {ledger_time: nat64;};
+   Duplicate: record {duplicate_of: nat;};
+   GenericBatchError: record {
+                        error_code: nat;
+                        message: text;
+                      };
+   GenericError: record {
+                   error_code: nat;
+                   message: text;
+                 };
+   InvalidRecipient;
+   NonExistingTokenId;
+   TooOld;
+   Unauthorized;
+ };
+type TransferFromArg = 
+ record {
+   created_at_time: opt nat64;
+   from: Account;
+   memo: opt blob;
+   spender_subaccount: opt blob;
+   to: Account;
+   token_id: nat;
+ };
+type TransferError = 
+ variant {
+   CreatedInFuture: record {ledger_time: nat64;};
+   Duplicate: record {duplicate_of: nat;};
+   GenericBatchError: record {
+                        error_code: nat;
+                        message: text;
+                      };
+   GenericError: record {
+                   error_code: nat;
+                   message: text;
+                 };
+   InvalidRecipient;
+   NonExistingTokenId;
+   TooOld;
+   Unauthorized;
+ };
+type TransferArgs = 
+ record {
+   created_at_time: opt nat64;
+   from_subaccount: opt blob;
+   memo: opt blob;
+   to: Account;
+   token_id: nat;
+ };
 type TokenPrice = 
  record {
    last_updated: Timestamp;
    price_in_icp_e8s: nat;
    token: OracleToken;
+ };
+type TokenApproval = 
+ record {
+   approval_info: ApprovalInfo;
+   token_id: nat;
  };
 type Timestamp = int;
 type SubmitOfferInput = 
@@ -252,6 +318,36 @@ type SaveProfileInput =
    avatar_key: opt text;
    bio: text;
    username: text;
+ };
+type RevokeTokenApprovalResult = 
+ variant {
+   Err: RevokeTokenApprovalError;
+   Ok: nat;
+ };
+type RevokeTokenApprovalError = 
+ variant {
+   ApprovalDoesNotExist;
+   CreatedInFuture: record {ledger_time: nat64;};
+   Duplicate: record {duplicate_of: nat;};
+   GenericBatchError: record {
+                        error_code: nat;
+                        message: text;
+                      };
+   GenericError: record {
+                   error_code: nat;
+                   message: text;
+                 };
+   NonExistingTokenId;
+   TooOld;
+   Unauthorized;
+ };
+type RevokeTokenApprovalArg = 
+ record {
+   created_at_time: opt nat64;
+   from_subaccount: opt blob;
+   memo: opt blob;
+   spender: opt Account;
+   token_id: nat;
  };
 type ResaleListingPublic = 
  record {
@@ -608,6 +704,12 @@ type LayerSummary =
    file_names: vec text;
    layer: text;
  };
+type IsApprovedArg = 
+ record {
+   from_subaccount: opt blob;
+   spender: Account;
+   token_id: nat;
+ };
 type InventoryCategory = 
  variant {
    Gal1;
@@ -634,6 +736,7 @@ type ICSpicy =
        err: text;
        ok: text;
      });
+   adminTransferFromPool: (tokenId: nat, to: Account) -> (TransferResult);
    airdropNFT: (_token_id: text, _recipient: principal) -> ();
    assignCallerUserRole: (_user: principal, _role: UserRole) -> ();
    assignPoolNFT: (nftId: nat, action: AssignAction) -> ();
@@ -754,6 +857,17 @@ type ICSpicy =
    getWalletTransactions: () -> (vec WalletTransaction) query;
    hasDAOAccess: () -> (bool) query;
    hasMembership: () -> (bool) query;
+   icrc37_approve_tokens: (args: vec ApproveTokenArg) ->
+    (vec opt ApproveTokenResult);
+   icrc37_get_token_approvals: (token_id: nat, prev: opt TokenApproval, take:
+    opt nat) -> (vec TokenApproval) query;
+   icrc37_is_approved: (args: vec IsApprovedArg) -> (vec bool) query;
+   icrc37_max_approvals_per_token_or_collection: () -> (opt nat) query;
+   icrc37_max_revoke_approvals: () -> (opt nat) query;
+   icrc37_revoke_token_approvals: (args: vec RevokeTokenApprovalArg) ->
+    (vec opt RevokeTokenApprovalResult);
+   icrc37_transfer_from: (args: vec TransferFromArg) ->
+    (vec opt TransferFromResult);
    icrc7_atomic_batch_transfers: () -> (opt bool) query;
    icrc7_balance_of: (accounts: vec Account) -> (vec nat) query;
    icrc7_collection_metadata: () -> (vec record {
@@ -777,11 +891,22 @@ type ICSpicy =
                    text;
                    Value;
                  }) query;
+   icrc7_token_metadata_certified: (tokenId: nat) ->
+    (record {
+       certificate: opt blob;
+       value: opt blob;
+       witness: blob;
+     }) query;
    icrc7_tokens: (prev: opt nat, take: opt nat) -> (vec nat) query;
    icrc7_tokens_of: (account: Account, prev: opt nat, take: opt nat) ->
     (vec nat) query;
    icrc7_total_supply: () -> (nat) query;
+   icrc7_transfer: (args: vec TransferArgs) -> (vec opt TransferResult);
    icrc7_tx_window: () -> (opt nat) query;
+   initializeNFTPool: () -> (record {
+                               initialized: nat;
+                               skipped: nat;
+                             });
    isCallerAdmin: () -> (bool) query;
    isPepperHead: (tokenId: nat) -> (bool) query;
    isPepperHeadAvailable: () -> (nat) query;
@@ -1086,6 +1211,41 @@ type ArtworkLayer =
    name: text;
    object_key: text;
    uploaded_at: Timestamp;
+ };
+type ApproveTokenResult = 
+ variant {
+   Err: ApproveTokenError;
+   Ok: nat;
+ };
+type ApproveTokenError = 
+ variant {
+   CreatedInFuture: record {ledger_time: nat64;};
+   Duplicate: record {duplicate_of: nat;};
+   GenericBatchError: record {
+                        error_code: nat;
+                        message: text;
+                      };
+   GenericError: record {
+                   error_code: nat;
+                   message: text;
+                 };
+   InvalidSpender;
+   NonExistingTokenId;
+   TooOld;
+   Unauthorized;
+ };
+type ApproveTokenArg = 
+ record {
+   approval_info: ApprovalInfo;
+   token_id: nat;
+ };
+type ApprovalInfo = 
+ record {
+   created_at_time: opt nat64;
+   expires_at: opt nat64;
+   from_subaccount: opt blob;
+   memo: opt blob;
+   spender: Account;
  };
 type AirdropAssignment = 
  record {

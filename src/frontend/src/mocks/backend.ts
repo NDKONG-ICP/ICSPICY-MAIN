@@ -21,6 +21,11 @@ const MOCK_PRINCIPAL = { toText: () => "aaaaa-aa" } as Principal;
 const NOW = BigInt(Date.now()) * BigInt(1_000_000);
 
 export const mockBackend: backendInterface = {
+  // Object-storage certification: no-op stubs. The mock backend is only
+  // exercised when VITE_USE_MOCK=true, which has no real upload/download
+  // path, so a deterministic empty response is sufficient.
+  _immutableObjectStorageCreateCertificate: async () => new Uint8Array(),
+  _immutableObjectStorageGetCertificate: async () => null,
   acceptOffer: async (offerId) => ({
     id: offerId,
     nft_id: "nft-001",

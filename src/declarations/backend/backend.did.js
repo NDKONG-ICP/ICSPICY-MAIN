@@ -94,6 +94,28 @@ export const idlFactory = ({ IDL }) => {
     'longitude' : IDL.Float64,
   });
   const TrayId = IDL.Nat;
+  const Subaccount = IDL.Vec(IDL.Nat8);
+  const Account = IDL.Record({
+    'owner' : IDL.Principal,
+    'subaccount' : IDL.Opt(Subaccount),
+  });
+  const TransferError = IDL.Variant({
+    'GenericError' : IDL.Record({
+      'message' : IDL.Text,
+      'error_code' : IDL.Nat,
+    }),
+    'Duplicate' : IDL.Record({ 'duplicate_of' : IDL.Nat }),
+    'NonExistingTokenId' : IDL.Null,
+    'Unauthorized' : IDL.Null,
+    'CreatedInFuture' : IDL.Record({ 'ledger_time' : IDL.Nat64 }),
+    'InvalidRecipient' : IDL.Null,
+    'GenericBatchError' : IDL.Record({
+      'message' : IDL.Text,
+      'error_code' : IDL.Nat,
+    }),
+    'TooOld' : IDL.Null,
+  });
+  const TransferResult = IDL.Variant({ 'Ok' : IDL.Nat, 'Err' : TransferError });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -625,10 +647,100 @@ export const idlFactory = ({ IDL }) => {
     'txType' : TxType,
     'amount' : IDL.Nat,
   });
-  const Subaccount = IDL.Vec(IDL.Nat8);
-  const Account = IDL.Record({
-    'owner' : IDL.Principal,
-    'subaccount' : IDL.Opt(Subaccount),
+  const ApprovalInfo = IDL.Record({
+    'memo' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'from_subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'created_at_time' : IDL.Opt(IDL.Nat64),
+    'expires_at' : IDL.Opt(IDL.Nat64),
+    'spender' : Account,
+  });
+  const ApproveTokenArg = IDL.Record({
+    'token_id' : IDL.Nat,
+    'approval_info' : ApprovalInfo,
+  });
+  const ApproveTokenError = IDL.Variant({
+    'GenericError' : IDL.Record({
+      'message' : IDL.Text,
+      'error_code' : IDL.Nat,
+    }),
+    'Duplicate' : IDL.Record({ 'duplicate_of' : IDL.Nat }),
+    'InvalidSpender' : IDL.Null,
+    'NonExistingTokenId' : IDL.Null,
+    'Unauthorized' : IDL.Null,
+    'CreatedInFuture' : IDL.Record({ 'ledger_time' : IDL.Nat64 }),
+    'GenericBatchError' : IDL.Record({
+      'message' : IDL.Text,
+      'error_code' : IDL.Nat,
+    }),
+    'TooOld' : IDL.Null,
+  });
+  const ApproveTokenResult = IDL.Variant({
+    'Ok' : IDL.Nat,
+    'Err' : ApproveTokenError,
+  });
+  const TokenApproval = IDL.Record({
+    'token_id' : IDL.Nat,
+    'approval_info' : ApprovalInfo,
+  });
+  const IsApprovedArg = IDL.Record({
+    'token_id' : IDL.Nat,
+    'from_subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'spender' : Account,
+  });
+  const RevokeTokenApprovalArg = IDL.Record({
+    'token_id' : IDL.Nat,
+    'memo' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'from_subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'created_at_time' : IDL.Opt(IDL.Nat64),
+    'spender' : IDL.Opt(Account),
+  });
+  const RevokeTokenApprovalError = IDL.Variant({
+    'GenericError' : IDL.Record({
+      'message' : IDL.Text,
+      'error_code' : IDL.Nat,
+    }),
+    'Duplicate' : IDL.Record({ 'duplicate_of' : IDL.Nat }),
+    'NonExistingTokenId' : IDL.Null,
+    'Unauthorized' : IDL.Null,
+    'CreatedInFuture' : IDL.Record({ 'ledger_time' : IDL.Nat64 }),
+    'ApprovalDoesNotExist' : IDL.Null,
+    'GenericBatchError' : IDL.Record({
+      'message' : IDL.Text,
+      'error_code' : IDL.Nat,
+    }),
+    'TooOld' : IDL.Null,
+  });
+  const RevokeTokenApprovalResult = IDL.Variant({
+    'Ok' : IDL.Nat,
+    'Err' : RevokeTokenApprovalError,
+  });
+  const TransferFromArg = IDL.Record({
+    'to' : Account,
+    'spender_subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'token_id' : IDL.Nat,
+    'from' : Account,
+    'memo' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'created_at_time' : IDL.Opt(IDL.Nat64),
+  });
+  const TransferFromError = IDL.Variant({
+    'GenericError' : IDL.Record({
+      'message' : IDL.Text,
+      'error_code' : IDL.Nat,
+    }),
+    'Duplicate' : IDL.Record({ 'duplicate_of' : IDL.Nat }),
+    'NonExistingTokenId' : IDL.Null,
+    'Unauthorized' : IDL.Null,
+    'CreatedInFuture' : IDL.Record({ 'ledger_time' : IDL.Nat64 }),
+    'InvalidRecipient' : IDL.Null,
+    'GenericBatchError' : IDL.Record({
+      'message' : IDL.Text,
+      'error_code' : IDL.Nat,
+    }),
+    'TooOld' : IDL.Null,
+  });
+  const TransferFromResult = IDL.Variant({
+    'Ok' : IDL.Nat,
+    'Err' : TransferFromError,
   });
   Value.fill(
     IDL.Variant({
@@ -640,6 +752,13 @@ export const idlFactory = ({ IDL }) => {
       'Array' : IDL.Vec(Value),
     })
   );
+  const TransferArgs = IDL.Record({
+    'to' : Account,
+    'token_id' : IDL.Nat,
+    'memo' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'from_subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'created_at_time' : IDL.Opt(IDL.Nat64),
+  });
   const LoadStaticMetadataResult = IDL.Record({
     'skipped' : IDL.Nat,
     'errors' : IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Text)),
@@ -734,6 +853,11 @@ export const idlFactory = ({ IDL }) => {
     'adminSubmitToDAB' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
+    'adminTransferFromPool' : IDL.Func(
+        [IDL.Nat, Account],
+        [TransferResult],
         [],
       ),
     'airdropNFT' : IDL.Func([IDL.Text, IDL.Principal], [], []),
@@ -950,6 +1074,37 @@ export const idlFactory = ({ IDL }) => {
       ),
     'hasDAOAccess' : IDL.Func([], [IDL.Bool], ['query']),
     'hasMembership' : IDL.Func([], [IDL.Bool], ['query']),
+    'icrc37_approve_tokens' : IDL.Func(
+        [IDL.Vec(ApproveTokenArg)],
+        [IDL.Vec(IDL.Opt(ApproveTokenResult))],
+        [],
+      ),
+    'icrc37_get_token_approvals' : IDL.Func(
+        [IDL.Nat, IDL.Opt(TokenApproval), IDL.Opt(IDL.Nat)],
+        [IDL.Vec(TokenApproval)],
+        ['query'],
+      ),
+    'icrc37_is_approved' : IDL.Func(
+        [IDL.Vec(IsApprovedArg)],
+        [IDL.Vec(IDL.Bool)],
+        ['query'],
+      ),
+    'icrc37_max_approvals_per_token_or_collection' : IDL.Func(
+        [],
+        [IDL.Opt(IDL.Nat)],
+        ['query'],
+      ),
+    'icrc37_max_revoke_approvals' : IDL.Func([], [IDL.Opt(IDL.Nat)], ['query']),
+    'icrc37_revoke_token_approvals' : IDL.Func(
+        [IDL.Vec(RevokeTokenApprovalArg)],
+        [IDL.Vec(IDL.Opt(RevokeTokenApprovalResult))],
+        [],
+      ),
+    'icrc37_transfer_from' : IDL.Func(
+        [IDL.Vec(TransferFromArg)],
+        [IDL.Vec(IDL.Opt(TransferFromResult))],
+        [],
+      ),
     'icrc7_atomic_batch_transfers' : IDL.Func(
         [],
         [IDL.Opt(IDL.Bool)],
@@ -986,6 +1141,17 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Opt(IDL.Vec(IDL.Tuple(IDL.Text, Value))))],
         ['query'],
       ),
+    'icrc7_token_metadata_certified' : IDL.Func(
+        [IDL.Nat],
+        [
+          IDL.Record({
+            'certificate' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+            'value' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+            'witness' : IDL.Vec(IDL.Nat8),
+          }),
+        ],
+        ['query'],
+      ),
     'icrc7_tokens' : IDL.Func(
         [IDL.Opt(IDL.Nat), IDL.Opt(IDL.Nat)],
         [IDL.Vec(IDL.Nat)],
@@ -997,7 +1163,17 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'icrc7_total_supply' : IDL.Func([], [IDL.Nat], ['query']),
+    'icrc7_transfer' : IDL.Func(
+        [IDL.Vec(TransferArgs)],
+        [IDL.Vec(IDL.Opt(TransferResult))],
+        [],
+      ),
     'icrc7_tx_window' : IDL.Func([], [IDL.Opt(IDL.Nat)], ['query']),
+    'initializeNFTPool' : IDL.Func(
+        [],
+        [IDL.Record({ 'skipped' : IDL.Nat, 'initialized' : IDL.Nat })],
+        [],
+      ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isPepperHead' : IDL.Func([IDL.Nat], [IDL.Bool], ['query']),
     'isPepperHeadAvailable' : IDL.Func([], [IDL.Nat], ['query']),

@@ -25,6 +25,29 @@ export interface AddWeatherRecordInput {
   'longitude' : number,
 }
 export interface AirdropAssignment { 'recipient' : Principal, 'nftId' : bigint }
+export interface ApprovalInfo {
+  'memo' : [] | [Uint8Array | number[]],
+  'from_subaccount' : [] | [Uint8Array | number[]],
+  'created_at_time' : [] | [bigint],
+  'expires_at' : [] | [bigint],
+  'spender' : Account,
+}
+export interface ApproveTokenArg {
+  'token_id' : bigint,
+  'approval_info' : ApprovalInfo,
+}
+export type ApproveTokenError = {
+    'GenericError' : { 'message' : string, 'error_code' : bigint }
+  } |
+  { 'Duplicate' : { 'duplicate_of' : bigint } } |
+  { 'InvalidSpender' : null } |
+  { 'NonExistingTokenId' : null } |
+  { 'Unauthorized' : null } |
+  { 'CreatedInFuture' : { 'ledger_time' : bigint } } |
+  { 'GenericBatchError' : { 'message' : string, 'error_code' : bigint } } |
+  { 'TooOld' : null };
+export type ApproveTokenResult = { 'Ok' : bigint } |
+  { 'Err' : ApproveTokenError };
 export interface ArtworkLayer {
   'id' : ArtworkLayerId,
   'layer_number' : bigint,
@@ -192,6 +215,7 @@ export interface ICSpicy {
     { 'ok' : string } |
       { 'err' : string }
   >,
+  'adminTransferFromPool' : ActorMethod<[bigint, Account], TransferResult>,
   'airdropNFT' : ActorMethod<[string, Principal], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignPoolNFT' : ActorMethod<[bigint, AssignAction], undefined>,
@@ -319,6 +343,28 @@ export interface ICSpicy {
   'getWalletTransactions' : ActorMethod<[], Array<WalletTransaction>>,
   'hasDAOAccess' : ActorMethod<[], boolean>,
   'hasMembership' : ActorMethod<[], boolean>,
+  'icrc37_approve_tokens' : ActorMethod<
+    [Array<ApproveTokenArg>],
+    Array<[] | [ApproveTokenResult]>
+  >,
+  'icrc37_get_token_approvals' : ActorMethod<
+    [bigint, [] | [TokenApproval], [] | [bigint]],
+    Array<TokenApproval>
+  >,
+  'icrc37_is_approved' : ActorMethod<[Array<IsApprovedArg>], Array<boolean>>,
+  'icrc37_max_approvals_per_token_or_collection' : ActorMethod<
+    [],
+    [] | [bigint]
+  >,
+  'icrc37_max_revoke_approvals' : ActorMethod<[], [] | [bigint]>,
+  'icrc37_revoke_token_approvals' : ActorMethod<
+    [Array<RevokeTokenApprovalArg>],
+    Array<[] | [RevokeTokenApprovalResult]>
+  >,
+  'icrc37_transfer_from' : ActorMethod<
+    [Array<TransferFromArg>],
+    Array<[] | [TransferFromResult]>
+  >,
   'icrc7_atomic_batch_transfers' : ActorMethod<[], [] | [boolean]>,
   'icrc7_balance_of' : ActorMethod<[Array<Account>], Array<bigint>>,
   'icrc7_collection_metadata' : ActorMethod<[], Array<[string, Value]>>,
@@ -338,13 +384,29 @@ export interface ICSpicy {
     [Array<bigint>],
     Array<[] | [Array<[string, Value]>]>
   >,
+  'icrc7_token_metadata_certified' : ActorMethod<
+    [bigint],
+    {
+      'certificate' : [] | [Uint8Array | number[]],
+      'value' : [] | [Uint8Array | number[]],
+      'witness' : Uint8Array | number[],
+    }
+  >,
   'icrc7_tokens' : ActorMethod<[[] | [bigint], [] | [bigint]], Array<bigint>>,
   'icrc7_tokens_of' : ActorMethod<
     [Account, [] | [bigint], [] | [bigint]],
     Array<bigint>
   >,
   'icrc7_total_supply' : ActorMethod<[], bigint>,
+  'icrc7_transfer' : ActorMethod<
+    [Array<TransferArgs>],
+    Array<[] | [TransferResult]>
+  >,
   'icrc7_tx_window' : ActorMethod<[], [] | [bigint]>,
+  'initializeNFTPool' : ActorMethod<
+    [],
+    { 'skipped' : bigint, 'initialized' : bigint }
+  >,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isPepperHead' : ActorMethod<[bigint], boolean>,
   'isPepperHeadAvailable' : ActorMethod<[], bigint>,
@@ -480,6 +542,11 @@ export type InventoryCategory = { 'OtherSize' : string } |
   { 'Gal5' : null } |
   { 'Oz16' : null } |
   { 'InGround' : null };
+export interface IsApprovedArg {
+  'token_id' : bigint,
+  'from_subaccount' : [] | [Uint8Array | number[]],
+  'spender' : Account,
+}
 export interface LayerSummary {
   'file_names' : Array<string>,
   'layer' : string,
@@ -760,6 +827,25 @@ export interface ResaleListingPublic {
   'listed_at' : Timestamp,
   'plant_id' : PlantId,
 }
+export interface RevokeTokenApprovalArg {
+  'token_id' : bigint,
+  'memo' : [] | [Uint8Array | number[]],
+  'from_subaccount' : [] | [Uint8Array | number[]],
+  'created_at_time' : [] | [bigint],
+  'spender' : [] | [Account],
+}
+export type RevokeTokenApprovalError = {
+    'GenericError' : { 'message' : string, 'error_code' : bigint }
+  } |
+  { 'Duplicate' : { 'duplicate_of' : bigint } } |
+  { 'NonExistingTokenId' : null } |
+  { 'Unauthorized' : null } |
+  { 'CreatedInFuture' : { 'ledger_time' : bigint } } |
+  { 'ApprovalDoesNotExist' : null } |
+  { 'GenericBatchError' : { 'message' : string, 'error_code' : bigint } } |
+  { 'TooOld' : null };
+export type RevokeTokenApprovalResult = { 'Ok' : bigint } |
+  { 'Err' : RevokeTokenApprovalError };
 export interface SaveProfileInput {
   'bio' : string,
   'username' : string,
@@ -809,11 +895,54 @@ export interface SubmitOfferInput {
   'offered_amount' : bigint,
 }
 export type Timestamp = bigint;
+export interface TokenApproval {
+  'token_id' : bigint,
+  'approval_info' : ApprovalInfo,
+}
 export interface TokenPrice {
   'token' : OracleToken,
   'price_in_icp_e8s' : bigint,
   'last_updated' : Timestamp,
 }
+export interface TransferArgs {
+  'to' : Account,
+  'token_id' : bigint,
+  'memo' : [] | [Uint8Array | number[]],
+  'from_subaccount' : [] | [Uint8Array | number[]],
+  'created_at_time' : [] | [bigint],
+}
+export type TransferError = {
+    'GenericError' : { 'message' : string, 'error_code' : bigint }
+  } |
+  { 'Duplicate' : { 'duplicate_of' : bigint } } |
+  { 'NonExistingTokenId' : null } |
+  { 'Unauthorized' : null } |
+  { 'CreatedInFuture' : { 'ledger_time' : bigint } } |
+  { 'InvalidRecipient' : null } |
+  { 'GenericBatchError' : { 'message' : string, 'error_code' : bigint } } |
+  { 'TooOld' : null };
+export interface TransferFromArg {
+  'to' : Account,
+  'spender_subaccount' : [] | [Uint8Array | number[]],
+  'token_id' : bigint,
+  'from' : Account,
+  'memo' : [] | [Uint8Array | number[]],
+  'created_at_time' : [] | [bigint],
+}
+export type TransferFromError = {
+    'GenericError' : { 'message' : string, 'error_code' : bigint }
+  } |
+  { 'Duplicate' : { 'duplicate_of' : bigint } } |
+  { 'NonExistingTokenId' : null } |
+  { 'Unauthorized' : null } |
+  { 'CreatedInFuture' : { 'ledger_time' : bigint } } |
+  { 'InvalidRecipient' : null } |
+  { 'GenericBatchError' : { 'message' : string, 'error_code' : bigint } } |
+  { 'TooOld' : null };
+export type TransferFromResult = { 'Ok' : bigint } |
+  { 'Err' : TransferFromError };
+export type TransferResult = { 'Ok' : bigint } |
+  { 'Err' : TransferError };
 export interface TransplantInput {
   'container_size' : ContainerSize,
   'plant_id' : PlantId,

@@ -1,0 +1,624 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Link, useParams } from "@tanstack/react-router";
+import {
+  ArrowLeft,
+  Check,
+  Copy,
+  Flame,
+  ShieldCheck,
+} from "lucide-react";
+import { motion } from "motion/react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { Value } from "../declarations/backend.did";
+import {
+  useIsPepperHead,
+  useTokenCertified,
+  useTokenMetadata,
+  useTokenOwner,
+} from "../hooks/useBackend";
+import { getNftImageUrl, isValidTokenId } from "../lib/nft-config";
+
+// ── Metadata helpers ────────────────────────────────────────────────────────
+
+function valueToString(v: Value): string {
+  if ("Text" in v) return v.Text;
+  if ("Nat" in v) return v.Nat.toString();
+  if ("Int" in v) return v.Int.toString();
+  if ("Blob" in v) return `<${v.Blob.length} bytes>`;
+  if ("Array" in v) return v.Array.map(valueToString).join(", ");
+  if ("Map" in v) return JSON.stringify(v.Map);
+  return "";
+}
+
+function getTextField(
+  metadata: Array<[string, Value]> | null | undefined,
+  key: string,
+): string | null {
+  if (!metadata) return null;
+  const entry = metadata.find(([k]) => k === key);
+  if (!entry) return null;
+  const [, v] = entry;
+  return "Text" in v ? v.Text : null;
+}
+
+interface ParsedAttribute {
+  trait_type: string;
+  value: Value;
+}
+
+function getAttributesArray(
+  metadata: Array<[string, Value]> | null | undefined,
+): ParsedAttribute[] {
+  if (!metadata) return [];
+  const entry = metadata.find(([k]) => k === "attributes");
+  if (!entry) return [];
+  const [, v] = entry;
+  if (!("Array" in v)) return [];
+  const out: ParsedAttribute[] = [];
+  for (const item of v.Array) {
+    if (!("Map" in item)) continue;
+    const m = item.Map;
+    const traitType = getTextField(m, "trait_type");
+    if (!traitType) continue;
+    const valueEntry = m.find(([k]) => k === "value");
+    if (!valueEntry) continue;
+    out.push({ trait_type: traitType, value: valueEntry[1] });
+  }
+  return out;
+}
+
+function truncatePrincipal(p: string, head = 7, tail = 5): string {
+  if (p.length <= head + tail + 1) return p;
+  return `${p.slice(0, head)}…${p.slice(-tail)}`;
+}
+
+function bytesToHex(bytes: Uint8Array | number[]): string {
+  const arr = bytes instanceof Uint8Array ? bytes : Uint8Array.from(bytes);
+  return Array.from(arr)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function byteLength(bytes: Uint8Array | number[]): number {
+  return bytes instanceof Uint8Array ? bytes.length : bytes.length;
+}
+
+// ── Sub-components ──────────────────────────────────────────────────────────
+
+function RarityBadge({ rarity }: { rarity: string | null }) {
+  // Tier → Tailwind classes per Q3 spec.
+  const colorMap: Record<string, string> = {
+    Common: "bg-zinc-100 text-zinc-700",
+    Uncommon: "bg-emerald-100 text-emerald-700",
+    Rare: "bg-purple-100 text-purple-700",
+    Founder: "bg-amber-100 text-amber-700",
+  };
+  if (!rarity) {
+    return (
+      <Badge variant="outline" className="bg-zinc-100 text-zinc-700">
+        Unknown
+      </Badge>
+    );
+  }
+  const cls = colorMap[rarity] ?? "bg-zinc-100 text-zinc-700";
+  return (
+    <Badge variant="outline" className={cls}>
+      {rarity}
+    </Badge>
+  );
+}
+
+function PepperHeadBadge() {
+  return (
+    <Badge variant="outline" className="bg-red-100 text-red-700 gap-1">
+      <Flame className="h-3 w-3" />
+      PepperHead
+    </Badge>
+  );
+}
+
+function CertificationBadge({
+  loading,
+  hasCertificate,
+}: {
+  loading: boolean;
+  hasCertificate: boolean;
+}) {
+  if (loading) {
+    return <Skeleton className="h-9 w-full rounded-md" />;
+  }
+  if (!hasCertificate) {
+    return (
+      <div
+        className="flex items-center gap-2 rounded-md border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-sm text-yellow-300"
+        data-ocid="nft-cert-unverified"
+      >
+        <ShieldCheck className="h-4 w-4 shrink-0" />
+        <span>Unverified — no certificate returned</span>
+      </div>
+    );
+  }
+  return (
+    <div
+      className="flex items-center gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300"
+      data-ocid="nft-cert-verified"
+    >
+      <ShieldCheck className="h-4 w-4 shrink-0" />
+      <span>Verified on-chain</span>
+    </div>
+  );
+}
+
+function HexBlob({
+  label,
+  bytes,
+}: {
+  label: string;
+  bytes: Uint8Array | number[] | null;
+}) {
+  const [copied, setCopied] = useState(false);
+  const hex = bytes ? bytesToHex(bytes) : "";
+  const len = bytes ? byteLength(bytes) : 0;
+
+  function copy() {
+    if (!hex) return;
+    navigator.clipboard.writeText(hex).then(() => {
+      setCopied(true);
+      toast.success(`${label} copied`);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-xs text-muted-foreground font-mono">
+          {label}{" "}
+          <span className="text-muted-foreground/60">({len} B)</span>
+        </span>
+        {hex && (
+          <button
+            type="button"
+            onClick={copy}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+          >
+            {copied ? (
+              <Check className="h-3 w-3" />
+            ) : (
+              <Copy className="h-3 w-3" />
+            )}
+            {copied ? "copied" : "copy"}
+          </button>
+        )}
+      </div>
+      <pre className="text-[10px] font-mono break-all whitespace-pre-wrap bg-muted/40 rounded p-2 max-h-48 overflow-y-auto">
+        {hex || "—"}
+      </pre>
+    </div>
+  );
+}
+
+function NFTImage({ tokenId, alt }: { tokenId: bigint; alt: string }) {
+  const [errored, setErrored] = useState(false);
+  if (errored) {
+    return (
+      <div
+        className="aspect-square w-full rounded-md bg-muted flex flex-col items-center justify-center gap-2 text-muted-foreground"
+        data-ocid="nft-image-fallback"
+      >
+        <Flame className="h-12 w-12" />
+        <span className="text-sm">Image unavailable</span>
+        <span className="text-xs font-mono">#{tokenId.toString()}</span>
+      </div>
+    );
+  }
+  return (
+    <img
+      src={getNftImageUrl(tokenId)}
+      alt={alt}
+      className="aspect-square w-full rounded-md object-cover bg-muted"
+      onError={() => setErrored(true)}
+      data-ocid="nft-image"
+    />
+  );
+}
+
+function InfoRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 py-2.5 border-b border-border/50 last:border-0">
+      <span className="text-sm text-muted-foreground min-w-[110px] shrink-0">
+        {label}
+      </span>
+      <span className="text-sm text-foreground text-right break-all">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function MetadataCard({
+  loading,
+  name,
+  description,
+  ownerText,
+  loadingOwner,
+  isPepperHead,
+  rarity,
+}: {
+  loading: boolean;
+  name: string;
+  description: string | null;
+  ownerText: string;
+  loadingOwner: boolean;
+  isPepperHead: boolean;
+  rarity: string | null;
+}) {
+  return (
+    <Card className="border-border bg-card">
+      <CardHeader className="pb-2">
+        <CardTitle className="font-display text-base font-bold">
+          Details
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <Skeleton className="h-32 w-full" />
+        ) : (
+          <>
+            <InfoRow label="Name" value={name} />
+            {description && (
+              <InfoRow label="Description" value={description} />
+            )}
+            <InfoRow
+              label="Rarity"
+              value={rarity ? <RarityBadge rarity={rarity} /> : "—"}
+            />
+            <InfoRow
+              label="Owner"
+              value={
+                loadingOwner ? (
+                  <Skeleton className="h-4 w-32 inline-block" />
+                ) : ownerText ? (
+                  <span className="font-mono text-xs break-all">
+                    {truncatePrincipal(ownerText)}
+                  </span>
+                ) : (
+                  "—"
+                )
+              }
+            />
+            {isPepperHead && (
+              <InfoRow
+                label="Membership"
+                value={
+                  <span className="inline-flex items-center gap-2">
+                    <PepperHeadBadge />
+                    <span className="text-muted-foreground text-xs">
+                      member benefits apply
+                    </span>
+                  </span>
+                }
+              />
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TraitsGrid({
+  attributes,
+  loading,
+}: {
+  attributes: ParsedAttribute[];
+  loading: boolean;
+}) {
+  return (
+    <Card className="border-border bg-card">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-display text-base font-bold">
+          Traits
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 rounded-md" />
+            ))}
+          </div>
+        ) : attributes.length === 0 ? (
+          <p
+            className="text-sm text-muted-foreground py-4 text-center"
+            data-ocid="nft-traits-empty"
+          >
+            No traits to display.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {attributes.map((attr, i) => (
+              <motion.div
+                key={`${attr.trait_type}-${i}`}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                className="rounded-md border border-border bg-muted/40 px-3 py-2"
+                data-ocid={`nft-trait-${i}`}
+              >
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  {attr.trait_type}
+                </p>
+                <p className="text-sm font-medium text-foreground truncate">
+                  {valueToString(attr.value)}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProvenancePlaceholder() {
+  return (
+    <Card
+      className="border-border bg-card border-dashed"
+      data-ocid="nft-provenance-placeholder"
+    >
+      <CardHeader className="pb-3">
+        <CardTitle className="font-display text-base font-bold flex items-center gap-2">
+          Provenance
+          <Badge
+            variant="outline"
+            className="text-[10px] uppercase tracking-wider"
+          >
+            Phase 5.5
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          Lifecycle telemetry — weather data, growth-stage transitions, and
+          farm-to-token timeline — will appear here once the on-chain
+          provenance recorder ships in Phase 5.5.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface CertEnvelope {
+  value: Uint8Array | number[] | null;
+  certificate: Uint8Array | number[] | null;
+  witness: Uint8Array | number[];
+}
+
+function LinksCard({
+  certified,
+  loading,
+}: {
+  certified: CertEnvelope | null;
+  loading: boolean;
+}) {
+  return (
+    <Card className="border-border bg-card">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-display text-base font-bold">
+          Links
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {/* TODO Phase 4: ICPSwap NFT link — verify URL format before enabling */}
+
+        <details
+          className="group rounded-md border border-border bg-muted/30 p-2 text-sm"
+          data-ocid="nft-cert-envelope"
+        >
+          <summary className="cursor-pointer select-none text-muted-foreground hover:text-foreground">
+            View raw certified envelope
+          </summary>
+          <div className="mt-3 space-y-3">
+            {loading ? (
+              <Skeleton className="h-24 w-full" />
+            ) : !certified ? (
+              <p className="text-xs text-muted-foreground">No envelope.</p>
+            ) : (
+              <>
+                <HexBlob
+                  label="value (metadata blob)"
+                  bytes={certified.value}
+                />
+                <HexBlob
+                  label="certificate (BLS-signed)"
+                  bytes={certified.certificate}
+                />
+                <HexBlob
+                  label="witness (Merkle path)"
+                  bytes={certified.witness}
+                />
+              </>
+            )}
+          </div>
+        </details>
+
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="w-full"
+          data-ocid="nft-back-link"
+        >
+          <Link to="/marketplace">
+            <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to collection
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function NotFound({
+  title,
+  message,
+}: {
+  title: string;
+  message: string;
+}) {
+  return (
+    <div
+      className="min-h-screen bg-background flex flex-col items-center justify-center py-24 text-center"
+      data-ocid="nft-not-found"
+    >
+      <span className="text-6xl mb-4">🌶️</span>
+      <h3 className="font-display text-2xl font-bold text-foreground mb-2">
+        {title}
+      </h3>
+      <p className="text-muted-foreground mb-6 max-w-sm px-4">{message}</p>
+      <Button asChild variant="outline">
+        <Link to="/marketplace">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to collection
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
+// ── Main page ──────────────────────────────────────────────────────────────
+
+export default function NFTDetailPage() {
+  const { tokenId: rawId } = useParams({ from: "/nft/$tokenId" });
+  // Validate BEFORE calling hooks. isValidTokenId returns null for "0",
+  // "9999", "abc", floats, hex, etc. — the four ICRC hooks then short-
+  // circuit via their `enabled` gate, never firing a network call.
+  const id = isValidTokenId(rawId);
+
+  const { data: metadata, isLoading: loadingMetadata } =
+    useTokenMetadata(id);
+  const { data: owner, isLoading: loadingOwner } = useTokenOwner(id);
+  const { data: isPepperHead } = useIsPepperHead(id);
+  const { data: certified, isLoading: loadingCertified } =
+    useTokenCertified(id);
+
+  if (id === null) {
+    return (
+      <NotFound
+        title="Invalid Token ID"
+        message={
+          rawId
+            ? `"${rawId}" is not a valid token id. Token IDs are integers between 1 and 8888.`
+            : "No token id provided."
+        }
+      />
+    );
+  }
+
+  // Token never minted → owner resolved to null after load.
+  if (!loadingOwner && owner === null) {
+    return (
+      <NotFound
+        title="Token Not Found"
+        message={`Token #${id.toString()} hasn't been minted yet.`}
+      />
+    );
+  }
+
+  const name =
+    getTextField(metadata, "name") ?? `IC SPICY #${id.toString()}`;
+  const description = getTextField(metadata, "description");
+  const rarity = getTextField(metadata, "rarity");
+  const attributes = getAttributesArray(metadata);
+  const ownerText = owner?.owner.toString() ?? "";
+
+  return (
+    <div className="min-h-screen bg-background" data-ocid="nft-detail">
+      <div className="bg-card border-b border-border">
+        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
+            data-ocid="nft-back-btn"
+          >
+            <Link to="/marketplace">
+              <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to collection
+            </Link>
+          </Button>
+
+          <div className="flex flex-wrap items-start gap-3">
+            <Flame className="mt-1 h-7 w-7 text-primary shrink-0" />
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-3 mb-1">
+                <h1 className="font-display text-3xl font-bold text-foreground leading-tight">
+                  {name}
+                </h1>
+                <RarityBadge rarity={rarity} />
+                {isPepperHead && <PepperHeadBadge />}
+              </div>
+              <p className="text-muted-foreground font-mono text-sm">
+                Token #{id.toString()} of 8888
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* LEFT: hero image, certification, links */}
+          <div className="lg:col-span-1 space-y-4">
+            <Card className="border-border bg-card">
+              <CardContent className="p-3">
+                <NFTImage tokenId={id} alt={name} />
+              </CardContent>
+            </Card>
+
+            <CertificationBadge
+              loading={loadingCertified}
+              hasCertificate={!!certified?.certificate}
+            />
+
+            <LinksCard
+              certified={certified ?? null}
+              loading={loadingCertified}
+            />
+          </div>
+
+          {/* RIGHT: metadata, traits, provenance placeholder */}
+          <div className="lg:col-span-2 space-y-4">
+            <MetadataCard
+              loading={loadingMetadata}
+              name={name}
+              description={description}
+              ownerText={ownerText}
+              loadingOwner={loadingOwner}
+              isPepperHead={!!isPepperHead}
+              rarity={rarity}
+            />
+
+            <TraitsGrid attributes={attributes} loading={loadingMetadata} />
+
+            <ProvenancePlaceholder />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

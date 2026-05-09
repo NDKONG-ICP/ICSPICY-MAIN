@@ -2,6 +2,7 @@ import { useActor } from "@caffeineai/core-infrastructure";
 import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createActor } from "../backend";
+import { useIcrc7Actor } from "../lib/icrc7-actor";
 import type {
   AddFeedingInput,
   AddWeatherRecordInput,
@@ -2029,5 +2030,77 @@ export function useRemoveZonePhoto() {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["trays"] }),
+  });
+}
+
+// ─── ICRC-7 NFT queries (Phase 3.6) ─────────────────────────────────────────
+//
+// These four hooks call the parallel raw actor in lib/icrc7-actor.ts —
+// see that file for the rationale. Each hook is INDEPENDENT (no compound
+// useNFT wrapper): the detail page calls all four in parallel via React
+// Query, and each section can render its own loading state without
+// blocking the others.
+//
+// All four accept `bigint | null` so the caller can pass `null` for an
+// invalid route param without a conditional hook call. The `enabled` gate
+// short-circuits the queryFn when tokenId is null, so no network call
+// fires for invalid ids.
+
+export function useTokenMetadata(tokenId: bigint | null) {
+  const { actor, isFetching } = useIcrc7Actor();
+  return useQuery({
+    queryKey: ["icrc7TokenMetadata", tokenId?.toString() ?? null],
+    queryFn: async () => {
+      if (!actor || tokenId == null) return null;
+      const [entry] = await actor.icrc7_token_metadata([tokenId]);
+      // Candid optional decodes as a 0/1-element tuple.
+      return entry.length === 0 ? null : entry[0];
+    },
+    enabled: !!actor && !isFetching && tokenId != null,
+  });
+}
+
+export function useTokenOwner(tokenId: bigint | null) {
+  const { actor, isFetching } = useIcrc7Actor();
+  return useQuery({
+    queryKey: ["icrc7Owner", tokenId?.toString() ?? null],
+    queryFn: async () => {
+      if (!actor || tokenId == null) return null;
+      const [entry] = await actor.icrc7_owner_of([tokenId]);
+      return entry.length === 0 ? null : entry[0];
+    },
+    enabled: !!actor && !isFetching && tokenId != null,
+  });
+}
+
+export function useIsPepperHead(tokenId: bigint | null) {
+  const { actor, isFetching } = useIcrc7Actor();
+  return useQuery({
+    queryKey: ["isPepperHead", tokenId?.toString() ?? null],
+    queryFn: async () => {
+      if (!actor || tokenId == null) return false;
+      return actor.isPepperHead(tokenId);
+    },
+    enabled: !!actor && !isFetching && tokenId != null,
+  });
+}
+
+export function useTokenCertified(tokenId: bigint | null) {
+  const { actor, isFetching } = useIcrc7Actor();
+  return useQuery({
+    queryKey: ["icrc7Certified", tokenId?.toString() ?? null],
+    queryFn: async () => {
+      if (!actor || tokenId == null) return null;
+      const r = await actor.icrc7_token_metadata_certified(tokenId);
+      // Normalize Candid's 0/1-element-tuple optionals to T | null so
+      // consumers can do truthy checks without unwrapping.
+      return {
+        value: r.value.length === 0 ? null : r.value[0],
+        certificate:
+          r.certificate.length === 0 ? null : r.certificate[0],
+        witness: r.witness,
+      };
+    },
+    enabled: !!actor && !isFetching && tokenId != null,
   });
 }

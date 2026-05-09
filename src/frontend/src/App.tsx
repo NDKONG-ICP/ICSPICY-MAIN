@@ -100,6 +100,7 @@ const NIMSPage = lazy(() => import("./pages/NIMS"));
 const CookBookPage = lazy(() => import("./pages/CookBook"));
 const ScheduleBuilderPage = lazy(() => import("./pages/ScheduleBuilder"));
 const ClaimPage = lazy(() => import("./pages/Claim"));
+const NFTDetailPage = lazy(() => import("./pages/NFTDetail"));
 
 // Admin guard component — shows a clear Access Denied message for non-admins.
 // The tab is always visible in the nav; the gate lives here inside the route.
@@ -384,6 +385,15 @@ const claimRoute = createRoute({
   component: ClaimPage,
 });
 
+// Phase 3.6 — single-NFT detail page. Path matches the external_url
+// pattern in the metadata blob (https://icspicy.app/nft/<id>) so links
+// minted on-chain resolve directly to this route.
+const nftDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/nft/$tokenId",
+  component: NFTDetailPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   marketplaceRoute,
@@ -400,6 +410,7 @@ const routeTree = rootRoute.addChildren([
   cookbookRoute,
   scheduleBuilderRoute,
   claimRoute,
+  nftDetailRoute,
 ]);
 
 const router = createRouter({ routeTree });
