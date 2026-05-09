@@ -111,6 +111,58 @@ mixin (
     icrc7TokenMetadataRaw.size();
   };
 
+  // ── Admin: initialize the 8888-token pool (Phase 3.5) ─────────────────────
+  //
+  // Mints all `totalSupplyCap` tokens to Self in a single canister message.
+  // Per-token idempotent: re-running after a partial trap or full success
+  // skips already-minted tokens. Safe to invoke as the recovery primitive
+  // if the loop ever hits the per-message instruction limit (current
+  // estimate: ~575M instructions for 8888 BTree inserts, well under the
+  // 5B limit; if a future code change pushes us over, the recovery path
+  // is just to call again — no batching needed for the happy path).
+  //
+  // SOLE-entry-point invariant: assignOwnership is the only mutator. The
+  // pre-existence check (`icrc7Owners.get(tokenId)`) filters the expected
+  // #err case (already-minted), so `assignOwnership` should always succeed
+  // here. An unexpected #err means an invariant violation upstream — trap
+  // loudly so the bug surfaces, matching the trap-on-invariant-violation
+  // pattern in lib/icrc7.mo.
+  //
+  // No approval invalidation: these are fresh mints (fromAccount = null),
+  // so the prior-owner cleanup that icrc7_transfer / transfer_from do is
+  // not needed.
+  public shared({caller}) func initializeNFTPool() : async {
+    initialized : Nat;
+    skipped     : Nat;
+  } {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let self : ICRC7.Account = {
+      owner      = selfPrincipal();
+      subaccount = null;
+    };
+    var initialized : Nat = 0;
+    var skipped     : Nat = 0;
+    var tokenId     : Nat = 1;
+    while (tokenId <= totalSupplyCap) {
+      switch (icrc7Owners.get(tokenId)) {
+        case (?_) { skipped += 1 };
+        case null {
+          switch (IcrcLib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, null, self)) {
+            case (#ok) { initialized += 1 };
+            case (#err msg) {
+              Runtime.trap(
+                "initializeNFTPool: assignOwnership failed for token " #
+                Nat.toText(tokenId) # ": " # msg
+              );
+            };
+          };
+        };
+      };
+      tokenId += 1;
+    };
+    { initialized; skipped };
+  };
+
   // ── Standard ICRC-7 config getters ────────────────────────────────────────
 
   public query func icrc7_name() : async Text { collectionName };
