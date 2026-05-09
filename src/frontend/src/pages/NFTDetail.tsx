@@ -81,6 +81,37 @@ function truncatePrincipal(p: string, head = 7, tail = 5): string {
   return `${p.slice(0, head)}…${p.slice(-tail)}`;
 }
 
+function CopyPrincipal({ principal }: { principal: string }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(principal).then(() => {
+      setCopied(true);
+      toast.success("Principal copied");
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="font-mono text-xs break-all">
+        {truncatePrincipal(principal)}
+      </span>
+      <button
+        type="button"
+        onClick={copy}
+        className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+        aria-label="Copy principal"
+        data-ocid="nft-owner-copy"
+      >
+        {copied ? (
+          <Check className="h-3 w-3" />
+        ) : (
+          <Copy className="h-3 w-3" />
+        )}
+      </button>
+    </span>
+  );
+}
+
 function bytesToHex(bytes: Uint8Array | number[]): string {
   const arr = bytes instanceof Uint8Array ? bytes : Uint8Array.from(bytes);
   return Array.from(arr)
@@ -294,9 +325,7 @@ function MetadataCard({
                 loadingOwner ? (
                   <Skeleton className="h-4 w-32 inline-block" />
                 ) : ownerText ? (
-                  <span className="font-mono text-xs break-all">
-                    {truncatePrincipal(ownerText)}
-                  </span>
+                  <CopyPrincipal principal={ownerText} />
                 ) : (
                   "—"
                 )
