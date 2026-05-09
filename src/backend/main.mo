@@ -17,6 +17,7 @@ import RecipeTypes "types/recipes";
 import ClaimTypes "types/claim";
 import ArtworkUploadTypes "types/artwork-upload";
 import RecipesLib "lib/recipes";
+import Cert "lib/cert";
 import ICRC7 "types/icrc7";
 import ICRC37 "types/icrc37";
 import ICRC7API "mixins/icrc7-api";
@@ -179,6 +180,21 @@ shared(msg) persistent actor class ICSpicy() = Self {
     var oldest = 0;
     var next   = 0;
   };
+
+  // Phase 3.6: certified-data Merkle tree for ICRC-7 token metadata.
+  //
+  // Per-token leaves under the "icrc7" prefix (see lib/cert.mo for the
+  // path scheme). Tree state is PERSISTENT — the structure survives
+  // upgrades — but the IC subnet's certified-data SLOT resets on upgrade
+  // and must be re-set in postupgrade (see system func below).
+  //
+  // SOLE-entry-point invariant: the tree is mutated only via lib/cert.mo's
+  // putTokenMetadata, called from loadStaticMetadata. Ownership / approval
+  // state is intentionally NOT in the tree (Phase 3.2 Q4 decision: certify
+  // static metadata only; dynamic provenance — owner, approvals — stays
+  // uncertified for now). Therefore icrc7_transfer / transfer_from /
+  // initializeNFTPool do NOT update this tree.
+  let certStore : Cert.Store = Cert.newStore();
 
   // Phase 3.4: ICRC-37 approval state.
   //
@@ -345,6 +361,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     recentTxByOrder,
     recentTxCursor,
     icrc37Approvals,
+    certStore,
   );
   include WalletAPI(wallets, txLog);
   include RecipesAPI(accessControlState, recipes, nextRecipeId);
@@ -370,5 +387,19 @@ shared(msg) persistent actor class ICSpicy() = Self {
   }) : Bool {
     ignore arg;
     not caller.isAnonymous()
+  };
+
+  // Phase 3.6: re-establish the certified-data slot after upgrade.
+  //
+  // The Merkle tree (certStore) is `let` in a persistent actor, so its
+  // structure survives the upgrade. The IC subnet's certified-data slot,
+  // however, is RESET to all-zeros on upgrade — without re-setting it,
+  // every certified query would return a certificate that doesn't match
+  // the tree root, and verification would fail.
+  //
+  // No-op on tokens: this just re-publishes the existing tree's root
+  // hash. It does NOT mutate the tree, so it cannot lose data.
+  system func postupgrade() {
+    Cert.setCertifiedData(certStore);
   };
 };

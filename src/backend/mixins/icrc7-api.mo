@@ -36,6 +36,7 @@
 // effect as of this commit.
 
 import Array "mo:core/Array";
+import CertifiedData "mo:core/CertifiedData";
 import Int "mo:core/Int";
 import List "mo:core/List";
 import Map "mo:core/Map";
@@ -49,6 +50,7 @@ import ICRC7 "../types/icrc7";
 import ICRC37 "../types/icrc37";
 import AccessControl "../lib/access-control";
 import CallerGuard "../lib/caller-guard";
+import Cert "../lib/cert";
 import IcrcLib "../lib/icrc7";
 import Icrc37Lib "../lib/icrc37";
 import JsonMini "../lib/json-mini";
@@ -67,6 +69,7 @@ mixin (
   recentTxByOrder        : Map.Map<Nat, Blob>,
   recentTxCursor         : { var oldest : Nat; var next : Nat },
   icrc37Approvals        : Map.Map<Nat, Map.Map<Principal, ICRC37.ApprovalInfo>>,
+  certStore              : Cert.Store,
 ) {
 
   // ── Admin: bulk-load static metadata ──────────────────────────────────────
@@ -98,11 +101,22 @@ mixin (
             };
             case (#ok _) {
               icrc7TokenMetadataRaw.add(tokenId, blob);
+              // Phase 3.6: insert into the certified-data Merkle tree at
+              // the canonical token path. Re-certification of the IC slot
+              // happens ONCE at end-of-batch (Q2) — intermediate states
+              // within a single message aren't observable.
+              Cert.putTokenMetadata(certStore, tokenId, blob);
               loaded += 1;
             };
           };
         };
       };
+    };
+    // Re-certify only when the tree actually changed. Cheap to call
+    // unconditionally, but skipping no-op batches keeps the certified
+    // history monotonically meaningful.
+    if (loaded > 0) {
+      Cert.setCertifiedData(certStore);
     };
     { loaded; skipped; errors = List.toArray(errors) };
   };
@@ -226,6 +240,39 @@ mixin (
         };
       },
     );
+  };
+
+  // Phase 3.6: certified single-token metadata read.
+  //
+  // Returns the raw metadata blob, the IC subnet's certificate over the
+  // canister's certified-data slot, and a Merkle witness from that
+  // certified root down to the token's leaf at path
+  //   ["icrc7", "<tokenId>"]   — see lib/cert.mo.
+  //
+  // Why single-token (not batched): batching forces the client to verify
+  // a multi-leaf witness, which complicates off-chain verifiers and ties
+  // the witness shape to a request-time selection. Per Phase 3.6 design,
+  // batched callers can hit icrc7_token_metadata for the uncertified
+  // fast path and only re-fetch via this method when a verified read is
+  // needed.
+  //
+  // Field semantics:
+  //   value       — ?Blob: null when token isn't loaded; the witness
+  //                 still cryptographically proves that absence.
+  //   certificate — ?Blob: null only inside update calls (CertifiedData
+  //                 .getCertificate is query-only). Always present here.
+  //   witness     — Blob: encoded Merkle path; valid for both presence
+  //                 and absence cases.
+  public query func icrc7_token_metadata_certified(tokenId : Nat) : async {
+    value       : ?Blob;
+    certificate : ?Blob;
+    witness     : Blob;
+  } {
+    {
+      value       = icrc7TokenMetadataRaw.get(tokenId);
+      certificate = CertifiedData.getCertificate();
+      witness     = Cert.tokenWitness(certStore, tokenId);
+    };
   };
 
   public query func icrc7_owner_of(token_ids : [Nat]) : async [?ICRC7.Account] {

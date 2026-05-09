@@ -28,3 +28,4 @@ args = [ "--actor-idl=src/backend/system-idl" ]
 [dependencies]
 core = "2.2.0"
 llm = "2.1.0"
+ic-certification = "1.1.0"
