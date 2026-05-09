@@ -409,6 +409,87 @@ mixin (
     #Ok(blockIndex);
   };
 
+  // ── Admin pool distribution (Phase 3.7-prep) ──────────────────────────────
+  //
+  // adminTransferFromPool: moves tokens FROM the canister's own pool (Self) to
+  // a recipient. Does NOT allow admin transfer of user-owned tokens — only
+  // Self-owned tokens can be moved.
+  // This is the standard distribution primitive for sales, airdrops, and
+  // QR-claim fulfillment.
+  //
+  // Why this exists: initializeNFTPool mints all 8888 tokens to the canister
+  // principal, and the canister cannot call its own update methods to set up
+  // an approval for a distribution agent. icrc7_transfer is intentionally
+  // NOT relaxed for admins — admins must not be able to confiscate
+  // user-owned tokens. So pool distribution gets its own gated method with
+  // a hard precondition: the token must currently belong to Self.
+  //
+  // Single-token by design: distribution events are individually auditable,
+  // and CallerGuard already serializes per-caller.
+  public shared({caller}) func adminTransferFromPool(
+    tokenId : Nat,
+    to      : ICRC7.Account,
+  ) : async ICRC7.TransferResult {
+    AccessControl.requireAdmin(accessControlState, caller);
+
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err msg) { Runtime.trap("Request already in flight: " # msg) };
+      case (#ok) {};
+    };
+
+    try {
+      let currentOwner = switch (icrc7Owners.get(tokenId)) {
+        case null { return #Err(#NonExistingTokenId) };
+        case (?o) o;
+      };
+
+      // The pool account is exactly what initializeNFTPool wrote: the
+      // canister principal with a null subaccount. accountsEqual normalizes
+      // the subaccount comparison so a 32-zero-byte subaccount is treated
+      // identically to null (matching IcrcLib's invariant).
+      //
+      // Spec requirement: "token is not in the pool — adminTransferFromPool
+      // only moves Self-owned tokens". Maps to #Unauthorized per ICRC-7's
+      // flag-variant convention; the human-readable rationale lives here in
+      // the comment, not in the wire payload.
+      let poolAccount : ICRC7.Account = {
+        owner      = selfPrincipal();
+        subaccount = null;
+      };
+      if (not IcrcLib.accountsEqual(currentOwner, poolAccount)) {
+        return #Err(#Unauthorized);
+      };
+
+      switch (IcrcLib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?currentOwner, to)) {
+        case (#err msg) {
+          // assignOwnership only #errs on prior-state mismatch, which the
+          // accountsEqual check above already covered. Reaching here means
+          // a state race with another distribution call that just moved the
+          // same token — translate to a generic error so a future batch
+          // wrapper can survive (mirrors processTransferOne's pattern).
+          return #Err(#GenericError { error_code = 2; message = msg });
+        };
+        case (#ok) {};
+      };
+
+      // Defensive: Self never grants approvals on its own pool tokens, so
+      // this is effectively a no-op today. Kept for symmetry with
+      // processTransferOne so every transfer path leaves identical
+      // post-state — no path ever leaves stale approvals on a transferred
+      // token.
+      ignore Icrc37Lib.removeAllApprovals(icrc37Approvals, tokenId);
+
+      let blockIndex = nextBlockIndex.value;
+      nextBlockIndex.value += 1;
+      // No created_at_time → no dedup record. Administrative action, not
+      // user-facing replay-protected traffic.
+
+      #Ok(blockIndex);
+    } finally {
+      CallerGuard.release(callerGuards, caller);
+    };
+  };
+
   // ── ICRC-37 approval surface (Phase 3.4) ──────────────────────────────────
   //
   // Approvals let an owner authorize a third-party "spender" to transfer
