@@ -272,6 +272,8 @@ export const idlFactory = ({ IDL }) => {
   });
   const OrderId = IDL.Nat;
   const OrderStatus = IDL.Variant({
+    'Paid' : IDL.Null,
+    'AwaitingPayment' : IDL.Null,
     'PickedUp' : IDL.Null,
     'Cancelled' : IDL.Null,
     'Shipped' : IDL.Null,
@@ -283,6 +285,7 @@ export const idlFactory = ({ IDL }) => {
     'shipping_address' : IDL.Opt(IDL.Text),
     'created_at' : Timestamp,
     'pickup' : IDL.Bool,
+    'payment_ref' : IDL.Opt(IDL.Text),
     'buyer' : IDL.Principal,
     'items' : IDL.Vec(OrderItem),
     'total_cents' : IDL.Nat,
@@ -625,28 +628,6 @@ export const idlFactory = ({ IDL }) => {
     'new_nft_id' : IDL.Text,
     'plant_id' : PlantId,
   });
-  const WalletToken = IDL.Record({
-    'decimals' : IDL.Nat8,
-    'balance' : IDL.Nat,
-    'name' : IDL.Text,
-    'usdValue' : IDL.Float64,
-    'symbol' : IDL.Text,
-  });
-  const TxStatus = IDL.Variant({
-    'pending' : IDL.Null,
-    'completed' : IDL.Null,
-    'failed' : IDL.Null,
-  });
-  const TxType = IDL.Variant({ 'receive' : IDL.Null, 'send' : IDL.Null });
-  const WalletTransaction = IDL.Record({
-    'id' : IDL.Text,
-    'status' : TxStatus,
-    'counterparty' : IDL.Text,
-    'tokenSymbol' : IDL.Text,
-    'timestamp' : Timestamp,
-    'txType' : TxType,
-    'amount' : IDL.Nat,
-  });
   const ApprovalInfo = IDL.Record({
     'memo' : IDL.Opt(IDL.Vec(IDL.Nat8)),
     'from_subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
@@ -770,15 +751,17 @@ export const idlFactory = ({ IDL }) => {
     'rarity_tier' : IDL.Nat,
     'plant_id' : PlantId,
   });
+  const PaymentToken = IDL.Variant({
+    'ICP' : IDL.Null,
+    'ckBTC' : IDL.Null,
+    'ckETH' : IDL.Null,
+    'ckUSDC' : IDL.Null,
+    'ckUSDT' : IDL.Null,
+  });
   const SaveProfileInput = IDL.Record({
     'bio' : IDL.Text,
     'username' : IDL.Text,
     'avatar_key' : IDL.Opt(IDL.Text),
-  });
-  const SendTokenInput = IDL.Record({
-    'tokenSymbol' : IDL.Text,
-    'recipientAddress' : IDL.Text,
-    'amount' : IDL.Nat,
   });
   const StoredFile = IDL.Record({
     'data' : IDL.Vec(IDL.Nat8),
@@ -906,6 +889,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'clearArtworkFiles' : IDL.Func([], [], []),
+    'confirmICPayPayment' : IDL.Func(
+        [IDL.Nat, IDL.Text],
+        [IDL.Record({ 'message' : IDL.Text, 'success' : IDL.Bool })],
+        [],
+      ),
     'counterOffer' : IDL.Func([CounterOfferInput], [Offer], []),
     'createBatchGiftPack' : IDL.Func(
         [IDL.Vec(PlantId)],
@@ -1065,15 +1053,18 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostPublic)],
         ['query'],
       ),
-    'getWalletAddress' : IDL.Func([], [IDL.Text], ['query']),
-    'getWalletBalances' : IDL.Func([], [IDL.Vec(WalletToken)], []),
-    'getWalletTransactions' : IDL.Func(
-        [],
-        [IDL.Vec(WalletTransaction)],
-        ['query'],
-      ),
     'hasDAOAccess' : IDL.Func([], [IDL.Bool], ['query']),
     'hasMembership' : IDL.Func([], [IDL.Bool], ['query']),
+    'icpayTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
     'icrc37_approve_tokens' : IDL.Func(
         [IDL.Vec(ApproveTokenArg)],
         [IDL.Vec(IDL.Opt(ApproveTokenResult))],
@@ -1268,6 +1259,17 @@ export const idlFactory = ({ IDL }) => {
         [http_request_result],
         ['query'],
       ),
+    'purchasePepperHead' : IDL.Func(
+        [PaymentToken, IDL.Nat],
+        [
+          IDL.Record({
+            'tokenId' : IDL.Opt(IDL.Nat),
+            'message' : IDL.Text,
+            'success' : IDL.Bool,
+          }),
+        ],
+        [],
+      ),
     'redeemBatchClaim' : IDL.Func(
         [ClaimTokenId],
         [IDL.Variant({ 'ok' : BatchGiftPackPublic, 'err' : IDL.Text })],
@@ -1288,12 +1290,8 @@ export const idlFactory = ({ IDL }) => {
     'saveCallerUserProfile' : IDL.Func([SaveProfileInput], [], []),
     'saveSchedule' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [ScheduleId], []),
     'seedDefaultRecipes' : IDL.Func([], [], []),
-    'sendToken' : IDL.Func(
-        [SendTokenInput],
-        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
-        [],
-      ),
     'setForSale' : IDL.Func([PlantId, IDL.Bool], [], []),
+    'setICPaySecretKey' : IDL.Func([IDL.Text], [], []),
     'setPlantNFT' : IDL.Func([PlantId, IDL.Text], [], []),
     'storeArtworkFile' : IDL.Func(
         [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text],

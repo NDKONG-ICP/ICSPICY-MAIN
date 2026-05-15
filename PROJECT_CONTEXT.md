@@ -25,6 +25,10 @@ These are the result of a multi-session design process. Do not deviate without e
 - **Internet Identity** is used for app login (chat, profile, lifecycle).
 - **Wallet connection** is a separate explicit "Connect Wallet" flow that links the II principal to a wallet principal for downstream NFT/payment actions.
 
+### Team wallet principals
+- **OISY**: `yyirv-5pjkg-oupac-gzja4-ljzfn-6mvon-r5w2i-6e7wm-sde75-wuses-nqe` (NFT display testing, wallet payments)
+- **OHSHII**: `evzpj-rfmph-crpjc-wftk2-6umc2-yu7m3-bagh5-jbtj5-vua6c-5zfqh-sae` (DAO governance, SPICY token integration)
+
 ### Tooling & build
 - **Standard moc compiler.** No Caffeine fork, no `--default-persistent-actors` flag.
 - **Explicit `persistent actor` annotations** on every actor declaration.

@@ -313,7 +313,7 @@ mixin (
   // synchronous mutation), so the guard is a no-op — but the try/finally
   // wrapping is structurally required from day one per AGENTS.md "Phase 4
   // wiring requirements". When Phase 4 settlement methods (placeOrder,
-  // confirmStripePayment) introduce real awaits, the lock prevents a
+  // confirmICPayPayment) introduce real awaits, the lock prevents a
   // second in-flight call from the same caller from racing the first.
   //
   // Single-pass semantics: each element observes the state as modified by

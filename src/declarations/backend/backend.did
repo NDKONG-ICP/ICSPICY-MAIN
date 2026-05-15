@@ -24,24 +24,6 @@ type WeatherRecord =
    user: principal;
    wind_speed: opt float64;
  };
-type WalletTransaction = 
- record {
-   amount: nat;
-   counterparty: text;
-   id: text;
-   status: TxStatus;
-   timestamp: Timestamp;
-   tokenSymbol: text;
-   txType: TxType;
- };
-type WalletToken = 
- record {
-   balance: nat;
-   decimals: nat8;
-   name: text;
-   symbol: text;
-   usdValue: float64;
- };
 type Value = 
  variant {
    Array: vec Value;
@@ -125,17 +107,6 @@ type UpdateCellDataInput =
    pest_notes: opt text;
    plant_id: PlantId;
    watering_schedule: opt text;
- };
-type TxType = 
- variant {
-   receive;
-   send;
- };
-type TxStatus = 
- variant {
-   completed;
-   failed;
-   pending;
  };
 type TreasuryTxType = 
  variant {
@@ -287,12 +258,6 @@ type ShopAssignment =
  record {
    nftId: nat;
    price: nat;
- };
-type SendTokenInput = 
- record {
-   amount: nat;
-   recipientAddress: text;
-   tokenSymbol: text;
  };
 type ScheduleId = text;
 type ScheduleEntry = 
@@ -566,9 +531,19 @@ type PlantPublic =
    watering_schedule: opt text;
  };
 type PlantId = nat;
+type PaymentToken = 
+ variant {
+   ICP;
+   ckBTC;
+   ckETH;
+   ckUSDC;
+   ckUSDT;
+ };
 type OrderStatus = 
  variant {
+   AwaitingPayment;
    Cancelled;
+   Paid;
    Pending;
    PickedUp;
    Shipped;
@@ -579,6 +554,7 @@ type OrderPublic =
    created_at: Timestamp;
    id: OrderId;
    items: vec OrderItem;
+   payment_ref: opt text;
    pickup: bool;
    shipping_address: opt text;
    status: OrderStatus;
@@ -767,6 +743,11 @@ type ICSpicy =
                                                  ok;
                                                });
    clearArtworkFiles: () -> ();
+   confirmICPayPayment: (orderId: nat, paymentId: text) ->
+    (record {
+       message: text;
+       success: bool;
+     });
    counterOffer: (input: CounterOfferInput) -> (Offer);
    createBatchGiftPack: (plant_ids: vec PlantId) ->
     (variant {
@@ -852,11 +833,12 @@ type ICSpicy =
    getUpgradeHistory: (plant_id: PlantId) ->
     (vec LifecycleUpgradeEvent) query;
    getUserPosts: (user: principal) -> (vec PostPublic) query;
-   getWalletAddress: () -> (text) query;
-   getWalletBalances: () -> (vec WalletToken);
-   getWalletTransactions: () -> (vec WalletTransaction) query;
    hasDAOAccess: () -> (bool) query;
    hasMembership: () -> (bool) query;
+   icpayTransform: (record {
+                      context: blob;
+                      response: http_request_result;
+                    }) -> (http_request_result) query;
    icrc37_approve_tokens: (args: vec ApproveTokenArg) ->
     (vec opt ApproveTokenResult);
    icrc37_get_token_approvals: (token_id: nat, prev: opt TokenApproval, take:
@@ -974,6 +956,12 @@ type ICSpicy =
        context: blob;
        response: http_request_result;
      }) -> (http_request_result) query;
+   purchasePepperHead: (token: PaymentToken, amount: nat) ->
+    (record {
+       message: text;
+       success: bool;
+       tokenId: opt nat;
+     });
    redeemBatchClaim: (token_id: ClaimTokenId) ->
     (variant {
        err: text;
@@ -993,11 +981,8 @@ type ICSpicy =
    saveCallerUserProfile: (input: SaveProfileInput) -> ();
    saveSchedule: (stage: text, inputs: vec text) -> (ScheduleId);
    seedDefaultRecipes: () -> ();
-   sendToken: (input: SendTokenInput) -> (variant {
-                                            err: text;
-                                            ok: text;
-                                          });
    setForSale: (plant_id: PlantId, for_sale: bool) -> ();
+   setICPaySecretKey: (key: text) -> ();
    setPlantNFT: (plant_id: PlantId, nft_id: text) -> ();
    storeArtworkFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);

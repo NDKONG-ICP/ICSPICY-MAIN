@@ -12,7 +12,6 @@ import MarketTypes "types/marketplace";
 import DAOTypes "types/dao";
 import CommunityTypes "types/community";
 import MembershipTypes "types/membership";
-import WalletTypes "types/wallet";
 import RecipeTypes "types/recipes";
 import ClaimTypes "types/claim";
 import ArtworkUploadTypes "types/artwork-upload";
@@ -27,7 +26,6 @@ import DAOAPI "mixins/dao-api";
 import CommunityAPI "mixins/community-api";
 import MembershipAPI "mixins/membership-api";
 import NFTAPI "mixins/nft-api";
-import WalletAPI "mixins/wallet-api";
 import RecipesAPI "mixins/recipes-api";
 import ClaimAPI "mixins/claim-api";
 import ScheduleAPI "mixins/schedule-api";
@@ -45,6 +43,7 @@ import ArtworkUploadAPI "mixins/artwork-upload-api";
 import PoolAPI "mixins/pool-api";
 import PoolLib "lib/pool";
 import PoolTypes "types/pool";
+import PaymentAPI "mixins/payment-api";
 
 shared(msg) persistent actor class ICSpicy() = Self {
   transient let initialDeployer = msg.caller;
@@ -58,7 +57,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // wiring sequence in AGENTS.md). The lock is consumed by the ICRC-7 mixin
   // from Phase 3.3 onwards (icrc7_transfer / icrc37_transfer_from), and by
   // Phase 4 payment-settlement methods (placeOrder, acceptOffer,
-  // confirmStripePayment, etc.).
+  // confirmICPayPayment, etc.).
   //
   // Usage pattern (per AGENTS.md "Code patterns to follow"):
   //   CallerGuard.acquire(callerGuards, caller) → try { ... } finally { release }
@@ -234,11 +233,6 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   let memberships = Map.empty<Principal, MembershipTypes.MembershipNFT>();
 
-  // ── Wallet state ───────────────────────────────────────────────────────────
-
-  let wallets = Map.empty<Principal, WalletTypes.WalletState>();
-  let txLog   = List.empty<WalletTypes.WalletTransaction>();
-
   // ── Recipes (CookBook) state ───────────────────────────────────────────────
 
   let recipes      = Map.empty<Common.RecipeId, RecipeTypes.Recipe>();
@@ -307,6 +301,17 @@ shared(msg) persistent actor class ICSpicy() = Self {
     started_at       = 0;
   };
 
+  // ── Payment state (Phase 4) ────────────────────────────────────────────────
+  //
+  // icpaySecretKey — set via admin method after deploy; never in source code.
+  // Empty string = ICPay verification disabled.
+  //
+  // icpaySessionsConsumed — idempotency map; prevents a paymentId from being
+  // used twice. Persistent; must not be cleared on upgrade.
+
+  let icpaySecretKey         : { var value : Text } = { var value = "" };
+  let icpaySessionsConsumed  : Map.Map<Text, Nat>   = Map.empty<Text, Nat>();
+
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   // Safe to call inside methods; never called at actor body level (avoids
@@ -363,7 +368,6 @@ shared(msg) persistent actor class ICSpicy() = Self {
     icrc37Approvals,
     certStore,
   );
-  include WalletAPI(wallets, txLog);
   include RecipesAPI(accessControlState, recipes, nextRecipeId);
   include ClaimAPI(accessControlState, claimTokens, plants, rwaTokens, claimMemberships);
   include ScheduleAPI(accessControlState, savedSchedules, scheduleShareIndex);
@@ -375,6 +379,16 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include DABAPI(accessControlState);
   include ArtworkUploadAPI(accessControlState, artworkUploadSession, storedFiles, poolNFTs, selfPrincipalText);
   include PoolAPI(accessControlState, nftPool, nextPoolProductId);
+  include PaymentAPI(
+    accessControlState,
+    callerGuards,
+    orders,
+    icrc7Owners,
+    icrc7Balances,
+    func() : Principal { Principal.fromActor(Self) },
+    icpaySecretKey,
+    icpaySessionsConsumed,
+  );
 
   // ── Ingress filter ─────────────────────────────────────────────────────────
 

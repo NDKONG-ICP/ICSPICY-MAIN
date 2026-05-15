@@ -21,17 +21,22 @@ import {
   Trash2,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { MembershipTier, RarityTier } from "../backend";
 import { useAuth } from "../hooks/useAuth";
 import {
+  useConfirmICPayPayment,
   useHasMembership,
   useMembership,
   useMyPlants,
   usePlaceOrder,
 } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
+
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+const ICPAY_PUBLIC_KEY = "pk_IBR7yEdfinVZ4484Q5jMxgx69cTS2Lxb";
 
 // ─── Rarity config ─────────────────────────────────────────────────────────
 
@@ -72,9 +77,6 @@ const RARITY_CONFIG: Record<
   },
 };
 
-// Derive rarity tier from the membership NFT tier.
-// MembershipTier.Premium → Rare (15%), Standard → Common (10%).
-// Falls back to Common when no explicit tier is determinable.
 function getRarityFromMembershipTier(
   tier: MembershipTier | undefined,
 ): RarityTier {
@@ -82,7 +84,7 @@ function getRarityFromMembershipTier(
   return RarityTier.Common;
 }
 
-// ─── Shipping form fields ─────────────────────────────────────────────────────
+// ─── Shipping form ────────────────────────────────────────────────────────────
 
 interface ShippingForm {
   fullName: string;
@@ -116,7 +118,7 @@ function formatAddress(f: ShippingForm) {
     .join(", ");
 }
 
-// ─── Unauthenticated gate ─────────────────────────────────────────────────────
+// ─── Auth gate ────────────────────────────────────────────────────────────────
 
 function AuthGate({ login }: { login: () => void }) {
   return (
@@ -236,6 +238,116 @@ function DiscountLine({
   );
 }
 
+// ─── ICPay button (web component wrapper) ────────────────────────────────────
+
+function ICPayWidget({
+  amountUsd,
+  orderId,
+  onSuccess,
+}: {
+  amountUsd: number;
+  orderId: bigint;
+  onSuccess: (paymentIntentId: string) => void;
+}) {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    // Dynamically import the web component to register the custom element
+    import("@ic-pay/icpay-widget").then(() => {
+      if (ref.current) {
+        (ref.current as any).config = {
+          publishableKey: ICPAY_PUBLIC_KEY,
+          amountUsd,
+          buttonLabel: `Pay $${amountUsd.toFixed(2)}`,
+          metadata: { order_id: orderId.toString() },
+          onSuccess: (tx: {
+            id: number;
+            status: string;
+            paymentIntentId?: string;
+          }) => {
+            const pid = tx.paymentIntentId ?? String(tx.id);
+            onSuccess(pid);
+          },
+        };
+      }
+    });
+  }, [amountUsd, orderId, onSuccess]);
+
+  return React.createElement("icpay-pay-button", {
+    ref,
+    style: { display: "block" },
+  });
+}
+
+// ─── Payment step ─────────────────────────────────────────────────────────────
+
+function PaymentStep({
+  orderId,
+  finalTotal,
+  onComplete,
+}: {
+  orderId: bigint;
+  finalTotal: bigint;
+  onComplete: () => void;
+}) {
+  const confirmICPay = useConfirmICPayPayment();
+  const navigate = useNavigate();
+
+  const usdAmount = Number(finalTotal) / 100;
+
+  async function handleICPaySuccess(paymentIntentId: string) {
+    try {
+      await confirmICPay.mutateAsync({ orderId, paymentId: paymentIntentId });
+      toast.success("Payment confirmed!");
+      onComplete();
+      navigate({ to: "/orders" });
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "ICPay confirmation failed",
+      );
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+      data-ocid="checkout-payment-step"
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <Lock className="w-4 h-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">
+          Order #{orderId.toString()} placed — complete payment to confirm
+        </span>
+      </div>
+
+      <div className="text-center py-4">
+        <p className="text-muted-foreground text-sm mb-1">Order total</p>
+        <p className="font-display font-bold text-3xl text-primary">
+          ${usdAmount.toFixed(2)}
+        </p>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: "auto" }}
+        className="rounded-xl border border-border bg-card p-5 space-y-4"
+        data-ocid="icpay-panel"
+      >
+        <p className="text-sm text-muted-foreground">
+          Pay with crypto wallet or card via ICPay.
+        </p>
+        <ICPayWidget
+          amountUsd={usdAmount}
+          orderId={orderId}
+          onSuccess={handleICPaySuccess}
+        />
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
@@ -246,18 +358,18 @@ export default function CheckoutPage() {
   const { data: membership } = useMembership();
   const { data: myPlants = [] } = useMyPlants();
   const placeOrder = usePlaceOrder();
-  const navigate = useNavigate();
 
   const [pickup, setPickup] = useState(false);
   const [form, setForm] = useState<ShippingForm>(EMPTY_FORM);
   const [submitted, setSubmitted] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<bigint | null>(null);
+  const [finalTotalForPayment, setFinalTotalForPayment] = useState<bigint>(0n);
 
-  // Determine highest rarity tier from claimed plant NFTs or membership
+  // ─ Rarity / discount ─
   let rarityTier: RarityTier | null = null;
   if (hasMembership && membership) {
     rarityTier = getRarityFromMembershipTier(membership.tier);
   } else if (myPlants.some((p) => p.nft_id)) {
-    // Has plant NFTs but no membership record — default to Common discount
     rarityTier = RarityTier.Common;
   }
 
@@ -286,7 +398,7 @@ export default function CheckoutPage() {
     (key: keyof ShippingForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleContinueToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated) {
       login();
@@ -296,7 +408,7 @@ export default function CheckoutPage() {
     if (!isFormValid) return;
 
     try {
-      await placeOrder.mutateAsync({
+      const order = await placeOrder.mutateAsync({
         pickup,
         shipping_address: pickup ? undefined : formatAddress(form),
         items: items.map((item) => ({
@@ -306,17 +418,37 @@ export default function CheckoutPage() {
           quantity: BigInt(item.quantity),
         })),
       });
-      clearCart();
-      toast.success("🌶️ Order placed! We'll be in touch soon.");
-      navigate({ to: "/orders" });
+      setFinalTotalForPayment(finalTotal);
+      setPendingOrderId(order.id);
     } catch {
       toast.error("Failed to place order. Please try again.");
     }
   };
 
+  // ─ Guards ─
   if (!isAuthenticated) return <AuthGate login={login} />;
-  if (items.length === 0) return <EmptyCart />;
+  if (items.length === 0 && !pendingOrderId) return <EmptyCart />;
 
+  // ─ Payment step ─
+  if (pendingOrderId) {
+    return (
+      <div className="max-w-xl mx-auto" data-ocid="checkout-payment">
+        <div className="flex items-center gap-3 mb-8">
+          <ShoppingBag className="w-7 h-7 text-primary" />
+          <h1 className="font-display font-bold text-3xl text-foreground">
+            <span className="text-fire">Payment</span>
+          </h1>
+        </div>
+        <PaymentStep
+          orderId={pendingOrderId}
+          finalTotal={finalTotalForPayment}
+          onComplete={clearCart}
+        />
+      </div>
+    );
+  }
+
+  // ─ Review step ─
   return (
     <div className="max-w-4xl mx-auto" data-ocid="checkout-page">
       <div className="flex items-center gap-3 mb-8">
@@ -326,7 +458,7 @@ export default function CheckoutPage() {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleContinueToPayment}>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* ─ Left column: cart items + form ─ */}
           <div className="lg:col-span-3 space-y-6">
@@ -360,7 +492,6 @@ export default function CheckoutPage() {
                         ${(Number(item.price_cents) / 100).toFixed(2)} ea.
                       </p>
                     </div>
-                    {/* Quantity controls */}
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <button
                         type="button"
@@ -683,7 +814,7 @@ export default function CheckoutPage() {
                   </>
                 ) : (
                   <>
-                    Place Order
+                    Continue to Payment
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}

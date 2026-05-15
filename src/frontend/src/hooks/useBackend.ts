@@ -25,6 +25,7 @@ import type {
   Offer,
   OrderId,
   OrderStatus,
+  PaymentToken,
   PlantId,
   PlantStage,
   PostId,
@@ -2104,5 +2105,67 @@ export function useTokenCertified(tokenId: bigint | null) {
       };
     },
     enabled: !!actor && !isFetching && tokenId != null,
+  });
+}
+
+// ─── Phase 4 Payment hooks ───────────────────────────────────────────────────
+
+export function useConfirmICPayPayment() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      paymentId,
+    }: { orderId: bigint; paymentId: string }) => {
+      if (!actor) throw new Error("Not connected");
+      const result = await actor.confirmICPayPayment(orderId, paymentId);
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["orders"] }),
+  });
+}
+
+export function usePurchasePepperHead() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      token,
+      amount,
+    }: { token: PaymentToken; amount: bigint }) => {
+      if (!actor) throw new Error("Not connected");
+      const result = await actor.purchasePepperHead(token, amount);
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["icrc7Owner"] });
+      qc.invalidateQueries({ queryKey: ["isPepperHeadAvailable"] });
+    },
+  });
+}
+
+export function useIsPepperHeadAvailable() {
+  const { actor, isFetching } = useIcrc7Actor();
+  return useQuery({
+    queryKey: ["isPepperHeadAvailable"],
+    queryFn: async () => {
+      if (!actor) return 0n;
+      return actor.isPepperHeadAvailable();
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 60_000,
+  });
+}
+
+export function useSetICPaySecretKey() {
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (key: string) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.setICPaySecretKey(key);
+    },
   });
 }

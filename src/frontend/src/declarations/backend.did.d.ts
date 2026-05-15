@@ -250,6 +250,10 @@ export interface ICSpicy {
       { 'err' : string }
   >,
   'clearArtworkFiles' : ActorMethod<[], undefined>,
+  'confirmICPayPayment' : ActorMethod<
+    [bigint, string],
+    { 'message' : string, 'success' : boolean }
+  >,
   'counterOffer' : ActorMethod<[CounterOfferInput], Offer>,
   'createBatchGiftPack' : ActorMethod<
     [Array<PlantId>],
@@ -338,11 +342,12 @@ export interface ICSpicy {
   'getTreasuryLedger' : ActorMethod<[], Array<TreasuryTransaction>>,
   'getUpgradeHistory' : ActorMethod<[PlantId], Array<LifecycleUpgradeEvent>>,
   'getUserPosts' : ActorMethod<[Principal], Array<PostPublic>>,
-  'getWalletAddress' : ActorMethod<[], string>,
-  'getWalletBalances' : ActorMethod<[], Array<WalletToken>>,
-  'getWalletTransactions' : ActorMethod<[], Array<WalletTransaction>>,
   'hasDAOAccess' : ActorMethod<[], boolean>,
   'hasMembership' : ActorMethod<[], boolean>,
+  'icpayTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
   'icrc37_approve_tokens' : ActorMethod<
     [Array<ApproveTokenArg>],
     Array<[] | [ApproveTokenResult]>
@@ -470,6 +475,10 @@ export interface ICSpicy {
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
   >,
+  'purchasePepperHead' : ActorMethod<
+    [PaymentToken, bigint],
+    { 'tokenId' : [] | [bigint], 'message' : string, 'success' : boolean }
+  >,
   'redeemBatchClaim' : ActorMethod<
     [ClaimTokenId],
     { 'ok' : BatchGiftPackPublic } |
@@ -490,12 +499,8 @@ export interface ICSpicy {
   'saveCallerUserProfile' : ActorMethod<[SaveProfileInput], undefined>,
   'saveSchedule' : ActorMethod<[string, Array<string>], ScheduleId>,
   'seedDefaultRecipes' : ActorMethod<[], undefined>,
-  'sendToken' : ActorMethod<
-    [SendTokenInput],
-    { 'ok' : string } |
-      { 'err' : string }
-  >,
   'setForSale' : ActorMethod<[PlantId, boolean], undefined>,
+  'setICPaySecretKey' : ActorMethod<[string], undefined>,
   'setPlantNFT' : ActorMethod<[PlantId, string], undefined>,
   'storeArtworkFile' : ActorMethod<
     [string, Uint8Array | number[], string],
@@ -642,14 +647,22 @@ export interface OrderPublic {
   'shipping_address' : [] | [string],
   'created_at' : Timestamp,
   'pickup' : boolean,
+  'payment_ref' : [] | [string],
   'buyer' : Principal,
   'items' : Array<OrderItem>,
   'total_cents' : bigint,
 }
-export type OrderStatus = { 'PickedUp' : null } |
+export type OrderStatus = { 'Paid' : null } |
+  { 'AwaitingPayment' : null } |
+  { 'PickedUp' : null } |
   { 'Cancelled' : null } |
   { 'Shipped' : null } |
   { 'Pending' : null };
+export type PaymentToken = { 'ICP' : null } |
+  { 'ckBTC' : null } |
+  { 'ckETH' : null } |
+  { 'ckUSDC' : null } |
+  { 'ckUSDT' : null };
 export type PlantId = bigint;
 export interface PlantPublic {
   'id' : PlantId,
@@ -868,11 +881,6 @@ export interface ScheduleEntry {
   'input_name' : string,
 }
 export type ScheduleId = string;
-export interface SendTokenInput {
-  'tokenSymbol' : string,
-  'recipientAddress' : string,
-  'amount' : bigint,
-}
 export interface ShopAssignment { 'nftId' : bigint, 'price' : bigint }
 export interface StageHistory {
   'stage' : PlantStage,
@@ -983,11 +991,6 @@ export type TreasuryTxType = { 'Deposit' : null } |
   { 'Withdrawal' : null } |
   { 'OfferSettlement' : null } |
   { 'Transfer' : null };
-export type TxStatus = { 'pending' : null } |
-  { 'completed' : null } |
-  { 'failed' : null };
-export type TxType = { 'receive' : null } |
-  { 'send' : null };
 export interface UpdateCellDataInput {
   'origin' : [] | [string],
   'common_name' : [] | [string],
@@ -1056,22 +1059,6 @@ export type Value = { 'Int' : bigint } |
   { 'Blob' : Uint8Array | number[] } |
   { 'Text' : string } |
   { 'Array' : Array<Value> };
-export interface WalletToken {
-  'decimals' : number,
-  'balance' : bigint,
-  'name' : string,
-  'usdValue' : number,
-  'symbol' : string,
-}
-export interface WalletTransaction {
-  'id' : string,
-  'status' : TxStatus,
-  'counterparty' : string,
-  'tokenSymbol' : string,
-  'timestamp' : Timestamp,
-  'txType' : TxType,
-  'amount' : bigint,
-}
 export interface WeatherRecord {
   'id' : WeatherRecordId,
   'latitude' : number,

@@ -979,4 +979,9 @@ export const mockBackend: backendInterface = {
   removeZonePhoto: async () => undefined,
   updateTrayOrder: async () => undefined,
   updateZoneNotes: async () => undefined,
+  // Phase 4 payment stubs
+  confirmICPayPayment: async () => ({ message: "Mock paid", success: true }),
+  purchasePepperHead: async () => ({ tokenId: null, message: "Mock purchased", success: true }),
+  isPepperHeadAvailable: async () => BigInt(0),
+  setICPaySecretKey: async () => undefined,
 };

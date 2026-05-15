@@ -836,6 +836,9 @@ export enum TreasuryToken {
     ckUSDC = "ckUSDC",
     ckUSDT = "ckUSDT"
 }
+// PaymentToken has the same token set as TreasuryToken — re-exported for Phase 4 payment hooks.
+export const PaymentToken = TreasuryToken;
+export type PaymentToken = TreasuryToken;
 export enum TreasuryTxType {
     Deposit = "Deposit",
     Withdrawal = "Withdrawal",
@@ -905,6 +908,7 @@ export interface backendInterface {
         err: string;
     }>;
     clearArtworkFiles(): Promise<void>;
+    confirmICPayPayment(orderId: bigint, paymentId: string): Promise<{ message: string; success: boolean }>;
     counterOffer(input: CounterOfferInput): Promise<Offer>;
     createBatchGiftPack(plant_ids: Array<PlantId>): Promise<{
         __kind__: "ok";
@@ -989,6 +993,7 @@ export interface backendInterface {
     hasDAOAccess(): Promise<boolean>;
     hasMembership(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
+    isPepperHeadAvailable(): Promise<bigint>;
     issueMembership(owner: Principal, tier: MembershipTier, nft_standard: NFTStandard): Promise<MembershipNFTPublic>;
     likePost(post_id: PostId): Promise<bigint>;
     listArtworkFiles(): Promise<Array<[string, bigint]>>;
@@ -1018,6 +1023,7 @@ export interface backendInterface {
     mintICRC37(plant_id: PlantId, image_key: string | null, attributes: Array<[string, string]>): Promise<string>;
     mintRWAProvenance(input: MintRWAProvenanceInput): Promise<string>;
     placeOrder(input: CreateOrderInput): Promise<OrderPublic>;
+    purchasePepperHead(token: PaymentToken, amount: bigint): Promise<{ tokenId: bigint | null; message: string; success: boolean }>;
     preGenerateNFTPool(layerCount: bigint, layerFileCounts: Array<bigint>): Promise<{
         ok: boolean;
         total: bigint;
@@ -1054,6 +1060,7 @@ export interface backendInterface {
         err: string;
     }>;
     setForSale(plant_id: PlantId, for_sale: boolean): Promise<void>;
+    setICPaySecretKey(key: string): Promise<void>;
     setPlantNFT(plant_id: PlantId, nft_id: string): Promise<void>;
     storeArtworkFile(path: string, data: Uint8Array, mimeType: string): Promise<StoredFile>;
     submitOffer(input: SubmitOfferInput): Promise<Offer>;
@@ -3394,6 +3401,34 @@ export class Backend implements backendInterface {
             const result = await this.actor.voteOnProposal(arg0, arg1);
             return result;
         }
+    }
+    // ── Phase 4 payment methods ──────────────────────────────────────────────
+    async confirmICPayPayment(arg0: bigint, arg1: string): Promise<{ message: string; success: boolean }> {
+        if (this.processError) {
+            try { return await this.actor.confirmICPayPayment(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.confirmICPayPayment(arg0, arg1); }
+    }
+    async purchasePepperHead(arg0: PaymentToken, arg1: bigint): Promise<{ tokenId: bigint | null; message: string; success: boolean }> {
+        const candidToken = to_candid_TreasuryToken_n173(this._uploadFile, this._downloadFile, arg0 as unknown as TreasuryToken);
+        if (this.processError) {
+            try {
+                const r = await this.actor.purchasePepperHead(candidToken, arg1);
+                return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.purchasePepperHead(candidToken, arg1);
+            return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
+        }
+    }
+    async isPepperHeadAvailable(): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.isPepperHeadAvailable(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.isPepperHeadAvailable(); }
+    }
+    async setICPaySecretKey(arg0: string): Promise<void> {
+        if (this.processError) {
+            try { return await this.actor.setICPaySecretKey(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.setICPaySecretKey(arg0); }
     }
 }
 function from_candid_BatchGiftPackPublic_n65(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BatchGiftPackPublic): BatchGiftPackPublic {
