@@ -38,7 +38,10 @@ export const spicyAiIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
     response: IDL.Text,
     docsReferenced: IDL.Vec(IDL.Text),
   });
-  const ContinueChatResponse = IDL.Variant({ ok: ContinueChatOk, err: ChatError });
+  const ContinueChatResponse = IDL.Variant({
+    ok: ContinueChatOk,
+    err: ChatError,
+  });
 
   const LlmChatOk = IDL.Record({
     response: IDL.Text,
@@ -61,42 +64,42 @@ export const spicyAiIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
 
   return IDL.Service({
     // Fast path: mo:llm single-call
-    chatWithLlm:  IDL.Func([ChatRequest], [LlmChatResponse], []),
+    chatWithLlm: IDL.Func([ChatRequest], [LlmChatResponse], []),
 
     // Streaming chat API (DeepSeek)
-    startChat:    IDL.Func([ChatRequest], [StartChatResponse], []),
-    continueChat: IDL.Func([IDL.Text],   [ContinueChatResponse], []),
-    cancelChat:   IDL.Func([IDL.Text],   [], []),
+    startChat: IDL.Func([ChatRequest], [StartChatResponse], []),
+    continueChat: IDL.Func([IDL.Text], [ContinueChatResponse], []),
+    cancelChat: IDL.Func([IDL.Text], [], []),
 
     // Monitoring (query)
-    getStatus:    IDL.Func([], [GenerationStatus], ["query"]),
+    getStatus: IDL.Func([], [GenerationStatus], ["query"]),
     getCycleBalance: IDL.Func([], [IDL.Nat], ["query"]),
-    getCanisterId:   IDL.Func([], [IDL.Text], ["query"]),
-    listAdmins:      IDL.Func([], [IDL.Vec(IDL.Principal)], ["query"]),
-    isAdminQuery:    IDL.Func([IDL.Principal], [IDL.Bool], ["query"]),
+    getCanisterId: IDL.Func([], [IDL.Text], ["query"]),
+    listAdmins: IDL.Func([], [IDL.Vec(IDL.Principal)], ["query"]),
+    isAdminQuery: IDL.Func([IDL.Principal], [IDL.Bool], ["query"]),
 
     // Admin config
-    setLlamaCppId:     IDL.Func([IDL.Text], [], []),
-    setDocsBackendId:  IDL.Func([IDL.Text], [], []),
-    setModelPath:      IDL.Func([IDL.Text], [], []),
-    setContextSize:    IDL.Func([IDL.Nat], [], []),
-    setTopK:           IDL.Func([IDL.Nat], [], []),
-    setMaxGenSteps:    IDL.Func([IDL.Nat], [], []),
-    setEnabled:        IDL.Func([IDL.Bool], [], []),
+    setLlamaCppId: IDL.Func([IDL.Text], [], []),
+    setDocsBackendId: IDL.Func([IDL.Text], [], []),
+    setModelPath: IDL.Func([IDL.Text], [], []),
+    setContextSize: IDL.Func([IDL.Nat], [], []),
+    setTopK: IDL.Func([IDL.Nat], [], []),
+    setMaxGenSteps: IDL.Func([IDL.Nat], [], []),
+    setEnabled: IDL.Func([IDL.Bool], [], []),
     setAnonDailyLimit: IDL.Func([IDL.Nat], [], []),
     setAuthDailyLimit: IDL.Func([IDL.Nat], [], []),
 
     // Admin: llama_cpp controls
     configureMaxTokens: IDL.Func([IDL.Nat64, IDL.Nat64], [IDL.Text], []),
     openLlamaCppAccess: IDL.Func([], [IDL.Text], []),
-    checkLlamaCpp:      IDL.Func([], [IDL.Text], []),
+    checkLlamaCpp: IDL.Func([], [IDL.Text], []),
 
     // Admin: session management
-    listSessions:        IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))], []),
-    adminCancelSession:  IDL.Func([IDL.Text], [], []),
+    listSessions: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))], []),
+    adminCancelSession: IDL.Func([IDL.Text], [], []),
 
     // Admin: principal management
-    addAdmin:    IDL.Func([IDL.Principal], [], []),
+    addAdmin: IDL.Func([IDL.Principal], [], []),
     removeAdmin: IDL.Func([IDL.Principal], [], []),
   });
 };
@@ -104,14 +107,14 @@ export const spicyAiIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
 // ── TypeScript actor interface ────────────────────────────────────────────────
 
 export interface SpicyAiChatError {
-  rateLimited?:    { resetInSeconds: bigint };
-  blocked?:        null;
-  llmError?:       string;
-  noContent?:      null;
-  notEnabled?:     null;
-  notConfigured?:  null;
+  rateLimited?: { resetInSeconds: bigint };
+  blocked?: null;
+  llmError?: string;
+  noContent?: null;
+  notEnabled?: null;
+  notConfigured?: null;
   sessionNotFound?: null;
-  sessionActive?:  null;
+  sessionActive?: null;
 }
 
 export interface SpicyAiLlmChatOk {
@@ -161,8 +164,12 @@ export interface SpicyAiGenerationStatus {
 }
 
 export interface SpicyAiActor {
-  chatWithLlm(req: { messages: SpicyAiChatMessage[] }): Promise<SpicyAiLlmChatResponse>;
-  startChat(req: { messages: SpicyAiChatMessage[] }): Promise<SpicyAiStartChatResponse>;
+  chatWithLlm(req: {
+    messages: SpicyAiChatMessage[];
+  }): Promise<SpicyAiLlmChatResponse>;
+  startChat(req: {
+    messages: SpicyAiChatMessage[];
+  }): Promise<SpicyAiStartChatResponse>;
   continueChat(chatId: string): Promise<SpicyAiContinueChatResponse>;
   cancelChat(chatId: string): Promise<void>;
   getStatus(): Promise<SpicyAiGenerationStatus>;
@@ -288,12 +295,13 @@ export function toSpicyAiMessage(m: ChatMessage): SpicyAiChatMessage {
 }
 
 export function chatErrorToString(err: SpicyAiChatError): string {
-  if (err.rateLimited)   return `Rate limited. Try again in ${Number(err.rateLimited.resetInSeconds)}s.`;
-  if (err.notEnabled)    return "DeepSeek not enabled yet.";
+  if (err.rateLimited)
+    return `Rate limited. Try again in ${Number(err.rateLimited.resetInSeconds)}s.`;
+  if (err.notEnabled) return "DeepSeek not enabled yet.";
   if (err.notConfigured) return "DeepSeek not configured yet.";
   if (err.sessionActive) return "A previous chat is still in progress.";
   if (err.sessionNotFound) return "Chat session not found.";
-  if (err.llmError)      return err.llmError;
-  if (err.blocked)       return "Blocked.";
+  if (err.llmError) return err.llmError;
+  if (err.blocked) return "Blocked.";
   return "Unknown error.";
 }

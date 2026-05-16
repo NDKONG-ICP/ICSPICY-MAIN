@@ -16,6 +16,27 @@ importers:
         specifier: ^0.34.4
         version: 0.34.5
 
+  scripts:
+    dependencies:
+      '@dfinity/agent':
+        specifier: 3.4.3
+        version: 3.4.3(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/hashes@1.8.0)
+      '@dfinity/assets':
+        specifier: 3.4.3
+        version: 3.4.3(@dfinity/agent@3.4.3(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/hashes@1.8.0))(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/hashes@1.8.0)
+      '@dfinity/identity':
+        specifier: 3.4.3
+        version: 3.4.3(@dfinity/agent@3.4.3(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/hashes@1.8.0))(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
+      '@dfinity/identity-secp256k1':
+        specifier: 3.4.3
+        version: 3.4.3(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
+      '@dfinity/principal':
+        specifier: 3.4.3
+        version: 3.4.3
+      qrcode:
+        specifier: ^1.5.4
+        version: 1.5.4
+
   src/docs_frontend:
     dependencies:
       '@dfinity/agent':
@@ -542,6 +563,23 @@ packages:
       '@dfinity/principal': 3.3.1
       '@noble/hashes': ^1.8.0
 
+  '@dfinity/agent@3.4.3':
+    resolution: {integrity: sha512-qOJqvZdMzncbbYX3eUjlAqvP66DQuOQgBFQE06yzI3m/lVXnefxvY7wE9Y1Sb2wjVIQs6W2rfjixnn4EEjHAZg==}
+    deprecated: 'This package has been deprecated. Use @icp-sdk/core/agent instead. Migration guide: https://js.icp.build/core/latest/upgrading/v5'
+    peerDependencies:
+      '@dfinity/candid': 3.4.3
+      '@dfinity/principal': 3.4.3
+      '@noble/hashes': ^1.8.0
+
+  '@dfinity/assets@3.4.3':
+    resolution: {integrity: sha512-i9QUpRCui/1lbsNo9iiVnmV9MPU6hKQxPKKUR7AKknvcaZAZVvZLcYMhOLP6Xazy7Y/VNWSj8UDhkxvIT80yDw==}
+    deprecated: This package has been deprecated. Its functionality is now part of `@icp-sdk/canisters` (https://js.icp.build/canisters), under the `assets` submodule.
+    peerDependencies:
+      '@dfinity/agent': 3.4.3
+      '@dfinity/candid': 3.4.3
+      '@dfinity/principal': 3.4.3
+      '@noble/hashes': ^1.8.0
+
   '@dfinity/auth-client@3.3.1':
     resolution: {integrity: sha512-Cxf8dlWzxG9mgRzEesuf4cRVCAMrIhlRKw54bc1CNceSobkhpo9Hbz4bSqD02zddKD+G69KAQR3z5r43wKi8CA==}
     deprecated: This package has been deprecated. Its functionality is now part of `@icp-sdk/auth` (https://js.icp.build/auth), under the `client` submodule.
@@ -555,6 +593,12 @@ packages:
     deprecated: 'This package has been deprecated. Use @icp-sdk/core/candid instead. Migration guide: https://js.icp.build/core/latest/upgrading/v5'
     peerDependencies:
       '@dfinity/principal': 3.3.1
+
+  '@dfinity/candid@3.4.3':
+    resolution: {integrity: sha512-M2MuNariyCZHvxT0IXvMWmg8jvG19EORDveoFm7PCIVXLgYfWSy0P59t6tQ24D72yRGu40CRLm85aqpt3cRvxw==}
+    deprecated: 'This package has been deprecated. Use @icp-sdk/core/candid instead. Migration guide: https://js.icp.build/core/latest/upgrading/v5'
+    peerDependencies:
+      '@dfinity/principal': 3.4.3
 
   '@dfinity/cbor@0.2.2':
     resolution: {integrity: sha512-GPJpH73kDEKbUBdUjY80lz7cq9l0vm1h/7ppejPV6O0ZTqCLrYspssYvqjRmK4aNnJ/SKXsP0rg9LYX7zpegaA==}
@@ -570,6 +614,14 @@ packages:
       '@noble/curves': ^1.9.2
       '@noble/hashes': ^1.8.0
 
+  '@dfinity/identity-secp256k1@3.4.3':
+    resolution: {integrity: sha512-Mao+EQZUWJ9oG90eS3GwI3zU4zdccvhuBANBpCJWhcad84HYkr7NIJRQRYWSDmIXdALcU8jCeUvyhLxxgk0akQ==}
+    deprecated: 'This package has been deprecated. Use @icp-sdk/core/identity/secp256k1 instead. Migration guide: https://js.icp.build/core/latest/upgrading/v5'
+    peerDependencies:
+      '@dfinity/candid': 3.4.3
+      '@noble/curves': ^1.9.2
+      '@noble/hashes': ^1.8.0
+
   '@dfinity/identity@3.3.1':
     resolution: {integrity: sha512-c+Grr7Mc7RephqBzRpdtySDg1to9pitb0wakXSk8902yg3BVc5vAsmbA3S1WwriY8+AMB06Dy2IZl/9Hot/Yhw==}
     deprecated: 'This package has been deprecated. Use @icp-sdk/core/identity instead. Migration guide: https://js.icp.build/core/latest/upgrading/v5'
@@ -577,6 +629,16 @@ packages:
       '@dfinity/agent': 3.3.1
       '@dfinity/candid': 3.3.1
       '@dfinity/principal': 3.3.1
+      '@noble/curves': ^1.9.2
+      '@noble/hashes': ^1.8.0
+
+  '@dfinity/identity@3.4.3':
+    resolution: {integrity: sha512-mAsdmlaZPe7UkPL8AKNq7801pYve3LWnXQLOq39Nu+pzAUWRnZcKO3Ao+xouym5VnQnBwO68BnSSvQ044bEyTA==}
+    deprecated: 'This package has been deprecated. Use @icp-sdk/core/identity instead. Migration guide: https://js.icp.build/core/latest/upgrading/v5'
+    peerDependencies:
+      '@dfinity/agent': 3.4.3
+      '@dfinity/candid': 3.4.3
+      '@dfinity/principal': 3.4.3
       '@noble/curves': ^1.9.2
       '@noble/hashes': ^1.8.0
 
@@ -591,6 +653,10 @@ packages:
 
   '@dfinity/principal@3.3.1':
     resolution: {integrity: sha512-UWloNRbDHSwVV/gec0CrtWm/cHODPgu+jgwn5iERheVwYCEp+yGXVIssUkJeN6wFxraqqCFcoBUvg7vtWM+GBg==}
+    deprecated: 'This package has been deprecated. Use @icp-sdk/core/principal instead. Migration guide: https://js.icp.build/core/latest/upgrading/v5'
+
+  '@dfinity/principal@3.4.3':
+    resolution: {integrity: sha512-KTWIRqj/0clwsxcXnjgMVpnvxis6ji8vddRbBnYLsPjRFaVXHeBwVN1rziA1w3u7AtlP3kuovB4czd2F5ORxDw==}
     deprecated: 'This package has been deprecated. Use @icp-sdk/core/principal instead. Migration guide: https://js.icp.build/core/latest/upgrading/v5'
 
   '@dfinity/utils@4.2.1':
@@ -3832,6 +3898,22 @@ snapshots:
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
 
+  '@dfinity/agent@3.4.3(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/hashes@1.8.0)':
+    dependencies:
+      '@dfinity/candid': 3.4.3(@dfinity/principal@3.4.3)
+      '@dfinity/cbor': 0.2.3
+      '@dfinity/principal': 3.4.3
+      '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+
+  '@dfinity/assets@3.4.3(@dfinity/agent@3.4.3(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/hashes@1.8.0))(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/hashes@1.8.0)':
+    dependencies:
+      '@dfinity/agent': 3.4.3(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/hashes@1.8.0)
+      '@dfinity/candid': 3.4.3(@dfinity/principal@3.4.3)
+      '@dfinity/principal': 3.4.3
+      '@noble/hashes': 1.8.0
+      mime: 3.0.0
+
   '@dfinity/auth-client@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)':
     dependencies:
       '@dfinity/agent': 3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0)
@@ -3842,6 +3924,10 @@ snapshots:
   '@dfinity/candid@3.3.1(@dfinity/principal@3.3.1)':
     dependencies:
       '@dfinity/principal': 3.3.1
+
+  '@dfinity/candid@3.4.3(@dfinity/principal@3.4.3)':
+    dependencies:
+      '@dfinity/principal': 3.4.3
 
   '@dfinity/cbor@0.2.2': {}
 
@@ -3859,11 +3945,31 @@ snapshots:
     transitivePeerDependencies:
       - '@dfinity/principal'
 
+  '@dfinity/identity-secp256k1@3.4.3(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)':
+    dependencies:
+      '@dfinity/agent': 3.4.3(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/hashes@1.8.0)
+      '@dfinity/candid': 3.4.3(@dfinity/principal@3.4.3)
+      '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
+      asn1js: 3.0.7
+    transitivePeerDependencies:
+      - '@dfinity/principal'
+
   '@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)':
     dependencies:
       '@dfinity/agent': 3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0)
       '@dfinity/candid': 3.3.1(@dfinity/principal@3.3.1)
       '@dfinity/principal': 3.3.1
+      '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+
+  '@dfinity/identity@3.4.3(@dfinity/agent@3.4.3(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/hashes@1.8.0))(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)':
+    dependencies:
+      '@dfinity/agent': 3.4.3(@dfinity/candid@3.4.3(@dfinity/principal@3.4.3))(@dfinity/principal@3.4.3)(@noble/hashes@1.8.0)
+      '@dfinity/candid': 3.4.3(@dfinity/principal@3.4.3)
+      '@dfinity/principal': 3.4.3
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
 
@@ -3876,6 +3982,10 @@ snapshots:
       zod: 4.4.3
 
   '@dfinity/principal@3.3.1':
+    dependencies:
+      '@noble/hashes': 1.8.0
+
+  '@dfinity/principal@3.4.3':
     dependencies:
       '@noble/hashes': 1.8.0
 

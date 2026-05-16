@@ -13,19 +13,31 @@ export function AnimatedBackdrop() {
         className="absolute -top-40 left-1/2 h-[60vh] w-[80vw] -translate-x-1/2 rounded-full bg-ember/25 blur-[120px]"
         initial={{ opacity: 0.55, x: "-50%", y: 0 }}
         animate={{ opacity: [0.45, 0.7, 0.45], y: [0, 20, 0] }}
-        transition={{ duration: 14, ease: "easeInOut", repeat: Infinity }}
+        transition={{
+          duration: 14,
+          ease: "easeInOut",
+          repeat: Number.POSITIVE_INFINITY,
+        }}
       />
       <motion.div
         className="absolute right-[-10%] top-1/3 h-[55vh] w-[55vw] rounded-full bg-gold/20 blur-[120px]"
         initial={{ opacity: 0.4 }}
         animate={{ opacity: [0.25, 0.55, 0.25], x: [0, -30, 0] }}
-        transition={{ duration: 18, ease: "easeInOut", repeat: Infinity }}
+        transition={{
+          duration: 18,
+          ease: "easeInOut",
+          repeat: Number.POSITIVE_INFINITY,
+        }}
       />
       <motion.div
         className="absolute -bottom-32 left-[-10%] h-[55vh] w-[55vw] rounded-full bg-sage/15 blur-[120px]"
         initial={{ opacity: 0.3 }}
         animate={{ opacity: [0.2, 0.45, 0.2], x: [0, 24, 0] }}
-        transition={{ duration: 22, ease: "easeInOut", repeat: Infinity }}
+        transition={{
+          duration: 22,
+          ease: "easeInOut",
+          repeat: Number.POSITIVE_INFINITY,
+        }}
       />
 
       {/* Subtle film grain texture using SVG noise. Adds tactile depth. */}

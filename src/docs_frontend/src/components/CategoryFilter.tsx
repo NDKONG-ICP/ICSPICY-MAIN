@@ -1,6 +1,6 @@
-import { motion } from "motion/react";
 import type { CategoryWithCount } from "@/lib/backend";
 import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
 
 interface CategoryFilterProps {
   categories: CategoryWithCount[];

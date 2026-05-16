@@ -1,9 +1,9 @@
-import { useState, useEffect, type ReactNode } from "react";
-import { Navigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
-import { isAuthenticated, getIdentity } from "@/lib/auth";
+import { getIdentity, isAuthenticated } from "@/lib/auth";
 import { getDocsBackendActor } from "@/lib/backend";
 import type { Principal } from "@dfinity/principal";
+import { Loader2 } from "lucide-react";
+import { type ReactNode, useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 
 interface Props {
   children: ReactNode;
@@ -62,9 +62,7 @@ export function AdminGuard({ children }: Props) {
   if (state === "not-admin") {
     return (
       <div className="container py-24 text-center">
-        <p className="text-xl font-semibold text-ink">
-          Not an admin principal
-        </p>
+        <p className="text-xl font-semibold text-ink">Not an admin principal</p>
         <p className="mt-2 text-muted">
           Your Internet Identity is not in the admin list for this canister.
         </p>

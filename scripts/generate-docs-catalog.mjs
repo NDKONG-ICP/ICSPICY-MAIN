@@ -648,10 +648,12 @@ async function main() {
     const mdDst = path.join(baseDst, `${stem}.md`);
     const pdfDst = path.join(baseDst, `${stem}.pdf`);
 
-    // Note: MD/PDF files are no longer copied to public/ — they are served
-    // from the docs_backend canister via getDocumentMarkdown/getDocumentPdf.
-    // The markdownPath/pdfPath fields are kept for backward compatibility but
-    // are not used for asset-canister serving anymore.
+    // Copy MD and PDF into public/documents/<collection>/ so Vite includes them
+    // in dist/ and the asset canister serves them at their pdfPath/markdownPath.
+    await ensureDir(baseDst);
+    await fs.copyFile(mdSrc, mdDst);
+    if (pdfStat) await fs.copyFile(pdfSrc, pdfDst);
+
     const markdownPath = `/documents/${collection}/${stem}.md`;
     const pdfPath = pdfStat ? `/documents/${collection}/${stem}.pdf` : "";
     const pdfBytes = pdfStat ? Number(pdfStat.size) : 0;

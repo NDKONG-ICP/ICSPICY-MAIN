@@ -1,3 +1,9 @@
+import { DocumentReader } from "@/components/DocumentReader";
+import { DocumentTile } from "@/components/DocumentTile";
+import { MARKDOWN_BODIES } from "@/generated/documentMarkdown";
+import { useCatalog } from "@/hooks/useCatalog";
+import { lookupBundledDocument } from "@/lib/catalogQuery";
+import { formatBytes, formatNumber, readingLabel } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -12,12 +18,6 @@ import {
 import { motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { DocumentReader } from "@/components/DocumentReader";
-import { DocumentTile } from "@/components/DocumentTile";
-import { MARKDOWN_BODIES } from "@/generated/documentMarkdown";
-import { useCatalog } from "@/hooks/useCatalog";
-import { lookupBundledDocument } from "@/lib/catalogQuery";
-import { formatBytes, formatNumber, readingLabel } from "@/lib/utils";
 
 export function DocumentDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -56,7 +56,7 @@ export function DocumentDetailPage() {
       return sepIdx >= 0 ? raw.slice(sepIdx + 5).trim() : raw;
     },
     enabled: !!doc,
-    staleTime: Infinity,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 
   if (!doc) return null;
@@ -126,8 +126,7 @@ export function DocumentDetailPage() {
                 {readingLabel(doc.readingMinutes)}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Hash className="h-3 w-3" />{" "}
-                {formatNumber(doc.wordCount)} words
+                <Hash className="h-3 w-3" /> {formatNumber(doc.wordCount)} words
               </span>
               {doc.pdfBytes > 0 && (
                 <span className="inline-flex items-center gap-1.5">

@@ -1,11 +1,11 @@
 import {
+  type ReactNode,
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
 
 type Theme = "light" | "dark";
@@ -30,9 +30,7 @@ function readInitialTheme(): Theme {
   } catch {
     /* ignore */
   }
-  return window.matchMedia("(prefers-color-scheme: light)").matches
-    ? "light"
-    : "dark";
+  return "dark";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

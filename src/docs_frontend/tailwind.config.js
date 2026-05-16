@@ -43,9 +43,15 @@ export default {
       },
       backgroundImage: {
         "ember-radial":
-          "radial-gradient(120% 80% at 50% -10%, rgb(var(--c-ember) / 0.28), transparent 60%)",
+          "radial-gradient(100% 60% at 50% -5%, rgb(var(--c-ember) / 0.22), transparent 55%)",
         "gold-radial":
-          "radial-gradient(80% 60% at 80% 0%, rgb(var(--c-gold) / 0.24), transparent 60%)",
+          "radial-gradient(70% 50% at 85% 0%, rgb(var(--c-gold) / 0.18), transparent 55%)",
+        "dark-texture":
+          "radial-gradient(ellipse 80% 50% at 20% 80%, rgb(var(--c-ember) / 0.06), transparent 50%)",
+        "hero-overlay":
+          "linear-gradient(to right, rgb(0 0 0 / 0.82) 0%, rgb(0 0 0 / 0.55) 55%, rgb(0 0 0 / 0.28) 100%)",
+        "section-fade":
+          "linear-gradient(to bottom, transparent 0%, rgb(var(--c-bg)) 100%)",
       },
       keyframes: {
         "fade-in-up": {

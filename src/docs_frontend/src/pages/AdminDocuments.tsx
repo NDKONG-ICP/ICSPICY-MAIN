@@ -1,27 +1,36 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { logout } from "@/lib/auth";
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Upload,
-  FileText,
-  X,
-  Save,
-  Loader2,
+  type DocumentRecord,
+  fromDocumentRecord,
+  getAuthenticatedActor,
+  toDocumentRecordCandid,
+} from "@/lib/backend";
+import type { DocsBackendActor } from "@/lib/idl";
+import { cn } from "@/lib/utils";
+import {
   AlertCircle,
   CheckCircle2,
+  FileText,
+  Loader2,
   LogOut,
+  Pencil,
+  Plus,
+  Save,
+  Trash2,
+  Upload,
+  X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { getAuthenticatedActor, fromDocumentRecord, toDocumentRecordCandid, type DocumentRecord } from "@/lib/backend";
-import { logout } from "@/lib/auth";
+import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { DocsBackendActor } from "@/lib/idl";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Status = { type: "idle" } | { type: "loading" } | { type: "success"; msg: string } | { type: "error"; msg: string };
+type Status =
+  | { type: "idle" }
+  | { type: "loading" }
+  | { type: "success"; msg: string }
+  | { type: "error"; msg: string };
 
 function emptyDoc(): DocumentRecord {
   return {
@@ -68,7 +77,10 @@ export function AdminDocumentsPage() {
     setStatus({ type: "loading" });
     try {
       const actor = await getActor();
-      if (!actor) { navigate("/admin/login"); return; }
+      if (!actor) {
+        navigate("/admin/login");
+        return;
+      }
       const docs = await actor.listDocuments();
       setDocuments(docs.map(fromDocumentRecord));
       setStatus({ type: "idle" });
@@ -77,7 +89,9 @@ export function AdminDocumentsPage() {
     }
   }, [getActor, navigate]);
 
-  useEffect(() => { loadDocuments(); }, [loadDocuments]);
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
 
   const openCreate = () => {
     setDrawerDoc(emptyDoc());
@@ -101,7 +115,10 @@ export function AdminDocumentsPage() {
   const handleSave = async () => {
     if (!drawerDoc) return;
     const actor = await getActor();
-    if (!actor) { navigate("/admin/login"); return; }
+    if (!actor) {
+      navigate("/admin/login");
+      return;
+    }
 
     setStatus({ type: "loading" });
     try {
@@ -161,7 +178,9 @@ export function AdminDocumentsPage() {
           <h1 className="display text-2xl font-bold text-ink">
             Document <span className="ember-text">Library</span>
           </h1>
-          <p className="text-sm text-muted">{documents.length} documents in the canister</p>
+          <p className="text-sm text-muted">
+            {documents.length} documents in the canister
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -203,11 +222,15 @@ export function AdminDocumentsPage() {
             className={cn(
               "mb-4 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm",
               status.type === "loading" && "bg-elevated/60 text-muted",
-              status.type === "success" && "bg-green-500/10 text-green-400 border border-green-500/20",
-              status.type === "error" && "bg-red-500/10 text-red-400 border border-red-500/20",
+              status.type === "success" &&
+                "bg-green-500/10 text-green-400 border border-green-500/20",
+              status.type === "error" &&
+                "bg-red-500/10 text-red-400 border border-red-500/20",
             )}
           >
-            {status.type === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}
+            {status.type === "loading" && (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            )}
             {status.type === "success" && <CheckCircle2 className="h-4 w-4" />}
             {status.type === "error" && <AlertCircle className="h-4 w-4" />}
             {status.type === "loading" ? "Working…" : status.msg}
@@ -220,10 +243,18 @@ export function AdminDocumentsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line/60 bg-elevated/30">
-              <th className="px-4 py-3 text-left font-medium text-muted">Title</th>
-              <th className="hidden px-4 py-3 text-left font-medium text-muted md:table-cell">Category</th>
-              <th className="hidden px-4 py-3 text-left font-medium text-muted lg:table-cell">Words</th>
-              <th className="px-4 py-3 text-right font-medium text-muted">Actions</th>
+              <th className="px-4 py-3 text-left font-medium text-muted">
+                Title
+              </th>
+              <th className="hidden px-4 py-3 text-left font-medium text-muted md:table-cell">
+                Category
+              </th>
+              <th className="hidden px-4 py-3 text-left font-medium text-muted lg:table-cell">
+                Words
+              </th>
+              <th className="px-4 py-3 text-right font-medium text-muted">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -249,8 +280,12 @@ export function AdminDocumentsPage() {
                     )}
                   </div>
                 </td>
-                <td className="hidden px-4 py-3 text-muted md:table-cell">{doc.category}</td>
-                <td className="hidden px-4 py-3 text-muted lg:table-cell">{doc.wordCount.toLocaleString()}</td>
+                <td className="hidden px-4 py-3 text-muted md:table-cell">
+                  {doc.category}
+                </td>
+                <td className="hidden px-4 py-3 text-muted lg:table-cell">
+                  {doc.wordCount.toLocaleString()}
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
                     <button
@@ -276,7 +311,8 @@ export function AdminDocumentsPage() {
             {documents.length === 0 && status.type !== "loading" && (
               <tr>
                 <td colSpan={4} className="px-4 py-12 text-center text-muted">
-                  No documents yet. Run the seed script or add documents manually.
+                  No documents yet. Run the seed script or add documents
+                  manually.
                 </td>
               </tr>
             )}
@@ -303,7 +339,9 @@ export function AdminDocumentsPage() {
             >
               <h3 className="font-semibold text-ink">Delete document?</h3>
               <p className="mt-1 text-sm text-muted">
-                This will permanently remove <span className="text-ink">{deleteConfirm}</span> and its BM25 index from the canister.
+                This will permanently remove{" "}
+                <span className="text-ink">{deleteConfirm}</span> and its BM25
+                index from the canister.
               </p>
               <div className="mt-4 flex gap-2">
                 <button
@@ -349,7 +387,11 @@ export function AdminDocumentsPage() {
                 <h2 className="font-semibold text-ink">
                   {drawerMode === "create" ? "New Document" : "Edit Document"}
                 </h2>
-                <button type="button" onClick={closeDrawer} className="text-muted hover:text-ink">
+                <button
+                  type="button"
+                  onClick={closeDrawer}
+                  className="text-muted hover:text-ink"
+                >
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -360,7 +402,9 @@ export function AdminDocumentsPage() {
                   <input
                     type="text"
                     value={drawerDoc.slug}
-                    onChange={(e) => setDrawerDoc({ ...drawerDoc, slug: e.target.value })}
+                    onChange={(e) =>
+                      setDrawerDoc({ ...drawerDoc, slug: e.target.value })
+                    }
                     disabled={drawerMode === "edit"}
                     placeholder="e.g. branded-whitepaper"
                     className="input-field"
@@ -371,7 +415,9 @@ export function AdminDocumentsPage() {
                   <input
                     type="text"
                     value={drawerDoc.title}
-                    onChange={(e) => setDrawerDoc({ ...drawerDoc, title: e.target.value })}
+                    onChange={(e) =>
+                      setDrawerDoc({ ...drawerDoc, title: e.target.value })
+                    }
                     placeholder="Document title"
                     className="input-field"
                   />
@@ -381,7 +427,9 @@ export function AdminDocumentsPage() {
                   <input
                     type="text"
                     value={drawerDoc.subtitle}
-                    onChange={(e) => setDrawerDoc({ ...drawerDoc, subtitle: e.target.value })}
+                    onChange={(e) =>
+                      setDrawerDoc({ ...drawerDoc, subtitle: e.target.value })
+                    }
                     placeholder="One-line subtitle"
                     className="input-field"
                   />
@@ -392,7 +440,9 @@ export function AdminDocumentsPage() {
                     <input
                       type="text"
                       value={drawerDoc.category}
-                      onChange={(e) => setDrawerDoc({ ...drawerDoc, category: e.target.value })}
+                      onChange={(e) =>
+                        setDrawerDoc({ ...drawerDoc, category: e.target.value })
+                      }
                       className="input-field"
                     />
                   </Field>
@@ -400,7 +450,12 @@ export function AdminDocumentsPage() {
                     <input
                       type="number"
                       value={drawerDoc.sortOrder}
-                      onChange={(e) => setDrawerDoc({ ...drawerDoc, sortOrder: Number(e.target.value) })}
+                      onChange={(e) =>
+                        setDrawerDoc({
+                          ...drawerDoc,
+                          sortOrder: Number(e.target.value),
+                        })
+                      }
                       className="input-field"
                     />
                   </Field>
@@ -413,7 +468,10 @@ export function AdminDocumentsPage() {
                     onChange={(e) =>
                       setDrawerDoc({
                         ...drawerDoc,
-                        tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean),
+                        tags: e.target.value
+                          .split(",")
+                          .map((t) => t.trim())
+                          .filter(Boolean),
                       })
                     }
                     placeholder="peppers, icp, brand"
@@ -424,7 +482,9 @@ export function AdminDocumentsPage() {
                 <Field label="Summary">
                   <textarea
                     value={drawerDoc.summary}
-                    onChange={(e) => setDrawerDoc({ ...drawerDoc, summary: e.target.value })}
+                    onChange={(e) =>
+                      setDrawerDoc({ ...drawerDoc, summary: e.target.value })
+                    }
                     rows={3}
                     placeholder="Short summary shown in the library card"
                     className="input-field resize-none"
@@ -436,7 +496,9 @@ export function AdminDocumentsPage() {
                     type="checkbox"
                     id="featured"
                     checked={drawerDoc.featured}
-                    onChange={(e) => setDrawerDoc({ ...drawerDoc, featured: e.target.checked })}
+                    onChange={(e) =>
+                      setDrawerDoc({ ...drawerDoc, featured: e.target.checked })
+                    }
                     className="h-4 w-4 accent-ember"
                   />
                   <label htmlFor="featured" className="text-sm text-ink">
@@ -471,7 +533,9 @@ export function AdminDocumentsPage() {
                         type="file"
                         accept=".pdf"
                         className="hidden"
-                        onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                        onChange={(e) =>
+                          setPdfFile(e.target.files?.[0] ?? null)
+                        }
                       />
                     </label>
                     {pdfFile && (
@@ -507,7 +571,11 @@ export function AdminDocumentsPage() {
                 <button
                   type="button"
                   onClick={handleSave}
-                  disabled={!drawerDoc.slug || !drawerDoc.title || status.type === "loading"}
+                  disabled={
+                    !drawerDoc.slug ||
+                    !drawerDoc.title ||
+                    status.type === "loading"
+                  }
                   className={cn(
                     "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium",
                     "bg-gradient-to-r from-ember to-gold text-bg shadow-ember",
@@ -530,7 +598,10 @@ export function AdminDocumentsPage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
       <label className="block text-xs font-medium text-muted">{label}</label>

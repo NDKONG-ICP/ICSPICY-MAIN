@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
-import { Flame, LogIn, Loader2 } from "lucide-react";
-import { login, isAuthenticated } from "@/lib/auth";
+import { isAuthenticated, login } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { Flame, Loader2, LogIn } from "lucide-react";
+import { motion } from "motion/react";
+import { useState } from "react";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function AdminLoginPage() {
   const navigate = useNavigate();
@@ -78,7 +78,9 @@ export function AdminLoginPage() {
           ) : (
             <LogIn className="h-4 w-4" strokeWidth={2.5} />
           )}
-          {loading ? "Opening Internet Identity…" : "Sign in with Internet Identity"}
+          {loading
+            ? "Opening Internet Identity…"
+            : "Sign in with Internet Identity"}
         </button>
 
         {error && (

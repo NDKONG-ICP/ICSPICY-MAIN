@@ -1,15 +1,15 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 import {
-  idlFactory,
-  type DocsBackendActor,
-  type DocumentRecordCandid,
   type CategoryWithCountCandid,
-  type DocumentStatsCandid,
-  type ChatbotConfigCandid,
-  type PersonaPresetCandid,
-  type ChatResponseCandid,
   type ChatErrorCandid,
   type ChatMessageCandid,
+  type ChatResponseCandid,
+  type ChatbotConfigCandid,
+  type DocsBackendActor,
+  type DocumentRecordCandid,
+  type DocumentStatsCandid,
+  type PersonaPresetCandid,
+  idlFactory,
 } from "./idl";
 
 // Resolve the docs_backend canister id at runtime.
@@ -220,9 +220,7 @@ export function fromChatbotConfig(c: ChatbotConfigCandid): ChatbotConfig {
   };
 }
 
-export function toChatbotConfigCandid(
-  cfg: ChatbotConfig,
-): ChatbotConfigCandid {
+export function toChatbotConfigCandid(cfg: ChatbotConfig): ChatbotConfigCandid {
   return {
     systemPromptExtra: cfg.systemPromptExtra,
     persona: toPersonaPresetCandid(cfg.persona),

@@ -1,8 +1,8 @@
+import type { DocumentRecord } from "@/lib/backend";
+import { cn, readingLabel } from "@/lib/utils";
 import { ArrowUpRight, BookOpen, Hash } from "lucide-react";
 import { motion, useMotionTemplate, useMotionValue } from "motion/react";
 import { Link } from "react-router-dom";
-import type { DocumentRecord } from "@/lib/backend";
-import { cn, readingLabel } from "@/lib/utils";
 
 interface DocumentTileProps {
   doc: DocumentRecord;
@@ -66,9 +66,7 @@ export function DocumentTile({
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="chip">{doc.category.replace(/-/g, " ")}</span>
-            {doc.featured && (
-              <span className="chip chip-active">Featured</span>
-            )}
+            {doc.featured && <span className="chip chip-active">Featured</span>}
           </div>
           <ArrowUpRight
             className="h-4 w-4 text-muted transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-gold"

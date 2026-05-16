@@ -1,21 +1,21 @@
 import {
-  DOCUMENT_CATEGORIES,
-  DOCUMENTS,
-  DOCUMENT_STATS,
-  MANIFEST_VERSION,
-  type DocumentSummary,
-  type DocumentCategory,
   type DocumentStats as BundledStats,
+  DOCUMENTS,
+  DOCUMENT_CATEGORIES,
+  DOCUMENT_STATS,
+  type DocumentCategory,
+  type DocumentSummary,
+  MANIFEST_VERSION,
 } from "@/generated/documentCatalog";
 import { MARKDOWN_BODIES } from "@/generated/documentMarkdown";
 import {
+  type CategoryWithCount,
+  type DocumentRecord,
+  type DocumentStats,
   fromCategoryWithCount,
   fromDocumentRecord,
   fromDocumentStats,
   getDocsBackendActor,
-  type CategoryWithCount,
-  type DocumentRecord,
-  type DocumentStats,
 } from "./backend";
 
 // The bundled catalog is always available — it's part of the Vite bundle.
@@ -135,7 +135,9 @@ export async function fetchDocumentMarkdown(slug: string): Promise<string> {
 
 // Fetch PDF bytes from the canister and return a blob URL for display.
 // Returns null if no PDF is available.
-export async function fetchDocumentPdfUrl(slug: string): Promise<string | null> {
+export async function fetchDocumentPdfUrl(
+  slug: string,
+): Promise<string | null> {
   const actor = getDocsBackendActor();
   if (!actor) return null;
   try {

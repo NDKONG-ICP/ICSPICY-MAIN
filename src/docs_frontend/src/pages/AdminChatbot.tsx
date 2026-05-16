@@ -1,28 +1,62 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "motion/react";
 import {
-  Bot,
-  Save,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  Plus,
-  X,
-  Send,
-  RotateCcw,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { getAuthenticatedActor, getDocsBackendActor, fromChatbotConfig, toChatbotConfigCandid, fromChatResponse, toChatMessageCandid, type ChatbotConfig, type ChatMessage, type ChatResult } from "@/lib/backend";
-import { useNavigate } from "react-router-dom";
+  type ChatMessage,
+  type ChatResult,
+  type ChatbotConfig,
+  fromChatResponse,
+  fromChatbotConfig,
+  getAuthenticatedActor,
+  getDocsBackendActor,
+  toChatMessageCandid,
+  toChatbotConfigCandid,
+} from "@/lib/backend";
 import type { DocsBackendActor } from "@/lib/idl";
+import { cn } from "@/lib/utils";
+import {
+  AlertCircle,
+  Bot,
+  CheckCircle2,
+  Loader2,
+  Plus,
+  RotateCcw,
+  Save,
+  Send,
+  X,
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-type Status = { type: "idle" } | { type: "loading" } | { type: "success"; msg: string } | { type: "error"; msg: string };
+type Status =
+  | { type: "idle" }
+  | { type: "loading" }
+  | { type: "success"; msg: string }
+  | { type: "error"; msg: string };
 
-const PERSONA_OPTIONS: { value: ChatbotConfig["persona"]; label: string; desc: string }[] = [
-  { value: "charming", label: "Charming Concierge", desc: "Fiery, warm, witty. The IC SPICY brand voice." },
-  { value: "spec", label: "Plain Spec", desc: "Precise and factual. Bullet points over prose." },
-  { value: "founder", label: "Founder Voice", desc: "Personal, passionate, first-person 'we'." },
-  { value: "gardener", label: "Master Gardener", desc: "KNF & JADAM expert — natural farming recipes, soil biology, Florida pepper growing." },
+const PERSONA_OPTIONS: {
+  value: ChatbotConfig["persona"];
+  label: string;
+  desc: string;
+}[] = [
+  {
+    value: "charming",
+    label: "Charming Concierge",
+    desc: "Fiery, warm, witty. The IC SPICY brand voice.",
+  },
+  {
+    value: "spec",
+    label: "Plain Spec",
+    desc: "Precise and factual. Bullet points over prose.",
+  },
+  {
+    value: "founder",
+    label: "Founder Voice",
+    desc: "Personal, passionate, first-person 'we'.",
+  },
+  {
+    value: "gardener",
+    label: "Master Gardener",
+    desc: "KNF & JADAM expert — natural farming recipes, soil biology, Florida pepper growing.",
+  },
 ];
 
 // Approx token count (GPT-style: ~4 chars per token).
@@ -53,7 +87,10 @@ export function AdminChatbotPage() {
   useEffect(() => {
     (async () => {
       const actor = getDocsBackendActor();
-      if (!actor) { navigate("/admin/login"); return; }
+      if (!actor) {
+        navigate("/admin/login");
+        return;
+      }
       try {
         const cfg = await actor.getChatbotConfig();
         setConfig(fromChatbotConfig(cfg));
@@ -70,7 +107,10 @@ export function AdminChatbotPage() {
   const save = async () => {
     if (!config) return;
     const actor = await getActor();
-    if (!actor) { navigate("/admin/login"); return; }
+    if (!actor) {
+      navigate("/admin/login");
+      return;
+    }
     setStatus({ type: "loading" });
     try {
       await actor.setChatbotConfig(toChatbotConfigCandid(config));
@@ -87,20 +127,34 @@ export function AdminChatbotPage() {
     const actor = getDocsBackendActor();
     if (!actor) return;
 
-    const newMsgs: ChatMessage[] = [...testMessages, { role: "user", content: text }];
+    const newMsgs: ChatMessage[] = [
+      ...testMessages,
+      { role: "user", content: text },
+    ];
     setTestMessages(newMsgs);
     setTestInput("");
     setTestLoading(true);
     try {
-      const resp = await actor.askSpicyAi({ messages: newMsgs.map(toChatMessageCandid) });
+      const resp = await actor.askSpicyAi({
+        messages: newMsgs.map(toChatMessageCandid),
+      });
       const result: ChatResult = fromChatResponse(resp);
       if (result.ok) {
-        setTestMessages([...newMsgs, { role: "assistant", content: result.response }]);
+        setTestMessages([
+          ...newMsgs,
+          { role: "assistant", content: result.response },
+        ]);
       } else {
-        setTestMessages([...newMsgs, { role: "assistant", content: `[Error: ${result.error.type}]` }]);
+        setTestMessages([
+          ...newMsgs,
+          { role: "assistant", content: `[Error: ${result.error.type}]` },
+        ]);
       }
     } catch (e) {
-      setTestMessages([...newMsgs, { role: "assistant", content: `[Exception: ${e}]` }]);
+      setTestMessages([
+        ...newMsgs,
+        { role: "assistant", content: `[Exception: ${e}]` },
+      ]);
     } finally {
       setTestLoading(false);
     }
@@ -122,7 +176,9 @@ export function AdminChatbotPage() {
           <h1 className="display text-2xl font-bold text-ink">
             Spicy<span className="ember-text">Ai</span> Config
           </h1>
-          <p className="text-sm text-muted">Tune the chatbot persona, prompt, and limits</p>
+          <p className="text-sm text-muted">
+            Tune the chatbot persona, prompt, and limits
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -162,11 +218,15 @@ export function AdminChatbotPage() {
             className={cn(
               "mb-4 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm",
               status.type === "loading" && "bg-elevated/60 text-muted",
-              status.type === "success" && "bg-green-500/10 text-green-400 border border-green-500/20",
-              status.type === "error" && "bg-red-500/10 text-red-400 border border-red-500/20",
+              status.type === "success" &&
+                "bg-green-500/10 text-green-400 border border-green-500/20",
+              status.type === "error" &&
+                "bg-red-500/10 text-red-400 border border-red-500/20",
             )}
           >
-            {status.type === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}
+            {status.type === "loading" && (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            )}
             {status.type === "success" && <CheckCircle2 className="h-4 w-4" />}
             {status.type === "error" && <AlertCircle className="h-4 w-4" />}
             {status.type === "loading" ? "Saving…" : status.msg}
@@ -210,39 +270,59 @@ export function AdminChatbotPage() {
 
           {/* Rate limits */}
           <section className="rounded-2xl border border-line/60 p-5">
-            <h2 className="mb-3 font-semibold text-ink">Rate Limits (per day)</h2>
+            <h2 className="mb-3 font-semibold text-ink">
+              Rate Limits (per day)
+            </h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-muted mb-1">Anonymous</label>
+                <label className="block text-xs text-muted mb-1">
+                  Anonymous
+                </label>
                 <input
                   type="number"
                   min={1}
                   max={1000}
                   value={config.anonDailyLimit}
-                  onChange={(e) => setConfig({ ...config, anonDailyLimit: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setConfig({
+                      ...config,
+                      anonDailyLimit: Number(e.target.value),
+                    })
+                  }
                   className="input-field w-full"
                 />
               </div>
               <div>
-                <label className="block text-xs text-muted mb-1">Authenticated (II)</label>
+                <label className="block text-xs text-muted mb-1">
+                  Authenticated (II)
+                </label>
                 <input
                   type="number"
                   min={1}
                   max={10000}
                   value={config.authDailyLimit}
-                  onChange={(e) => setConfig({ ...config, authDailyLimit: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setConfig({
+                      ...config,
+                      authDailyLimit: Number(e.target.value),
+                    })
+                  }
                   className="input-field w-full"
                 />
               </div>
             </div>
             <div className="mt-3">
-              <label className="block text-xs text-muted mb-1">Top-K chunks retrieved per query</label>
+              <label className="block text-xs text-muted mb-1">
+                Top-K chunks retrieved per query
+              </label>
               <input
                 type="number"
                 min={1}
                 max={10}
                 value={config.topK}
-                onChange={(e) => setConfig({ ...config, topK: Number(e.target.value) })}
+                onChange={(e) =>
+                  setConfig({ ...config, topK: Number(e.target.value) })
+                }
                 className="input-field w-24"
               />
             </div>
@@ -263,7 +343,9 @@ export function AdminChatbotPage() {
                     onClick={() =>
                       setConfig({
                         ...config,
-                        blockedPhrases: config.blockedPhrases.filter((x) => x !== p),
+                        blockedPhrases: config.blockedPhrases.filter(
+                          (x) => x !== p,
+                        ),
                       })
                     }
                     className="text-muted hover:text-red-400"
@@ -285,7 +367,10 @@ export function AdminChatbotPage() {
                   if (e.key === "Enter" && newPhrase.trim()) {
                     setConfig({
                       ...config,
-                      blockedPhrases: [...config.blockedPhrases, newPhrase.trim()],
+                      blockedPhrases: [
+                        ...config.blockedPhrases,
+                        newPhrase.trim(),
+                      ],
                     });
                     setNewPhrase("");
                   }
@@ -300,7 +385,10 @@ export function AdminChatbotPage() {
                   if (newPhrase.trim()) {
                     setConfig({
                       ...config,
-                      blockedPhrases: [...config.blockedPhrases, newPhrase.trim()],
+                      blockedPhrases: [
+                        ...config.blockedPhrases,
+                        newPhrase.trim(),
+                      ],
                     });
                     setNewPhrase("");
                   }
@@ -322,7 +410,9 @@ export function AdminChatbotPage() {
             </div>
             <textarea
               value={config.systemPromptExtra}
-              onChange={(e) => setConfig({ ...config, systemPromptExtra: e.target.value })}
+              onChange={(e) =>
+                setConfig({ ...config, systemPromptExtra: e.target.value })
+              }
               rows={4}
               placeholder="Optional additional instructions appended to the system prompt…"
               className="input-field w-full resize-none text-sm"
@@ -349,19 +439,30 @@ export function AdminChatbotPage() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ minHeight: 200, maxHeight: 400 }}>
+            <div
+              className="flex-1 overflow-y-auto p-4 space-y-3"
+              style={{ minHeight: 200, maxHeight: 400 }}
+            >
               {testMessages.length === 0 && !testLoading && (
                 <p className="text-center text-sm text-muted py-8">
-                  Send a message to preview how SpicyAi responds with current config.
+                  Send a message to preview how SpicyAi responds with current
+                  config.
                 </p>
               )}
               {testMessages.map((m, i) => (
-                <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+                <div
+                  key={i}
+                  className={cn(
+                    "flex",
+                    m.role === "user" ? "justify-end" : "justify-start",
+                  )}
+                >
                   <div
                     className={cn(
                       "max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap",
                       m.role === "user" && "bg-ember text-bg rounded-br-sm",
-                      m.role === "assistant" && "bg-elevated/70 text-ink rounded-bl-sm",
+                      m.role === "assistant" &&
+                        "bg-elevated/70 text-ink rounded-bl-sm",
                     )}
                   >
                     {m.content}
@@ -384,7 +485,9 @@ export function AdminChatbotPage() {
                 type="text"
                 value={testInput}
                 onChange={(e) => setTestInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") sendTest(); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") sendTest();
+                }}
                 placeholder="Ask a test question…"
                 disabled={testLoading}
                 className="input-field flex-1 text-sm"
@@ -404,7 +507,8 @@ export function AdminChatbotPage() {
           </section>
 
           <p className="mt-3 text-xs text-muted">
-            Note: the test panel uses the <em>live</em> canister config. Save changes first for them to take effect.
+            Note: the test panel uses the <em>live</em> canister config. Save
+            changes first for them to take effect.
           </p>
         </div>
       </div>

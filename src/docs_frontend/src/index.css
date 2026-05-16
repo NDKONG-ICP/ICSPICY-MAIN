@@ -6,6 +6,19 @@
 
 @layer base {
   :root {
+    /* Dark: smoked espresso, ember glow, gold leaf — default */
+    --c-bg: 10 6 4;
+    --c-surface: 18 12 9;
+    --c-elevated: 26 18 14;
+    --c-ink: 244 234 220;
+    --c-muted: 158 144 130;
+    --c-line: 52 38 30;
+    --c-ember: 245 92 50;
+    --c-gold: 226 178 90;
+    --c-sage: 160 178 132;
+  }
+
+  :root.light {
     /* Light: warm parchment, deep ink, fire-red accent, gold gleam */
     --c-bg: 250 246 240;
     --c-surface: 255 251 245;
@@ -16,19 +29,6 @@
     --c-ember: 214 49 22;
     --c-gold: 184 138 53;
     --c-sage: 90 110 80;
-  }
-
-  :root.dark {
-    /* Dark: smoked espresso, ember glow, gold leaf */
-    --c-bg: 13 8 5;
-    --c-surface: 22 16 12;
-    --c-elevated: 30 22 17;
-    --c-ink: 244 234 220;
-    --c-muted: 158 144 130;
-    --c-line: 60 46 36;
-    --c-ember: 245 92 50;
-    --c-gold: 226 178 90;
-    --c-sage: 160 178 132;
   }
 
   html,
@@ -42,7 +42,8 @@
 
   body {
     background-image: theme("backgroundImage.ember-radial"),
-      theme("backgroundImage.gold-radial");
+      theme("backgroundImage.gold-radial"),
+      theme("backgroundImage.dark-texture");
     background-attachment: fixed;
   }
 
@@ -177,10 +178,7 @@
     color: rgb(var(--c-muted));
     background-color: rgb(var(--c-elevated) / 0.6);
     border: 1px solid rgb(var(--c-line));
-    transition:
-      background-color 0.2s,
-      color 0.2s,
-      border-color 0.2s;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
   }
 
   .chip:hover {
@@ -190,11 +188,7 @@
 
   .chip-active {
     color: rgb(var(--c-elevated));
-    background: linear-gradient(
-      135deg,
-      rgb(var(--c-ember)),
-      rgb(var(--c-gold))
-    );
+    background: linear-gradient(135deg, rgb(var(--c-ember)), rgb(var(--c-gold)));
     border-color: transparent;
   }
 

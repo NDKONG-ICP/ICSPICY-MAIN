@@ -1,13 +1,13 @@
 import { Suspense, lazy, useEffect, useState } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
-import { getPrincipal } from "./lib/auth";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { AdminGuard } from "./components/AdminGuard";
 import { AnimatedBackdrop } from "./components/AnimatedBackdrop";
+import { ChatWidget } from "./components/ChatWidget";
 import { CommandPalette } from "./components/CommandPalette";
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
-import { ChatWidget } from "./components/ChatWidget";
-import { AdminGuard } from "./components/AdminGuard";
 import { useCatalog } from "./hooks/useCatalog";
+import { getPrincipal } from "./lib/auth";
 
 const HomePage = lazy(() =>
   import("./pages/Home").then((m) => ({ default: m.HomePage })),
@@ -27,10 +27,15 @@ const AdminLoginPage = lazy(() =>
   import("./pages/AdminLogin").then((m) => ({ default: m.AdminLoginPage })),
 );
 const AdminDocumentsPage = lazy(() =>
-  import("./pages/AdminDocuments").then((m) => ({ default: m.AdminDocumentsPage })),
+  import("./pages/AdminDocuments").then((m) => ({
+    default: m.AdminDocumentsPage,
+  })),
 );
 const AdminChatbotPage = lazy(() =>
   import("./pages/AdminChatbot").then((m) => ({ default: m.AdminChatbotPage })),
+);
+const ChatPage = lazy(() =>
+  import("./pages/Chat").then((m) => ({ default: m.ChatPage })),
 );
 
 function PageFallback() {
@@ -48,6 +53,7 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isChatRoute = location.pathname === "/chat";
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
@@ -65,6 +71,15 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/library/:slug" element={<DocumentDetailPage />} />
+            <Route
+              path="/documents"
+              element={<Navigate to="/library" replace />}
+            />
+            <Route
+              path="/documents/:slug"
+              element={<Navigate to="/library/:slug" replace />}
+            />
+            <Route path="/chat" element={<ChatPage />} />
 
             {/* Admin routes */}
             <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -92,8 +107,8 @@ export default function App() {
       </main>
       {!isAdminRoute && <Footer />}
 
-      {/* Chat widget — shown on all public pages */}
-      {!isAdminRoute && <ChatWidget />}
+      {/* Chat widget — shown on all public pages except /chat itself */}
+      {!isAdminRoute && !isChatRoute && <ChatWidget />}
 
       {!isAdminRoute && (
         <CommandPalette
@@ -126,7 +141,10 @@ function AdminHeader() {
     <header className="sticky top-0 z-40 border-b border-line/60 backdrop-blur-xl">
       <div className="absolute inset-0 -z-10 bg-bg/70" />
       <div className="container flex h-14 items-center gap-3 flex-wrap">
-        <a href="/" className="text-sm text-muted hover:text-ink transition-colors shrink-0">
+        <a
+          href="/"
+          className="text-sm text-muted hover:text-ink transition-colors shrink-0"
+        >
           ← Back to Library
         </a>
         <span className="text-muted/40">/</span>
@@ -141,7 +159,9 @@ function AdminHeader() {
             className="ml-auto flex items-center gap-2 rounded-lg border border-line/60 bg-elevated/40 px-3 py-1.5 transition-colors hover:border-ember/60 hover:bg-elevated/70"
           >
             <span className="text-xs text-muted shrink-0">Principal:</span>
-            <span className="font-mono text-xs text-ink break-all">{principal}</span>
+            <span className="font-mono text-xs text-ink break-all">
+              {principal}
+            </span>
             <span className="shrink-0 text-xs text-muted">
               {copied ? "✓ copied" : "copy"}
             </span>

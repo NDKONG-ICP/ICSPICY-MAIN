@@ -1,10 +1,10 @@
+import type { DocumentRecord } from "@/lib/backend";
+import { cn } from "@/lib/utils";
 import { Command } from "cmdk";
 import { ArrowRight, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { DocumentRecord } from "@/lib/backend";
-import { cn } from "@/lib/utils";
 
 interface CommandPaletteProps {
   open: boolean;

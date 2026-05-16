@@ -1,10 +1,10 @@
 // Internet Identity authentication flow for the admin panel.
 // Uses @dfinity/auth-client with a delegation cached in localStorage.
 
-import { AuthClient } from "@dfinity/auth-client";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import type { Identity } from "@dfinity/agent";
-import { idlFactory, type DocsBackendActor } from "./idl";
+import { AuthClient } from "@dfinity/auth-client";
+import { type DocsBackendActor, idlFactory } from "./idl";
 
 // Internet Identity URL — local dev uses the locally-deployed II canister.
 function resolveIIUrl(): string {
@@ -16,8 +16,7 @@ function resolveIIUrl(): string {
   ) {
     // Local replica: II is available at a specific canister address.
     // Fallback to mainnet II if local isn't deployed.
-    const localIICanisterId =
-      (process.env.CANISTER_ID_INTERNET_IDENTITY ?? "");
+    const localIICanisterId = process.env.CANISTER_ID_INTERNET_IDENTITY ?? "";
     if (localIICanisterId) {
       return `http://${localIICanisterId}.localhost:4943`;
     }

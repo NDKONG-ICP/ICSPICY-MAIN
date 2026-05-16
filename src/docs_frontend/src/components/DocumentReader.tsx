@@ -1,8 +1,8 @@
-import { Download, FileText, Maximize2, ScrollText } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { useState } from "react";
 import type { DocumentRecord } from "@/lib/backend";
 import { cn, formatBytes } from "@/lib/utils";
+import { Download, FileText, Maximize2, ScrollText } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
 import { MarkdownView } from "./MarkdownView";
 
 interface DocumentReaderProps {
@@ -95,10 +95,7 @@ export function DocumentReader({ doc, body }: DocumentReaderProps) {
                 >
                   <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted">
                     Your browser does not support inline PDF viewing.{" "}
-                    <a
-                      href={doc.pdfPath}
-                      className="ml-1 text-ember underline"
-                    >
+                    <a href={doc.pdfPath} className="ml-1 text-ember underline">
                       Open the PDF directly.
                     </a>
                   </div>

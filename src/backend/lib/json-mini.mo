@@ -1,22 +1,23 @@
-/// Minimal JSON-to-ICRC7.Value parser, narrowly scoped to IC SPICY templated metadata.
+/// Minimal JSON-to-ICRC7.Value parser.
 ///
-/// Empirical scope: surveyed all 8888 mainnet-templated JSONs in
-/// nft_collection_templated_mainnet/metadata/. The parser's accepted
-/// subset is calibrated to that actual input domain; anything outside
-/// the subset returns #err with a descriptive message.
+/// Originally scoped to IC SPICY templated NFT metadata (Phase 3.2).
+/// Extended in Phase 4 to handle general-purpose API responses (ICPay)
+/// by adding null/true/false literal support and negative integers.
 ///
 /// Supported:
 /// - Objects with unique string keys
 /// - Arrays of supported values
 /// - String values (UTF-8; backslash escapes \" \\ \/ \b \f \n \r \t)
-/// - Whole-number integers (mapped to ICRC-7 #Nat)
-/// - Decimal fractions like "5.0" (preserved as #Text since ICRC-3 Value
-///   has no #Float case; lossless byte-deterministic)
+/// - Whole-number integers (mapped to #Nat)
+/// - Negative integers like -5 (mapped to #Int)
+/// - Decimal fractions like "5.0" (preserved as #Text; no #Float in ICRC-3)
+/// - Negative decimals like "-5.0" (preserved as #Text "-5.0")
+/// - null  → #Text "null"
+/// - true  → #Text "true"
+/// - false → #Text "false"
 ///
 /// Explicitly NOT supported (returns #err with descriptive message):
-/// - Negative numbers (no `-` prefix)
 /// - Scientific notation (no e/E)
-/// - null / true / false  — none appear in the templated fixtures
 /// - Unicode \uXXXX escape sequences in strings
 /// - JSON comments
 /// - Trailing commas
@@ -29,8 +30,13 @@
 ///   JSON object         → #Map [(Text, Value)]
 ///   JSON array          → #Array [Value]
 ///   JSON string         → #Text Text
-///   JSON whole-int      → #Nat Nat        (rejects negatives)
-///   JSON decimal "5.0"  → #Text "5.0"     (preserve lexeme byte-for-byte)
+///   JSON whole-int      → #Nat Nat
+///   JSON negative int   → #Int Int       (e.g. -5 → #Int -5)
+///   JSON decimal "5.0"  → #Text "5.0"    (preserve lexeme byte-for-byte)
+///   JSON neg decimal    → #Text "-5.0"   (preserve lexeme byte-for-byte)
+///   JSON null           → #Text "null"
+///   JSON true           → #Text "true"
+///   JSON false          → #Text "false"
 ///
 /// Phase 3.2 ownership: this parser is invoked at metadata-load time
 /// (in loadStaticMetadata) so malformed JSON is caught at deploy, not at
@@ -66,6 +72,17 @@ module {
   let DIGIT9    : Nat8 = 0x39; // 9
   let LOWER_E   : Nat8 = 0x65; // e
   let UPPER_E   : Nat8 = 0x45; // E
+  let MINUS     : Nat8 = 0x2D; // -
+  // Literal keyword bytes (null / true / false)
+  let L_n : Nat8 = 0x6E; // n
+  let L_u : Nat8 = 0x75; // u
+  let L_l : Nat8 = 0x6C; // l
+  let L_t : Nat8 = 0x74; // t
+  let L_r : Nat8 = 0x72; // r
+  let L_f : Nat8 = 0x66; // f
+  let L_a : Nat8 = 0x61; // a
+  let L_s : Nat8 = 0x73; // s
+  let L_e : Nat8 = 0x65; // e (reuse LOWER_E value, named for readability)
 
   // Mutable cursor over the input bytes. `var pos` is updated in place
   // across recursive calls; records with `var` fields are reference types
@@ -137,12 +154,19 @@ module {
       };
     } else if (b >= DIGIT0 and b <= DIGIT9) {
       parseNumber(s);
+    } else if (b == MINUS) {
+      parseNegativeNumber(s);
+    } else if (b == L_n) {
+      parseLiteralNull(s);
+    } else if (b == L_t) {
+      parseLiteralTrue(s);
+    } else if (b == L_f) {
+      parseLiteralFalse(s);
     } else {
-      // Out-of-subset: '-', null, true, false, etc. all land here.
       #err(
         "unexpected character at pos " # Nat.toText(s.pos) #
         " (byte 0x" # nat8ToHex(b) #
-        "); expected '{', '[', '\"', or digit (subset rejects null/true/false/negative)"
+        "); expected '{', '[', '\"', digit, '-', null, true, or false"
       );
     };
   };
@@ -336,6 +360,60 @@ module {
       };
     } else {
       #ok(#Nat natValue);
+    };
+  };
+
+  // ── Literal keywords (null / true / false) ───────────────────────────────
+  //
+  // All three map to #Text to preserve the value without adding new variants.
+  // Callers that need boolean semantics compare the Text value.
+
+  func expectBytes(s : State, expected : [Nat8], _name : Text) : Bool {
+    let len = expected.size();
+    if (s.pos + len > s.bytes.size()) return false;
+    var i = 0;
+    while (i < len) {
+      if (s.bytes[s.pos + i] != expected[i]) return false;
+      i += 1;
+    };
+    s.pos += len;
+    true
+  };
+
+  func parseLiteralNull(s : State) : Result.Result<ICRC7.Value, Text> {
+    if (expectBytes(s, [L_n, L_u, L_l, L_l], "null")) #ok(#Text "null")
+    else #err("invalid literal at pos " # Nat.toText(s.pos) # " (expected 'null')")
+  };
+
+  func parseLiteralTrue(s : State) : Result.Result<ICRC7.Value, Text> {
+    if (expectBytes(s, [L_t, L_r, L_u, L_e], "true")) #ok(#Text "true")
+    else #err("invalid literal at pos " # Nat.toText(s.pos) # " (expected 'true')")
+  };
+
+  func parseLiteralFalse(s : State) : Result.Result<ICRC7.Value, Text> {
+    if (expectBytes(s, [L_f, L_a, L_l, L_s, L_e], "false")) #ok(#Text "false")
+    else #err("invalid literal at pos " # Nat.toText(s.pos) # " (expected 'false')")
+  };
+
+  // ── Negative numbers ─────────────────────────────────────────────────────
+  //
+  // Negative whole-int → #Int (ICRC-3 Value has an #Int variant).
+  // Negative decimal   → #Text "-5.0" (same lossless treatment as positive decimals).
+
+  func parseNegativeNumber(s : State) : Result.Result<ICRC7.Value, Text> {
+    // s.bytes[s.pos] == MINUS; advance past it before calling parseNumber.
+    s.pos += 1;
+    if (s.pos >= s.bytes.size() or s.bytes[s.pos] < DIGIT0 or s.bytes[s.pos] > DIGIT9) {
+      return #err("expected digit after '-' at pos " # Nat.toText(s.pos));
+    };
+    switch (parseNumber(s)) {
+      case (#err e) #err(e);
+      case (#ok(#Nat n)) #ok(#Int(- n));
+      case (#ok(#Text t)) {
+        // Decimal — reconstruct the negative lexeme.
+        #ok(#Text("-" # t))
+      };
+      case (#ok _) #err("internal: unexpected parseNumber result for negative");
     };
   };
 

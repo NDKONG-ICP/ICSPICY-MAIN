@@ -1,6 +1,6 @@
+import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { cn } from "@/lib/utils";
 
 interface MarkdownViewProps {
   body: string;
