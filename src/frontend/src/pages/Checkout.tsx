@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
+  CheckCircle2,
   Crown,
   Flame,
   Gem,
@@ -19,9 +20,10 @@ import {
   Sparkles,
   Star,
   Trash2,
+  Wallet,
 } from "lucide-react";
-import { motion } from "motion/react";
-import React, { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import { MembershipTier, RarityTier } from "../backend";
 import { useAuth } from "../hooks/useAuth";
@@ -33,10 +35,7 @@ import {
   usePlaceOrder,
 } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
-
-// ─── Constants ──────────────────────────────────────────────────────────────
-
-const ICPAY_PUBLIC_KEY = "pk_IBR7yEdfinVZ4484Q5jMxgx69cTS2Lxb";
+import { useICPay } from "../hooks/useICPay";
 
 // ─── Rarity config ─────────────────────────────────────────────────────────
 
@@ -238,45 +237,30 @@ function DiscountLine({
   );
 }
 
-// ─── ICPay button (web component wrapper) ────────────────────────────────────
+// ─── Wallet status pill ───────────────────────────────────────────────────────
 
-function ICPayWidget({
-  amountUsd,
-  orderId,
-  onSuccess,
-}: {
-  amountUsd: number;
-  orderId: bigint;
-  onSuccess: (paymentIntentId: string) => void;
-}) {
-  const ref = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    // Dynamically import the web component to register the custom element
-    import("@ic-pay/icpay-widget").then(() => {
-      if (ref.current) {
-        (ref.current as any).config = {
-          publishableKey: ICPAY_PUBLIC_KEY,
-          amountUsd,
-          buttonLabel: `Pay $${amountUsd.toFixed(2)}`,
-          metadata: { order_id: orderId.toString() },
-          onSuccess: (tx: {
-            id: number;
-            status: string;
-            paymentIntentId?: string;
-          }) => {
-            const pid = tx.paymentIntentId ?? String(tx.id);
-            onSuccess(pid);
-          },
-        };
-      }
-    });
-  }, [amountUsd, orderId, onSuccess]);
-
-  return React.createElement("icpay-pay-button", {
-    ref,
-    style: { display: "block" },
-  });
+function WalletStatus({ principal }: { principal: string | null }) {
+  if (!principal) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="w-2 h-2 rounded-full bg-muted-foreground/40" />
+        No wallet connected
+      </div>
+    );
+  }
+  const short = `${principal.slice(0, 5)}…${principal.slice(-5)}`;
+  return (
+    <div className="flex items-center gap-2 text-xs text-emerald-400">
+      <div className="w-2 h-2 rounded-full bg-emerald-400" />
+      <span className="font-mono">{short}</span>
+      <Badge
+        variant="outline"
+        className="text-[10px] px-1.5 py-0 h-4 border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+      >
+        Connected
+      </Badge>
+    </div>
+  );
 }
 
 // ─── Payment step ─────────────────────────────────────────────────────────────
@@ -292,21 +276,42 @@ function PaymentStep({
 }) {
   const confirmICPay = useConfirmICPayPayment();
   const navigate = useNavigate();
+  const [walletPrincipal, setWalletPrincipal] = useState<string | null>(null);
 
   const usdAmount = Number(finalTotal) / 100;
 
-  async function handleICPaySuccess(paymentIntentId: string) {
-    try {
-      await confirmICPay.mutateAsync({ orderId, paymentId: paymentIntentId });
-      toast.success("Payment confirmed!");
-      onComplete();
-      navigate({ to: "/orders" });
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "ICPay confirmation failed",
-      );
-    }
-  }
+  const icpay = useICPay({
+    onSuccess: async (paymentId) => {
+      try {
+        await confirmICPay.mutateAsync({ orderId, paymentId });
+        toast.success("Payment confirmed!");
+        onComplete();
+        navigate({ to: "/orders" });
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Backend confirmation failed",
+        );
+      }
+    },
+    onError: (msg) => toast.error(msg),
+  });
+
+  const handleConnect = async (
+    provider: "plug" | "oisy" | "internet-identity",
+  ) => {
+    const result = await icpay.connectWallet(provider);
+    if (result?.connected) setWalletPrincipal(result.principal);
+  };
+
+  const handlePay = async () => {
+    await icpay.payUsd(usdAmount, { orderId: orderId.toString() });
+  };
+
+  const isPending =
+    icpay.status === "connecting" ||
+    icpay.status === "paying" ||
+    icpay.status === "confirming" ||
+    confirmICPay.isPending;
 
   return (
     <motion.div
@@ -315,13 +320,15 @@ function PaymentStep({
       className="space-y-6"
       data-ocid="checkout-payment-step"
     >
-      <div className="flex items-center gap-2 mb-2">
+      {/* Order reference */}
+      <div className="flex items-center gap-2">
         <Lock className="w-4 h-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">
           Order #{orderId.toString()} placed — complete payment to confirm
         </span>
       </div>
 
+      {/* Total */}
       <div className="text-center py-4">
         <p className="text-muted-foreground text-sm mb-1">Order total</p>
         <p className="font-display font-bold text-3xl text-primary">
@@ -329,21 +336,149 @@ function PaymentStep({
         </p>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: 1, height: "auto" }}
-        className="rounded-xl border border-border bg-card p-5 space-y-4"
+      {/* Payment panel */}
+      <div
+        className="rounded-xl border border-border bg-card p-5 space-y-5"
         data-ocid="icpay-panel"
       >
-        <p className="text-sm text-muted-foreground">
-          Pay with crypto wallet or card via ICPay.
+        {/* Wallet status */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-foreground">
+            Crypto Wallet
+          </span>
+          <WalletStatus principal={walletPrincipal} />
+        </div>
+
+        {/* Connect wallet options */}
+        {!walletPrincipal && (
+          <div className="space-y-2" data-ocid="wallet-connect-options">
+            <p className="text-xs text-muted-foreground">
+              Connect a wallet to pay with ICP or ckTokens, or pay directly
+              with card below.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                disabled={icpay.status === "connecting"}
+                onClick={() => handleConnect("plug")}
+                data-ocid="connect-plug-btn"
+              >
+                {icpay.status === "connecting" ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Wallet className="w-3 h-3" />
+                )}
+                Plug
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                disabled={icpay.status === "connecting"}
+                onClick={() => handleConnect("oisy")}
+                data-ocid="connect-oisy-btn"
+              >
+                {icpay.status === "connecting" ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Wallet className="w-3 h-3" />
+                )}
+                OISY
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <Separator />
+
+        {/* Status indicator */}
+        <AnimatePresence mode="wait">
+          {icpay.status === "confirming" || confirmICPay.isPending ? (
+            <motion.div
+              key="confirming"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center gap-3 text-sm text-muted-foreground"
+              data-ocid="payment-confirming"
+            >
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              Confirming payment on-chain…
+            </motion.div>
+          ) : icpay.status === "error" ? (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-3"
+              data-ocid="payment-error"
+            >
+              <p className="text-sm text-destructive">{icpay.error}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={icpay.reset}
+                className="w-full"
+              >
+                Try Again
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="pay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <Button
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                disabled={isPending}
+                onClick={handlePay}
+                data-ocid="pay-btn"
+              >
+                {icpay.status === "paying" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Opening payment…
+                  </>
+                ) : (
+                  <>
+                    <Flame className="w-4 h-4" />
+                    Pay ${usdAmount.toFixed(2)}
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+          <Lock className="w-3 h-3" />
+          Powered by ICPay — crypto wallet &amp; card accepted
         </p>
-        <ICPayWidget
-          amountUsd={usdAmount}
-          orderId={orderId}
-          onSuccess={handleICPaySuccess}
-        />
-      </motion.div>
+      </div>
+
+      {/* Success overlay */}
+      <AnimatePresence>
+        {icpay.status === "success" && (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center gap-3 py-6 text-center"
+            data-ocid="payment-success"
+          >
+            <CheckCircle2 className="w-12 h-12 text-emerald-400" />
+            <p className="font-semibold text-foreground">Order confirmed!</p>
+            <p className="text-sm text-muted-foreground">
+              Redirecting to your orders…
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -460,7 +595,7 @@ export default function CheckoutPage() {
 
       <form onSubmit={handleContinueToPayment}>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* ─ Left column: cart items + form ─ */}
+          {/* ─ Left column: cart items + fulfillment form ─ */}
           <div className="lg:col-span-3 space-y-6">
             {/* Cart items */}
             <div>
