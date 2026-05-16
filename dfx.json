@@ -1,9 +1,16 @@
 {
   "canisters": {
+    "internet_identity": {
+      "type": "custom",
+      "candid": "vendor/internet-identity/internet_identity.did",
+      "wasm": "vendor/internet-identity/internet_identity_dev.wasm.gz",
+      "specified_id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+    },
     "backend": {
       "type": "motoko",
       "main": "src/backend/main.mo",
-      "args": "--actor-idl src/backend/system-idl"
+      "args": "--actor-idl src/backend/system-idl",
+      "wasm_memory_persistence": "keep"
     },
     "frontend": {
       "type": "assets",

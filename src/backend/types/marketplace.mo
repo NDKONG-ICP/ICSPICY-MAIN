@@ -71,6 +71,10 @@ module {
     image_keys : ?[Text];    // when provided replaces the full image_keys array
   };
 
+  // STABLE-MEMORY INVARIANT: do NOT add or remove variants — OrderStatus is
+  // stored in a `var` field inside Order (invariant typing). Changing variants
+  // requires an explicit migration function. Track payment confirmation via
+  // icpaySessionsConsumed + audit log instead of a new #Paid variant.
   public type OrderStatus = {
     #Pending;
     #Shipped;

@@ -15,6 +15,7 @@ import MembershipTypes "types/membership";
 import RecipeTypes "types/recipes";
 import ClaimTypes "types/claim";
 import ArtworkUploadTypes "types/artwork-upload";
+import WalletTypes "types/wallet";
 import RecipesLib "lib/recipes";
 import Cert "lib/cert";
 import ICRC7 "types/icrc7";
@@ -303,6 +304,17 @@ shared(msg) persistent actor class ICSpicy() = Self {
     var received     = 0;
     started_at       = 0;
   };
+
+  // ── Ghost wallet state — kept for stable-memory upgrade compatibility ──────
+  //
+  // These variables existed in the pre-Phase-4 canister. Motoko's upgrade
+  // checker will REFUSE to install a new wasm that drops stable variables, so
+  // we keep them here with the same types as before. They are never written to
+  // by new code. A future explicit migration will zero them out and remove the
+  // declarations.
+
+  let wallets = Map.empty<Principal, WalletTypes.WalletState>();
+  let txLog   = List.empty<WalletTypes.WalletTransaction>();
 
   // ── Payment state (Phase 4) ────────────────────────────────────────────────
   //

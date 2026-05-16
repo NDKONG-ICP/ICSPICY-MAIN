@@ -182,8 +182,10 @@ mixin (
         not AccessControl.isAdmin(accessControlState, caller)) {
       return { success = false; message = "Not your order" };
     };
-    if (order.status == #Paid) {
-      return { success = false; message = "Order already paid" };
+    // Check idempotency before the outcall — paymentId already consumed?
+    switch (icpaySessionsConsumed.get(paymentId)) {
+      case (?_) return { success = false; message = "ICPay payment already confirmed" };
+      case null {};
     };
     // Verify via ICPay (HTTPS outcall)
     switch (await verifyICPayPayment(paymentId)) {
@@ -196,8 +198,7 @@ mixin (
       case (?_) return { success = false; message = "ICPay payment already used" };
       case null {};
     };
-    order.status      := #Paid;
-    order.payment_ref := ?("icpay:" # paymentId);
+    // Mark consumed (status stays #Pending; confirmed via icpaySessionsConsumed + audit log).
     icpaySessionsConsumed.add(paymentId, orderId);
     auditLog.value := AuditLog.append(auditLog.value, {
       ts     = Time.now();
@@ -367,11 +368,10 @@ mixin (
       case null return { success = false; message = "Order not found" };
       case (?o) o;
     };
-    if (order.status != #AwaitingPayment) {
+    if (order.status != #Pending) {
       return { success = false; message = "Order is not stuck — status is " # debug_show(order.status) };
     };
-    order.status      := #Pending;
-    order.payment_ref := null;
+    order.status := #Pending;
     auditLog.value := AuditLog.append(auditLog.value, {
       ts     = Time.now();
       admin  = caller;

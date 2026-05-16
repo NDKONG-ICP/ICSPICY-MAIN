@@ -303,6 +303,15 @@ Smoke test for Phase 4 to verify guard works:
 
 ---
 
+### Phase 4 — Mainnet upgrade: stable-memory migration (2026-05-16)
+
+- **Mutable record fields (`var`) are type-invariant in stable memory.** Adding even a `?Text` field with `var` breaks the upgrade. Store per-record mutable state in a side map (`Map.Map<Id, T>`) keyed by record ID, not inside the record itself.
+- **Variant types in `var` fields are also invariant.** Adding `#Paid` or `#AwaitingPayment` to `OrderStatus` blocked the upgrade because `var status : OrderStatus` is invariant. Phase 4 fix: track payment confirmation via `icpaySessionsConsumed` map + audit log. Never add variant cases to a variant used in a `var` field without an explicit migration.
+- **Dropping stable variables requires an explicit migration.** Deleting `lib/wallet.mo` without keeping ghost `wallets`/`txLog` declarations in `main.mo` triggered M0169. Always convert deleted-mixin state to ghost declarations (`// Ghost — stable compat`) and remove them later via explicit migration.
+- **`wasm_memory_persistence: keep` must be in `dfx.json` for persistent actor class.** Without it, the replica rejects upgrades with IC0504. `dfx canister install` ignores this key — only `dfx deploy` reads it. Use `dfx deploy` for all backend upgrades.
+- **Two interactive prompts require two `yes` answers.** Upgraded backends with both Candid and stable-interface warnings show two separate prompts. Workaround: `TERM=xterm-256color dfx deploy --network ic backend <<< $'yes\nyes\n'`
+- **Frontend canister ID: `7rukv-hqaaa-aaaao-ba6ma-cai`.** Deployed 2026-05-16. `ii_derivation_origin` set to `https://7rukv-hqaaa-aaaao-ba6ma-cai.icp0.io`. ICPay publishable key embedded in build.
+
 ## Last updated
 - Initial version: written for Claude Code in Cursor workflow, post-design-session
 - Owner: project lead — keep this file in sync with actual workflow as it evolves

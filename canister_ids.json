@@ -8,6 +8,9 @@
   "docs_frontend": {
     "ic": "pr3bu-6aaaa-aaaao-ba5ba-cai"
   },
+  "frontend": {
+    "ic": "7rukv-hqaaa-aaaao-ba6ma-cai"
+  },
   "llama_cpp": {
     "ic": "pw2ha-tyaaa-aaaao-ba5bq-cai"
   },

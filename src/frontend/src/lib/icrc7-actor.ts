@@ -22,7 +22,7 @@
 import { loadConfig } from "@caffeineai/core-infrastructure";
 import { Actor, type ActorSubclass, HttpAgent } from "@icp-sdk/core/agent";
 import { useQuery } from "@tanstack/react-query";
-import { idlFactory, type _SERVICE } from "../declarations/backend.did";
+import { type _SERVICE, idlFactory } from "../declarations/backend.did";
 import { useAuth } from "../hooks/useAuth";
 
 // Distinct from useActor's "actor" key so the two actors don't collide
@@ -47,21 +47,29 @@ export function useIcrc7Actor(): {
     queryFn: async () => {
       try {
         const config = await loadConfig();
-        const agentOpts =
-          isAuthenticated && identity ? { identity } : {};
+        const agentOpts = isAuthenticated && identity ? { identity } : {};
+        // Only pass a host when it's a non-empty, non-placeholder value.
+        // In Vite proxy mode env.json leaves backend_host empty/undefined,
+        // and passing host:"" breaks HttpAgent. When omitted, the agent
+        // defaults to window.location.origin and Vite forwards /api → 4943.
+        const backendHost =
+          config.backend_host &&
+          config.backend_host !== "undefined" &&
+          config.backend_host !== ""
+            ? config.backend_host
+            : undefined;
         const agent = new HttpAgent({
           ...agentOpts,
-          host: config.backend_host,
+          ...(backendHost ? { host: backendHost } : {}),
         });
         // fetchRootKey is required for the local replica's self-signed cert.
-        // Checking config.backend_host is unreliable here because in Vite
-        // proxy mode backend_host is intentionally undefined (the agent
-        // defaults to window.location.origin and Vite forwards /api to 4943).
-        // Use DFX_NETWORK, exposed unconditionally by vite-plugin-environment
-        // in vite.config.js, as the authoritative local-vs-mainnet signal.
+        // Use DFX_NETWORK (exposed by vite-plugin-environment) as the
+        // authoritative local-vs-mainnet signal, with a hostname fallback.
         const isLocal =
           process.env.DFX_NETWORK === "local" ||
-          !!config.backend_host?.match(/localhost|127\.0\.0\.1/);
+          !!(backendHost ?? window.location.hostname).match(
+            /localhost|127\.0\.0\.1/,
+          );
         if (isLocal) {
           await agent.fetchRootKey().catch(() => {});
         }

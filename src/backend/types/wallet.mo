@@ -1,12 +1,16 @@
 import Common "common";
 
+// Ghost module — kept only to preserve stable memory compatibility with the
+// `wallets` and `txLog` variables that exist in the pre-Phase-4 mainnet state.
+// Do NOT use these types for new code. Will be cleaned up via explicit
+// migration in a future phase once the stable variables can be dropped.
 module {
   public type WalletToken = {
     symbol : Text;
     name : Text;
-    balance : Nat; // in smallest unit (e8s for ICP/ckBTC, etc.)
+    balance : Nat;
     decimals : Nat8;
-    usdValue : Float; // approximate USD value of total balance
+    usdValue : Float;
   };
 
   public type TxType = { #send; #receive };
@@ -28,12 +32,11 @@ module {
     amount : Nat;
   };
 
-  // Per-principal wallet state stored in the canister
   public type WalletState = {
-    var icp : Nat;     // e8s
-    var ckbtc : Nat;   // satoshis
-    var cketh : Nat;   // wei (scaled: 1e15 = 0.001 ETH)
-    var ckusdc : Nat;  // micro-USDC (1e6 = 1 USDC)
-    var ckusdt : Nat;  // micro-USDT (1e6 = 1 USDT)
+    var icp    : Nat;
+    var ckbtc  : Nat;
+    var cketh  : Nat;
+    var ckusdc : Nat;
+    var ckusdt : Nat;
   };
 };

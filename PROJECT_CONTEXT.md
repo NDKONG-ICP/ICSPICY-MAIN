@@ -597,6 +597,107 @@ Ran the regression check against the Phase 1 backend changes. Results: **1 Phase
 
 ---
 
+## Stable Memory Migration Patterns
+
+These patterns surfaced during the Phase 4 mainnet upgrade (2026-05-16) and will recur on every future backend upgrade. Record them here so the cost is not paid twice.
+
+---
+
+### Pattern 1 — Mutable record fields are type-invariant
+
+**Rule:** Any field declared `var` inside a record that is stored in stable memory uses **invariant** typing for upgrade checks. You cannot add, remove, or change the type of a `var` field without an explicit migration function — even if the new type is otherwise a valid subtype.
+
+**Manifestation (M0170):**
+```
+Compatibility error [M0170]: the new type of stable variable `orders` is not compatible.
+…because expected field `payment_ref` is missing from type {…}
+```
+
+**What triggered it:** Phase 4 added `var payment_ref : ?Text` to the `Order` record. Even though `?Text` is optional, the field was `var`, so Motoko's stable checker rejected it.
+
+**Fix applied:** Removed `payment_ref` from the `Order` record entirely. The ICPay payment reference is captured in the audit log (`lib/audit-log.mo`) and the `icpaySessionsConsumed` map, which provide the same audit trail without touching stable record fields.
+
+**Future rule:** Never add a `var` field to a record type that is stored in a stable map or variable. Store mutable per-record state in a separate side map (`Map.Map<Id, T>`) keyed by the record's identifier.
+
+---
+
+### Pattern 2 — Variant cases in mutable status fields are type-invariant
+
+**Rule:** If a variant type is used as the type of a `var` field inside a stable record (e.g., `var status : OrderStatus`), the entire variant must be **identical** before and after the upgrade. Adding or removing a case is a breaking change.
+
+**Manifestation (M0170):**
+```
+Compatibility error [M0170]: …because expected case `#Paid` is missing from type
+  {#Cancelled; #Pending; #PickedUp; #Shipped}
+```
+
+**What triggered it:** Phase 4 added `#Paid` and `#AwaitingPayment` to `OrderStatus`, which is used as `var status : OrderStatus` inside `Order`.
+
+**Fix applied:** Removed `#Paid` and `#AwaitingPayment` from `OrderStatus`. Order payment confirmation is now signaled solely through `icpaySessionsConsumed` membership and an audit log entry — not via a status flag. The `OrderStatus` variant is now locked to its original four cases: `{#Pending; #Shipped; #PickedUp; #Cancelled}`.
+
+**Future rule:** The comment at the `OrderStatus` definition in `types/marketplace.mo` now reads:
+```motoko
+// STABLE-MEMORY INVARIANT: do NOT add or remove variants — OrderStatus is
+// stored in a `var` field inside Order (invariant typing). Adding variants
+// requires an explicit migration function.
+```
+
+---
+
+### Pattern 3 — Stable variables cannot be silently dropped
+
+**Rule:** Any stable variable (`let x = …` in a persistent actor) that existed in the **currently installed** canister wasm must also exist in the **new** wasm. Dropping a stable variable without an explicit migration causes a hard error at upgrade time.
+
+**Manifestation (M0169):**
+```
+Compatibility error [M0169]: the stable variable `txLog` of the previous version cannot be
+implicitly discarded. The variable can only be dropped by an explicit migration function.
+```
+
+**What triggered it:** Phase 4 deleted `lib/wallet.mo` and `mixins/wallet-api.mo` (the simulated wallet subsystem), which removed the `wallets` and `txLog` state variables from `main.mo`.
+
+**Fix applied:** Restored `types/wallet.mo` with the exact original type definitions (marked as a ghost module) and re-added both declarations to `main.mo`:
+```motoko
+// Ghost wallet state — kept for stable-memory upgrade compatibility.
+let wallets = Map.empty<Principal, WalletTypes.WalletState>();
+let txLog   = List.empty<WalletTypes.WalletTransaction>();
+```
+
+These variables will never be written to by new code. They will be cleanly removed in a future phase via an explicit migration function that zeroes them out.
+
+**Future rule:** Before deleting any mixin or module, check `main.mo` for state variables that the mixin owns. If any exist, convert them to ghost declarations with a `// Ghost — stable compat` comment rather than deleting them. Schedule the explicit migration as a dedicated future task.
+
+---
+
+### Pattern 4 — Enhanced orthogonal persistence requires `wasm_memory_persistence: keep`
+
+**Rule:** Canisters compiled with the `persistent actor class` syntax (enhanced orthogonal persistence) require the `wasm_memory_persistence: keep` upgrade option to be passed at install time. Without it, the replica rejects the upgrade with IC0504.
+
+**Manifestation:**
+```
+reject message: Missing upgrade option: Enhanced orthogonal persistence requires the
+`wasm_memory_persistence` upgrade option.
+```
+
+**Fix applied:** Added `"wasm_memory_persistence": "keep"` to the `backend` entry in `dfx.json`. `dfx deploy` reads this and passes the option automatically. `dfx canister install` does NOT read it — always use `dfx deploy` for backend upgrades, not `dfx canister install`.
+
+---
+
+### dfx deploy interactive-prompt workaround
+
+`dfx deploy` emits up to **two** interactive prompts when upgrading with breaking Candid or stable-interface changes:
+1. Candid interface compatibility warning (method signature change)
+2. Stable interface compatibility warning (stable variable type change)
+
+Piping `echo yes` causes dfx to panic (`Failed to set stderr output color`) because it detects non-TTY stderr. The working workaround:
+```bash
+TERM=xterm-256color dfx deploy --network ic backend <<< $'yes\nyes\n'
+```
+
+The `TERM=xterm-256color` suppresses the color panic; the here-string `<<< $'yes\nyes\n'` pre-feeds two `yes` answers for both prompts.
+
+---
+
 ## Open / non-blocking items
 
 1. **External audit firm** (Phase 7) — Trail of Bits, Vespertine, OAK Security, Hacken. Budget $30–60K. Schedule early; firms book months out.
