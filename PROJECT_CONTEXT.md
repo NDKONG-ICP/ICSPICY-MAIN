@@ -547,9 +547,16 @@ URL pattern: `https://skills.internetcomputer.org/.well-known/skills/<skill-name
   - 3T cycles initial allocation, 90-day freezing threshold
   - Controllers: same as nft_assets
 
+**Phase 4 deploy (2026-05-16):**
+
+- `frontend` mainnet canister ID: `7rukv-hqaaa-aaaao-ba6ma-cai`
+  - IC SPICY storefront — React/Vite, TanStack Router
+  - `ii_derivation_origin` set to `https://7rukv-hqaaa-aaaao-ba6ma-cai.icp0.io`
+  - ICPay publishable key embedded at build time (`pk_qZ5D…`)
+  - Controllers: `gqkko-43bbx-nwsp4-it2rg-pc2dy-w2pt2-fa5om-4y6es-oyhz2-5i5oh-5ae` (deployer)
+
 **Pending (created in later phases):**
 
-- `frontend` asset canister — Phase 7 deployment
 - `marketplace_canister` — Phase 6 extraction
 - `treasury_canister` — Phase 6 extraction
 - `community_canister` — Phase 6 extraction
