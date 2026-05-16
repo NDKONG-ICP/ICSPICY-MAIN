@@ -35,6 +35,7 @@ import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
 import Nat "mo:core/Nat";
 import Time "mo:core/Time";
+import Error "mo:core/Error";
 import IC "ic:aaaaa-aa";
 
 mixin (
@@ -120,8 +121,8 @@ mixin (
         transform = ?{ function = icpayTransform; context = Blob.fromArray([]) };
         is_replicated = null;
       });
-    } catch (_) {
-      return #err("ICPay API unreachable");
+    } catch (e) {
+      return #err("ICPay http_request failed: " # Error.message(e));
     };
     let entries : [(Text, ICRC7.Value)] = switch (JsonMini.parse(httpResult.body)) {
       case (#err(e)) return #err("ICPay response malformed: " # e);
