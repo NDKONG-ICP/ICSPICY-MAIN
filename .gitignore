@@ -39,3 +39,4 @@ src/docs_backend/generated/
 src/docs_frontend/public/documents/
 src/docs_frontend/src/generated/
 vendor/
+labels/
