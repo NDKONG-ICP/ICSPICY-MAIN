@@ -34,6 +34,11 @@ import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
 import Nat "mo:core/Nat";
+import Nat32 "mo:core/Nat32";
+import Nat8 "mo:core/Nat8";
+import Array "mo:core/Array";
+import Int "mo:core/Int";
+import Char "mo:core/Char";
 import Time "mo:core/Time";
 import Error "mo:core/Error";
 import IC "ic:aaaaa-aa";
@@ -69,15 +74,163 @@ mixin (
     });
   };
 
-  // ── Transform callback (required by IC HTTPS outcall consensus) ────────────
+  // ── JSON escape + ICPay response normalization (HTTPS transform consensus) ─
+  //
+  // ICPay varies JSON ordering and timestamps → different hashes unless the
+  // transform emits a deterministic body with fixed field order.
 
-  /// Strips response headers so all replicas produce identical results.
+  func concatAll(parts : [Text]) : Text {
+    Array.foldLeft<Text, Text>(
+      parts,
+      "",
+      func(acc : Text, p : Text) : Text { acc # p },
+    );
+  };
+
+  func escapeJsonSegment(t : Text) : Text {
+    Text.foldLeft(
+      t,
+      "",
+      func(acc : Text, ch : Char) : Text {
+        if (ch == '\\') acc # "\\\\"
+        else if (Char.toNat32(ch) == (34 : Nat32)) acc # "\\\""
+        else acc # Char.toText(ch);
+      },
+    );
+  };
+
+  /// Pull id / status / amount from a flattened object map. Amount may be nested
+  /// or string-vs-number-shaped per json-mini conventions.
+  func absorbIcPayFieldMap(entries : [(Text, ICRC7.Value)], out : {
+    var id : Text;
+    var status : Text;
+    var amount : Text;
+  }) {
+    for ((k, v) in entries.vals()) {
+      if (k == "id") {
+        switch v {
+          case (#Text(txt)) out.id := txt;
+          case (_) {};
+        };
+      } else if (k == "status") {
+        switch v {
+          case (#Text(txt)) out.status := txt;
+          case (_) {};
+        };
+      } else if (k == "amount") {
+        switch v {
+          case (#Text(txt)) out.amount := txt;
+          case (#Nat(n)) out.amount := Nat.toText(n);
+          case (#Int(i)) out.amount := Int.toText(i);
+          case (_) {};
+        };
+      };
+    };
+  };
+
+  /// Strips varying headers AND reduces body to deterministic JSON subset:
+  ///   { "id", "status", "amount" } fixed key order — identical on all replicas.
   public query func icpayTransform({
     context  : Blob;
     response : IC.http_request_result;
   }) : async IC.http_request_result {
     ignore context;
-    { response with headers = [] };
+    // Fallback body when JsonMini rejects the HTTPS payload — fixed bytes ⇒ consensus.
+    let PARSE_FAILED : Blob =
+      Blob.fromArray(
+        [
+          (0x7b : Nat8),
+          (0x22 : Nat8),
+          (0x65 : Nat8),
+          (0x72 : Nat8),
+          (0x72 : Nat8),
+          (0x6f : Nat8),
+          (0x72 : Nat8),
+          (0x22 : Nat8),
+          (0x3a : Nat8),
+          (0x22 : Nat8),
+          (0x70 : Nat8),
+          (0x61 : Nat8),
+          (0x72 : Nat8),
+          (0x73 : Nat8),
+          (0x65 : Nat8),
+          (0x5f : Nat8),
+          (0x66 : Nat8),
+          (0x61 : Nat8),
+          (0x69 : Nat8),
+          (0x6c : Nat8),
+          (0x65 : Nat8),
+          (0x64 : Nat8),
+          (0x22 : Nat8),
+          (0x7d : Nat8),
+        ],
+      );
+
+    let out : {
+      var id : Text;
+      var status : Text;
+      var amount : Text;
+    } = { var id = ""; var status = ""; var amount = "" };
+    switch (JsonMini.parse(response.body)) {
+      case (#err(_)) {
+        return {
+          response with
+          headers = [];
+          body = PARSE_FAILED;
+        };
+      };
+      case (#ok(#Map(outerEntries))) {
+        absorbIcPayFieldMap(outerEntries, out);
+        for ((k, v) in outerEntries.vals()) {
+          if (k == "payment") {
+            switch v {
+              case (#Map(innerEntries)) absorbIcPayFieldMap(innerEntries, out);
+              case (_) {};
+            };
+          };
+        };
+      };
+      case (_) {
+        return {
+          response with
+          headers = [];
+          body = PARSE_FAILED;
+        };
+      };
+    };
+    let deterministicBody = concatAll([
+      Char.toText('{'),
+      "\"",
+      "id",
+      "\"",
+      ":",
+      "\"",
+      escapeJsonSegment(out.id),
+      "\"",
+      ",",
+      "\"",
+      "status",
+      "\"",
+      ":",
+      "\"",
+      escapeJsonSegment(out.status),
+      "\"",
+      ",",
+      "\"",
+      "amount",
+      "\"",
+      ":",
+      "\"",
+      escapeJsonSegment(out.amount),
+      "\"",
+      Char.toText('}'),
+    ]);
+
+    {
+      response with
+      headers = [];
+      body = deterministicBody.encodeUtf8();
+    };
   };
 
   // ── JSON field helpers ────────────────────────────────────────────────────
