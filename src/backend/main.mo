@@ -43,6 +43,7 @@ import ArtworkUploadAPI "mixins/artwork-upload-api";
 import PoolAPI "mixins/pool-api";
 import PoolLib "lib/pool";
 import PoolTypes "types/pool";
+import AuditLog   "lib/audit-log";
 import PaymentAPI "mixins/payment-api";
 
 shared(msg) persistent actor class ICSpicy() = Self {
@@ -308,9 +309,14 @@ shared(msg) persistent actor class ICSpicy() = Self {
   //
   // icpaySessionsConsumed — idempotency map; prevents a paymentId from being
   // used twice. Persistent; must not be cleared on upgrade.
+  //
+  // auditLog — append-only record of admin-initiated actions. Wrapped in a
+  // `{ var value }` record so the PaymentAPI mixin can prepend entries via
+  // its captured reference (same pattern as icpaySecretKey). Persistent.
 
-  let icpaySecretKey         : { var value : Text } = { var value = "" };
-  let icpaySessionsConsumed  : Map.Map<Text, Nat>   = Map.empty<Text, Nat>();
+  let icpaySecretKey         : { var value : Text }              = { var value = "" };
+  let icpaySessionsConsumed  : Map.Map<Text, Nat>                = Map.empty<Text, Nat>();
+  let auditLog               : { var value : AuditLog.AuditLog } = { var value = AuditLog.empty() };
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -385,10 +391,19 @@ shared(msg) persistent actor class ICSpicy() = Self {
     orders,
     icrc7Owners,
     icrc7Balances,
+    icrc37Approvals,
     func() : Principal { Principal.fromActor(Self) },
     icpaySecretKey,
     icpaySessionsConsumed,
+    auditLog,
   );
+
+  // ── Audit log query ────────────────────────────────────────────────────────
+
+  public query({ caller }) func getAuditLog(offset : Nat, limit : Nat) : async [AuditLog.AuditEntry] {
+    assert AccessControl.isAdmin(accessControlState, caller);
+    AuditLog.toArray(auditLog.value, offset, limit)
+  };
 
   // ── Ingress filter ─────────────────────────────────────────────────────────
 
