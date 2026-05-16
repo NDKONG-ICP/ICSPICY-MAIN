@@ -105,9 +105,8 @@ mixin (
 
   func verifyICPayPayment(paymentId : Text) : async Result.Result<(), Text> {
     if (icpaySecretKey.value == "") return #err("ICPay not configured");
-    // Authenticated GET — requires secret key in Authorization: Bearer header.
-    // Endpoint: GET /user/payments/:id  (ICPay docs: icpay.org/sdk, protected ops)
-    let url = "https://api.icpay.org/user/payments/" # paymentId;
+    // Protected API — matches @ic-pay/icpay-sdk getPaymentById: GET /sdk/payments/:id
+    let url = "https://api.icpay.org/sdk/payments/" # paymentId;
     let httpResult = try {
       await (with cycles = 231_000_000_000) IC.http_request({
         url;
