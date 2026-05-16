@@ -295,6 +295,10 @@ export interface ICSpicy {
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCanisterId' : ActorMethod<[], string>,
   'getClaimToken' : ActorMethod<[ClaimTokenId], [] | [ClaimTokenPublic]>,
+  'getClaimInfo' : ActorMethod<
+    [string],
+    [] | [{ 'tokenId' : bigint, 'redeemed' : boolean, 'nftName' : string }]
+  >,
   'getDAOProposal' : ActorMethod<[ProposalId], [] | [ProposalPublic]>,
   'getDAOStats' : ActorMethod<
     [],
@@ -484,7 +488,10 @@ export interface ICSpicy {
     { 'ok' : BatchGiftPackPublic } |
       { 'err' : string }
   >,
-  'redeemClaim' : ActorMethod<[ClaimTokenId], ClaimTokenPublic>,
+  'redeemClaim' : ActorMethod<
+    [string],
+    { 'tokenId' : [] | [bigint], 'message' : string, 'success' : boolean }
+  >,
   'refreshTokenPrices' : ActorMethod<[], boolean>,
   'rejectOffer' : ActorMethod<[string], Offer>,
   'removeAdmin' : ActorMethod<[Principal], undefined>,

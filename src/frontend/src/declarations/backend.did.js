@@ -969,6 +969,15 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(ClaimTokenPublic)],
         ['query'],
       ),
+    'getClaimInfo' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(IDL.Record({
+          'tokenId' : IDL.Nat,
+          'redeemed' : IDL.Bool,
+          'nftName' : IDL.Text,
+        }))],
+        ['query'],
+      ),
     'getDAOProposal' : IDL.Func(
         [ProposalId],
         [IDL.Opt(ProposalPublic)],
@@ -1275,7 +1284,15 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : BatchGiftPackPublic, 'err' : IDL.Text })],
         [],
       ),
-    'redeemClaim' : IDL.Func([ClaimTokenId], [ClaimTokenPublic], []),
+    'redeemClaim' : IDL.Func(
+        [IDL.Text],
+        [IDL.Record({
+          'tokenId' : IDL.Opt(IDL.Nat),
+          'message' : IDL.Text,
+          'success' : IDL.Bool,
+        })],
+        [],
+      ),
     'refreshTokenPrices' : IDL.Func([], [IDL.Bool], []),
     'rejectOffer' : IDL.Func([IDL.Text], [Offer], []),
     'removeAdmin' : IDL.Func([IDL.Principal], [], []),

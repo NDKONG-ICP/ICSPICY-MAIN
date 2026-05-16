@@ -1156,14 +1156,15 @@ export function useRedeemClaim() {
   const { actor } = useBackendActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (tokenId: ClaimTokenId) => {
+    mutationFn: async (claimToken: string) => {
       if (!actor) throw new Error("Not connected");
-      return actor.redeemClaim(tokenId);
+      const result = await actor.redeemClaim(claimToken);
+      if (!result.success) throw new Error(result.message);
+      return result;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["membership"] });
-      qc.invalidateQueries({ queryKey: ["hasMembership"] });
-      qc.invalidateQueries({ queryKey: ["claimToken"] });
+      qc.invalidateQueries({ queryKey: ["claimInfo"] });
+      qc.invalidateQueries({ queryKey: ["icrc7Owner"] });
     },
   });
 }
@@ -1177,6 +1178,19 @@ export function useGetClaimToken(tokenId: ClaimTokenId | undefined) {
       return actor.getClaimToken(tokenId);
     },
     enabled: !!actor && !isFetching && !!tokenId,
+  });
+}
+
+export function useGetClaimInfo(token: string | undefined) {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: ["claimInfo", token],
+    queryFn: async () => {
+      if (!actor || !token) return null;
+      return actor.getClaimInfo(token);
+    },
+    enabled: !!actor && !isFetching && !!token,
+    staleTime: 30_000,
   });
 }
 

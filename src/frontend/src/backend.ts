@@ -1036,7 +1036,8 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
-    redeemClaim(token_id: ClaimTokenId): Promise<ClaimTokenPublic>;
+    getClaimInfo(token: string): Promise<{ tokenId: bigint; redeemed: boolean; nftName: string } | null>;
+    redeemClaim(claimToken: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }>;
     refreshTokenPrices(): Promise<boolean>;
     rejectOffer(offerId: string): Promise<Offer>;
     removePlantPhoto(plant_id: PlantId, photo_key: string): Promise<void>;
@@ -2880,18 +2881,26 @@ export class Backend implements backendInterface {
             return from_candid_variant_n64(this._uploadFile, this._downloadFile, result);
         }
     }
-    async redeemClaim(arg0: ClaimTokenId): Promise<ClaimTokenPublic> {
+    async getClaimInfo(arg0: string): Promise<{ tokenId: bigint; redeemed: boolean; nftName: string } | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.redeemClaim(arg0);
-                return from_candid_ClaimTokenPublic_n116(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
+                const r = await this.actor.getClaimInfo(arg0);
+                return r.length > 0 ? r[0] : null;
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else {
-            const result = await this.actor.redeemClaim(arg0);
-            return from_candid_ClaimTokenPublic_n116(this._uploadFile, this._downloadFile, result);
+            const r = await this.actor.getClaimInfo(arg0);
+            return r.length > 0 ? r[0] : null;
+        }
+    }
+    async redeemClaim(arg0: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.redeemClaim(arg0);
+                return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.redeemClaim(arg0);
+            return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
         }
     }
     async refreshTokenPrices(): Promise<boolean> {

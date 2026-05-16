@@ -1,6 +1,14 @@
 import Common "common";
 
 module {
+  // NFT QR claim token — maps spcy_<10hex> → ICRC-7 token ID with redemption flag.
+  // Used by the Phase 4 QR claim flow (generateClaimToken / redeemClaim).
+  // Separate from the legacy plant-based ClaimToken below.
+  public type NftClaimEntry = {
+    tokenId    : Nat;
+    var redeemed : Bool;
+  };
+
   // Rarity tier for RWA NFTs — determines holder discount percentage.
   //
   // Phase 3.0: #Founder added for the 50 Founder PepperHeads (token IDs

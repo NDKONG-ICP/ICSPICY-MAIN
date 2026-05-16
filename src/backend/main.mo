@@ -241,7 +241,9 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   // ── Claim token state (QR label → NFT claim flow) ─────────────────────────
 
-  let claimTokens = Map.empty<Common.ClaimTokenId, ClaimTypes.ClaimToken>();
+  let claimTokens    = Map.empty<Common.ClaimTokenId, ClaimTypes.ClaimToken>();
+  // Phase 4: spcy_<10hex> → NftClaimEntry (tokenId + redeemed flag)
+  let nftClaimTokens = Map.empty<Text, ClaimTypes.NftClaimEntry>();
 
   // ── Schedule state (KNF application schedule builder) ─────────────────────
 
@@ -375,7 +377,14 @@ shared(msg) persistent actor class ICSpicy() = Self {
     certStore,
   );
   include RecipesAPI(accessControlState, recipes, nextRecipeId);
-  include ClaimAPI(accessControlState, claimTokens, plants, rwaTokens, claimMemberships);
+  include ClaimAPI(
+    accessControlState,
+    nftClaimTokens,
+    icrc7Owners,
+    icrc7Balances,
+    func() : Principal { Principal.fromActor(Self) },
+    auditLog,
+  );
   include ScheduleAPI(accessControlState, savedSchedules, scheduleShareIndex);
   include LifecycleUpgradeAPI(accessControlState, plants, stageHistory, rwaTokens, upgradeEvents, artworkLayers);
   include BatchGiftAndResaleAPI(accessControlState, batchGiftPacks, resaleListings, claimTokens, plants, rwaTokens, claimMemberships);

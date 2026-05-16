@@ -782,15 +782,12 @@ export const mockBackend: backendInterface = {
       highest_rarity_pct: BigInt(15),
     },
   }),
-  redeemClaim: async (token_id) => ({
-    id: token_id,
-    created_at: NOW,
-    redeemed_at: NOW,
-    redeemed_by: MOCK_PRINCIPAL,
-    claim_data: JSON.stringify({ plant_id: "1", rarity_tier: "Rare" }),
-    rarity_tier: RarityTier.Rare,
-    plant_id: BigInt(1),
+  redeemClaim: async (_claimToken) => ({
+    tokenId: BigInt(1),
+    message: "Mock claim redeemed",
+    success: true,
   }),
+  getClaimInfo: async (_token) => null,
   refreshTokenPrices: async () => true,
   rejectOffer: async (offerId) => ({
     id: offerId,
