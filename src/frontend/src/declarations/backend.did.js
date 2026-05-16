@@ -1260,7 +1260,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'purchasePepperHead' : IDL.Func(
-        [PaymentToken, IDL.Nat],
+        [IDL.Text],
         [
           IDL.Record({
             'tokenId' : IDL.Opt(IDL.Nat),

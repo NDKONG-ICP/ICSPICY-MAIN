@@ -1,30 +1,33 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Check,
+  CheckCircle2,
   Copy,
   Flame,
+  Loader2,
   ShieldCheck,
+  Wallet,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Value } from "../declarations/backend.did";
+import { useAuth } from "../hooks/useAuth";
 import {
   useIsPepperHead,
+  useIsPepperHeadAvailable,
+  usePurchasePepperHead,
   useTokenCertified,
   useTokenMetadata,
   useTokenOwner,
 } from "../hooks/useBackend";
+import { useICPay } from "../hooks/useICPay";
 import { getNftImageUrl, isValidTokenId } from "../lib/nft-config";
 
 // ── Metadata helpers ────────────────────────────────────────────────────────
@@ -102,11 +105,7 @@ function CopyPrincipal({ principal }: { principal: string }) {
         aria-label="Copy principal"
         data-ocid="nft-owner-copy"
       >
-        {copied ? (
-          <Check className="h-3 w-3" />
-        ) : (
-          <Copy className="h-3 w-3" />
-        )}
+        {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
       </button>
     </span>
   );
@@ -213,8 +212,7 @@ function HexBlob({
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-xs text-muted-foreground font-mono">
-          {label}{" "}
-          <span className="text-muted-foreground/60">({len} B)</span>
+          {label} <span className="text-muted-foreground/60">({len} B)</span>
         </span>
         {hex && (
           <button
@@ -312,9 +310,7 @@ function MetadataCard({
         ) : (
           <>
             <InfoRow label="Name" value={name} />
-            {description && (
-              <InfoRow label="Description" value={description} />
-            )}
+            {description && <InfoRow label="Description" value={description} />}
             <InfoRow
               label="Rarity"
               value={rarity ? <RarityBadge rarity={rarity} /> : "—"}
@@ -368,8 +364,8 @@ function TraitsGrid({
       <CardContent>
         {loading ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-md" />
+            {["t1", "t2", "t3", "t4", "t5", "t6"].map((k) => (
+              <Skeleton key={k} className="h-16 rounded-md" />
             ))}
           </div>
         ) : attributes.length === 0 ? (
@@ -425,8 +421,8 @@ function ProvenancePlaceholder() {
       <CardContent>
         <p className="text-sm text-muted-foreground">
           Lifecycle telemetry — weather data, growth-stage transitions, and
-          farm-to-token timeline — will appear here once the on-chain
-          provenance recorder ships in Phase 5.5.
+          farm-to-token timeline — will appear here once the on-chain provenance
+          recorder ships in Phase 5.5.
         </p>
       </CardContent>
     </Card>
@@ -503,6 +499,162 @@ function LinksCard({
   );
 }
 
+// ── PepperHead purchase card ────────────────────────────────────────────────
+//
+// Shown when the token is a PepperHead AND is still owned by the canister
+// (i.e. still in the open pool). Uses ICPay for payment — no wallet
+// approval required; ICPay handles crypto/card conversion internally.
+
+const BACKEND_CANISTER_ID: string =
+  (import.meta.env.VITE_CANISTER_ID_BACKEND as string | undefined) ??
+  "uxrrr-q7777-77774-qaaaq-cai";
+
+function PepperHeadPurchaseCard({
+  tokenId,
+  ownerPrincipal,
+}: {
+  tokenId: bigint;
+  ownerPrincipal: string;
+}) {
+  const { data: availableCount, isLoading: loadingAvail } =
+    useIsPepperHeadAvailable();
+  const purchase = usePurchasePepperHead();
+  const { isAuthenticated } = useAuth();
+  const [succeeded, setSucceeded] = useState<bigint | null>(null);
+
+  const available = availableCount ?? 0n;
+  // Only offer purchase while this specific token is still in the open pool.
+  const isInPool = ownerPrincipal === BACKEND_CANISTER_ID;
+
+  const icpay = useICPay({
+    onSuccess: async (paymentId) => {
+      try {
+        const result = await purchase.mutateAsync({ paymentId });
+        const mintedId = result.tokenId != null ? BigInt(result.tokenId) : null;
+        setSucceeded(mintedId ?? tokenId);
+        toast.success(
+          mintedId != null
+            ? `You now own IC SPICY #${mintedId}!`
+            : "PepperHead purchased!",
+        );
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Purchase failed");
+      }
+    },
+    onError: (msg) => toast.error(msg),
+  });
+
+  const isPending =
+    icpay.status === "paying" ||
+    icpay.status === "confirming" ||
+    purchase.isPending;
+
+  if (succeeded != null) {
+    return (
+      <Card
+        className="border-emerald-500/30 bg-emerald-500/5"
+        data-ocid="pepperhead-success-card"
+      >
+        <CardContent className="pt-6 pb-5 text-center space-y-2">
+          <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-400" />
+          <p className="font-display font-bold text-foreground">
+            You now own IC SPICY #{succeeded.toString()}!
+          </p>
+          <p className="text-xs text-muted-foreground">
+            PepperHead membership benefits are now active on this token.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card
+      className="border-red-500/30 bg-red-500/5"
+      data-ocid="pepperhead-purchase-card"
+    >
+      <CardHeader className="pb-3">
+        <CardTitle className="font-display text-base font-bold flex items-center gap-2">
+          <Flame className="w-4 h-4 text-red-500" />
+          Buy PepperHead — $25
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Remaining in pool</span>
+          {loadingAvail ? (
+            <Skeleton className="h-5 w-12" />
+          ) : (
+            <span className="font-bold text-foreground">
+              {available.toString()} / 888
+            </span>
+          )}
+        </div>
+
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          PepperHead NFTs grant exclusive member benefits — lifetime discounts,
+          early access, and provenance rights. Pay with any crypto wallet or
+          card via ICPay.
+        </p>
+
+        <Separator />
+
+        {icpay.status === "error" && (
+          <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+            {icpay.error}
+          </div>
+        )}
+
+        {!isAuthenticated ? (
+          <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2.5 text-sm text-muted-foreground">
+            <Wallet className="h-4 w-4 shrink-0" />
+            <span>Log in with Internet Identity to purchase.</span>
+          </div>
+        ) : !isInPool ? (
+          <div className="text-xs text-muted-foreground text-center py-1">
+            This PepperHead has already been claimed.
+          </div>
+        ) : (
+          <Button
+            className="w-full bg-red-600 hover:bg-red-700 text-white"
+            disabled={available === 0n || loadingAvail || isPending}
+            onClick={() =>
+              icpay.payUsd(25, {
+                action: "pepperhead",
+                tokenId: tokenId.toString(),
+              })
+            }
+            data-ocid="pepperhead-buy-btn"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {icpay.status === "confirming" || purchase.isPending
+                  ? "Confirming on-chain…"
+                  : "Awaiting payment…"}
+              </>
+            ) : available === 0n ? (
+              <>
+                <Flame className="w-4 h-4" />
+                Sold Out
+              </>
+            ) : (
+              <>
+                <Flame className="w-4 h-4" />
+                Buy PepperHead — $25
+              </>
+            )}
+          </Button>
+        )}
+
+        <p className="text-[11px] text-center text-muted-foreground">
+          Powered by ICPay · crypto wallet &amp; card accepted
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function NotFound({
   title,
   message,
@@ -538,8 +690,7 @@ export default function NFTDetailPage() {
   // circuit via their `enabled` gate, never firing a network call.
   const id = isValidTokenId(rawId);
 
-  const { data: metadata, isLoading: loadingMetadata } =
-    useTokenMetadata(id);
+  const { data: metadata, isLoading: loadingMetadata } = useTokenMetadata(id);
   const { data: owner, isLoading: loadingOwner } = useTokenOwner(id);
   const { data: isPepperHead } = useIsPepperHead(id);
   const { data: certified, isLoading: loadingCertified } =
@@ -568,8 +719,7 @@ export default function NFTDetailPage() {
     );
   }
 
-  const name =
-    getTextField(metadata, "name") ?? `IC SPICY #${id.toString()}`;
+  const name = getTextField(metadata, "name") ?? `IC SPICY #${id.toString()}`;
   const description = getTextField(metadata, "description");
   const rarity = getTextField(metadata, "rarity");
   const attributes = getAttributesArray(metadata);
@@ -643,6 +793,13 @@ export default function NFTDetailPage() {
             />
 
             <TraitsGrid attributes={attributes} loading={loadingMetadata} />
+
+            {isPepperHead && (
+              <PepperHeadPurchaseCard
+                tokenId={id}
+                ownerPrincipal={ownerText}
+              />
+            )}
 
             <ProvenancePlaceholder />
           </div>

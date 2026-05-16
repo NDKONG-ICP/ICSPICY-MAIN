@@ -1023,7 +1023,7 @@ export interface backendInterface {
     mintICRC37(plant_id: PlantId, image_key: string | null, attributes: Array<[string, string]>): Promise<string>;
     mintRWAProvenance(input: MintRWAProvenanceInput): Promise<string>;
     placeOrder(input: CreateOrderInput): Promise<OrderPublic>;
-    purchasePepperHead(token: PaymentToken, amount: bigint): Promise<{ tokenId: bigint | null; message: string; success: boolean }>;
+    purchasePepperHead(paymentId: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }>;
     preGenerateNFTPool(layerCount: bigint, layerFileCounts: Array<bigint>): Promise<{
         ok: boolean;
         total: bigint;
@@ -3408,15 +3408,14 @@ export class Backend implements backendInterface {
             try { return await this.actor.confirmICPayPayment(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.confirmICPayPayment(arg0, arg1); }
     }
-    async purchasePepperHead(arg0: PaymentToken, arg1: bigint): Promise<{ tokenId: bigint | null; message: string; success: boolean }> {
-        const candidToken = to_candid_TreasuryToken_n173(this._uploadFile, this._downloadFile, arg0 as unknown as TreasuryToken);
+    async purchasePepperHead(arg0: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }> {
         if (this.processError) {
             try {
-                const r = await this.actor.purchasePepperHead(candidToken, arg1);
+                const r = await this.actor.purchasePepperHead(arg0);
                 return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
             } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else {
-            const r = await this.actor.purchasePepperHead(candidToken, arg1);
+            const r = await this.actor.purchasePepperHead(arg0);
             return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
         }
     }

@@ -2131,12 +2131,9 @@ export function usePurchasePepperHead() {
   const { actor } = useBackendActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      token,
-      amount,
-    }: { token: PaymentToken; amount: bigint }) => {
+    mutationFn: async ({ paymentId }: { paymentId: string }) => {
       if (!actor) throw new Error("Not connected");
-      const result = await actor.purchasePepperHead(token, amount);
+      const result = await actor.purchasePepperHead(paymentId);
       if (!result.success) throw new Error(result.message);
       return result;
     },

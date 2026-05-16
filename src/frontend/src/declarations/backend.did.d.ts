@@ -476,7 +476,7 @@ export interface ICSpicy {
     http_request_result
   >,
   'purchasePepperHead' : ActorMethod<
-    [PaymentToken, bigint],
+    [string],
     { 'tokenId' : [] | [bigint], 'message' : string, 'success' : boolean }
   >,
   'redeemBatchClaim' : ActorMethod<
