@@ -107,6 +107,43 @@ shared(msg) persistent actor class ICSpicy() = Self {
     Principal.fromActor(Self).toText()
   };
 
+  // ── ICRC-10 / ICRC-28 (wallet signer + IdentityKit trusted origins) ────────
+
+  /// ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
+  public query func icrc10_supported_standards() : async [{ url : Text; name : Text }] {
+    [
+      {
+        url = "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-10/ICRC-10.md";
+        name = "ICRC-10";
+      },
+      {
+        url = "https://github.com/dfinity/wg-identity-authentication/blob/main/topics/icrc_28_trusted_origins.md";
+        name = "ICRC-28";
+      },
+      {
+        url = "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-7/ICRC-7.md";
+        name = "ICRC-7";
+      },
+      {
+        url = "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-37/ICRC-37.md";
+        name = "ICRC-37";
+      },
+    ];
+  };
+
+  /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+  public query func icrc28_trusted_origins() : async { trusted_origins : [Text] } {
+    {
+      trusted_origins = [
+        "https://7rukv-hqaaa-aaaao-ba6ma-cai.icp0.io",
+        "https://7rukv-hqaaa-aaaao-ba6ma-cai.raw.icp0.io",
+        "https://icspicy.app",
+        "https://ic-spicy.com",
+        "https://www.ic-spicy.com",
+      ];
+    };
+  };
+
   // ── Counter wrappers (shared mutable references) ───────────────────────────
 
   let nextPlantId          = { var value : Nat = 1 };
