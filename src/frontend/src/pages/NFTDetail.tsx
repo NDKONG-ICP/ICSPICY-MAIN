@@ -619,10 +619,11 @@ function PepperHeadPurchaseCard({
             className="w-full bg-red-600 hover:bg-red-700 text-white"
             disabled={available === 0n || loadingAvail || isPending}
             onClick={() =>
-              icpay.payUsd(25, {
-                action: "pepperhead",
-                tokenId: tokenId.toString(),
-              })
+              icpay.payUsd(
+                25,
+                { action: "pepperhead", tokenId: tokenId.toString() },
+                "ic_icp",
+              )
             }
             data-ocid="pepperhead-buy-btn"
           >

@@ -1,3 +1,4 @@
+import { ConnectWallet } from "@nfid/identitykit/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -29,7 +30,7 @@ const SOCIAL_ICONS = [
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isAuthenticated, login, logout, isInitializing } = useAuth();
+  const { isAuthenticated, isInitializing } = useAuth();
   const itemCount = useCart((s) => s.itemCount());
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
@@ -138,41 +139,24 @@ export function Header() {
               )}
             </Link>
 
-            {/* Auth */}
-            {!isInitializing &&
-              (isAuthenticated ? (
-                <div className="hidden sm:flex items-center gap-2">
-                  <Link to="/profile">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground hover:text-foreground"
-                      data-ocid="header-profile"
-                    >
-                      Profile
-                    </Button>
-                  </Link>
+            {/* Wallet (IdentityKit) + profile shortcut */}
+            <div className="hidden sm:flex items-center gap-2" data-ocid="header-wallet">
+              {!isInitializing && isAuthenticated && (
+                <Link to="/profile">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    onClick={logout}
-                    data-ocid="header-logout"
-                    className="border-border"
+                    className="text-muted-foreground hover:text-foreground"
+                    data-ocid="header-profile"
                   >
-                    Sign Out
+                    Profile
                   </Button>
-                </div>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={login}
-                  disabled={isInitializing}
-                  data-ocid="header-login"
-                  className="hidden sm:flex bg-primary hover:bg-primary/90 text-primary-foreground"
-                >
-                  Connect
-                </Button>
-              ))}
+                </Link>
+              )}
+              <div className="[&_button]:rounded-md [&_button]:text-sm">
+                <ConnectWallet />
+              </div>
+            </div>
 
             {/* Mobile menu toggle */}
             <button
@@ -248,7 +232,7 @@ export function Header() {
                 Admin
               </Link>
 
-              <div className="pt-3 border-t border-border flex items-center justify-between">
+              <div className="pt-3 border-t border-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   {SOCIAL_ICONS.map(({ href, Icon, label }) => (
                     <a
@@ -263,25 +247,11 @@ export function Header() {
                     </a>
                   ))}
                 </div>
-                {!isInitializing &&
-                  (isAuthenticated ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={logout}
-                      className="border-border"
-                    >
-                      Sign Out
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      onClick={login}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    >
-                      Connect
-                    </Button>
-                  ))}
+                {!isInitializing && (
+                  <div className="flex justify-end [&_button]:text-sm">
+                    <ConnectWallet />
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

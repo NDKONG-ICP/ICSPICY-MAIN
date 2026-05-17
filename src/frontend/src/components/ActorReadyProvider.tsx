@@ -32,7 +32,7 @@
  *   to seed roles and profiles so downstream queries work correctly.
  */
 
-import { useActor } from "@caffeineai/core-infrastructure";
+import { useActor } from "../hooks/useActor";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createActor } from "../backend";

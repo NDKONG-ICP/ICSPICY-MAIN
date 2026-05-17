@@ -1,4 +1,4 @@
-import { useActor } from "@caffeineai/core-infrastructure";
+import { useActor } from "./useActor";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createActor } from "../backend";
 import type { CreateProposalInput, ProposalId } from "../backend";

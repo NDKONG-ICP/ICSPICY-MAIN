@@ -1,4 +1,4 @@
-import { useActor } from "@caffeineai/core-infrastructure";
+import { useActor } from "./useActor";
 import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createActor } from "../backend";

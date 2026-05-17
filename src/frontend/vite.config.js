@@ -6,7 +6,7 @@ import environment from "vite-plugin-environment";
 const ii_url =
   process.env.DFX_NETWORK === "local"
     ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943/`
-    : `https://identity.internetcomputer.org/`;
+    : `https://identity.ic0.app`;
 
 process.env.II_URL = process.env.II_URL || ii_url;
 export default defineConfig({
@@ -50,7 +50,22 @@ export default defineConfig({
         find: "@",
         replacement: fileURLToPath(new URL("./src", import.meta.url)),
       },
+      // signer-agent expects `compare` on `@dfinity/agent` (removed from public API).
+      {
+        find: "@dfinity/agent",
+        replacement: fileURLToPath(
+          new URL("./src/shims/dfinity-agent-with-compare.ts", import.meta.url),
+        ),
+      },
+      // Deep import used by @slide-computer/signer-transport-stoic (IdentityKit) —
+      // not exposed in @dfinity/identity "exports" (Vite/Rollup fails without this).
+      {
+        find: "@dfinity/identity/lib/cjs/identity/partial",
+        replacement: fileURLToPath(
+          new URL("./src/shims/dfinity-partial-id.ts", import.meta.url),
+        ),
+      },
     ],
-    dedupe: ["@dfinity/agent"]
+    dedupe: ["@dfinity/agent", "@dfinity/identity"],
   },
 });

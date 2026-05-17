@@ -15,7 +15,6 @@
 # scripts/generate-docs-catalog.mjs at build time.
 *.pem
 *.swp
-*identity*
 .DS_Store
 .dfx/
 .env

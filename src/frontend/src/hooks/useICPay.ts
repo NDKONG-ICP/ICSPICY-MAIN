@@ -80,11 +80,16 @@ export function useICPay(options?: UseICPayOptions) {
     async (
       amountUsd: number,
       metadata?: Record<string, unknown>,
+      tokenShortcode?: string,
     ): Promise<TransactionResponse | null> => {
       try {
         setStatus("paying");
         setError(null);
-        return await icpay.createPaymentUsd({ usdAmount: amountUsd, metadata });
+        return await icpay.createPaymentUsd({
+          usdAmount: amountUsd,
+          tokenShortcode: tokenShortcode ?? "ic_icp",
+          metadata,
+        });
       } catch (err: unknown) {
         const msg =
           err instanceof Error ? err.message : "Payment creation failed";
