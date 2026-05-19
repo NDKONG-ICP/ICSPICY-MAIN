@@ -25,7 +25,7 @@ mixin (
   // Primary admin PID text — must NOT be converted to Principal at mixin level
   // (Principal.fromText at module/mixin level traps at canister init time).
   // Conversion is done lazily inside resolveSellerForNft().
-  let OFFERS_ADMIN_PID_TEXT : Text = "lgjjr-4bwun-koggr-pornj-ltxia-m4xxo-iy7mg-cct7e-okxub-mbxku-tae";
+  let OFFERS_ADMIN_PID_TEXT : Text = "gqkko-43bbx-nwsp4-it2rg-pc2dy-w2pt2-fa5om-4y6es-oyhz2-5i5oh-5ae";
 
   // Convert OfferToken to the matching OracleToken for price lookup
   func offerTokenToOracle(token : OfferTypes.OfferToken) : PriceOracleTypes.OracleToken {

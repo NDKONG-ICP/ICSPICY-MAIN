@@ -5794,7 +5794,7 @@ function FoundersCollectionTab() {
   const handleMintAll = async () => {
     if (cards.length === 0) return;
     const ADMIN_PID =
-      "lgjjr-4bwun-koggr-pornj-ltxia-m4xxo-iy7mg-cct7e-okxub-mbxku-tae"; // primary admin — fallback recipient for unminted cards
+      "gqkko-43bbx-nwsp4-it2rg-pc2dy-w2pt2-fa5om-4y6es-oyhz2-5i5oh-5ae"; // primary admin — fallback recipient for unminted cards
     const { Principal } = await import("@icp-sdk/core/principal");
 
     const entries: FoundersMintInput[] = cards.map((c) => {

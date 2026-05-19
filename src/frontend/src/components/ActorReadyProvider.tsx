@@ -40,9 +40,11 @@ import { ActorReadyContext } from "../hooks/useActorReady";
 import { useAuth } from "../hooks/useAuth";
 
 const ADMIN_PIDS = [
-  "lgjjr-4bwun-koggr-pornj-ltxia-m4xxo-iy7mg-cct7e-okxub-mbxku-tae",
-  "7qhp3-ojhp3-sjhf6-lnj6s-kqxyt-q4iaw-vtdxi-youle-zn666-4o5gh",
-  "7qhp3-ojhp3-sjhf6-lnj6s-kqxyt-q4iaw-vtdxi-youle-zn666-4o5gh-qae",
+  "gqkko-43bbx-nwsp4-it2rg-pc2dy-w2pt2-fa5om-4y6es-oyhz2-5i5oh-5ae",
+  "mbz2t-cj2zo-voeoz-lh2jm-ea3u3-epinh-oesla-3kghk-e62b2-wx5yp-sae",
+  "yyirv-5pjkg-oupac-gzja4-ljzfn-6mvon-r5w2i-6e7wm-sde75-wuses-nqe",
+  "sh7h6-b7xcy-tjank-crj6d-idrcr-ormbi-22yqs-uanyl-itbp3-ur5ue-wae",
+  "evzpj-rfmph-crpjc-wftk2-6umc2-yu7m3-bagh5-jbtj5-vua6c-5zfqh-sae",
 ];
 
 function isAdminPrincipal(raw: string): boolean {
