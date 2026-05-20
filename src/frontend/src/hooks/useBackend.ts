@@ -49,7 +49,7 @@ import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
 
 function useBackendActor() {
-  return useActor(createActor);
+  return useActor<import("../backend").Backend>(createActor);
 }
 
 // ─── Products ───────────────────────────────────────────────────────────────

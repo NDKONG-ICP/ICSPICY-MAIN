@@ -1,12 +1,18 @@
-import { AnonymousIdentity, Actor, HttpAgent } from "@dfinity/agent";
+import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import type { Principal as IcpPrincipal } from "@icp-sdk/core/principal";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
-const HOST = "https://icp0.io";
+const HOST = import.meta.env.DEV
+  ? "http://127.0.0.1:4943"
+  : "https://icp-api.io";
 
-const icrc1LedgerIdlFactory = ({ IDL }: { IDL: typeof import("@dfinity/candid").IDL }) => {
+const icrc1LedgerIdlFactory = ({
+  IDL,
+}: {
+  IDL: typeof import("@dfinity/candid").IDL;
+}) => {
   const Sub = IDL.Vec(IDL.Nat8);
   const Account = IDL.Record({
     owner: IDL.Principal,
@@ -24,20 +30,18 @@ type Icrc1Ledger = {
   }) => Promise<bigint>;
 };
 
-let cachedAgent: HttpAgent | null = null;
-
-function getAnonymousAgent(): HttpAgent {
-  if (!cachedAgent) {
-    cachedAgent = HttpAgent.createSync({
-      host: HOST,
-      identity: new AnonymousIdentity(),
-    });
+async function balanceOf(
+  identity: import("@dfinity/agent").Identity | null,
+  canisterId: string,
+  owner: IcpPrincipal,
+): Promise<bigint> {
+  const agent = await HttpAgent.create({
+    host: HOST,
+    identity: identity ?? undefined,
+  });
+  if (import.meta.env.DEV) {
+    await agent.fetchRootKey().catch(() => {});
   }
-  return cachedAgent;
-}
-
-async function balanceOf(canisterId: string, owner: IcpPrincipal): Promise<bigint> {
-  const agent = getAnonymousAgent();
   const actor = Actor.createActor(icrc1LedgerIdlFactory as never, {
     agent,
     canisterId: Principal.fromText(canisterId),
@@ -105,7 +109,7 @@ function formatBalance(
 }
 
 export function useTokenBalances() {
-  const { principal, isAuthenticated } = useAuth();
+  const { principal, isAuthenticated, identity } = useAuth();
 
   return useQuery({
     queryKey: ["tokenBalances", principal?.toText() ?? "anon"],
@@ -117,7 +121,7 @@ export function useTokenBalances() {
       const rows: TokenBalanceRow[] = [];
       for (const L of LEDGERS) {
         try {
-          const bal = await balanceOf(L.canisterId, principal);
+          const bal = await balanceOf(identity, L.canisterId, principal);
           rows.push({
             symbol: L.symbol,
             canisterId: L.canisterId,

@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@tanstack/react-router";
-import { ConnectWallet } from "@nfid/identitykit/react";
+import { ConnectButton } from "../components/ConnectButton";
 import {
   Copy,
   Flame,
@@ -95,7 +95,7 @@ export default function ProfilePage() {
           Sign in with your wallet to view and edit your community profile.
         </p>
         <div className="flex justify-center">
-          <ConnectWallet />
+          <ConnectButton />
         </div>
       </div>
     );

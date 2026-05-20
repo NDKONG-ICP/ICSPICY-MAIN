@@ -50,21 +50,6 @@ export default defineConfig({
         find: "@",
         replacement: fileURLToPath(new URL("./src", import.meta.url)),
       },
-      // signer-agent expects `compare` on `@dfinity/agent` (removed from public API).
-      {
-        find: "@dfinity/agent",
-        replacement: fileURLToPath(
-          new URL("./src/shims/dfinity-agent-with-compare.ts", import.meta.url),
-        ),
-      },
-      // Deep import used by @slide-computer/signer-transport-stoic (IdentityKit) —
-      // not exposed in @dfinity/identity "exports" (Vite/Rollup fails without this).
-      {
-        find: "@dfinity/identity/lib/cjs/identity/partial",
-        replacement: fileURLToPath(
-          new URL("./src/shims/dfinity-partial-id.ts", import.meta.url),
-        ),
-      },
     ],
     dedupe: ["@dfinity/agent", "@dfinity/identity"],
   },

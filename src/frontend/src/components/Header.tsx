@@ -1,5 +1,5 @@
-import { ConnectWallet } from "@nfid/identitykit/react";
 import { Badge } from "@/components/ui/badge";
+import { ConnectButton } from "@/components/ConnectButton";
 import { Button } from "@/components/ui/button";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Flame, Menu, ShoppingCart, X } from "lucide-react";
@@ -139,7 +139,7 @@ export function Header() {
               )}
             </Link>
 
-            {/* Wallet (IdentityKit) + profile shortcut */}
+            {/* Internet Identity + profile shortcut */}
             <div className="hidden sm:flex items-center gap-2" data-ocid="header-wallet">
               {!isInitializing && isAuthenticated && (
                 <Link to="/profile">
@@ -153,9 +153,7 @@ export function Header() {
                   </Button>
                 </Link>
               )}
-              <div className="[&_button]:rounded-md [&_button]:text-sm">
-                <ConnectWallet />
-              </div>
+              <ConnectButton />
             </div>
 
             {/* Mobile menu toggle */}
@@ -247,11 +245,9 @@ export function Header() {
                     </a>
                   ))}
                 </div>
-                {!isInitializing && (
-                  <div className="flex justify-end [&_button]:text-sm">
-                    <ConnectWallet />
-                  </div>
-                )}
+                <div className="flex justify-end">
+                  <ConnectButton />
+                </div>
               </div>
             </div>
           </motion.div>

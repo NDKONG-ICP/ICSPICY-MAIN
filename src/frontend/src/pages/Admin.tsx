@@ -5078,7 +5078,7 @@ function TreasuryBalancesSection() {
   const totalIcpE8s = balances.reduce((sum, b) => {
     const price = priceMap.get(b.token);
     if (b.token === TreasuryToken.ICP) return sum + b.balance_e8s;
-    if (price) return sum + (b.balance_e8s * price) / BigInt(1e8);
+    if (price) return sum + (b.balance_e8s * BigInt(price)) / BigInt(1e8);
     return sum;
   }, BigInt(0));
 
@@ -5122,7 +5122,7 @@ function TreasuryBalancesSection() {
               const icpPrice = priceMap.get(token);
               const icpEquiv =
                 token !== TreasuryToken.ICP && icpPrice
-                  ? Number(balE8s * icpPrice) / 1e16
+                  ? Number(balE8s * BigInt(icpPrice)) / 1e16
                   : null;
               return (
                 <div

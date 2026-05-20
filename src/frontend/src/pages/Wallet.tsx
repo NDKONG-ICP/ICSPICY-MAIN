@@ -9,7 +9,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@tanstack/react-router";
 import { Coins, Copy, Flame, Link2, ShoppingBag, User } from "lucide-react";
-import { ConnectWallet } from "@nfid/identitykit/react";
+import { ConnectButton } from "../components/ConnectButton";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { getNftImageUrl } from "../lib/nft-config";
@@ -67,8 +67,8 @@ export default function WalletPage() {
           Connect your wallet to view token balances and NFTs on the Internet
           Computer.
         </p>
-        <div className="flex justify-center [&_button]:px-6">
-          <ConnectWallet />
+        <div className="flex justify-center">
+          <ConnectButton />
         </div>
       </div>
     );
@@ -94,8 +94,7 @@ export default function WalletPage() {
             Connected
           </CardTitle>
           <CardDescription>
-            Principal used for on-chain queries. Use IdentityKit to disconnect or
-            switch wallet.
+            Principal used for on-chain queries. Sign in with Internet Identity.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -122,7 +121,7 @@ export default function WalletPage() {
             </div>
           )}
           <div className="flex flex-wrap gap-2 pt-2">
-            <ConnectWallet />
+            <ConnectButton />
           </div>
         </CardContent>
       </Card>
