@@ -73,6 +73,7 @@ module {
     weight_based : Bool;
     price_per_unit_cents : Nat;
     unit_label : ?Text;
+    inventory_remaining : ?Nat;
   };
 
   public type CreateProductInput = {
@@ -90,6 +91,7 @@ module {
     weight_based : Bool;
     price_per_unit_cents : ?Nat;
     unit_label : ?Text;
+    inventory_quantity : ?Nat;
   };
 
   public type UpdateProductInput = {

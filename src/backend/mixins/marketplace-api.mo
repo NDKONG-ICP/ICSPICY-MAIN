@@ -15,6 +15,7 @@ import MarketLib "../lib/marketplace";
 import MarketOrder "../lib/marketplace-order";
 import ProductNft "../lib/product-nft";
 import ProductShipping "../lib/product-shipping";
+import ProductInventory "../lib/product-inventory";
 import ICRC7 "../types/icrc7";
 import Set "mo:core/Set";
 
@@ -26,6 +27,7 @@ mixin (
   memberships : Map.Map<Principal, MembershipTypes.MembershipNFT>,
   claimTokens : Map.Map<Common.ClaimTokenId, ClaimTypes.ClaimToken>,
   productNftTokenIds : Map.Map<Common.ProductId, Nat>,
+  productInventoryRemaining : Map.Map<Common.ProductId, Nat>,
   productShippingConfigs : Map.Map<Common.ProductId, ProductShipping.ProductShippingConfig>,
   orderLineNftTokenIds : Map.Map<Common.OrderId, [Nat]>,
   orderPickupClaimTokens : Map.Map<Common.OrderId, [Text]>,
@@ -38,10 +40,12 @@ mixin (
   nextOrderId : { var value : Nat },
 ) {
   func toPublic(p : MarketTypes.Product) : MarketTypes.ProductPublic {
+    let config = productShippingConfigs.get(p.id);
     MarketLib.toPublicProduct(
       p,
       productNftTokenIds.get(p.id),
-      productShippingConfigs.get(p.id),
+      config,
+      ProductInventory.remainingForPublic(productInventoryRemaining, p.id, config),
     );
   };
 
@@ -79,7 +83,7 @@ mixin (
     let orderId = nextOrderId.value;
     switch (
       MarketOrder.createValidatedOrder(
-        orders, products, productShippingConfigs,
+        orders, products, productShippingConfigs, productInventoryRemaining,
         orderShippingCents, orderShippingAddresses,
         icrc7Balances,
         orderId, caller, input,
@@ -101,6 +105,15 @@ mixin (
     let productId = nextProductId.value;
     ignore MarketLib.createProduct(products, productId, input);
     saveProductConfig(productId, input);
+    ProductInventory.initOnCreate(
+      productInventoryRemaining,
+      productId,
+      input,
+      ProductShipping.applyCategoryDefaults(
+        input.category,
+        ProductShipping.configFromInput(input),
+      ),
+    );
     ProductNft.linkPlantListingNft(products, productNftTokenIds, plants, productId);
     ProductNft.assignCatalogNftOnCreate(
       products, productNftTokenIds, icrc7Owners, selfPrincipal(), productId,
@@ -122,6 +135,15 @@ mixin (
       nextProductId.value += 1;
       ignore MarketLib.createProduct(products, productId, input);
       saveProductConfig(productId, input);
+      ProductInventory.initOnCreate(
+        productInventoryRemaining,
+        productId,
+        input,
+        ProductShipping.applyCategoryDefaults(
+          input.category,
+          ProductShipping.configFromInput(input),
+        ),
+      );
       ProductNft.linkPlantListingNft(products, productNftTokenIds, plants, productId);
       ProductNft.assignCatalogNftOnCreate(
         products, productNftTokenIds, icrc7Owners, selfPrincipal(), productId,
@@ -172,7 +194,13 @@ mixin (
   public query func listProducts() : async [MarketTypes.ProductPublic] {
     var out : [MarketTypes.ProductPublic] = [];
     for ((_, p) in products.entries()) {
-      if (p.active) out := Array.concat(out, [toPublic(p)]);
+      if (p.active) {
+        let pub = toPublic(p);
+        switch (pub.inventory_remaining) {
+          case (?0) {};
+          case (_) { out := Array.concat(out, [pub]) };
+        };
+      };
     };
     out;
   };
@@ -180,7 +208,13 @@ mixin (
   public query func listProductsByCategory(category : MarketTypes.ProductCategory) : async [MarketTypes.ProductPublic] {
     var out : [MarketTypes.ProductPublic] = [];
     for ((_, p) in products.entries()) {
-      if (p.active and p.category == category) out := Array.concat(out, [toPublic(p)]);
+      if (p.active and p.category == category) {
+        let pub = toPublic(p);
+        switch (pub.inventory_remaining) {
+          case (?0) {};
+          case (_) { out := Array.concat(out, [pub]) };
+        };
+      };
     };
     out;
   };

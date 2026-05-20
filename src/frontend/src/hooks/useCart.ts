@@ -26,6 +26,19 @@ function normalizeCartItem(item: CartItem): CartItem {
   };
 }
 
+function maxCartQuantity(item: CartItem): number | null {
+  if (item.unique_listing) return 1;
+  if (item.weight_based) return null;
+  if (item.inventory_remaining === undefined) return 1;
+  return Number(item.inventory_remaining);
+}
+
+function clampCartQuantity(item: CartItem, quantity: number): number {
+  const max = maxCartQuantity(item);
+  if (max === null) return Math.max(1, quantity);
+  return Math.max(1, Math.min(max, quantity));
+}
+
 interface CartStore {
   items: CartItem[];
   addItem: (item: CartItem) => void;
@@ -52,7 +65,10 @@ export const useCart = create<CartStore>()(
           );
           if (existing) {
             if (existing.unique_listing) return state;
-            const nextQty = existing.quantity + normalized.quantity;
+            const nextQty = clampCartQuantity(
+              normalized,
+              existing.quantity + normalized.quantity,
+            );
             return {
               items: state.items.map((i) =>
                 i.line_id === normalized.line_id
@@ -61,7 +77,15 @@ export const useCart = create<CartStore>()(
               ),
             };
           }
-          return { items: [...state.items, normalized] };
+          return {
+            items: [
+              ...state.items,
+              {
+                ...normalized,
+                quantity: clampCartQuantity(normalized, normalized.quantity),
+              },
+            ],
+          };
         }),
 
       removeItem: (lineId) =>
@@ -76,9 +100,10 @@ export const useCart = create<CartStore>()(
               ? state.items.filter((i) => i.line_id !== lineId)
               : state.items.map((i) => {
                   if (i.line_id !== lineId) return i;
-                  const maxQty = i.unique_listing ? 1 : quantity;
-                  const next = i.unique_listing ? 1 : Math.max(1, quantity);
-                  return { ...i, quantity: i.unique_listing ? maxQty : next };
+                  return {
+                    ...i,
+                    quantity: clampCartQuantity(i, quantity),
+                  };
                 }),
         })),
 

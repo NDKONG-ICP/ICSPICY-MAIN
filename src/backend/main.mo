@@ -316,6 +316,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   // Mandatory NFT per shop product listing (live plant preview only; sale assigns per line)
   let productNftTokenIds = Map.empty<Common.ProductId, Nat>();
+  let productInventoryRemaining = Map.empty<Common.ProductId, Nat>();
   let productShippingConfigs = Map.empty<Common.ProductId, ProductShipping.ProductShippingConfig>();
   let orderLineNftTokenIds = Map.empty<Common.OrderId, [Nat]>();
   let orderPickupClaimTokens = Map.empty<Common.OrderId, [Text]>();
@@ -487,6 +488,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     memberships,
     claimTokens,
     productNftTokenIds,
+    productInventoryRemaining,
     productShippingConfigs,
     orderLineNftTokenIds,
     orderPickupClaimTokens,
@@ -579,6 +581,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     orders,
     products,
     productNftTokenIds,
+    productInventoryRemaining,
     productShippingConfigs,
     orderLineNftTokenIds,
     orderPickupClaimTokens,

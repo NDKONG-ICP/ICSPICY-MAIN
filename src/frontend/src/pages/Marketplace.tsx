@@ -91,6 +91,7 @@ type ShopProduct = Product & {
   price_per_unit_cents?: bigint;
   unit_label?: string;
   nft_token_id?: bigint;
+  inventory_remaining?: bigint;
 };
 
 function productUnitPrice(p: ShopProduct): bigint {
@@ -100,9 +101,18 @@ function productUnitPrice(p: ShopProduct): bigint {
   return p.price_cents;
 }
 
+function maxPurchasableQuantity(product: ShopProduct): number | null {
+  if (product.weight_based || product.plant_id !== undefined) return null;
+  if (product.inventory_remaining === undefined) return 1;
+  return Number(product.inventory_remaining);
+}
+
 function productToCartItem(p: ShopProduct, quantity: number): import("../types/index").CartItem {
   const productId = toNatBigInt(p.id);
   const plantId = toOptionalNatBigInt(p.plant_id);
+  const maxQty = maxPurchasableQuantity(p);
+  const qty =
+    maxQty === null ? quantity : Math.min(quantity, Math.max(1, maxQty));
   return {
     line_id: lineIdForProduct(productId, plantId),
     product_id: productId,
@@ -110,13 +120,14 @@ function productToCartItem(p: ShopProduct, quantity: number): import("../types/i
     name: p.name,
     variety: p.variety,
     unit_price_cents: Number(productUnitPrice(p)),
-    quantity,
+    quantity: qty,
     category: p.category as string,
     shippable: p.shippable,
     weight_based: p.weight_based,
     unit_label: p.unit_label,
     unique_listing: p.plant_id !== undefined,
     nft_token_id: p.nft_token_id,
+    inventory_remaining: p.inventory_remaining,
   };
 }
 
@@ -1593,7 +1604,8 @@ function ProductModal({
   onClose: () => void;
 }) {
   const addItem = useCart((s) => s.addItem);
-  const [qty, setQty] = useState(product.weight_based ? 1 : 1);
+  const stockMax = maxPurchasableQuantity(product);
+  const [qty, setQty] = useState(1);
   const imageKeys = getProductImageKeys(product);
   const unitPrice = productUnitPrice(product);
 
@@ -1646,6 +1658,11 @@ function ProductModal({
           {product.nft_token_id !== undefined && (
             <Badge variant="outline" className="text-xs gap-1">
               🎫 NFT #{product.nft_token_id.toString()}
+            </Badge>
+          )}
+          {product.inventory_remaining !== undefined && !product.weight_based && (
+            <Badge variant="outline" className="text-xs">
+              {product.inventory_remaining.toString()} in stock
             </Badge>
           )}
           {product.shippable ? (
@@ -1707,8 +1724,17 @@ function ProductModal({
             </span>
             <button
               type="button"
-              onClick={() => setQty(product.plant_id !== undefined ? 1 : qty + 1)}
-              disabled={product.plant_id !== undefined}
+              onClick={() =>
+                setQty(
+                  stockMax === null
+                    ? qty + 1
+                    : Math.min(stockMax, qty + 1),
+                )
+              }
+              disabled={
+                product.plant_id !== undefined ||
+                (stockMax !== null && qty >= stockMax)
+              }
               className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-smooth disabled:opacity-40"
               aria-label="Increase quantity"
               data-ocid="modal-qty-increase"
@@ -1988,7 +2014,11 @@ export default function MarketplacePage() {
     allProducts
       ?.filter((p) => {
         const pub = p as ShopProduct & { active?: boolean };
-        return (pub.active ?? true) && isCatalogProduct(p.category as string);
+        if (!(pub.active ?? true)) return false;
+        if (!isCatalogProduct(p.category as string)) return false;
+        const remaining = pub.inventory_remaining;
+        if (remaining !== undefined && remaining <= 0n) return false;
+        return true;
       })
       .map((p) => p as ShopProduct) ?? [];
 

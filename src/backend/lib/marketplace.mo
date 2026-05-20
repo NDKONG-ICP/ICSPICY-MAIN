@@ -118,7 +118,7 @@ module {
       let id = nextId.value;
       nextId.value += 1;
       let product = createProduct(products, id, input);
-      #ok(toPublicProduct(product, null, null));
+      #ok(toPublicProduct(product, null, null, null));
     });
   };
 
@@ -178,7 +178,7 @@ module {
   ) : ?Types.ProductPublic {
     switch (products.get(product_id)) {
       case null { null };
-      case (?p) { ?toPublicProduct(p, null, null) };
+      case (?p) { ?toPublicProduct(p, null, null, null) };
     };
   };
 
@@ -188,7 +188,7 @@ module {
     let results = List.empty<Types.ProductPublic>();
     for ((_, p) in products.entries()) {
       if (p.active) {
-        results.add(toPublicProduct(p, null, null));
+        results.add(toPublicProduct(p, null, null, null));
       };
     };
     results.toArray();
@@ -201,7 +201,7 @@ module {
     let results = List.empty<Types.ProductPublic>();
     for ((_, p) in products.entries()) {
       if (p.active and p.category == category) {
-        results.add(toPublicProduct(p, null, null));
+        results.add(toPublicProduct(p, null, null, null));
       };
     };
     results.toArray();
@@ -234,6 +234,7 @@ module {
     p : Types.Product,
     nftTokenId : ?Nat,
     config : ?ProductShipping.ProductShippingConfig,
+    inventoryRemaining : ?Nat,
   ) : Types.ProductPublic {
     // Backward compat: if image_keys is empty but image_key is set, surface [image_key]
     let keys : [Text] = if (p.image_keys.size() > 0) {
@@ -262,6 +263,7 @@ module {
       weight_based = false;
       price_per_unit_cents = p.price_cents;
       unit_label = null;
+      inventory_remaining = inventoryRemaining;
     };
     ProductShipping.enrichProductPublic(base, config, nftTokenId);
   };

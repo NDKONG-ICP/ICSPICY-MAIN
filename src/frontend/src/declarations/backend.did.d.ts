@@ -29,6 +29,11 @@ export interface AddWeatherRecordInput {
   'humidity' : [] | [number],
   'longitude' : number,
 }
+export interface AdminWithdrawTokensResult {
+  'blockIndex' : [] | [bigint],
+  'message' : string,
+  'success' : boolean,
+}
 export interface AirdropAssignment { 'recipient' : Principal, 'nftId' : bigint }
 export interface ApprovalInfo {
   'memo' : [] | [Uint8Array | number[]],
@@ -82,16 +87,16 @@ export interface BatchGiftPackPublic {
 }
 export type BulkCreateResult = { 'ok' : ProductPublic } |
   { 'err' : string };
-export interface CanisterTreasuryBalance {
-  'balance' : bigint,
-  'ledgerCanisterId' : string,
-  'symbol' : string,
-}
 export interface BuyListedNftResult { 'message' : string, 'success' : boolean }
 export interface CallerDiscount {
   'tokenId' : [] | [bigint],
   'discountPercent' : bigint,
   'rarity' : string,
+}
+export interface CanisterTreasuryBalance {
+  'balance' : bigint,
+  'ledgerCanisterId' : string,
+  'symbol' : string,
 }
 export type ClaimTokenId = string;
 export type CommentId = bigint;
@@ -102,6 +107,12 @@ export interface CommentPublic {
   'created_at' : Timestamp,
   'author' : Principal,
   'author_username' : [] | [string],
+}
+export interface ConfirmOrderPaymentDirectResult {
+  'claim_tokens' : Array<string>,
+  'message' : string,
+  'nft_token_ids' : Array<bigint>,
+  'success' : boolean,
 }
 export type ContainerSize = { 'Gal5Bucket' : null } |
   { 'Gal1' : null } |
@@ -162,6 +173,7 @@ export interface CreateProductInput {
   'name' : string,
   'price_cents' : bigint,
   'description' : string,
+  'inventory_quantity' : [] | [bigint],
   'inventory_category' : [] | [InventoryCategory],
   'image_keys' : Array<string>,
   'shippable' : boolean,
@@ -274,17 +286,13 @@ export interface ICSpicy {
     [bigint],
     { 'message' : string, 'success' : boolean }
   >,
-  'adminWithdrawTokens' : ActorMethod<
-    [string, Principal, bigint],
-    {
-      'blockIndex' : [] | [bigint],
-      'message' : string,
-      'success' : boolean,
-    }
-  >,
   'adminUnstickPepperHead' : ActorMethod<
     [bigint],
     { 'message' : string, 'success' : boolean }
+  >,
+  'adminWithdrawTokens' : ActorMethod<
+    [string, Principal, bigint],
+    AdminWithdrawTokensResult
   >,
   'airdropNFT' : ActorMethod<[string, Principal], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
@@ -330,12 +338,7 @@ export interface ICSpicy {
   >,
   'confirmOrderPaymentDirect' : ActorMethod<
     [bigint, string, bigint],
-    {
-      'claim_tokens' : Array<string>,
-      'message' : string,
-      'nft_token_ids' : Array<bigint>,
-      'success' : boolean,
-    }
+    ConfirmOrderPaymentDirectResult
   >,
   'counterOffer' : ActorMethod<[CounterOfferInput], Offer>,
   'createBatchGiftPack' : ActorMethod<
@@ -390,7 +393,10 @@ export interface ICSpicy {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfilePublic]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCanisterId' : ActorMethod<[], string>,
-  'getCanisterTreasuryBalances' : ActorMethod<[], Array<CanisterTreasuryBalance>>,
+  'getCanisterTreasuryBalances' : ActorMethod<
+    [],
+    Array<CanisterTreasuryBalance>
+  >,
   'getClaimInfo' : ActorMethod<
     [string],
     [] | [
@@ -1017,6 +1023,7 @@ export interface ProductPublic {
   'inventory_category' : [] | [InventoryCategory],
   'image_keys' : Array<string>,
   'shippable' : boolean,
+  'inventory_remaining' : [] | [bigint],
   'category' : ProductCategory,
   'variety' : [] | [string],
   'weight_based' : boolean,

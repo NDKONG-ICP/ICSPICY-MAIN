@@ -24,15 +24,30 @@ module {
     Principal.equal(acc.owner, canister) and acc.subaccount == null;
   };
 
+  func isExcluded(tokenId : Nat, exclude : [Nat]) : Bool {
+    for (e in exclude.vals()) {
+      if (e == tokenId) return true;
+    };
+    false;
+  };
+
   /// Collect available non-PepperHead tokens owned by the canister (open pool).
   public func collectAvailable(
     icrc7Owners : Map.Map<Nat, ICRC7.Account>,
     canister : Principal,
   ) : [Nat] {
+    collectAvailableExcluding(icrc7Owners, canister, []);
+  };
+
+  public func collectAvailableExcluding(
+    icrc7Owners : Map.Map<Nat, ICRC7.Account>,
+    canister : Principal,
+    exclude : [Nat],
+  ) : [Nat] {
     var available : [Nat] = [];
     var tokenId : Nat = 1;
     while (tokenId <= MAX_TOKEN) {
-      if (isPlantPoolToken(tokenId)) {
+      if (isPlantPoolToken(tokenId) and not isExcluded(tokenId, exclude)) {
         switch (icrc7Owners.get(tokenId)) {
           case (?(acc)) {
             if (isCanisterOpenPool(acc, canister)) {
@@ -47,13 +62,25 @@ module {
     available;
   };
 
+  public func canisterOwnsToken(
+    icrc7Owners : Map.Map<Nat, ICRC7.Account>,
+    canister : Principal,
+    tokenId : Nat,
+  ) : Bool {
+    switch (icrc7Owners.get(tokenId)) {
+      case (?(acc)) isCanisterOpenPool(acc, canister);
+      case null false;
+    };
+  };
+
   /// Pick a pseudo-random available token. Returns null if pool exhausted.
   public func pickRandomAvailableNft(
     icrc7Owners : Map.Map<Nat, ICRC7.Account>,
     canister : Principal,
     entropy : Nat,
+    exclude : [Nat],
   ) : ?Nat {
-    let available = collectAvailable(icrc7Owners, canister);
+    let available = collectAvailableExcluding(icrc7Owners, canister, exclude);
     if (available.size() == 0) return null;
     let idx = entropy % available.size();
     ?available[idx];

@@ -57,6 +57,7 @@ mixin (
   orders                  : Map.Map<Common.OrderId, MarketTypes.Order>,
   products                : Map.Map<Common.ProductId, MarketTypes.Product>,
   productNftTokenIds      : Map.Map<Common.ProductId, Nat>,
+  productInventoryRemaining : Map.Map<Common.ProductId, Nat>,
   productShippingConfigs  : Map.Map<Common.ProductId, ProductShipping.ProductShippingConfig>,
   orderLineNftTokenIds    : Map.Map<Common.OrderId, [Nat]>,
   orderPickupClaimTokens  : Map.Map<Common.OrderId, [Text]>,
@@ -389,7 +390,7 @@ mixin (
     let canister = selfPrincipal();
     switch (
       ProductNft.settleOrderLineItems(
-        orderId, order, products, productNftTokenIds, productShippingConfigs, plants, nimsSideMaps(),
+        orderId, order, products, productNftTokenIds, productInventoryRemaining, productShippingConfigs, plants, nimsSideMaps(),
         icrc7Owners, icrc7Balances, icrc37Approvals,
         nftClaimTokens, nftClaimPlantIds, plantClaimTokens, nftTokenPlantIds,
         order.buyer, canister,
@@ -517,7 +518,7 @@ mixin (
     var settledTokenIds : [Nat] = [];
     switch (
       ProductNft.settleOrderLineItems(
-        orderId, order, products, productNftTokenIds, productShippingConfigs, plants, nimsSideMaps(),
+        orderId, order, products, productNftTokenIds, productInventoryRemaining, productShippingConfigs, plants, nimsSideMaps(),
         icrc7Owners, icrc7Balances, icrc37Approvals,
         nftClaimTokens, nftClaimPlantIds, plantClaimTokens, nftTokenPlantIds,
         order.buyer, canister,

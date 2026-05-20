@@ -438,6 +438,7 @@ type ProductPublic =
    image_key: opt text;
    image_keys: vec text;
    inventory_category: opt InventoryCategory;
+   inventory_remaining: opt nat;
    name: text;
    nft_token_id: opt nat;
    plant_id: opt PlantId;
@@ -857,17 +858,13 @@ type ICSpicy =
        message: text;
        success: bool;
      });
-   adminWithdrawTokens: (ledgerCanisterId: text, to: principal, amount: nat) ->
-    (record {
-       blockIndex: opt nat;
-       message: text;
-       success: bool;
-     });
    adminUnstickPepperHead: (tokenId: nat) ->
     (record {
        message: text;
        success: bool;
      });
+   adminWithdrawTokens: (ledgerCanisterId: text, to: principal, amount:
+    nat) -> (AdminWithdrawTokensResult);
    airdropNFT: (_token_id: text, _recipient: principal) -> ();
    assignCallerUserRole: (_user: principal, _role: UserRole) -> ();
    assignPoolNFT: (nftId: nat, action: AssignAction) -> ();
@@ -905,13 +902,8 @@ type ICSpicy =
        message: text;
        success: bool;
      });
-   confirmOrderPaymentDirect: (orderId: nat, ledgerCanisterId: text, amount: nat) ->
-    (record {
-       claim_tokens: vec text;
-       message: text;
-       nft_token_ids: vec nat;
-       success: bool;
-     });
+   confirmOrderPaymentDirect: (orderId: nat, ledgerCanisterId: text, amount:
+    nat) -> (ConfirmOrderPaymentDirectResult);
    counterOffer: (input: CounterOfferInput) -> (Offer);
    createBatchGiftPack: (plant_ids: vec PlantId) ->
     (variant {
@@ -966,8 +958,7 @@ type ICSpicy =
    getCallerUserProfile: () -> (opt UserProfilePublic) query;
    getCallerUserRole: () -> (UserRole) query;
    getCanisterId: () -> (text) query;
-   getCanisterTreasuryBalances: () ->
-    (vec CanisterTreasuryBalance);
+   getCanisterTreasuryBalances: () -> (vec CanisterTreasuryBalance);
    getClaimInfo: (token: text) ->
     (opt
       record {
@@ -1311,6 +1302,7 @@ type CreateProductInput =
    image_key: opt text;
    image_keys: vec text;
    inventory_category: opt InventoryCategory;
+   inventory_quantity: opt nat;
    name: text;
    plant_id: opt PlantId;
    price_cents: nat;
@@ -1384,6 +1376,13 @@ type ContainerSize =
    Pot4Inch;
    Pot6Inch;
  };
+type ConfirmOrderPaymentDirectResult = 
+ record {
+   claim_tokens: vec text;
+   message: text;
+   nft_token_ids: vec nat;
+   success: bool;
+ };
 type CommentPublic = 
  record {
    author: principal;
@@ -1395,6 +1394,12 @@ type CommentPublic =
  };
 type CommentId = nat;
 type ClaimTokenId = text;
+type CanisterTreasuryBalance = 
+ record {
+   balance: nat;
+   ledgerCanisterId: text;
+   symbol: text;
+ };
 type CallerDiscount = 
  record {
    discountPercent: nat;
@@ -1421,12 +1426,6 @@ type BatchGiftPackPublic =
    plant_ids: vec PlantId;
    redeemed: bool;
    redeemed_by: opt principal;
- };
-type CanisterTreasuryBalance =
- record {
-   balance: nat;
-   ledgerCanisterId: text;
-   symbol: text;
  };
 type AuditEntry = 
  record {
@@ -1489,6 +1488,12 @@ type AirdropAssignment =
  record {
    nftId: nat;
    recipient: principal;
+ };
+type AdminWithdrawTokensResult = 
+ record {
+   blockIndex: opt nat;
+   message: text;
+   success: bool;
  };
 type AddWeatherRecordInput = 
  record {

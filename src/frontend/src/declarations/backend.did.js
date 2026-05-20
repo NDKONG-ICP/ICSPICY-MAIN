@@ -135,6 +135,11 @@ export const idlFactory = ({ IDL }) => {
     'TooOld' : IDL.Null,
   });
   const TransferResult = IDL.Variant({ 'Ok' : IDL.Nat, 'Err' : TransferError });
+  const AdminWithdrawTokensResult = IDL.Record({
+    'blockIndex' : IDL.Opt(IDL.Nat),
+    'message' : IDL.Text,
+    'success' : IDL.Bool,
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -205,6 +210,7 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Text,
     'price_cents' : IDL.Nat,
     'description' : IDL.Text,
+    'inventory_quantity' : IDL.Opt(IDL.Nat),
     'inventory_category' : IDL.Opt(InventoryCategory),
     'image_keys' : IDL.Vec(IDL.Text),
     'shippable' : IDL.Bool,
@@ -228,6 +234,7 @@ export const idlFactory = ({ IDL }) => {
     'inventory_category' : IDL.Opt(InventoryCategory),
     'image_keys' : IDL.Vec(IDL.Text),
     'shippable' : IDL.Bool,
+    'inventory_remaining' : IDL.Opt(IDL.Nat),
     'category' : ProductCategory,
     'variety' : IDL.Opt(IDL.Text),
     'weight_based' : IDL.Bool,
@@ -247,6 +254,12 @@ export const idlFactory = ({ IDL }) => {
   });
   const BuyListedNftResult = IDL.Record({
     'message' : IDL.Text,
+    'success' : IDL.Bool,
+  });
+  const ConfirmOrderPaymentDirectResult = IDL.Record({
+    'claim_tokens' : IDL.Vec(IDL.Text),
+    'message' : IDL.Text,
+    'nft_token_ids' : IDL.Vec(IDL.Nat),
     'success' : IDL.Bool,
   });
   const CounterOfferInput = IDL.Record({
@@ -589,6 +602,11 @@ export const idlFactory = ({ IDL }) => {
     'created_at' : Timestamp,
     'follower_count' : IDL.Nat,
     'principal_id' : IDL.Principal,
+  });
+  const CanisterTreasuryBalance = IDL.Record({
+    'balance' : IDL.Nat,
+    'ledgerCanisterId' : IDL.Text,
+    'symbol' : IDL.Text,
   });
   const NftListingPublic = IDL.Record({
     'tokenId' : IDL.Nat,
@@ -1022,18 +1040,14 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Record({ 'message' : IDL.Text, 'success' : IDL.Bool })],
         [],
       ),
-    'adminWithdrawTokens' : IDL.Func(
-        [IDL.Text, IDL.Principal, IDL.Nat],
-        [IDL.Record({
-          'blockIndex' : IDL.Opt(IDL.Nat),
-          'message' : IDL.Text,
-          'success' : IDL.Bool,
-        })],
-        [],
-      ),
     'adminUnstickPepperHead' : IDL.Func(
         [IDL.Nat],
         [IDL.Record({ 'message' : IDL.Text, 'success' : IDL.Bool })],
+        [],
+      ),
+    'adminWithdrawTokens' : IDL.Func(
+        [IDL.Text, IDL.Principal, IDL.Nat],
+        [AdminWithdrawTokensResult],
         [],
       ),
     'airdropNFT' : IDL.Func([IDL.Text, IDL.Principal], [], []),
@@ -1094,12 +1108,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'confirmOrderPaymentDirect' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Nat],
-        [IDL.Record({
-          'claim_tokens' : IDL.Vec(IDL.Text),
-          'message' : IDL.Text,
-          'nft_token_ids' : IDL.Vec(IDL.Nat),
-          'success' : IDL.Bool,
-        })],
+        [ConfirmOrderPaymentDirectResult],
         [],
       ),
     'counterOffer' : IDL.Func([CounterOfferInput], [Offer], []),
@@ -1193,11 +1202,7 @@ export const idlFactory = ({ IDL }) => {
     'getCanisterId' : IDL.Func([], [IDL.Text], ['query']),
     'getCanisterTreasuryBalances' : IDL.Func(
         [],
-        [IDL.Vec(IDL.Record({
-          'balance' : IDL.Nat,
-          'ledgerCanisterId' : IDL.Text,
-          'symbol' : IDL.Text,
-        }))],
+        [IDL.Vec(CanisterTreasuryBalance)],
         [],
       ),
     'getClaimInfo' : IDL.Func(

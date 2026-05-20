@@ -98,6 +98,7 @@ export interface CartItem {
   unit_label?: string;
   unique_listing?: boolean;
   nft_token_id?: bigint;
+  inventory_remaining?: bigint;
   /** @deprecated use unit_price_cents */
   price_cents?: bigint;
 }

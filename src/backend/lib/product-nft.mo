@@ -4,6 +4,7 @@ import Map "mo:core/Map";
 import Set "mo:core/Set";
 import Nat "mo:core/Nat";
 import Int "mo:core/Int";
+import Time "mo:core/Time";
 import Principal "mo:core/Principal";
 import Result "mo:core/Result";
 import Array "mo:core/Array";
@@ -13,6 +14,7 @@ import ICRC7Lib "../lib/icrc7";
 import ICRC37Lib "../lib/icrc37";
 import NftClaim "../lib/nft-claim";
 import ProductShipping "../lib/product-shipping";
+import ProductInventory "../lib/product-inventory";
 import Common "../types/common";
 import MarketTypes "../types/marketplace";
 import PlantTypes "../types/plants";
@@ -23,6 +25,32 @@ module {
   public type LineSettlement = {
     tokenId : Nat;
     pickup_claim_token : ?Text;
+  };
+
+  func reservedTokenIds(productNftTokenIds : Map.Map<Common.ProductId, Nat>) : [Nat] {
+    var ids : [Nat] = [];
+    for ((_, tokenId) in productNftTokenIds.entries()) {
+      ids := Array.concat(ids, [tokenId]);
+    };
+    ids;
+  };
+
+  func pickEntropy(productId : Common.ProductId, salt : Nat) : Nat {
+    Nat.fromInt(
+      Int.abs(Time.now()) + Int.fromNat(productId) * 1_000_003 + Int.fromNat(salt),
+    );
+  };
+
+  func pickFreshCatalogNft(
+    productNftTokenIds : Map.Map<Common.ProductId, Nat>,
+    icrc7Owners : Map.Map<Nat, ICRC7.Account>,
+    canister : Principal,
+    productId : Common.ProductId,
+    entropySalt : Nat,
+  ) : ?Nat {
+    let exclude = reservedTokenIds(productNftTokenIds);
+    let entropy = pickEntropy(productId, entropySalt);
+    NftPool.pickRandomAvailableNft(icrc7Owners, canister, entropy, exclude);
   };
 
   /// Reserve a pool NFT for a catalog (non-plant) product at listing time.
@@ -42,12 +70,66 @@ module {
             switch (productNftTokenIds.get(productId)) {
               case (?_) {};
               case null {
-                let entropy = Int.abs(productId);
-                switch (NftPool.pickRandomAvailableNft(icrc7Owners, canister, entropy)) {
+                switch (pickFreshCatalogNft(productNftTokenIds, icrc7Owners, canister, productId, 0)) {
                   case null {};
-                  case (?t) { productNftTokenIds.add(productId, t) };
+                  case (?t) {
+                    if (NftPool.canisterOwnsToken(icrc7Owners, canister, t)) {
+                      productNftTokenIds.add(productId, t);
+                    };
+                  };
                 };
               };
+            };
+          };
+        };
+      };
+    };
+  };
+
+  public func refreshCatalogReservation(
+    products : Map.Map<Common.ProductId, MarketTypes.Product>,
+    productNftTokenIds : Map.Map<Common.ProductId, Nat>,
+    productInventoryRemaining : Map.Map<Common.ProductId, Nat>,
+    productShippingConfigs : Map.Map<Common.ProductId, ProductShipping.ProductShippingConfig>,
+    icrc7Owners : Map.Map<Nat, ICRC7.Account>,
+    canister : Principal,
+    productId : Common.ProductId,
+  ) : () {
+    switch (products.get(productId)) {
+      case null {};
+      case (?product) {
+        if (not product.active) {
+          ignore productNftTokenIds.delete(productId);
+          return;
+        };
+        let config = switch (productShippingConfigs.get(productId)) {
+          case (?c) c;
+          case null {
+            {
+              shippable = false;
+              shipping_flat_rate_cents = null;
+              weight_based = false;
+              price_per_unit_cents = product.price_cents;
+              unit_label = null;
+            };
+          };
+        };
+        if (not ProductInventory.hasRemainingStock(productInventoryRemaining, productId, ?config)) {
+          ignore productNftTokenIds.delete(productId);
+          return;
+        };
+        switch (productNftTokenIds.get(productId)) {
+          case (?reserved) {
+            if (NftPool.canisterOwnsToken(icrc7Owners, canister, reserved)) return;
+            ignore productNftTokenIds.delete(productId);
+          };
+          case null {};
+        };
+        switch (pickFreshCatalogNft(productNftTokenIds, icrc7Owners, canister, productId, 7)) {
+          case null {};
+          case (?t) {
+            if (NftPool.canisterOwnsToken(icrc7Owners, canister, t)) {
+              productNftTokenIds.add(productId, t);
             };
           };
         };
@@ -111,10 +193,38 @@ module {
       };
       case null {
         switch (productNftTokenIds.get(product.id)) {
-          case (?reserved) #ok(reserved);
+          case (?reserved) {
+            if (NftPool.canisterOwnsToken(icrc7Owners, canister, reserved)) {
+              #ok(reserved);
+            } else {
+              ignore productNftTokenIds.delete(product.id);
+              let entropy = Nat.fromInt(
+                Int.abs(Time.now()) + Int.fromNat(orderId) * 997 +
+                Int.fromNat(lineIndex) * 1_000_003 + Int.fromNat(product.id),
+              );
+              switch (
+                NftPool.pickRandomAvailableNft(
+                  icrc7Owners, canister, entropy, reservedTokenIds(productNftTokenIds),
+                )
+              ) {
+                case null return #err("No NFTs available in pool");
+                case (?t) {
+                  productNftTokenIds.add(product.id, t);
+                  #ok(t);
+                };
+              };
+            };
+          };
           case null {
-            let entropy = Int.abs(orderId) + lineIndex * 1_000_003 + Int.abs(product.id);
-            switch (NftPool.pickRandomAvailableNft(icrc7Owners, canister, entropy)) {
+            let entropy = Nat.fromInt(
+              Int.abs(Time.now()) + Int.fromNat(orderId) * 997 +
+              Int.fromNat(lineIndex) * 1_000_003 + Int.fromNat(product.id),
+            );
+            switch (
+              NftPool.pickRandomAvailableNft(
+                icrc7Owners, canister, entropy, reservedTokenIds(productNftTokenIds),
+              )
+            ) {
               case null return #err("No NFTs available in pool");
               case (?t) #ok(t);
             };
@@ -130,6 +240,7 @@ module {
     order : MarketTypes.Order,
     products : Map.Map<Common.ProductId, MarketTypes.Product>,
     productNftTokenIds : Map.Map<Common.ProductId, Nat>,
+    productInventoryRemaining : Map.Map<Common.ProductId, Nat>,
     productShippingConfigs : Map.Map<Common.ProductId, ProductShipping.ProductShippingConfig>,
     plants : Map.Map<Common.PlantId, PlantTypes.Plant>,
     nimsSide : NimsLib.SideMaps,
@@ -176,6 +287,9 @@ module {
         case null return #err("NFT owner not found");
         case (?a) a;
       };
+      if (not NftPool.canisterOwnsToken(icrc7Owners, canister, tokenId)) {
+        return #err("NFT no longer available in pool: token " # Nat.toText(tokenId));
+      };
       let buyerAccount : ICRC7.Account = { owner = buyer; subaccount = null };
       switch (
         ICRC7Lib.assignOwnership(
@@ -196,7 +310,15 @@ module {
           ignore NimsLib.markPlantClaimedViaQr(plants, nimsSide, pid, buyer);
           product.active := false;
         };
-        case null {};
+        case null {
+          ignore ProductInventory.consumeOnSettlement(
+            products, productInventoryRemaining, product.id, config, item.quantity,
+          );
+          refreshCatalogReservation(
+            products, productNftTokenIds, productInventoryRemaining, productShippingConfigs,
+            icrc7Owners, canister, product.id,
+          );
+        };
       };
 
       let pickupClaim = if (order.pickup) {

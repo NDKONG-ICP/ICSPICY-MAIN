@@ -224,6 +224,7 @@ export interface CreateProductInput {
     weight_based: boolean;
     price_per_unit_cents?: bigint;
     unit_label?: string;
+    inventory_quantity?: bigint;
 }
 export type ContainerSize = {
     __kind__: "Gal5Bucket";
@@ -418,6 +419,7 @@ export interface ProductPublic {
     weight_based: boolean;
     price_per_unit_cents: bigint;
     unit_label?: string;
+    inventory_remaining?: bigint;
 }
 export interface UpdateRecipeInput {
     id: RecipeId;

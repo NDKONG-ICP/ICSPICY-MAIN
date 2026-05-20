@@ -1253,6 +1253,7 @@ function AddForSaleItemForm({
         weight_based: isFreshByLb,
         price_per_unit_cents: isFreshByLb ? priceCents : undefined,
         unit_label: isFreshByLb ? "lb" : undefined,
+        inventory_quantity: BigInt(qty),
       });
       toast.success(`"${fsName}" added to shop!`);
       setFsName("");
@@ -1547,6 +1548,7 @@ function BulkUploadPanel() {
         image_keys: [],
         shippable: false,
         weight_based: false,
+        inventory_quantity: BigInt(Number.parseInt(r.quantity, 10) || 1),
       }));
       const results = await bulkCreate.mutateAsync(inputs);
       const created = results.filter((r) => "ok" in r).length;

@@ -282,7 +282,7 @@ module {
       case (?variety) {};
     };
     validateTrayCell(trays, trayId, cellPosition);
-    let tokenId = switch (NftPool.pickRandomAvailableNft(icrc7Owners, canister, entropy)) {
+    let tokenId = switch (NftPool.pickRandomAvailableNft(icrc7Owners, canister, entropy, [])) {
       case null return #err("No NFTs available in plant pool");
       case (?t) t;
     };

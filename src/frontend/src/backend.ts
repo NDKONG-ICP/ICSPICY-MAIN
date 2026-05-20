@@ -306,6 +306,7 @@ export interface CreateProductInput {
     weight_based: boolean;
     price_per_unit_cents?: bigint;
     unit_label?: string;
+    inventory_quantity?: bigint;
 }
 export type ContainerSize = {
     __kind__: "Gal5Bucket";
@@ -500,6 +501,7 @@ export interface ProductPublic {
     weight_based: boolean;
     price_per_unit_cents: bigint;
     unit_label?: string;
+    inventory_remaining?: bigint;
 }
 export interface UpdateRecipeInput {
     id: RecipeId;
@@ -4364,6 +4366,7 @@ function from_candid_record_n52(_uploadFile: (file: ExternalBlob) => Promise<Uin
     inventory_category: [] | [_InventoryCategory];
     image_keys: Array<string>;
     shippable: boolean;
+    inventory_remaining: [] | [bigint];
     category: _ProductCategory;
     variety: [] | [string];
     weight_based: boolean;
@@ -4383,6 +4386,7 @@ function from_candid_record_n52(_uploadFile: (file: ExternalBlob) => Promise<Uin
         inventory_category: record_opt_to_undefined(from_candid_opt_n53(_uploadFile, _downloadFile, value.inventory_category)),
         image_keys: value.image_keys,
         shippable: value.shippable,
+        inventory_remaining: record_opt_to_undefined(from_candid_opt_n76(_uploadFile, _downloadFile, value.inventory_remaining)),
         category: from_candid_ProductCategory_n56(_uploadFile, _downloadFile, value.category),
         variety: record_opt_to_undefined(from_candid_opt_n17(_uploadFile, _downloadFile, value.variety)),
         weight_based: value.weight_based,
@@ -5667,6 +5671,9 @@ function to_candid_record_n43(_uploadFile: (file: ExternalBlob) => Promise<Uint8
             ? candid_some(value.price_per_unit_cents)
             : candid_none(),
         plant_id: value.plant_id ? candid_some(value.plant_id) : candid_none(),
+        inventory_quantity: value.inventory_quantity
+            ? candid_some(value.inventory_quantity)
+            : candid_none(),
     };
 }
 function to_candid_record_n61(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {

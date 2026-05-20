@@ -11,6 +11,7 @@ import Common "../types/common";
 import MarketTypes "../types/marketplace";
 import PlantTypes "../types/plants";
 import ProductShipping "../lib/product-shipping";
+import ProductInventory "../lib/product-inventory";
 import NftDiscount "../lib/nft-discount";
 import Set "mo:core/Set";
 
@@ -19,6 +20,7 @@ module {
     orders : Map.Map<Common.OrderId, MarketTypes.Order>,
     products : Map.Map<Common.ProductId, MarketTypes.Product>,
     productShippingConfigs : Map.Map<Common.ProductId, ProductShipping.ProductShippingConfig>,
+    productInventoryRemaining : Map.Map<Common.ProductId, Nat>,
     orderShippingCents : Map.Map<Common.OrderId, Nat>,
     orderShippingAddresses : Map.Map<Common.OrderId, MarketTypes.ShippingAddress>,
     icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
@@ -52,6 +54,7 @@ module {
     };
     var validatedItems : [MarketTypes.OrderItem] = [];
     var subtotal : Nat = 0;
+    var requestedQtyByProduct = Map.empty<Common.ProductId, Nat>();
     for (item in input.items.vals()) {
       let product = switch (products.get(item.product_id)) {
         case null return #err("Product not found: " # Nat.toText(item.product_id));
@@ -74,6 +77,20 @@ module {
         case (#err(e)) return #err(e);
         case (#ok) {};
       };
+      let priorQty = switch (requestedQtyByProduct.get(item.product_id)) {
+        case (?q) q;
+        case null 0;
+      };
+      let totalRequested = priorQty + item.quantity;
+      switch (
+        ProductInventory.validateOrderQuantity(
+          productInventoryRemaining, product, config, totalRequested,
+        )
+      ) {
+        case (#err(e)) return #err(e);
+        case (#ok) {};
+      };
+      requestedQtyByProduct.add(item.product_id, totalRequested);
       let unitPrice = ProductShipping.lineUnitPriceCents(product, config);
       let lineTotal = unitPrice * item.quantity;
       subtotal += lineTotal;
