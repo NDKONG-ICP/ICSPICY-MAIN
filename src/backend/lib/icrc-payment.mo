@@ -36,6 +36,31 @@ module {
     #GenericError      : { error_code : Nat; message : Text };
   };
 
+  public type TransferError = {
+    #BadFee            : { expected_fee : Nat };
+    #BadBurn           : { min_burn_amount : Nat };
+    #InsufficientFunds : { balance : Nat };
+    #TooOld;
+    #CreatedInFuture   : { ledger_time : Nat64 };
+    #Duplicate         : { duplicate_of : Nat };
+    #TemporarilyUnavailable;
+    #GenericError      : { error_code : Nat; message : Text };
+  };
+
+  // Minimal ICRC-1 ledger interface (balance + outbound transfer from canister).
+  public type ICRC1Ledger = actor {
+    icrc1_fee : () -> async Nat;
+    icrc1_balance_of : ({ owner : Principal; subaccount : ?Blob }) -> async Nat;
+    icrc1_transfer : ({
+      from_subaccount : ?Blob;
+      to : { owner : Principal; subaccount : ?Blob };
+      amount : Nat;
+      fee : ?Nat;
+      memo : ?Blob;
+      created_at_time : ?Nat64;
+    }) -> async { #Ok : Nat; #Err : TransferError };
+  };
+
   // Minimal ICRC-2 ledger interface needed for payment settlement.
   public type ICRC2Ledger = actor {
     icrc1_fee : () -> async Nat;
@@ -64,6 +89,60 @@ module {
 
   public func getLedger(token : PaymentToken) : ICRC2Ledger {
     actor (ledgerCanisterId(token)) : ICRC2Ledger;
+  };
+
+  public func getIcrc1Ledger(ledgerCanisterId : Text) : ICRC1Ledger {
+    actor (ledgerCanisterId) : ICRC1Ledger;
+  };
+
+  public func allPaymentTokens() : [PaymentToken] {
+    [#ICP, #ckBTC, #ckETH, #ckUSDC, #ckUSDT];
+  };
+
+  public func tokenSymbol(token : PaymentToken) : Text {
+    switch token {
+      case (#ICP) "ICP";
+      case (#ckBTC) "ckBTC";
+      case (#ckETH) "ckETH";
+      case (#ckUSDC) "ckUSDC";
+      case (#ckUSDT) "ckUSDT";
+    };
+  };
+
+  public func isAllowedLedgerId(id : Text) : Bool {
+    for (token in allPaymentTokens().vals()) {
+      if (id == ledgerCanisterId(token)) return true;
+    };
+    false;
+  };
+
+  public func balanceOf(ledgerCanisterId : Text, owner : Principal) : async Nat {
+    let ledger = getIcrc1Ledger(ledgerCanisterId);
+    await ledger.icrc1_balance_of({ owner = owner; subaccount = null });
+  };
+
+  /// Transfer tokens from the calling canister to `to` via icrc1_transfer.
+  public func transferOut(
+    ledgerCanisterId : Text,
+    to : Principal,
+    amount : Nat,
+    created_at_time_ns : ?Nat64,
+    memo : ?Blob,
+  ) : async Result.Result<Nat, Text> {
+    let ledger = getIcrc1Ledger(ledgerCanisterId);
+    let fee = await ledger.icrc1_fee();
+    let result = await ledger.icrc1_transfer({
+      from_subaccount = null;
+      to = { owner = to; subaccount = null };
+      amount;
+      fee = ?fee;
+      memo;
+      created_at_time = created_at_time_ns;
+    });
+    switch result {
+      case (#Ok(blockIndex)) #ok(blockIndex);
+      case (#Err(e)) #err(transferErrorText(e));
+    };
   };
 
   // Transfer `amount` base-units of `token` from buyer → receiver.
@@ -106,6 +185,19 @@ module {
       case (#BadBurn { min_burn_amount })          "Bad burn; min " # Nat.toText(min_burn_amount);
       case (#InsufficientFunds { balance })        "Insufficient funds; balance " # Nat.toText(balance);
       case (#InsufficientAllowance { allowance })  "Insufficient allowance; allowance " # Nat.toText(allowance);
+      case (#TooOld)                               "Transaction too old";
+      case (#CreatedInFuture _)                    "Created in future";
+      case (#Duplicate { duplicate_of })           "Duplicate of block " # Nat.toText(duplicate_of);
+      case (#TemporarilyUnavailable)               "Ledger temporarily unavailable";
+      case (#GenericError { message; error_code = _ }) "Ledger error: " # message;
+    };
+  };
+
+  func transferErrorText(e : TransferError) : Text {
+    switch e {
+      case (#BadFee { expected_fee })             "Bad fee; expected " # Nat.toText(expected_fee);
+      case (#BadBurn { min_burn_amount })          "Bad burn; min " # Nat.toText(min_burn_amount);
+      case (#InsufficientFunds { balance })        "Insufficient funds; balance " # Nat.toText(balance);
       case (#TooOld)                               "Transaction too old";
       case (#CreatedInFuture _)                    "Created in future";
       case (#Duplicate { duplicate_of })           "Duplicate of block " # Nat.toText(duplicate_of);

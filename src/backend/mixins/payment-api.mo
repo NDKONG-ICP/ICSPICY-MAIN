@@ -31,6 +31,7 @@ import NimsLib "../lib/nims";
 import PlantTypes "../types/plants";
 import ClaimTypes "../types/claim";
 import ICRC7 "../types/icrc7";
+import IcrcPayment "../lib/icrc-payment";
 import Result "mo:core/Result";
 import Map "mo:core/Map";
 import List "mo:core/List";
@@ -41,6 +42,7 @@ import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
 import Nat "mo:core/Nat";
 import Nat32 "mo:core/Nat32";
+import Nat64 "mo:core/Nat64";
 import Nat8 "mo:core/Nat8";
 import Array "mo:core/Array";
 import Int "mo:core/Int";
@@ -420,6 +422,230 @@ mixin (
       detail = "order=" # Nat.toText(orderId) # " ref=icpay:" # paymentId;
     });
     { success = true; message = "ICPay payment confirmed" };
+  };
+
+  // ── Direct ICRC-2 stablecoin order payment ────────────────────────────────
+
+  public type ConfirmOrderPaymentDirectResult = {
+    success : Bool;
+    message : Text;
+    claim_tokens : [Text];
+  };
+
+  public shared ({ caller }) func confirmOrderPaymentDirect(
+    orderId : Nat,
+    ledgerCanisterId : Text,
+    amount : Nat,
+  ) : async ConfirmOrderPaymentDirectResult {
+    AccessControl.requireAuthenticated(caller);
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok) {};
+    };
+    try {
+      let result = await doConfirmOrderPaymentDirect(
+        caller, orderId, ledgerCanisterId, amount,
+      );
+      CallerGuard.release(callerGuards, caller);
+      result;
+    } catch (e) {
+      CallerGuard.release(callerGuards, caller);
+      { success = false; message = "Unexpected error during payment"; claim_tokens = [] };
+    };
+  };
+
+  func tokenFromLedgerId(id : Text) : ?IcrcPayment.PaymentToken {
+    if (id == IcrcPayment.ledgerCanisterId(#ckUSDC)) { ?#ckUSDC }
+    else if (id == IcrcPayment.ledgerCanisterId(#ckUSDT)) { ?#ckUSDT }
+    else null;
+  };
+
+  func doConfirmOrderPaymentDirect(
+    caller : Principal,
+    orderId : Nat,
+    ledgerCanisterId : Text,
+    amount : Nat,
+  ) : async ConfirmOrderPaymentDirectResult {
+    switch (orderLineNftTokenIds.get(orderId)) {
+      case (?_) {
+        return { success = false; message = "Order already paid"; claim_tokens = [] };
+      };
+      case null {};
+    };
+    let order = switch (orders.get(orderId)) {
+      case null return { success = false; message = "Order not found"; claim_tokens = [] };
+      case (?o) o;
+    };
+    if (not Principal.equal(order.buyer, caller)) {
+      return { success = false; message = "Not your order"; claim_tokens = [] };
+    };
+    let token = switch (tokenFromLedgerId(ledgerCanisterId)) {
+      case null {
+        return {
+          success = false;
+          message = "Unsupported ledger — use ckUSDC or ckUSDT";
+          claim_tokens = [];
+        };
+      };
+      case (?t) t;
+    };
+    let expected = NimsLib.centsToStablecoinBase(order.total_cents);
+    if (amount != expected) {
+      return {
+        success = false;
+        message = "Payment amount mismatch: expected " # Nat.toText(expected);
+        claim_tokens = [];
+      };
+    };
+    let canister = selfPrincipal();
+    switch (
+      await IcrcPayment.transferFrom(
+        token,
+        caller,
+        canister,
+        amount,
+        ?Nat64.fromNat(Int.abs(Time.now())),
+        ?("order:" # Nat.toText(orderId)).encodeUtf8(),
+      )
+    ) {
+      case (#err(e)) return { success = false; message = e; claim_tokens = [] };
+      case (#ok(_block)) {};
+    };
+    switch (
+      ProductNft.settleOrderLineItems(
+        orderId, order, products, productNftTokenIds, productShippingConfigs, plants, nimsSideMaps(),
+        icrc7Owners, icrc7Balances, icrc37Approvals,
+        nftClaimTokens, nftClaimPlantIds, plantClaimTokens, nftTokenPlantIds,
+        order.buyer, canister,
+      )
+    ) {
+      case (#err(e)) {
+        return { success = false; message = e; claim_tokens = [] };
+      };
+      case (#ok(settlements)) {
+        var tokenIds : [Nat] = [];
+        var claimTokens : [Text] = [];
+        for (s in settlements.vals()) {
+          tokenIds := Array.concat(tokenIds, [s.tokenId]);
+          switch (s.pickup_claim_token) {
+            case (?t) claimTokens := Array.concat(claimTokens, [t]);
+            case null {};
+          };
+        };
+        orderLineNftTokenIds.add(orderId, tokenIds);
+        if (claimTokens.size() > 0) {
+          orderPickupClaimTokens.add(orderId, claimTokens);
+        };
+      };
+    };
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts     = Time.now();
+      admin  = caller;
+      action = "order_payment_direct";
+      detail = "order=" # Nat.toText(orderId) # " ledger=" # ledgerCanisterId;
+    });
+    let stored = switch (orderPickupClaimTokens.get(orderId)) {
+      case (?t) t;
+      case null [];
+    };
+    { success = true; message = "Payment confirmed"; claim_tokens = stored };
+  };
+
+  // ── Canister treasury (on-ledger balances + admin withdrawal) ─────────────
+
+  public type CanisterTreasuryBalance = {
+    ledgerCanisterId : Text;
+    symbol : Text;
+    balance : Nat;
+  };
+
+  public type AdminWithdrawTokensResult = {
+    success : Bool;
+    blockIndex : ?Nat;
+    message : Text;
+  };
+
+  /// Admin: query icrc1_balance_of on each supported ledger for this canister.
+  public shared ({ caller }) func getCanisterTreasuryBalances() : async [CanisterTreasuryBalance] {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let owner = selfPrincipal();
+    var out : [CanisterTreasuryBalance] = [];
+    for (token in IcrcPayment.allPaymentTokens().vals()) {
+      let ledgerId = IcrcPayment.ledgerCanisterId(token);
+      let balance = await IcrcPayment.balanceOf(ledgerId, owner);
+      out := Array.concat(out, [{
+        ledgerCanisterId = ledgerId;
+        symbol = IcrcPayment.tokenSymbol(token);
+        balance;
+      }]);
+    };
+    out;
+  };
+
+  /// Admin: icrc1_transfer from canister treasury to an external principal.
+  public shared ({ caller }) func adminWithdrawTokens(
+    ledgerCanisterId : Text,
+    to : Principal,
+    amount : Nat,
+  ) : async AdminWithdrawTokensResult {
+    AccessControl.requireAdmin(accessControlState, caller);
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok) {};
+    };
+    try {
+      let result = await doAdminWithdrawTokens(caller, ledgerCanisterId, to, amount);
+      CallerGuard.release(callerGuards, caller);
+      result;
+    } catch (e) {
+      CallerGuard.release(callerGuards, caller);
+      { success = false; blockIndex = null; message = "Withdrawal failed" };
+    };
+  };
+
+  func doAdminWithdrawTokens(
+    caller : Principal,
+    ledgerCanisterId : Text,
+    to : Principal,
+    amount : Nat,
+  ) : async AdminWithdrawTokensResult {
+    if (not IcrcPayment.isAllowedLedgerId(ledgerCanisterId)) {
+      return {
+        success = false;
+        blockIndex = null;
+        message = "Unsupported ledger — must be ICP, ckBTC, ckETH, ckUSDC, or ckUSDT";
+      };
+    };
+    if (amount == 0) {
+      return { success = false; blockIndex = null; message = "Amount must be greater than zero" };
+    };
+    switch (
+      await IcrcPayment.transferOut(
+        ledgerCanisterId,
+        to,
+        amount,
+        ?Nat64.fromNat(Int.abs(Time.now())),
+        ?"treasury_withdraw".encodeUtf8(),
+      )
+    ) {
+      case (#err(e)) return { success = false; blockIndex = null; message = e };
+      case (#ok(blockIndex)) {
+        auditLog.value := AuditLog.append(auditLog.value, {
+          ts     = Time.now();
+          admin  = caller;
+          action = "treasury_withdrawal";
+          detail = "ledger=" # ledgerCanisterId #
+            " to=" # Principal.toText(to) #
+            " amount=" # Nat.toText(amount) #
+            " block=" # Nat.toText(blockIndex);
+        });
+        {
+          success = true;
+          blockIndex = ?blockIndex;
+          message = "Withdrawal confirmed";
+        };
+      };
+    };
   };
 
   // ── PepperHead NFT purchase ───────────────────────────────────────────────

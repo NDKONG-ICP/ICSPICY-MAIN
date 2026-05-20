@@ -1022,6 +1022,15 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Record({ 'message' : IDL.Text, 'success' : IDL.Bool })],
         [],
       ),
+    'adminWithdrawTokens' : IDL.Func(
+        [IDL.Text, IDL.Principal, IDL.Nat],
+        [IDL.Record({
+          'blockIndex' : IDL.Opt(IDL.Nat),
+          'message' : IDL.Text,
+          'success' : IDL.Bool,
+        })],
+        [],
+      ),
     'adminUnstickPepperHead' : IDL.Func(
         [IDL.Nat],
         [IDL.Record({ 'message' : IDL.Text, 'success' : IDL.Bool })],
@@ -1081,6 +1090,15 @@ export const idlFactory = ({ IDL }) => {
     'confirmICPayPayment' : IDL.Func(
         [IDL.Nat, IDL.Text],
         [IDL.Record({ 'message' : IDL.Text, 'success' : IDL.Bool })],
+        [],
+      ),
+    'confirmOrderPaymentDirect' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Nat],
+        [IDL.Record({
+          'claim_tokens' : IDL.Vec(IDL.Text),
+          'message' : IDL.Text,
+          'success' : IDL.Bool,
+        })],
         [],
       ),
     'counterOffer' : IDL.Func([CounterOfferInput], [Offer], []),
@@ -1172,6 +1190,15 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCanisterId' : IDL.Func([], [IDL.Text], ['query']),
+    'getCanisterTreasuryBalances' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Record({
+          'balance' : IDL.Nat,
+          'ledgerCanisterId' : IDL.Text,
+          'symbol' : IDL.Text,
+        }))],
+        [],
+      ),
     'getClaimInfo' : IDL.Func(
         [IDL.Text],
         [

@@ -947,6 +947,10 @@ export interface backendInterface {
     }>;
     clearArtworkFiles(): Promise<void>;
     confirmICPayPayment(orderId: bigint, paymentId: string): Promise<{ message: string; success: boolean }>;
+    confirmOrderPaymentDirect(orderId: bigint, ledgerCanisterId: string, amount: bigint): Promise<{ claim_tokens: string[]; message: string; success: boolean }>;
+    adminWithdrawTokens(ledgerCanisterId: string, to: Principal, amount: bigint): Promise<{ blockIndex: bigint | null; message: string; success: boolean }>;
+    getCanisterTreasuryBalances(): Promise<Array<{ ledgerCanisterId: string; symbol: string; balance: bigint }>>;
+    getAuditLog(offset: bigint, limit: bigint): Promise<Array<{ ts: bigint; admin: Principal; action: string; detail: string }>>;
     counterOffer(input: CounterOfferInput): Promise<Offer>;
     createBatchGiftPack(plant_ids: Array<PlantId>): Promise<{
         __kind__: "ok";
@@ -3478,6 +3482,32 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try { return await this.actor.confirmICPayPayment(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.confirmICPayPayment(arg0, arg1); }
+    }
+    async confirmOrderPaymentDirect(arg0: bigint, arg1: string, arg2: bigint): Promise<{ claim_tokens: string[]; message: string; success: boolean }> {
+        if (this.processError) {
+            try { return await this.actor.confirmOrderPaymentDirect(arg0, arg1, arg2); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.confirmOrderPaymentDirect(arg0, arg1, arg2); }
+    }
+    async adminWithdrawTokens(arg0: string, arg1: Principal, arg2: bigint): Promise<{ blockIndex: bigint | null; message: string; success: boolean }> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.adminWithdrawTokens(arg0, arg1, arg2);
+                return { ...r, blockIndex: r.blockIndex.length > 0 ? r.blockIndex[0] : null };
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.adminWithdrawTokens(arg0, arg1, arg2);
+            return { ...r, blockIndex: r.blockIndex.length > 0 ? r.blockIndex[0] : null };
+        }
+    }
+    async getCanisterTreasuryBalances(): Promise<Array<{ ledgerCanisterId: string; symbol: string; balance: bigint }>> {
+        if (this.processError) {
+            try { return await this.actor.getCanisterTreasuryBalances(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getCanisterTreasuryBalances(); }
+    }
+    async getAuditLog(arg0: bigint, arg1: bigint): Promise<Array<{ ts: bigint; admin: Principal; action: string; detail: string }>> {
+        if (this.processError) {
+            try { return await this.actor.getAuditLog(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getAuditLog(arg0, arg1); }
     }
     async purchasePepperHead(arg0: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }> {
         if (this.processError) {

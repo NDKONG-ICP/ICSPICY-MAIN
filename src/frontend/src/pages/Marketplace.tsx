@@ -68,7 +68,7 @@ import { useNftDiscount } from "../hooks/useNftDiscount";
 import { ShopPlantsSection } from "../components/ShopPlantsSection";
 import { ShopListingImage } from "../components/ShopListingImage";
 import { NftResaleSection } from "../components/NftResaleSection";
-import { lineIdForProduct } from "../lib/cart-utils";
+import { lineIdForProduct, lineTotalCents, formatLinePrice, toNatBigInt, toOptionalNatBigInt } from "../lib/cart-utils";
 import {
   CATALOG_CATEGORY_TABS,
   CATEGORY_DISPLAY,
@@ -101,13 +101,15 @@ function productUnitPrice(p: ShopProduct): bigint {
 }
 
 function productToCartItem(p: ShopProduct, quantity: number): import("../types/index").CartItem {
+  const productId = toNatBigInt(p.id);
+  const plantId = toOptionalNatBigInt(p.plant_id);
   return {
-    line_id: lineIdForProduct(p.id, p.plant_id),
-    product_id: p.id,
-    plant_id: p.plant_id,
+    line_id: lineIdForProduct(productId, plantId),
+    product_id: productId,
+    plant_id: plantId,
     name: p.name,
     variety: p.variety,
-    unit_price_cents: productUnitPrice(p),
+    unit_price_cents: Number(productUnitPrice(p)),
     quantity,
     category: p.category as string,
     shippable: p.shippable,
@@ -231,11 +233,10 @@ const RARITY_CONFIG: Record<
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatPrice(cents: bigint, discountPercent = 0) {
-  const base = Number(cents) / 100;
+function formatPrice(cents: number, discountPercent = 0) {
+  const base = cents / 100;
   if (discountPercent <= 0) return `$${base.toFixed(2)}`;
-  const discounted =
-    Number(discountedSubtotalCents(cents, discountPercent)) / 100;
+  const discounted = discountedSubtotalCents(cents, discountPercent) / 100;
   return `$${discounted.toFixed(2)}`;
 }
 
@@ -1169,15 +1170,18 @@ function OffersTab({ priceE8sMap }: { priceE8sMap: Map<string, bigint> }) {
 // ─── Cart Drawer ──────────────────────────────────────────────────────────────
 
 function CartFloat({ discountPercent }: { discountPercent: number }) {
-  const { items, itemCount, shippingCents, removeItem, updateQuantity } =
-    useCart();
+  const {
+    items,
+    itemCount,
+    subtotalCents,
+    shippingCents,
+    removeItem,
+    updateQuantity,
+  } = useCart();
   const [open, setOpen] = useState(false);
   const count = itemCount();
   const shipping = shippingCents();
-  const rawSubtotal = items.reduce(
-    (sum, item) => sum + item.unit_price_cents * BigInt(item.quantity),
-    0n,
-  );
+  const rawSubtotal = subtotalCents();
   const discountAmount = discountAmountCents(rawSubtotal, discountPercent);
   const total = rawSubtotal - discountAmount + shipping;
   const hasDiscount = discountPercent > 0;
@@ -1196,7 +1200,7 @@ function CartFloat({ discountPercent }: { discountPercent: number }) {
       >
         <ShoppingCart className="w-5 h-5" />
         <span className="font-display font-bold text-sm">{count}</span>
-        <span className="text-sm">${(Number(total) / 100).toFixed(2)}</span>
+        <span className="text-sm">${(total / 100).toFixed(2)}</span>
       </motion.button>
 
       <AnimatePresence>
@@ -1248,10 +1252,16 @@ function CartFloat({ discountPercent }: { discountPercent: number }) {
                     <p className="text-xs text-primary font-bold mt-0.5">
                       {hasDiscount
                         ? formatPrice(
-                            item.unit_price_cents * BigInt(item.quantity),
+                            lineTotalCents(
+                              item.unit_price_cents,
+                              item.quantity,
+                            ),
                             discountPercent,
                           )
-                        : `$${(Number(item.unit_price_cents * BigInt(item.quantity)) / 100).toFixed(2)}`}
+                        : formatLinePrice(
+                            item.unit_price_cents,
+                            item.quantity,
+                          )}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
@@ -1301,25 +1311,25 @@ function CartFloat({ discountPercent }: { discountPercent: number }) {
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Subtotal</span>
                     <span className="text-muted-foreground line-through">
-                      ${(Number(rawSubtotal) / 100).toFixed(2)}
+                      ${(rawSubtotal / 100).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-primary">
                     <span>Discount</span>
-                    <span>-${(Number(discountAmount) / 100).toFixed(2)}</span>
+                    <span>-${(discountAmount / 100).toFixed(2)}</span>
                   </div>
                 </>
               )}
-              {shipping > 0n && (
+              {shipping > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>USPS Small Flat Rate shipping</span>
-                  <span>${(Number(shipping) / 100).toFixed(2)}</span>
+                  <span>${(shipping / 100).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-foreground font-bold">
                 <span>Total</span>
                 <span className="text-primary">
-                  ${(Number(total) / 100).toFixed(2)}
+                  ${(total / 100).toFixed(2)}
                 </span>
               </div>
               <a href="/checkout" className="block">

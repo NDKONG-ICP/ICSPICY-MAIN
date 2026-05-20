@@ -90,7 +90,7 @@ export interface CartItem {
   plant_id?: bigint;
   name: string;
   variety?: string;
-  unit_price_cents: bigint;
+  unit_price_cents: number;
   quantity: number;
   category: string;
   shippable?: boolean;

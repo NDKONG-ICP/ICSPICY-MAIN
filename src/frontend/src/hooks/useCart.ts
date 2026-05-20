@@ -4,8 +4,27 @@ import type { CartItem } from "../types/index.ts";
 import {
   cartHasShippable,
   lineTotalCents,
+  priceCentsToNumber,
+  toNatBigInt,
+  toOptionalNatBigInt,
   USPS_SMALL_FLAT_RATE_CENTS,
 } from "../lib/cart-utils";
+
+function normalizeCartItem(item: CartItem): CartItem {
+  return {
+    ...item,
+    product_id: toNatBigInt(item.product_id as bigint | number | string),
+    plant_id: toOptionalNatBigInt(
+      item.plant_id as bigint | number | string | undefined,
+    ),
+    nft_token_id: toOptionalNatBigInt(
+      item.nft_token_id as bigint | number | string | undefined,
+    ),
+    unit_price_cents: priceCentsToNumber(
+      item.unit_price_cents as bigint | number | string,
+    ),
+  };
+}
 
 interface CartStore {
   items: CartItem[];
@@ -13,9 +32,9 @@ interface CartStore {
   removeItem: (lineId: string) => void;
   updateQuantity: (lineId: string, quantity: number) => void;
   clearCart: () => void;
-  subtotalCents: () => bigint;
-  shippingCents: () => bigint;
-  totalCents: () => bigint;
+  subtotalCents: () => number;
+  shippingCents: () => number;
+  totalCents: () => number;
   itemCount: () => number;
   hasShippableItems: () => boolean;
 }
@@ -27,19 +46,22 @@ export const useCart = create<CartStore>()(
 
       addItem: (item) =>
         set((state) => {
-          const existing = state.items.find((i) => i.line_id === item.line_id);
+          const normalized = normalizeCartItem(item);
+          const existing = state.items.find(
+            (i) => i.line_id === normalized.line_id,
+          );
           if (existing) {
             if (existing.unique_listing) return state;
-            const nextQty = existing.quantity + item.quantity;
+            const nextQty = existing.quantity + normalized.quantity;
             return {
               items: state.items.map((i) =>
-                i.line_id === item.line_id
+                i.line_id === normalized.line_id
                   ? { ...i, quantity: nextQty }
                   : i,
               ),
             };
           }
-          return { items: [...state.items, item] };
+          return { items: [...state.items, normalized] };
         }),
 
       removeItem: (lineId) =>
@@ -65,13 +87,14 @@ export const useCart = create<CartStore>()(
       subtotalCents: () => {
         const { items } = get();
         return items.reduce(
-          (sum, item) => sum + lineTotalCents(item.unit_price_cents, item.quantity),
-          0n,
+          (sum, item) =>
+            sum + lineTotalCents(item.unit_price_cents, item.quantity),
+          0,
         );
       },
 
       shippingCents: () =>
-        cartHasShippable(get().items) ? USPS_SMALL_FLAT_RATE_CENTS : 0n,
+        cartHasShippable(get().items) ? USPS_SMALL_FLAT_RATE_CENTS : 0,
 
       totalCents: () => get().subtotalCents() + get().shippingCents(),
 
@@ -85,12 +108,13 @@ export const useCart = create<CartStore>()(
         getItem: (name) => {
           const str = localStorage.getItem(name);
           if (!str) return null;
-          return JSON.parse(str, (_, value) => {
-            if (typeof value === "string" && /^\d+n$/.test(value)) {
-              return BigInt(value.slice(0, -1));
-            }
-            return value;
-          });
+          const parsed = JSON.parse(str);
+          if (parsed?.state?.items) {
+            parsed.state.items = parsed.state.items.map((item: CartItem) =>
+              normalizeCartItem(item),
+            );
+          }
+          return parsed;
         },
         setItem: (name, value) => {
           localStorage.setItem(

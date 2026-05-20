@@ -82,6 +82,11 @@ export interface BatchGiftPackPublic {
 }
 export type BulkCreateResult = { 'ok' : ProductPublic } |
   { 'err' : string };
+export interface CanisterTreasuryBalance {
+  'balance' : bigint,
+  'ledgerCanisterId' : string,
+  'symbol' : string,
+}
 export interface BuyListedNftResult { 'message' : string, 'success' : boolean }
 export interface CallerDiscount {
   'tokenId' : [] | [bigint],
@@ -269,6 +274,14 @@ export interface ICSpicy {
     [bigint],
     { 'message' : string, 'success' : boolean }
   >,
+  'adminWithdrawTokens' : ActorMethod<
+    [string, Principal, bigint],
+    {
+      'blockIndex' : [] | [bigint],
+      'message' : string,
+      'success' : boolean,
+    }
+  >,
   'adminUnstickPepperHead' : ActorMethod<
     [bigint],
     { 'message' : string, 'success' : boolean }
@@ -314,6 +327,14 @@ export interface ICSpicy {
   'confirmICPayPayment' : ActorMethod<
     [bigint, string],
     { 'message' : string, 'success' : boolean }
+  >,
+  'confirmOrderPaymentDirect' : ActorMethod<
+    [bigint, string, bigint],
+    {
+      'claim_tokens' : Array<string>,
+      'message' : string,
+      'success' : boolean,
+    }
   >,
   'counterOffer' : ActorMethod<[CounterOfferInput], Offer>,
   'createBatchGiftPack' : ActorMethod<
@@ -368,6 +389,7 @@ export interface ICSpicy {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfilePublic]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCanisterId' : ActorMethod<[], string>,
+  'getCanisterTreasuryBalances' : ActorMethod<[], Array<CanisterTreasuryBalance>>,
   'getClaimInfo' : ActorMethod<
     [string],
     [] | [

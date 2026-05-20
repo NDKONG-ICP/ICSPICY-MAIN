@@ -7,6 +7,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
   CheckCircle2,
+  CreditCard,
   Flame,
   Gem,
   Loader2,
@@ -17,23 +18,30 @@ import {
   Plus,
   ShoppingBag,
   Trash2,
-  Wallet,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
 import {
-  useConfirmICPayPayment,
+  useConfirmOrderPaymentDirect,
   usePlaceOrder,
 } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
-import { useICPay } from "../hooks/useICPay";
 import { PlantCheckoutPanel } from "../components/PlantCheckoutPanel";
+import {
+  icrc2Approve,
+  STABLECOIN_LEDGERS,
+  stableAmountFromUsdCents,
+  type StableToken,
+} from "../lib/icrc2-payment";
+import { TOKEN_DISPLAY, type OfferTokenSymbol } from "../types";
 import {
   formatLinePrice,
   PICKUP_ADDRESS,
+  toNatBigInt,
+  toOptionalNatBigInt,
   USPS_SMALL_FLAT_RATE_CENTS,
 } from "../lib/cart-utils";
 import {
@@ -50,7 +58,7 @@ function NftDiscountSection({
 }: {
   discountPercent: number;
   rarity: string;
-  discountAmount: bigint;
+  discountAmount: number;
 }) {
   if (discountPercent <= 0) {
     return (
@@ -85,7 +93,7 @@ function NftDiscountSection({
           NFT discount ({discountPercent}%)
         </span>
         <span className="font-semibold text-primary">
-          -${(Number(discountAmount) / 100).toFixed(2)}
+          -${(discountAmount / 100).toFixed(2)}
         </span>
       </div>
     </div>
@@ -118,7 +126,72 @@ function getProductEmoji(category: string) {
   return "🌶️";
 }
 
-// ─── Auth gate ────────────────────────────────────────────────────────────────
+type FulfillmentMethod = "pickup" | "ship";
+
+const SHIPPING_FEE_CENTS = USPS_SMALL_FLAT_RATE_CENTS;
+const SHIPPING_FEE_LABEL = `$${(SHIPPING_FEE_CENTS / 100).toFixed(2)}`;
+
+function FulfillmentSelector({
+  method,
+  onChange,
+}: {
+  method: FulfillmentMethod;
+  onChange: (method: FulfillmentMethod) => void;
+}) {
+  return (
+    <div
+      className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+      data-ocid="checkout-fulfillment-options"
+    >
+      <button
+        type="button"
+        onClick={() => onChange("pickup")}
+        className={[
+          "text-left p-4 rounded-xl border transition-smooth",
+          method === "pickup"
+            ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+            : "border-border bg-secondary/30 hover:border-primary/40",
+        ].join(" ")}
+        data-ocid="checkout-fulfillment-pickup"
+      >
+        <div className="flex items-start gap-3">
+          <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              Local Pickup — Port Charlotte, FL
+            </p>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              Free · QR claim code after payment
+            </p>
+          </div>
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("ship")}
+        className={[
+          "text-left p-4 rounded-xl border transition-smooth",
+          method === "ship"
+            ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+            : "border-border bg-secondary/30 hover:border-primary/40",
+        ].join(" ")}
+        data-ocid="checkout-fulfillment-ship"
+      >
+        <div className="flex items-start gap-3">
+          <Package className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              Ship to me (+{SHIPPING_FEE_LABEL})
+            </p>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              USPS Small Flat Rate · entire order
+            </p>
+          </div>
+        </div>
+      </button>
+    </div>
+  );
+}
 
 function AuthGate({ login }: { login: () => void }) {
   return (
@@ -176,81 +249,132 @@ function EmptyCart() {
   );
 }
 
-// ─── Shipping form ────────────────────────────────────────────────────────────
-
-function WalletStatus({ principal }: { principal: string | null }) {
-  if (!principal) {
-    return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <div className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-        No wallet connected
-      </div>
-    );
-  }
-  const short = `${principal.slice(0, 5)}…${principal.slice(-5)}`;
-  return (
-    <div className="flex items-center gap-2 text-xs text-emerald-400">
-      <div className="w-2 h-2 rounded-full bg-emerald-400" />
-      <span className="font-mono">{short}</span>
-      <Badge
-        variant="outline"
-        className="text-[10px] px-1.5 py-0 h-4 border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-      >
-        Connected
-      </Badge>
-    </div>
-  );
-}
-
 // ─── Payment step ─────────────────────────────────────────────────────────────
+
+const STABLE_TOKENS: StableToken[] = ["ckUSDC", "ckUSDT"];
+const COMING_SOON_VOLATILE: OfferTokenSymbol[] = ["ICP", "ckBTC", "ckETH"];
 
 function PaymentStep({
   orderId,
   finalTotal,
+  isPickup,
   onComplete,
 }: {
   orderId: bigint;
   finalTotal: bigint;
+  isPickup: boolean;
   onComplete: () => void;
 }) {
-  const confirmICPay = useConfirmICPayPayment();
+  const { isAuthenticated, login, identity, principal } = useAuth();
+  const confirmDirect = useConfirmOrderPaymentDirect();
   const navigate = useNavigate();
-  const [walletPrincipal, setWalletPrincipal] = useState<string | null>(null);
+
+  const [payingToken, setPayingToken] = useState<StableToken | null>(null);
+  const [claimTokens, setClaimTokens] = useState<string[]>([]);
+  const [paid, setPaid] = useState(false);
 
   const usdAmount = Number(finalTotal) / 100;
+  const stableAmount = stableAmountFromUsdCents(finalTotal);
 
-  const icpay = useICPay({
-    onSuccess: async (paymentId) => {
-      try {
-        await confirmICPay.mutateAsync({ orderId, paymentId });
-        toast.success("Payment confirmed!");
-        onComplete();
-        navigate({ to: "/orders" });
-      } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Backend confirmation failed",
-        );
-      }
-    },
-    onError: (msg) => toast.error(msg),
-  });
-
-  const handleConnect = async (
-    provider: "plug" | "oisy" | "internet-identity",
-  ) => {
-    const result = await icpay.connectWallet(provider);
-    if (result?.connected) setWalletPrincipal(result.principal);
+  const handlePayStable = async (token: StableToken) => {
+    if (!identity) {
+      login();
+      return;
+    }
+    setPayingToken(token);
+    try {
+      const ledgerId = STABLECOIN_LEDGERS[token];
+      await icrc2Approve(identity, ledgerId, stableAmount);
+      const result = await confirmDirect.mutateAsync({
+        orderId,
+        ledgerCanisterId: ledgerId,
+        amount: stableAmount,
+      });
+      setClaimTokens(result.claim_tokens);
+      setPaid(true);
+      toast.success("Payment confirmed!");
+      onComplete();
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Payment failed. Try again.",
+      );
+    } finally {
+      setPayingToken(null);
+    }
   };
 
-  const handlePay = async () => {
-    await icpay.payUsd(usdAmount, { orderId: orderId.toString() });
-  };
+  if (!isAuthenticated) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center gap-4 py-12 text-center"
+        data-ocid="checkout-payment-login"
+      >
+        <Lock className="w-10 h-10 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground max-w-xs">
+          Sign in with Internet Identity to pay for your order.
+        </p>
+        <Button onClick={login} data-ocid="checkout-payment-login-btn">
+          <Flame className="w-4 h-4" />
+          Sign in with Internet Identity to pay
+        </Button>
+      </motion.div>
+    );
+  }
 
-  const isPending =
-    icpay.status === "connecting" ||
-    icpay.status === "paying" ||
-    icpay.status === "confirming" ||
-    confirmICPay.isPending;
+  if (paid) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="space-y-6 text-center py-6"
+        data-ocid="payment-success"
+      >
+        <CheckCircle2 className="w-14 h-14 text-emerald-400 mx-auto" />
+        <div>
+          <p className="font-semibold text-foreground text-lg">Order confirmed!</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Order #{orderId.toString()} · ${usdAmount.toFixed(2)}
+          </p>
+        </div>
+        {isPickup && claimTokens.length > 0 ? (
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-left space-y-2">
+            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-primary" />
+              Pickup QR claim code
+            </p>
+            {claimTokens.map((t) => (
+              <p
+                key={t}
+                className="text-xs font-mono break-all bg-muted rounded p-2"
+              >
+                {t}
+              </p>
+            ))}
+            <p className="text-xs text-muted-foreground">
+              Bring this code to the nursery in Port Charlotte, FL.
+            </p>
+          </div>
+        ) : !isPickup ? (
+          <p className="text-sm text-muted-foreground">
+            Your order is paid and will ship to the address you provided.
+          </p>
+        ) : null}
+        <Button
+          className="w-full"
+          onClick={() => navigate({ to: "/orders" })}
+          data-ocid="payment-view-orders-btn"
+        >
+          View My Orders
+        </Button>
+      </motion.div>
+    );
+  }
+
+  const principalShort = principal
+    ? `${principal.toText().slice(0, 5)}…${principal.toText().slice(-5)}`
+    : "";
 
   return (
     <motion.div
@@ -259,165 +383,129 @@ function PaymentStep({
       className="space-y-6"
       data-ocid="checkout-payment-step"
     >
-      {/* Order reference */}
       <div className="flex items-center gap-2">
         <Lock className="w-4 h-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">
-          Order #{orderId.toString()} placed — complete payment to confirm
+          Order #{orderId.toString()} placed — choose a payment method
         </span>
       </div>
 
-      {/* Total */}
-      <div className="text-center py-4">
+      <div className="text-center py-2">
         <p className="text-muted-foreground text-sm mb-1">Order total</p>
         <p className="font-display font-bold text-3xl text-primary">
           ${usdAmount.toFixed(2)}
         </p>
       </div>
 
-      {/* Payment panel */}
-      <div
-        className="rounded-xl border border-border bg-card p-5 space-y-5"
-        data-ocid="icpay-panel"
-      >
-        {/* Wallet status */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-foreground">
-            Crypto Wallet
+      <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2">
+        <span className="text-xs text-muted-foreground">
+          Signed in with Internet Identity
+        </span>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-400" />
+          <span className="text-xs font-mono text-emerald-400">
+            {principalShort}
           </span>
-          <WalletStatus principal={walletPrincipal} />
+          <Badge
+            variant="outline"
+            className="text-[10px] px-1.5 py-0 h-4 border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+          >
+            Ready to pay
+          </Badge>
         </div>
+      </div>
 
-        {/* Connect wallet options */}
-        {!walletPrincipal && (
-          <div className="space-y-2" data-ocid="wallet-connect-options">
-            <p className="text-xs text-muted-foreground">
-              Connect a wallet to pay with ICP or ckTokens, or pay directly
-              with card below.
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                disabled={icpay.status === "connecting"}
-                onClick={() => handleConnect("plug")}
-                data-ocid="connect-plug-btn"
-              >
-                {icpay.status === "connecting" ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Wallet className="w-3 h-3" />
-                )}
-                Plug
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                disabled={icpay.status === "connecting"}
-                onClick={() => handleConnect("oisy")}
-                data-ocid="connect-oisy-btn"
-              >
-                {icpay.status === "connecting" ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Wallet className="w-3 h-3" />
-                )}
-                OISY
-              </Button>
-            </div>
+      <div
+        className="rounded-xl border border-border bg-card p-5 space-y-4"
+        data-ocid="checkout-payment-options"
+      >
+        <div>
+          <p className="text-sm font-medium text-foreground mb-2">
+            Stablecoins
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {STABLE_TOKENS.map((token) => {
+              const display = TOKEN_DISPLAY[token];
+              const isPaying = payingToken === token;
+              return (
+                <Button
+                  key={token}
+                  className="w-full justify-between h-auto py-3"
+                  disabled={payingToken !== null}
+                  onClick={() => handlePayStable(token)}
+                  data-ocid={`pay-${token.toLowerCase()}-btn`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${display.bgClass} ${display.colorClass}`}
+                    >
+                      {display.symbol}
+                    </span>
+                    <span className="font-semibold">{token}</span>
+                  </span>
+                  {isPaying ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">
+                      {(Number(stableAmount) / 1_000_000).toFixed(2)}
+                    </span>
+                  )}
+                </Button>
+              );
+            })}
           </div>
-        )}
+          <p className="text-[10px] text-muted-foreground mt-2">
+            ICRC-2 approve + backend settlement via your Internet Identity
+          </p>
+        </div>
 
         <Separator />
 
-        {/* Status indicator */}
-        <AnimatePresence mode="wait">
-          {icpay.status === "confirming" || confirmICPay.isPending ? (
-            <motion.div
-              key="confirming"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-3 text-sm text-muted-foreground"
-              data-ocid="payment-confirming"
-            >
-              <Loader2 className="w-4 h-4 animate-spin text-primary" />
-              Confirming payment on-chain…
-            </motion.div>
-          ) : icpay.status === "error" ? (
-            <motion.div
-              key="error"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="space-y-3"
-              data-ocid="payment-error"
-            >
-              <p className="text-sm text-destructive">{icpay.error}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={icpay.reset}
-                className="w-full"
-              >
-                Try Again
-              </Button>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="pay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <Button
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
-                disabled={isPending}
-                onClick={handlePay}
-                data-ocid="pay-btn"
-              >
-                {icpay.status === "paying" ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Opening payment…
-                  </>
-                ) : (
-                  <>
-                    <Flame className="w-4 h-4" />
-                    Pay ${usdAmount.toFixed(2)}
-                  </>
-                )}
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div>
+          <p className="text-sm font-medium text-muted-foreground mb-2">
+            Volatile tokens — coming soon
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {COMING_SOON_VOLATILE.map((token) => {
+              const display = TOKEN_DISPLAY[token];
+              return (
+                <Button
+                  key={token}
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  className="opacity-50"
+                  data-ocid={`pay-${token.toLowerCase()}-disabled`}
+                >
+                  <span
+                    className={`mr-1 ${display.colorClass}`}
+                  >
+                    {display.symbol}
+                  </span>
+                  {token}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
 
-        <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
-          <Lock className="w-3 h-3" />
-          Powered by ICPay — crypto wallet &amp; card accepted
-        </p>
-      </div>
+        <Separator />
 
-      {/* Success overlay */}
-      <AnimatePresence>
-        {icpay.status === "success" && (
-          <motion.div
-            key="success"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center gap-3 py-6 text-center"
-            data-ocid="payment-success"
+        <div>
+          <p className="text-sm font-medium text-muted-foreground mb-2">
+            Card payments — coming soon
+          </p>
+          <Button
+            variant="outline"
+            className="w-full opacity-50"
+            disabled
+            data-ocid="pay-icpay-disabled"
           >
-            <CheckCircle2 className="w-12 h-12 text-emerald-400" />
-            <p className="font-semibold text-foreground">Order confirmed!</p>
-            <p className="text-sm text-muted-foreground">
-              Redirecting to your orders…
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <CreditCard className="w-4 h-4 mr-2" />
+            ICPay (card) — coming soon
+          </Button>
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -440,27 +528,27 @@ export default function CheckoutPage() {
   }
 
   const { isAuthenticated, login } = useAuth();
-  const { items, removeItem, updateQuantity, subtotalCents, shippingCents, hasShippableItems, clearCart } =
+  const { items, removeItem, updateQuantity, subtotalCents, clearCart } =
     useCart();
   const { discountPercent, rarity } = useNftDiscount();
   const placeOrder = usePlaceOrder();
 
+  const [fulfillment, setFulfillment] = useState<FulfillmentMethod>("pickup");
   const [form, setForm] = useState<ShippingForm>(EMPTY_FORM);
   const [submitted, setSubmitted] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<bigint | null>(null);
   const [finalTotalForPayment, setFinalTotalForPayment] = useState<bigint>(0n);
 
-  const needsShipping = hasShippableItems();
-  const hasPickupItems = items.some((i) => !i.shippable);
+  const wantsShipping = fulfillment === "ship";
 
   const rawSubtotal = subtotalCents();
-  const shipping = shippingCents();
+  const shipping = wantsShipping ? SHIPPING_FEE_CENTS : 0;
   const discountAmount = discountAmountCents(rawSubtotal, discountPercent);
   const discountedSubtotal = rawSubtotal - discountAmount;
   const finalTotal = discountedSubtotal + shipping;
 
   const isFormValid =
-    !needsShipping ||
+    !wantsShipping ||
     (form.fullName.trim() !== "" &&
       form.address1.trim() !== "" &&
       form.city.trim() !== "" &&
@@ -482,9 +570,9 @@ export default function CheckoutPage() {
     if (!isFormValid) return;
 
     try {
-      const order = await placeOrder.mutateAsync({
-        pickup: !needsShipping,
-        shipping: needsShipping
+      const orderInput = {
+        pickup: !wantsShipping,
+        shipping: wantsShipping
           ? {
               full_name: form.fullName.trim(),
               street_line1: form.address1.trim(),
@@ -496,16 +584,44 @@ export default function CheckoutPage() {
             }
           : undefined,
         items: items.map((item) => ({
-          product_id: item.product_id,
-          plant_id: item.plant_id,
-          price_cents: item.unit_price_cents,
+          product_id: toNatBigInt(item.product_id),
+          plant_id: toOptionalNatBigInt(item.plant_id),
+          price_cents: BigInt(item.unit_price_cents),
           quantity: BigInt(item.quantity),
         })),
+      };
+      console.log("[checkout] placeOrder request", {
+        isAuthenticated,
+        fulfillment,
+        itemCount: items.length,
+        orderInput: {
+          ...orderInput,
+          items: orderInput.items.map((item) => ({
+            product_id: item.product_id.toString(),
+            plant_id: item.plant_id?.toString() ?? null,
+            price_cents: item.price_cents.toString(),
+            quantity: item.quantity.toString(),
+          })),
+        },
       });
+      const order = await placeOrder.mutateAsync(orderInput);
+      console.log("[checkout] placeOrder response", {
+        id: order?.id?.toString() ?? null,
+        total_cents: order?.total_cents?.toString() ?? null,
+        raw: order ?? null,
+      });
+      if (!order?.id) {
+        throw new Error("placeOrder returned null or missing id");
+      }
       setFinalTotalForPayment(BigInt(order.total_cents));
       setPendingOrderId(order.id);
-    } catch {
-      toast.error("Failed to place order. Please try again.");
+    } catch (err) {
+      console.error("[checkout] placeOrder failed", err);
+      toast.error(
+        err instanceof Error
+          ? `Failed to place order: ${err.message}`
+          : "Failed to place order. Please try again.",
+      );
     }
   };
 
@@ -526,6 +642,7 @@ export default function CheckoutPage() {
         <PaymentStep
           orderId={pendingOrderId}
           finalTotal={finalTotalForPayment}
+          isPickup={fulfillment === "pickup"}
           onComplete={clearCart}
         />
       </div>
@@ -574,12 +691,11 @@ export default function CheckoutPage() {
                       )}
                       <p className="text-[10px] text-primary/80 mt-0.5">
                         🎫 NFT included
-                        {item.shippable ? " · Ships" : " · Local pickup"}
                       </p>
                       <p className="text-primary text-sm font-bold mt-0.5">
                         {item.weight_based && item.unit_label
-                          ? `$${(Number(item.unit_price_cents) / 100).toFixed(2)}/${item.unit_label}`
-                          : `$${(Number(item.unit_price_cents) / 100).toFixed(2)} ea.`}
+                          ? `$${(item.unit_price_cents / 100).toFixed(2)}/${item.unit_label}`
+                          : `$${(item.unit_price_cents / 100).toFixed(2)} ea.`}
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -635,37 +751,22 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Fulfillment — auto-detected from cart */}
+            {/* Fulfillment — customer choice for entire order */}
             <div>
               <h2 className="font-display font-semibold text-foreground text-lg mb-3">
                 Fulfillment
               </h2>
 
-              {hasPickupItems && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-3 p-4 rounded-xl bg-secondary/40 border border-border mb-4"
-                  data-ocid="checkout-pickup-info"
-                >
-                  <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      Local Pickup — {PICKUP_ADDRESS}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Pickup items receive a QR claim code after payment. Bring
-                      it to the nursery to collect your order.
-                    </p>
-                  </div>
-                </motion.div>
-              )}
+              <FulfillmentSelector
+                method={fulfillment}
+                onChange={setFulfillment}
+              />
 
-              {needsShipping ? (
+              {wantsShipping ? (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="space-y-3"
+                  className="space-y-3 mt-4"
                   data-ocid="checkout-shipping-form"
                 >
                   <div className="flex items-center gap-2 mb-1">
@@ -673,13 +774,6 @@ export default function CheckoutPage() {
                     <p className="text-sm font-medium text-foreground">
                       Shipping address
                     </p>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] border-primary/30 text-primary ml-auto"
-                    >
-                      USPS Small Flat Rate · $
-                      {(Number(USPS_SMALL_FLAT_RATE_CENTS) / 100).toFixed(2)}
-                    </Badge>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="sm:col-span-2">
@@ -813,10 +907,16 @@ export default function CheckoutPage() {
                   )}
                 </motion.div>
               ) : (
-                <p className="text-xs text-muted-foreground">
-                  All items in your cart are local pickup only — no shipping
-                  address needed.
-                </p>
+                <motion.p
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-muted-foreground mt-4 leading-relaxed"
+                  data-ocid="checkout-pickup-info"
+                >
+                  Pick up at {PICKUP_ADDRESS}. You&apos;ll receive a QR claim
+                  code after payment — bring it to the nursery to collect your
+                  order.
+                </motion.p>
               )}
             </div>
           </div>
@@ -841,12 +941,12 @@ export default function CheckoutPage() {
                         : ""}
                     </span>
                     <span className="flex-shrink-0">
-                      $
-                      {(
-                        Number(
-                          item.unit_price_cents * BigInt(item.quantity),
-                        ) / 100
-                      ).toFixed(2)}
+                      {formatLinePrice(
+                        item.unit_price_cents,
+                        item.quantity,
+                        item.weight_based,
+                        item.unit_label,
+                      )}
                     </span>
                   </div>
                 ))}
@@ -857,7 +957,7 @@ export default function CheckoutPage() {
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Subtotal</span>
-                  <span>${(Number(rawSubtotal) / 100).toFixed(2)}</span>
+                  <span>${(rawSubtotal / 100).toFixed(2)}</span>
                 </div>
 
                 <NftDiscountSection
@@ -866,14 +966,12 @@ export default function CheckoutPage() {
                   discountAmount={discountAmount}
                 />
 
-                {shipping > 0n && (
+                {wantsShipping ? (
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>USPS Small Flat Rate shipping</span>
-                    <span>${(Number(shipping) / 100).toFixed(2)}</span>
+                    <span>{SHIPPING_FEE_LABEL}</span>
                   </div>
-                )}
-
-                {!needsShipping && hasPickupItems && (
+                ) : (
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Local pickup</span>
                     <Badge
@@ -891,7 +989,7 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-foreground font-bold text-lg mb-6">
                 <span>Total</span>
                 <span className="text-primary">
-                  ${(Number(finalTotal) / 100).toFixed(2)}
+                  ${(finalTotal / 100).toFixed(2)}
                 </span>
               </div>
 

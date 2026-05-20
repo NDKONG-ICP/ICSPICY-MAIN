@@ -857,6 +857,12 @@ type ICSpicy =
        message: text;
        success: bool;
      });
+   adminWithdrawTokens: (ledgerCanisterId: text, to: principal, amount: nat) ->
+    (record {
+       blockIndex: opt nat;
+       message: text;
+       success: bool;
+     });
    adminUnstickPepperHead: (tokenId: nat) ->
     (record {
        message: text;
@@ -896,6 +902,12 @@ type ICSpicy =
    clearArtworkFiles: () -> ();
    confirmICPayPayment: (orderId: nat, paymentId: text) ->
     (record {
+       message: text;
+       success: bool;
+     });
+   confirmOrderPaymentDirect: (orderId: nat, ledgerCanisterId: text, amount: nat) ->
+    (record {
+       claim_tokens: vec text;
        message: text;
        success: bool;
      });
@@ -953,6 +965,8 @@ type ICSpicy =
    getCallerUserProfile: () -> (opt UserProfilePublic) query;
    getCallerUserRole: () -> (UserRole) query;
    getCanisterId: () -> (text) query;
+   getCanisterTreasuryBalances: () ->
+    (vec CanisterTreasuryBalance);
    getClaimInfo: (token: text) ->
     (opt
       record {
@@ -1406,6 +1420,12 @@ type BatchGiftPackPublic =
    plant_ids: vec PlantId;
    redeemed: bool;
    redeemed_by: opt principal;
+ };
+type CanisterTreasuryBalance =
+ record {
+   balance: nat;
+   ledgerCanisterId: text;
+   symbol: text;
  };
 type AuditEntry = 
  record {

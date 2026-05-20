@@ -3,6 +3,7 @@ import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createActor } from "../backend";
 import { useIcrc7Actor } from "../lib/icrc7-actor";
+import { toNatBigInt, toOptionalNatBigInt } from "../lib/cart-utils";
 
 import type {
   AddFeedingInput,
@@ -589,10 +590,10 @@ export function usePlaceOrder() {
   return useMutation({
     mutationFn: async (input: {
       items: Array<{
-        product_id: bigint;
-        plant_id?: bigint;
-        price_cents: bigint;
-        quantity: bigint;
+        product_id: bigint | number | string;
+        plant_id?: bigint | number | string;
+        price_cents: bigint | number | string;
+        quantity: bigint | number | string;
       }>;
       shipping?: {
         full_name: string;
@@ -606,18 +607,42 @@ export function usePlaceOrder() {
       pickup: boolean;
     }) => {
       if (!actor) throw new Error("Not connected");
-      const backendActor = actor as unknown as {
-        placeOrder: (i: {
-          items: typeof input.items;
-          shipping: [] | [typeof input.shipping & object];
-          pickup: boolean;
-        }) => Promise<{ id: bigint; total_cents: bigint }>;
-      };
-      return backendActor.placeOrder({
-        items: input.items,
-        shipping: input.shipping ? [input.shipping] : [],
+      const payload: CreateOrderInput = {
+        items: input.items.map((item) => ({
+          product_id: toNatBigInt(item.product_id),
+          plant_id: toOptionalNatBigInt(item.plant_id),
+          price_cents: toNatBigInt(item.price_cents),
+          quantity: toNatBigInt(item.quantity),
+        })),
+        shipping: input.shipping,
         pickup: input.pickup,
+      };
+      console.log("[usePlaceOrder] calling backend.placeOrder", {
+        pickup: payload.pickup,
+        shipping: payload.shipping ?? null,
+        items: payload.items.map((item) => ({
+          product_id: item.product_id.toString(),
+          plant_id: item.plant_id?.toString() ?? null,
+          price_cents: item.price_cents.toString(),
+          quantity: item.quantity.toString(),
+        })),
       });
+      const result = await actor.placeOrder(payload);
+      console.log("[usePlaceOrder] backend.placeOrder response", {
+        id: result?.id?.toString() ?? null,
+        total_cents: result?.total_cents?.toString() ?? null,
+        subtotal_cents: result?.subtotal_cents?.toString() ?? null,
+        shipping_cents: result?.shipping_cents?.toString() ?? null,
+        pickup: result?.pickup ?? null,
+        status: result?.status ?? null,
+        raw: result ?? null,
+      });
+      if (!result?.id) {
+        throw new Error(
+          `placeOrder returned empty result: ${JSON.stringify(result)}`,
+        );
+      }
+      return result;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["myOrders"] }),
   });
@@ -1670,6 +1695,62 @@ export function useTreasuryTransfer() {
   });
 }
 
+export function useCanisterTreasuryBalances() {
+  const { actor } = useBackendActor();
+  const { actorReady } = useActorReady();
+  return useQuery({
+    queryKey: ["canisterTreasuryBalances", actorReady],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getCanisterTreasuryBalances();
+    },
+    enabled: !!actor && actorReady,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useAdminWithdrawTokens() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      ledgerCanisterId,
+      to,
+      amount,
+    }: {
+      ledgerCanisterId: string;
+      to: Principal;
+      amount: bigint;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      const result = await actor.adminWithdrawTokens(
+        ledgerCanisterId,
+        to,
+        amount,
+      );
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["canisterTreasuryBalances"] });
+      qc.invalidateQueries({ queryKey: ["auditLog"] });
+    },
+  });
+}
+
+export function useAuditLog(offset = 0n, limit = 100n) {
+  const { actor } = useBackendActor();
+  const { actorReady } = useActorReady();
+  return useQuery({
+    queryKey: ["auditLog", offset.toString(), limit.toString(), actorReady],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAuditLog(offset, limit);
+    },
+    enabled: !!actor && actorReady,
+  });
+}
+
 // ─── Offers ───────────────────────────────────────────────────────────────────
 
 export function useSubmitOffer() {
@@ -2182,6 +2263,32 @@ export function useConfirmICPayPayment() {
     }: { orderId: bigint; paymentId: string }) => {
       if (!actor) throw new Error("Not connected");
       const result = await actor.confirmICPayPayment(orderId, paymentId);
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["orders"] }),
+  });
+}
+
+export function useConfirmOrderPaymentDirect() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      ledgerCanisterId,
+      amount,
+    }: {
+      orderId: bigint;
+      ledgerCanisterId: string;
+      amount: bigint;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      const result = await actor.confirmOrderPaymentDirect(
+        orderId,
+        ledgerCanisterId,
+        amount,
+      );
       if (!result.success) throw new Error(result.message);
       return result;
     },

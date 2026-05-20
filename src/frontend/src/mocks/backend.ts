@@ -1023,6 +1023,44 @@ export const mockBackend: backendInterface = {
   updateZoneNotes: async () => undefined,
   // Phase 4 payment stubs
   confirmICPayPayment: async () => ({ message: "Mock paid", success: true }),
+  confirmOrderPaymentDirect: async () => ({
+    message: "Mock paid",
+    success: true,
+    claim_tokens: ["mock-claim-token"],
+  }),
+  getCanisterTreasuryBalances: async () => [
+    {
+      ledgerCanisterId: "xevnm-gaaaa-aaaar-qafnq-cai",
+      symbol: "ckUSDC",
+      balance: BigInt(1_000_000),
+    },
+    {
+      ledgerCanisterId: "ryjl3-tyaaa-aaaaa-aaaba-cai",
+      symbol: "ICP",
+      balance: BigInt(0),
+    },
+    {
+      ledgerCanisterId: "mxzaz-hqaaa-aaaar-qaada-cai",
+      symbol: "ckBTC",
+      balance: BigInt(0),
+    },
+    {
+      ledgerCanisterId: "ss2fx-dyaaa-aaaar-qacoq-cai",
+      symbol: "ckETH",
+      balance: BigInt(0),
+    },
+    {
+      ledgerCanisterId: "cngnf-vqaaa-aaaar-qag4q-cai",
+      symbol: "ckUSDT",
+      balance: BigInt(0),
+    },
+  ],
+  adminWithdrawTokens: async () => ({
+    success: true,
+    blockIndex: BigInt(42),
+    message: "Withdrawal confirmed",
+  }),
+  getAuditLog: async () => [],
   purchasePepperHead: async () => ({ tokenId: null, message: "Mock purchased", success: true }),
   isPepperHeadAvailable: async () => BigInt(0),
   setICPaySecretKey: async () => undefined,

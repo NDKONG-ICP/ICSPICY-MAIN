@@ -27,15 +27,14 @@ module {
     input : MarketTypes.CreateOrderInput,
   ) : Result.Result<MarketTypes.Order, Text> {
     if (input.items.size() == 0) return #err("Order must have at least one item");
-    let hasShippable = ProductShipping.orderHasShippableItems(
-      input.items, products, productShippingConfigs,
-    );
-    let shippingCents = ProductShipping.computeShippingCents(
-      input.items, products, productShippingConfigs,
-    );
-    if (hasShippable) {
+    if (input.pickup) {
       switch (input.shipping) {
-        case null return #err("Shipping address required for shippable items");
+        case (?_) return #err("Shipping address not needed for pickup orders");
+        case null {};
+      };
+    } else {
+      switch (input.shipping) {
+        case null return #err("Shipping address required");
         case (?addr) {
           if (addr.full_name.size() == 0 or addr.street_line1.size() == 0
             or addr.city.size() == 0 or addr.state.size() == 0
@@ -45,11 +44,11 @@ module {
           orderShippingAddresses.add(nextId, addr);
         };
       };
+    };
+    let shippingCents = if (input.pickup) {
+      0;
     } else {
-      switch (input.shipping) {
-        case (?_) return #err("Shipping address not needed for pickup-only orders");
-        case null {};
-      };
+      ProductShipping.USPS_SMALL_FLAT_RATE_CENTS;
     };
     var validatedItems : [MarketTypes.OrderItem] = [];
     var subtotal : Nat = 0;
@@ -100,7 +99,7 @@ module {
       items = validatedItems;
       total_cents = total;
       shipping_address = shippingText;
-      pickup = not hasShippable;
+      pickup = input.pickup;
       var status = #Pending;
       created_at = Time.now();
     };

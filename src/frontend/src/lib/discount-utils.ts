@@ -1,26 +1,30 @@
-/** NFT holder discount math — mirrors backend lib/nft-discount.mo. */
+/** NFT holder discount math — mirrors backend lib/nft-discount.mo (number cents in cart). */
+
+import { priceCentsToNumber } from "./cart-utils";
 
 export function discountAmountCents(
-  subtotalCents: bigint,
+  subtotalCents: number,
   discountPercent: number,
-): bigint {
-  if (discountPercent <= 0 || subtotalCents <= 0n) return 0n;
-  return (subtotalCents * BigInt(discountPercent) + 50n) / 100n;
+): number {
+  if (discountPercent <= 0 || subtotalCents <= 0) return 0;
+  return Math.round((subtotalCents * discountPercent) / 100);
 }
 
 export function discountedSubtotalCents(
-  subtotalCents: bigint,
+  subtotalCents: number,
   discountPercent: number,
-): bigint {
-  const discount = discountAmountCents(subtotalCents, discountPercent);
-  return subtotalCents - discount;
+): number {
+  return subtotalCents - discountAmountCents(subtotalCents, discountPercent);
 }
 
 export function discountedUnitPriceCents(
-  unitPriceCents: bigint,
+  unitPriceCents: bigint | number,
   discountPercent: number,
-): bigint {
-  return discountedSubtotalCents(unitPriceCents, discountPercent);
+): number {
+  return discountedSubtotalCents(
+    priceCentsToNumber(unitPriceCents),
+    discountPercent,
+  );
 }
 
 export function formatRarityLabel(rarity: string): string {
@@ -41,11 +45,11 @@ export function formatRarityLabel(rarity: string): string {
 }
 
 export function formatDiscountedPriceDisplay(
-  unitPriceCents: bigint,
+  unitPriceCents: bigint | number,
   discountPercent: number,
 ): { yourPrice: string; listPrice: string } {
-  const list = Number(unitPriceCents) / 100;
-  const your = Number(discountedUnitPriceCents(unitPriceCents, discountPercent)) / 100;
+  const list = priceCentsToNumber(unitPriceCents) / 100;
+  const your = discountedUnitPriceCents(unitPriceCents, discountPercent) / 100;
   return {
     yourPrice: `$${your.toFixed(2)}`,
     listPrice: `$${list.toFixed(2)}`,
