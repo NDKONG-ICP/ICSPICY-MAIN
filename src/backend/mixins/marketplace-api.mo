@@ -81,6 +81,7 @@ mixin (
       MarketOrder.createValidatedOrder(
         orders, products, productShippingConfigs,
         orderShippingCents, orderShippingAddresses,
+        icrc7Balances,
         orderId, caller, input,
       )
     ) {
@@ -101,6 +102,9 @@ mixin (
     ignore MarketLib.createProduct(products, productId, input);
     saveProductConfig(productId, input);
     ProductNft.linkPlantListingNft(products, productNftTokenIds, plants, productId);
+    ProductNft.assignCatalogNftOnCreate(
+      products, productNftTokenIds, icrc7Owners, selfPrincipal(), productId,
+    );
     nextProductId.value += 1;
     switch (products.get(productId)) {
       case null Runtime.trap("Product missing after create");
@@ -119,6 +123,9 @@ mixin (
       ignore MarketLib.createProduct(products, productId, input);
       saveProductConfig(productId, input);
       ProductNft.linkPlantListingNft(products, productNftTokenIds, plants, productId);
+      ProductNft.assignCatalogNftOnCreate(
+        products, productNftTokenIds, icrc7Owners, selfPrincipal(), productId,
+      );
       switch (products.get(productId)) {
         case null results := Array.concat(results, [#err("Product missing after create")]);
         case (?p) results := Array.concat(results, [#ok(toPublic(p))]);

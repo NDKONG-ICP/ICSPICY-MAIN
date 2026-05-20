@@ -51,6 +51,12 @@ module {
     started_at    : Common.Timestamp;
   };
 
+  /// Public shop listing image bytes (shop-listings/* paths only).
+  public type ShopListingFile = {
+    data : [Nat8];
+    mime_type : Text;
+  };
+
   // ── Pool NFT types ──────────────────────────────────────────────────────────
 
   public type PoolNFTRarity = {

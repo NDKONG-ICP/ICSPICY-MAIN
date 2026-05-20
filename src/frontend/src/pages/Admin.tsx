@@ -1210,18 +1210,14 @@ function ShopPhotoUpload({ imageKey, onChange }: ShopPhotoUploadProps) {
   );
 }
 
-// Category options for the manual Add For-Sale Item form
+// Category options for the manual Add For-Sale Item form (Phase 6)
 const FOR_SALE_CATEGORIES = [
-  { label: "Seedling", value: ProductCategory.Seedling },
-  { label: "Gallon (1 gal)", value: ProductCategory.Gallon1 },
-  { label: "Gallon (5 gal)", value: ProductCategory.Gallon5 },
-  { label: "Spice", value: ProductCategory.Spice },
-  { label: "Garden Inputs", value: ProductCategory.GardenInputs },
   { label: "Live Plant", value: ProductCategory.LivePlant },
   { label: "Dried Pods", value: ProductCategory.DriedPods },
-  { label: "Garden Amendment", value: ProductCategory.GardenAmendment },
   { label: "Fresh Pods (by lb)", value: ProductCategory.FreshPodsByLb },
   { label: "Fresh Pods (Flat Rate Box)", value: ProductCategory.FreshPodsFlatRate },
+  { label: "Spice", value: ProductCategory.Spice },
+  { label: "Garden Amendment", value: ProductCategory.GardenAmendment },
 ] as const;
 
 const DESC_MAX = 500;
@@ -1234,7 +1230,7 @@ function AddForSaleItemForm({
   const [fsName, setFsName] = useState("");
   const [fsDesc, setFsDesc] = useState("");
   const [fsCategory, setFsCategory] = useState<ProductCategory>(
-    ProductCategory.Seedling,
+    ProductCategory.DriedPods,
   );
   const [fsPrice, setFsPrice] = useState("");
   const [fsStage, setFsStage] = useState("");

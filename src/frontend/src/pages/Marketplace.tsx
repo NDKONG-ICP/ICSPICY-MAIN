@@ -56,19 +56,30 @@ import {
   useGetActiveResaleListings,
   useGetMyOffers,
   useGetOffersReceived,
-  useHasMembership,
   useIssueMembership,
   useMembershipPrices,
   useProducts,
-  useProductsByCategory,
   useRejectOffer,
   useSubmitOffer,
   useTokenPrices,
 } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
+import { useNftDiscount } from "../hooks/useNftDiscount";
 import { ShopPlantsSection } from "../components/ShopPlantsSection";
+import { ShopListingImage } from "../components/ShopListingImage";
 import { NftResaleSection } from "../components/NftResaleSection";
 import { lineIdForProduct } from "../lib/cart-utils";
+import {
+  CATALOG_CATEGORY_TABS,
+  CATEGORY_DISPLAY,
+  isCatalogProduct,
+} from "../lib/shop-products";
+import {
+  discountAmountCents,
+  discountedSubtotalCents,
+  discountedUnitPriceCents,
+  formatRarityLabel,
+} from "../lib/discount-utils";
 import { OFFER_TOKENS, TOKEN_DECIMALS, TOKEN_DISPLAY } from "../types/index";
 import type { OfferTokenSymbol, Product } from "../types/index";
 
@@ -115,19 +126,6 @@ const SHOP_TABS: Array<{ label: string; emoji: string; value: ShopTab }> = [
   { label: "PepperHead", emoji: "👑", value: "pepperhead" },
   { label: "NFT Resale", emoji: "♻️", value: "nft-resale" },
 ];
-
-const NON_PLANT_CATEGORIES = new Set([
-  "Spice",
-  "GardenInputs",
-  "GardenAmendment",
-  "DriedPods",
-  "FreshPodsByLb",
-  "FreshPodsFlatRate",
-]);
-
-function isNonPlantProduct(category: string): boolean {
-  return NON_PLANT_CATEGORIES.has(category);
-}
 
 type TabValue = ProductCategory | "resale" | "offers" | null;
 
@@ -233,10 +231,12 @@ const RARITY_CONFIG: Record<
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatPrice(cents: bigint, discount = false) {
+function formatPrice(cents: bigint, discountPercent = 0) {
   const base = Number(cents) / 100;
-  const final = discount ? base * 0.9 : base;
-  return `$${final.toFixed(2)}`;
+  if (discountPercent <= 0) return `$${base.toFixed(2)}`;
+  const discounted =
+    Number(discountedSubtotalCents(cents, discountPercent)) / 100;
+  return `$${discounted.toFixed(2)}`;
 }
 
 function truncatePrincipal(p: string) {
@@ -274,10 +274,8 @@ function formatIcpEquiv(icp_e8s: bigint): string {
   return `≈ ${icp.toFixed(4)} ICP`;
 }
 
-// ─── Stage Badge ──────────────────────────────────────────────────────────────
-
-function StageBadge({ category }: { category: string }) {
-  const cfg = STAGE_LABELS[category];
+function CategoryBadge({ category }: { category: string }) {
+  const cfg = CATEGORY_DISPLAY[category] ?? STAGE_LABELS[category];
   if (!cfg) return null;
   return (
     <span
@@ -286,6 +284,12 @@ function StageBadge({ category }: { category: string }) {
       {cfg.label}
     </span>
   );
+}
+
+// ─── Stage Badge ──────────────────────────────────────────────────────────────
+
+function StageBadge({ category }: { category: string }) {
+  return <CategoryBadge category={category} />;
 }
 
 // ─── Rarity Badge ─────────────────────────────────────────────────────────────
@@ -1164,14 +1168,19 @@ function OffersTab({ priceE8sMap }: { priceE8sMap: Map<string, bigint> }) {
 
 // ─── Cart Drawer ──────────────────────────────────────────────────────────────
 
-function CartFloat({ hasMembership }: { hasMembership: boolean }) {
-  const { items, itemCount, totalCents, shippingCents, removeItem, updateQuantity } =
+function CartFloat({ discountPercent }: { discountPercent: number }) {
+  const { items, itemCount, shippingCents, removeItem, updateQuantity } =
     useCart();
   const [open, setOpen] = useState(false);
   const count = itemCount();
   const shipping = shippingCents();
-  const rawTotal = totalCents();
-  const total = hasMembership ? (rawTotal * BigInt(9)) / BigInt(10) : rawTotal;
+  const rawSubtotal = items.reduce(
+    (sum, item) => sum + item.unit_price_cents * BigInt(item.quantity),
+    0n,
+  );
+  const discountAmount = discountAmountCents(rawSubtotal, discountPercent);
+  const total = rawSubtotal - discountAmount + shipping;
+  const hasDiscount = discountPercent > 0;
 
   if (count === 0 && !open) return null;
 
@@ -1237,10 +1246,10 @@ function CartFloat({ hasMembership }: { hasMembership: boolean }) {
                     )}
                     <p className="text-[10px] text-primary/80">🎫 NFT included</p>
                     <p className="text-xs text-primary font-bold mt-0.5">
-                      {hasMembership
+                      {hasDiscount
                         ? formatPrice(
                             item.unit_price_cents * BigInt(item.quantity),
-                            true,
+                            discountPercent,
                           )
                         : `$${(Number(item.unit_price_cents * BigInt(item.quantity)) / 100).toFixed(2)}`}
                     </p>
@@ -1284,16 +1293,22 @@ function CartFloat({ hasMembership }: { hasMembership: boolean }) {
             </div>
 
             <div className="p-4 border-t border-border space-y-3">
-              {hasMembership && (
-                <div className="flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-1 text-amber-400">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Member 10% discount applied
-                  </span>
-                  <span className="text-muted-foreground line-through">
-                    ${(Number(rawTotal) / 100).toFixed(2)}
-                  </span>
-                </div>
+              {hasDiscount && (
+                <>
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
+                    🌶️ NFT Holder Discount: {discountPercent}% off
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-muted-foreground line-through">
+                      ${(Number(rawSubtotal) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-primary">
+                    <span>Discount</span>
+                    <span>-${(Number(discountAmount) / 100).toFixed(2)}</span>
+                  </div>
+                </>
               )}
               {shipping > 0n && (
                 <div className="flex justify-between text-xs text-muted-foreground">
@@ -1493,10 +1508,15 @@ function ProductImageGallery({
     <div className="mb-4 space-y-2">
       {/* Main carousel */}
       <div className="relative aspect-video rounded-lg overflow-hidden bg-secondary">
-        <img
-          src={`/api/object-storage/${imageKeys[current]}`}
+        <ShopListingImage
+          path={imageKeys[current]}
           alt={productName}
           className="w-full h-full object-cover"
+          fallback={
+            <div className="w-full h-full flex items-center justify-center text-6xl">
+              {getProductEmoji(category)}
+            </div>
+          }
         />
         {imageKeys.length > 1 && (
           <>
@@ -1538,8 +1558,8 @@ function ProductImageGallery({
               aria-label={`View ${productName} ${idx + 1}`}
               data-ocid={`product-thumb-${idx + 1}`}
             >
-              <img
-                src={`/api/object-storage/${key}`}
+              <ShopListingImage
+                path={key}
                 alt=""
                 className="w-full h-full object-cover"
               />
@@ -1555,11 +1575,11 @@ function ProductImageGallery({
 
 function ProductModal({
   product,
-  hasMembership,
+  discountPercent,
   onClose,
 }: {
   product: ShopProduct;
-  hasMembership: boolean;
+  discountPercent: number;
   onClose: () => void;
 }) {
   const addItem = useCart((s) => s.addItem);
@@ -1573,9 +1593,10 @@ function ProductModal({
     onClose();
   };
 
-  const displayPrice = hasMembership
-    ? (Number(unitPrice) / 100) * 0.9
-    : Number(unitPrice) / 100;
+  const displayPriceCents = discountedUnitPriceCents(unitPrice, discountPercent);
+  const hasDiscount = discountPercent > 0;
+  const displayPrice = Number(displayPriceCents) / 100;
+  const listPrice = Number(unitPrice) / 100;
   const lineTotal = displayPrice * qty;
 
   return (
@@ -1612,9 +1633,11 @@ function ProductModal({
         </p>
 
         <div className="flex items-center gap-2 mb-4">
-          <Badge variant="outline" className="text-xs gap-1">
-            🎫 NFT included
-          </Badge>
+          {product.nft_token_id !== undefined && (
+            <Badge variant="outline" className="text-xs gap-1">
+              🎫 NFT #{product.nft_token_id.toString()}
+            </Badge>
+          )}
           {product.shippable ? (
             <Badge variant="secondary" className="text-xs">
               Ships USPS Flat Rate
@@ -1626,26 +1649,34 @@ function ProductModal({
           )}
         </div>
 
-        {hasMembership && (
-          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-950/30 border border-amber-700/30 mb-4">
-            <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
-            <p className="text-xs text-amber-300">
-              Member discount applied — 10% off!
+        {hasDiscount && (
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/30 mb-4">
+            <p className="text-xs text-foreground">
+              🌶️ NFT Holder Discount: {discountPercent}% off applied
             </p>
           </div>
         )}
 
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-2xl font-display font-bold text-primary">
-              ${displayPrice.toFixed(2)}
-              {product.weight_based && product.unit_label
-                ? ` / ${product.unit_label}`
-                : ""}
-            </p>
-            {hasMembership && (
-              <p className="text-xs text-muted-foreground line-through">
-                ${(Number(product.price_cents) / 100).toFixed(2)}
+            {hasDiscount ? (
+              <>
+                <p className="text-2xl font-display font-bold text-primary">
+                  Your price: ${displayPrice.toFixed(2)}
+                  {product.weight_based && product.unit_label
+                    ? ` / ${product.unit_label}`
+                    : ""}
+                </p>
+                <p className="text-xs text-muted-foreground line-through">
+                  ${listPrice.toFixed(2)}
+                </p>
+              </>
+            ) : (
+              <p className="text-2xl font-display font-bold text-primary">
+                ${listPrice.toFixed(2)}
+                {product.weight_based && product.unit_label
+                  ? ` / ${product.unit_label}`
+                  : ""}
               </p>
             )}
           </div>
@@ -1694,11 +1725,11 @@ function ProductModal({
 
 function ProductCard({
   product,
-  hasMembership,
+  discountPercent,
   onSelect,
 }: {
   product: ShopProduct;
-  hasMembership: boolean;
+  discountPercent: number;
   onSelect: () => void;
 }) {
   const addItem = useCart((s) => s.addItem);
@@ -1712,9 +1743,10 @@ function ProductCard({
     toast.success(`Added ${product.name} to cart`);
   };
 
-  const displayPrice = hasMembership
-    ? (Number(unitPrice) / 100) * 0.9
-    : Number(unitPrice) / 100;
+  const displayPriceCents = discountedUnitPriceCents(unitPrice, discountPercent);
+  const hasDiscount = discountPercent > 0;
+  const displayPrice = Number(displayPriceCents) / 100;
+  const listPrice = Number(unitPrice) / 100;
 
   return (
     <motion.div
@@ -1726,15 +1758,12 @@ function ProductCard({
       data-ocid="product-card"
     >
       <div className="aspect-square bg-secondary flex items-center justify-center text-5xl relative overflow-hidden">
-        {firstImage ? (
-          <img
-            src={`/api/object-storage/${firstImage}`}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          getProductEmoji(product.category)
-        )}
+        <ShopListingImage
+          path={firstImage}
+          alt={product.name}
+          className="w-full h-full object-cover"
+          fallback={getProductEmoji(product.category)}
+        />
         {imageKeys.length > 1 && (
           <div className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-full bg-card/80 border border-border text-[10px] text-foreground">
             +{imageKeys.length - 1}
@@ -1743,11 +1772,10 @@ function ProductCard({
         <div className="absolute top-2 left-2">
           <StageBadge category={product.category} />
         </div>
-        {hasMembership && (
+        {hasDiscount && (
           <div className="absolute top-2 right-2">
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-700/50 text-amber-400 text-xs font-medium">
-              <Sparkles className="w-2.5 h-2.5" />
-              -10%
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/90 border border-primary/50 text-primary-foreground text-xs font-medium">
+              -{discountPercent}%
             </span>
           </div>
         )}
@@ -1763,19 +1791,35 @@ function ProductCard({
                 {product.variety}
               </p>
             )}
-            <p className="text-[10px] text-primary/80 mt-0.5">🎫 NFT included</p>
+            {product.nft_token_id !== undefined && (
+              <p className="text-[10px] text-primary/80 mt-0.5">
+                🎫 NFT #{product.nft_token_id.toString()}
+              </p>
+            )}
+            <div className="mt-1">
+              <CategoryBadge category={product.category} />
+            </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <span className="font-bold text-primary text-sm">
-              ${displayPrice.toFixed(2)}
-              {product.weight_based && product.unit_label
-                ? `/${product.unit_label}`
-                : ""}
-            </span>
-            {hasMembership && (
-              <p className="text-xs text-muted-foreground line-through leading-none">
-                ${(Number(product.price_cents) / 100).toFixed(2)}
-              </p>
+            {hasDiscount ? (
+              <>
+                <span className="font-bold text-primary text-sm block">
+                  Your price: ${displayPrice.toFixed(2)}
+                  {product.weight_based && product.unit_label
+                    ? `/${product.unit_label}`
+                    : ""}
+                </span>
+                <p className="text-xs text-muted-foreground line-through leading-none">
+                  ${listPrice.toFixed(2)}
+                </p>
+              </>
+            ) : (
+              <span className="font-bold text-primary text-sm">
+                ${listPrice.toFixed(2)}
+                {product.weight_based && product.unit_label
+                  ? `/${product.unit_label}`
+                  : ""}
+              </span>
             )}
           </div>
         </div>
@@ -1793,6 +1837,97 @@ function ProductCard({
         </Button>
       </div>
     </motion.div>
+  );
+}
+
+// ─── Products catalog (listProducts, non-NIMS) ───────────────────────────────
+
+function ProductsCatalogSection({
+  products,
+  isLoading,
+  discountPercent,
+  onSelectProduct,
+}: {
+  products: ShopProduct[];
+  isLoading: boolean;
+  discountPercent: number;
+  onSelectProduct: (p: ShopProduct) => void;
+}) {
+  const [categoryFilter, setCategoryFilter] = useState<ProductCategory | null>(
+    null,
+  );
+
+  const filtered = categoryFilter
+    ? products.filter((p) => p.category === categoryFilter)
+    : products;
+
+  return (
+    <section className="space-y-6">
+      <div className="text-center space-y-2 py-2">
+        <h2 className="text-2xl font-display font-bold text-foreground">
+          Pods, Spices &amp; Garden Goods
+        </h2>
+        <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+          Catalog listings from the shop — dried and fresh pods, artisan spices,
+          and garden amendments. Each purchase includes an IC SPICY NFT.
+        </p>
+      </div>
+
+      <div
+        className="flex items-center gap-1.5 flex-wrap p-1 rounded-xl bg-secondary/40 border border-border w-fit mx-auto"
+        data-ocid="products-category-tabs"
+      >
+        {CATALOG_CATEGORY_TABS.map(({ label, emoji, value }) => (
+          <button
+            type="button"
+            key={label}
+            onClick={() => setCategoryFilter(value)}
+            className={[
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-smooth",
+              categoryFilter === value
+                ? "bg-primary text-primary-foreground shadow-subtle"
+                : "text-muted-foreground hover:text-foreground hover:bg-card",
+            ].join(" ")}
+          >
+            <span>{emoji}</span>
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
+
+      {isLoading ? (
+        <ProductGrid />
+      ) : filtered.length > 0 ? (
+        <div
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
+          data-ocid="product-list"
+        >
+          {filtered.map((p) => (
+            <ProductCard
+              key={p.id.toString()}
+              product={p}
+              discountPercent={discountPercent}
+              onSelect={() => onSelectProduct(p)}
+            />
+          ))}
+        </div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center justify-center py-20 text-center"
+        >
+          <div className="text-7xl mb-4">🧂</div>
+          <h3 className="font-display font-semibold text-foreground text-xl mb-2">
+            No products in this category yet
+          </h3>
+          <p className="text-muted-foreground text-sm max-w-xs">
+            Dried pods, spices, and garden amendments will appear here when
+            listed in Admin.
+          </p>
+        </motion.div>
+      )}
+    </section>
   );
 }
 
@@ -1823,37 +1958,29 @@ function ProductGrid({ count = 8 }: { count?: number }) {
 
 export default function MarketplacePage() {
   const [shopTab, setShopTab] = useState<ShopTab>("plants");
-  const [activeTab, setActiveTab] = useState<TabValue>(null);
   const [selectedProduct, setSelectedProduct] = useState<ShopProduct | null>(null);
 
   const isResaleTab = shopTab === "nft-resale";
-  const isOffersTab = false;
   const isProductsTab = shopTab === "products";
   const isPepperHeadTab = shopTab === "pepperhead";
   const isPlantsTab = shopTab === "plants";
-  const activeCategory =
-    isResaleTab || isOffersTab ? null : (activeTab as ProductCategory | null);
 
   const { data: allProducts, isLoading: allLoading } = useProducts();
-  const { data: catProducts, isLoading: catLoading } = useProductsByCategory(
-    activeCategory ?? undefined,
-  );
-  const { data: hasMembership = false } = useHasMembership();
-  const { data: tokenPrices = [], dataUpdatedAt } = useTokenPrices();
+  const { discountPercent, rarity } = useNftDiscount();
+  const { dataUpdatedAt } = useTokenPrices();
   const { data: membershipPrices = {} } = useMembershipPrices();
-
-  const priceE8sMap = new Map<string, bigint>(
-    tokenPrices.map((p) => [p.token as string, p.price_in_icp_e8s]),
-  );
 
   const priceUpdated = dataUpdatedAt
     ? new Date(dataUpdatedAt).toLocaleTimeString()
     : null;
 
-  const products = activeCategory ? catProducts : allProducts;
-  const isLoading = activeCategory ? catLoading : allLoading;
-  const shopProducts =
-    products?.filter((p) => isNonPlantProduct(p.category as string)) ?? [];
+  const catalogProducts =
+    allProducts
+      ?.filter((p) => {
+        const pub = p as ShopProduct & { active?: boolean };
+        return (pub.active ?? true) && isCatalogProduct(p.category as string);
+      })
+      .map((p) => p as ShopProduct) ?? [];
 
   return (
     <div>
@@ -1866,8 +1993,8 @@ export default function MarketplacePage() {
           </h1>
         </div>
         <p className="text-muted-foreground ml-10">
-          Rare chili plants at every growth stage — plus artisan smoked spices,
-          garden inputs &amp; resale NFTs with rarity discounts.
+          Live nursery plants from NIMS, plus pods, spices, garden goods, and
+          NFT resale — all in one shop.
         </p>
       </div>
 
@@ -1894,6 +2021,31 @@ export default function MarketplacePage() {
         ))}
       </div>
 
+      {discountPercent > 0 && (isPlantsTab || isProductsTab) && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/30 mb-6"
+          data-ocid="nft-discount-banner"
+        >
+          <span className="text-lg flex-shrink-0">🌶️</span>
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              NFT Holder Discount Active
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {discountPercent}% off all shop products
+              {formatRarityLabel(rarity)
+                ? ` — ${formatRarityLabel(rarity)} tier`
+                : ""}
+            </p>
+          </div>
+          <Badge className="ml-auto bg-primary/10 text-primary border-primary/30 border text-xs">
+            -{discountPercent}%
+          </Badge>
+        </motion.div>
+      )}
+
       {isPlantsTab && <ShopPlantsSection />}
 
       {isPepperHeadTab && (
@@ -1904,77 +2056,28 @@ export default function MarketplacePage() {
       )}
 
       {isProductsTab && (
-        <>
-          {isLoading ? (
-            <ProductGrid />
-          ) : shopProducts.length > 0 ? (
-            <div
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
-              data-ocid="product-list"
-            >
-              {shopProducts.map((p) => (
-                <ProductCard
-                  key={p.id.toString()}
-                  product={p as ShopProduct}
-                  hasMembership={hasMembership}
-                  onSelect={() => setSelectedProduct(p as ShopProduct)}
-                />
-              ))}
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-20 text-center"
-            >
-              <div className="text-7xl mb-4">🧂</div>
-              <h3 className="font-display font-semibold text-foreground text-xl mb-2">
-                No products listed yet
-              </h3>
-              <p className="text-muted-foreground text-sm max-w-xs">
-                Dried pods, spices, and garden amendments will appear here.
-              </p>
-            </motion.div>
-          )}
-        </>
+        <ProductsCatalogSection
+          products={catalogProducts}
+          isLoading={allLoading}
+          discountPercent={discountPercent}
+          onSelectProduct={setSelectedProduct}
+        />
       )}
 
       {isResaleTab && <NftResaleSection />}
-
-      {hasMembership && (isPlantsTab || isProductsTab) && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 rounded-xl bg-amber-950/30 border border-amber-700/30 mb-6"
-          data-ocid="member-discount-banner"
-        >
-          <Sparkles className="w-5 h-5 text-amber-400 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-amber-300">
-              Member Pricing Active
-            </p>
-            <p className="text-xs text-amber-400/80">
-              Your loyalty discount is applied to all prices below.
-            </p>
-          </div>
-          <Badge className="ml-auto bg-amber-900/50 text-amber-300 border-amber-700/50 border text-xs">
-            -10% OFF
-          </Badge>
-        </motion.div>
-      )}
 
       {/* Product detail modal */}
       {selectedProduct && (
         <ProductModal
           product={selectedProduct}
-          hasMembership={hasMembership}
+          discountPercent={discountPercent}
           onClose={() => setSelectedProduct(null)}
         />
       )}
 
       {/* Floating cart */}
       {(isPlantsTab || isProductsTab || isPepperHeadTab) && (
-        <CartFloat hasMembership={hasMembership} />
+        <CartFloat discountPercent={discountPercent} />
       )}
     </div>
   );

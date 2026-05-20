@@ -52,6 +52,7 @@ import AccessControl "../lib/access-control";
 import CallerGuard "../lib/caller-guard";
 import Cert "../lib/cert";
 import IcrcLib "../lib/icrc7";
+import NftDiscount "../lib/nft-discount";
 import Icrc37Lib "../lib/icrc37";
 import JsonMini "../lib/json-mini";
 
@@ -760,5 +761,10 @@ mixin (
         count;
       };
     };
+  };
+
+  /// Storewide NFT holder discount for the calling principal (highest tier wins).
+  public query ({ caller }) func getCallerDiscount() : async NftDiscount.CallerDiscount {
+    NftDiscount.callerDiscountFromBalances(icrc7Balances, caller);
   };
 };

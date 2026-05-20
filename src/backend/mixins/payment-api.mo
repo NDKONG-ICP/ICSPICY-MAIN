@@ -387,7 +387,7 @@ mixin (
     let canister = selfPrincipal();
     switch (
       ProductNft.settleOrderLineItems(
-        orderId, order, products, productShippingConfigs, plants, nimsSideMaps(),
+        orderId, order, products, productNftTokenIds, productShippingConfigs, plants, nimsSideMaps(),
         icrc7Owners, icrc7Balances, icrc37Approvals,
         nftClaimTokens, nftClaimPlantIds, plantClaimTokens, nftTokenPlantIds,
         order.buyer, canister,

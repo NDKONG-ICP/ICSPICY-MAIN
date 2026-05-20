@@ -356,6 +356,11 @@ export const mockBackend: backendInterface = {
   getAdminPrincipal: async () => "gqkko-43bbx-nwsp4-it2rg-pc2dy-w2pt2-fa5om-4y6es-oyhz2-5i5oh-5ae", // primary admin PID
   getBatchGiftPack: async () => null,
   getCallerMembership: async () => null,
+  getCallerDiscount: async () => ({
+    discountPercent: 0n,
+    rarity: "none",
+    tokenId: undefined,
+  }),
   getCallerUserProfile: async () => null,
   getCallerUserRole: async () => UserRole.guest,
   getCanisterId: async () => "n5mdl-vyaaa-aaaah-qujtq-cai",
@@ -958,6 +963,7 @@ export const mockBackend: backendInterface = {
   }),
   generateAllPoolNFTs: async () => BigInt(8888),
   getArtworkFile: async () => null,
+  getShopListingFile: async () => null,
   getArtworkUploadResult: async () => ({
     layers_detected: BigInt(0),
     asset_canister_id: "aaaaa-aa",

@@ -83,6 +83,11 @@ export interface BatchGiftPackPublic {
 export type BulkCreateResult = { 'ok' : ProductPublic } |
   { 'err' : string };
 export interface BuyListedNftResult { 'message' : string, 'success' : boolean }
+export interface CallerDiscount {
+  'tokenId' : [] | [bigint],
+  'discountPercent' : bigint,
+  'rarity' : string,
+}
 export type ClaimTokenId = string;
 export type CommentId = bigint;
 export interface CommentPublic {
@@ -358,6 +363,7 @@ export interface ICSpicy {
   'getArtworkUploadStatus' : ActorMethod<[], UploadSessionStatus>,
   'getAuditLog' : ActorMethod<[bigint, bigint], Array<AuditEntry>>,
   'getBatchGiftPack' : ActorMethod<[ClaimTokenId], [] | [BatchGiftPackPublic]>,
+  'getCallerDiscount' : ActorMethod<[], CallerDiscount>,
   'getCallerMembership' : ActorMethod<[], [] | [MembershipNFTPublic]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfilePublic]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
@@ -431,6 +437,7 @@ export interface ICSpicy {
     [string, Array<string>],
     Array<ScheduleEntry>
   >,
+  'getShopListingFile' : ActorMethod<[string], [] | [ShopListingFile]>,
   'getTokenPriceInIcp' : ActorMethod<[OracleToken], bigint>,
   'getTokenPrices' : ActorMethod<[], Array<TokenPrice>>,
   'getTray' : ActorMethod<[TrayId], [] | [TrayPublic]>,
@@ -1101,6 +1108,10 @@ export interface ShippingAddress {
   'full_name' : string,
 }
 export interface ShopAssignment { 'nftId' : bigint, 'price' : bigint }
+export interface ShopListingFile {
+  'data' : Uint8Array | number[],
+  'mime_type' : string,
+}
 export interface StageHistory {
   'stage' : PlantStage,
   'notes' : string,

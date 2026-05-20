@@ -25,6 +25,36 @@ module {
     pickup_claim_token : ?Text;
   };
 
+  /// Reserve a pool NFT for a catalog (non-plant) product at listing time.
+  public func assignCatalogNftOnCreate(
+    products : Map.Map<Common.ProductId, MarketTypes.Product>,
+    productNftTokenIds : Map.Map<Common.ProductId, Nat>,
+    icrc7Owners : Map.Map<Nat, ICRC7.Account>,
+    canister : Principal,
+    productId : Common.ProductId,
+  ) : () {
+    switch (products.get(productId)) {
+      case null {};
+      case (?product) {
+        switch (product.plant_id) {
+          case (?_) {};
+          case null {
+            switch (productNftTokenIds.get(productId)) {
+              case (?_) {};
+              case null {
+                let entropy = Int.abs(productId);
+                switch (NftPool.pickRandomAvailableNft(icrc7Owners, canister, entropy)) {
+                  case null {};
+                  case (?t) { productNftTokenIds.add(productId, t) };
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+  };
+
   /// Link a live-plant shop listing to its plant NFT (display only — sale assigns at checkout).
   public func linkPlantListingNft(
     products : Map.Map<Common.ProductId, MarketTypes.Product>,
@@ -56,6 +86,7 @@ module {
   func pickLineNft(
     item : MarketTypes.OrderItem,
     product : MarketTypes.Product,
+    productNftTokenIds : Map.Map<Common.ProductId, Nat>,
     plants : Map.Map<Common.PlantId, PlantTypes.Plant>,
     icrc7Owners : Map.Map<Nat, ICRC7.Account>,
     canister : Principal,
@@ -79,10 +110,15 @@ module {
         };
       };
       case null {
-        let entropy = Int.abs(orderId) + lineIndex * 1_000_003 + Int.abs(product.id);
-        switch (NftPool.pickRandomAvailableNft(icrc7Owners, canister, entropy)) {
-          case null return #err("No NFTs available in pool");
-          case (?t) #ok(t);
+        switch (productNftTokenIds.get(product.id)) {
+          case (?reserved) #ok(reserved);
+          case null {
+            let entropy = Int.abs(orderId) + lineIndex * 1_000_003 + Int.abs(product.id);
+            switch (NftPool.pickRandomAvailableNft(icrc7Owners, canister, entropy)) {
+              case null return #err("No NFTs available in pool");
+              case (?t) #ok(t);
+            };
+          };
         };
       };
     };
@@ -93,6 +129,7 @@ module {
     orderId : Common.OrderId,
     order : MarketTypes.Order,
     products : Map.Map<Common.ProductId, MarketTypes.Product>,
+    productNftTokenIds : Map.Map<Common.ProductId, Nat>,
     productShippingConfigs : Map.Map<Common.ProductId, ProductShipping.ProductShippingConfig>,
     plants : Map.Map<Common.PlantId, PlantTypes.Plant>,
     nimsSide : NimsLib.SideMaps,
@@ -130,7 +167,7 @@ module {
         case (#ok) {};
       };
       let tokenId = switch (
-        pickLineNft(item, product, plants, icrc7Owners, canister, orderId, lineIndex)
+        pickLineNft(item, product, productNftTokenIds, plants, icrc7Owners, canister, orderId, lineIndex)
       ) {
         case (#err(e)) return #err(e);
         case (#ok(t)) t;

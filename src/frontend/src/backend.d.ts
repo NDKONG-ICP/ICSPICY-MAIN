@@ -64,6 +64,11 @@ export interface MembershipNFTPublic {
     rarity_tier?: RarityTier;
     nft_standard: NFTStandard;
 }
+export interface CallerDiscount {
+    discountPercent: bigint;
+    rarity: string;
+    tokenId?: bigint;
+}
 export interface CreateProposalInput {
     title: string;
     ends_at: Timestamp;
@@ -341,6 +346,10 @@ export interface StoredFile {
     layer: string;
     filename: string;
     uploaded_at: Timestamp;
+}
+export interface ShopListingFile {
+    data: Uint8Array;
+    mime_type: string;
 }
 export interface Recipe {
     id: RecipeId;
@@ -882,10 +891,12 @@ export interface backendInterface {
     getAdminPrincipal(): Promise<string>;
     getAdminPrincipals(): Promise<Array<string>>;
     getArtworkFile(path: string): Promise<Uint8Array | null>;
+    getShopListingFile(path: string): Promise<ShopListingFile | null>;
     getArtworkUploadResult(): Promise<UploadResult>;
     getArtworkUploadStatus(): Promise<UploadSessionStatus>;
     getBatchGiftPack(claim_token_id: ClaimTokenId): Promise<BatchGiftPackPublic | null>;
     getCallerMembership(): Promise<MembershipNFTPublic | null>;
+    getCallerDiscount(): Promise<CallerDiscount>;
     getCallerUserProfile(): Promise<UserProfilePublic | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCanisterId(): Promise<string>;

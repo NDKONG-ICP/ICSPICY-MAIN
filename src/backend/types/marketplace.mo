@@ -4,19 +4,22 @@ module {
   // Original shop category variants kept for existing products.
   // InventoryCategory mirrors ContainerSize for NIMS transplant items
   // and stays consistent with types/plants.mo ContainerSize.
+  // STABLE-MEMORY INVARIANT: variant order must match mainnet exactly.
+  // Existing discriminants (ghxmp-xiaaa-aaaao-ba4sq-cai): Gallon1, Gallon5,
+  // GardenInputs, Seedling, Spice. New Phase 6 variants append at end only.
   public type ProductCategory = {
-    // Legacy shop categories (stable — do not remove)
-    #Seedling;
+    // Original variants (mainnet stable order — do not reorder or remove)
     #Gallon1;
     #Gallon5;
-    #Spice;
     #GardenInputs;
-    // Phase 6 product types
+    #Seedling;
+    #Spice;
+    // Phase 6 product types (append-only)
     #LivePlant;
     #DriedPods;
-    #GardenAmendment;
     #FreshPodsByLb;
     #FreshPodsFlatRate;
+    #GardenAmendment;
   };
 
   public type InventoryCategory = {

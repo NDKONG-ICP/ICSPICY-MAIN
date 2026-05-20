@@ -14,6 +14,10 @@ import { useMemo, useState } from "react";
 import type { PlantStage } from "../declarations/backend.did";
 import type { PlantStage as BackendPlantStage } from "../backend";
 import { StageBadge } from "../components/ui/StageBadge";
+import { useNftDiscount } from "../hooks/useNftDiscount";
+import {
+  formatDiscountedPriceDisplay,
+} from "../lib/discount-utils";
 import {
   formatCents,
   nftImageUrl,
@@ -39,6 +43,7 @@ export function ShopPlantsSection() {
   const { data: plants = [], isLoading } = usePlantsForSale(stage, varietyId);
   const { data: varieties = [] } = useVarieties();
   const { data: phAvailable } = usePepperHeadAvailable();
+  const { discountPercent } = useNftDiscount();
 
   return (
     <section className="space-y-8">
@@ -94,6 +99,10 @@ export function ShopPlantsSection() {
             const price =
               unwrapOpt(lc.priceCents) ??
               BigInt(stageDefaultPrice(lc.plant.stage) * 100);
+            const hasDiscount = discountPercent > 0;
+            const priceDisplay = hasDiscount
+              ? formatDiscountedPriceDisplay(price, discountPercent)
+              : null;
             const feedingCount = lc.feedingLog.length;
             return (
               <div
@@ -114,7 +123,18 @@ export function ShopPlantsSection() {
                 <div className="p-4 flex-1 flex flex-col gap-2">
                   <h3 className="font-semibold text-lg">{lc.plant.variety}</h3>
                   <p className="text-xs text-muted-foreground">
-                    {stageLabel(lc.plant.stage)} · {formatCents(price)}
+                    {stageLabel(lc.plant.stage)}
+                    {hasDiscount && priceDisplay ? (
+                      <>
+                        {" · "}
+                        <span className="text-primary font-medium">
+                          Your price: {priceDisplay.yourPrice}
+                        </span>{" "}
+                        <span className="line-through">{priceDisplay.listPrice}</span>
+                      </>
+                    ) : (
+                      <> · {formatCents(price)}</>
+                    )}
                   </p>
                   {tokenId !== undefined && (
                     <Badge variant="secondary" className="w-fit text-xs">

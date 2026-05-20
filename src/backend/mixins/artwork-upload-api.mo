@@ -109,6 +109,28 @@ mixin (
     };
   };
 
+  func isShopListingPath(path : Text) : Bool {
+    let prefix = "shop-listings/";
+    if (path.size() < prefix.size()) return false;
+    var pathIter = path.chars();
+    for (pc in prefix.chars()) {
+      switch (pathIter.next()) {
+        case null return false;
+        case (?c) { if (c != pc) return false };
+      };
+    };
+    true;
+  };
+
+  /// Public: shop listing photos stored via storeArtworkFile (shop-listings/* only).
+  public query func getShopListingFile(path : Text) : async ?Types.ShopListingFile {
+    if (not isShopListingPath(path)) return null;
+    switch (storedFiles.get(path)) {
+      case (?file) ?{ data = file.data; mime_type = file.mime_type };
+      case null null;
+    };
+  };
+
   // ── Pool NFT generation ────────────────────────────────────────────────────
 
   /// Admin: pre-generate all 8,888 pool NFTs.

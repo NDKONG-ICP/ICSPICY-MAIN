@@ -557,6 +557,11 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Principal,
     'detail' : IDL.Text,
   });
+  const CallerDiscount = IDL.Record({
+    'tokenId' : IDL.Opt(IDL.Nat),
+    'discountPercent' : IDL.Nat,
+    'rarity' : IDL.Text,
+  });
   const MembershipTier = IDL.Variant({
     'Premium' : IDL.Null,
     'Standard' : IDL.Null,
@@ -688,6 +693,10 @@ export const idlFactory = ({ IDL }) => {
     'notes' : IDL.Text,
     'frequency' : IDL.Text,
     'input_name' : IDL.Text,
+  });
+  const ShopListingFile = IDL.Record({
+    'data' : IDL.Vec(IDL.Nat8),
+    'mime_type' : IDL.Text,
   });
   const TokenPrice = IDL.Record({
     'token' : OracleToken,
@@ -1150,6 +1159,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(BatchGiftPackPublic)],
         ['query'],
       ),
+    'getCallerDiscount' : IDL.Func([], [CallerDiscount], ['query']),
     'getCallerMembership' : IDL.Func(
         [],
         [IDL.Opt(MembershipNFTPublic)],
@@ -1271,6 +1281,11 @@ export const idlFactory = ({ IDL }) => {
     'getScheduleData' : IDL.Func(
         [IDL.Text, IDL.Vec(IDL.Text)],
         [IDL.Vec(ScheduleEntry)],
+        ['query'],
+      ),
+    'getShopListingFile' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(ShopListingFile)],
         ['query'],
       ),
     'getTokenPriceInIcp' : IDL.Func([OracleToken], [IDL.Nat], ['query']),

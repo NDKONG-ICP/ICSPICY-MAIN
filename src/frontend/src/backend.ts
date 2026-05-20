@@ -146,6 +146,11 @@ export interface MembershipNFTPublic {
     rarity_tier?: RarityTier;
     nft_standard: NFTStandard;
 }
+export interface CallerDiscount {
+    discountPercent: bigint;
+    rarity: string;
+    tokenId?: bigint;
+}
 export interface CreateProposalInput {
     title: string;
     ends_at: Timestamp;
@@ -423,6 +428,10 @@ export interface StoredFile {
     layer: string;
     filename: string;
     uploaded_at: Timestamp;
+}
+export interface ShopListingFile {
+    data: Uint8Array;
+    mime_type: string;
 }
 export interface Recipe {
     id: RecipeId;
@@ -971,10 +980,12 @@ export interface backendInterface {
     getAdminPrincipal(): Promise<string>;
     getAdminPrincipals(): Promise<Array<string>>;
     getArtworkFile(path: string): Promise<Uint8Array | null>;
+    getShopListingFile(path: string): Promise<ShopListingFile | null>;
     getArtworkUploadResult(): Promise<UploadResult>;
     getArtworkUploadStatus(): Promise<UploadSessionStatus>;
     getBatchGiftPack(claim_token_id: ClaimTokenId): Promise<BatchGiftPackPublic | null>;
     getCallerMembership(): Promise<MembershipNFTPublic | null>;
+    getCallerDiscount(): Promise<CallerDiscount>;
     getCallerUserProfile(): Promise<UserProfilePublic | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCanisterId(): Promise<string>;
@@ -1869,6 +1880,16 @@ export class Backend implements backendInterface {
             return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getShopListingFile(path: string): Promise<ShopListingFile | null> {
+        const result = await this.actor.getShopListingFile(path);
+        if (result === undefined || result === null) return null;
+        if (Array.isArray(result) && result.length === 0) return null;
+        const file = Array.isArray(result) ? result[0] : result;
+        return {
+            data: new Uint8Array(file.data),
+            mime_type: file.mime_type,
+        };
+    }
     async getArtworkUploadResult(): Promise<UploadResult> {
         if (this.processError) {
             try {
@@ -1924,6 +1945,18 @@ export class Backend implements backendInterface {
             const result = await this.actor.getCallerMembership();
             return from_candid_opt_n124(this._uploadFile, this._downloadFile, result);
         }
+    }
+    async getCallerDiscount(): Promise<CallerDiscount> {
+        const result = await this.actor.getCallerDiscount();
+        const tokenId =
+            Array.isArray(result.tokenId) && result.tokenId.length > 0
+                ? result.tokenId[0]
+                : undefined;
+        return {
+            discountPercent: result.discountPercent,
+            rarity: result.rarity,
+            tokenId,
+        };
     }
     async getCallerUserProfile(): Promise<UserProfilePublic | null> {
         if (this.processError) {

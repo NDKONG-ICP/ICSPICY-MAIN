@@ -7,7 +7,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
   CheckCircle2,
-  Crown,
   Flame,
   Gem,
   Loader2,
@@ -17,24 +16,19 @@ import {
   Package,
   Plus,
   ShoppingBag,
-  Sparkles,
-  Star,
   Trash2,
   Wallet,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { MembershipTier, RarityTier } from "../backend";
 import { useAuth } from "../hooks/useAuth";
 import {
   useConfirmICPayPayment,
-  useHasMembership,
-  useMembership,
-  useMyPlants,
   usePlaceOrder,
 } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
+import { useNftDiscount } from "../hooks/useNftDiscount";
 import { useICPay } from "../hooks/useICPay";
 import { PlantCheckoutPanel } from "../components/PlantCheckoutPanel";
 import {
@@ -42,54 +36,61 @@ import {
   PICKUP_ADDRESS,
   USPS_SMALL_FLAT_RATE_CENTS,
 } from "../lib/cart-utils";
+import {
+  discountAmountCents,
+  formatRarityLabel,
+} from "../lib/discount-utils";
 
-// ─── Rarity config ─────────────────────────────────────────────────────────
+// ─── Discount line ────────────────────────────────────────────────────────────
 
-const RARITY_CONFIG: Record<
-  RarityTier,
-  {
-    label: string;
-    colorClass: string;
-    bgClass: string;
-    borderClass: string;
-    discountPct: number;
-    icon: React.ReactNode;
+function NftDiscountSection({
+  discountPercent,
+  rarity,
+  discountAmount,
+}: {
+  discountPercent: number;
+  rarity: string;
+  discountAmount: bigint;
+}) {
+  if (discountPercent <= 0) {
+    return (
+      <div
+        className="flex items-center justify-between rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2.5 text-xs"
+        data-ocid="checkout-discount-cta"
+      >
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <Gem className="w-3.5 h-3.5 text-primary" />
+          Hold an IC SPICY NFT for storewide discounts
+        </span>
+        <Link
+          to="/marketplace"
+          className="font-semibold text-primary hover:text-primary/80 transition-colors"
+        >
+          Browse the Shop →
+        </Link>
+      </div>
+    );
   }
-> = {
-  [RarityTier.Common]: {
-    label: "Common",
-    colorClass: "text-emerald-400",
-    bgClass: "bg-emerald-500/10",
-    borderClass: "border-emerald-500/30",
-    discountPct: 10,
-    icon: <Star className="w-3 h-3" />,
-  },
-  [RarityTier.Uncommon]: {
-    label: "Uncommon",
-    colorClass: "text-blue-400",
-    bgClass: "bg-blue-500/10",
-    borderClass: "border-blue-500/30",
-    discountPct: 12,
-    icon: <Sparkles className="w-3 h-3" />,
-  },
-  [RarityTier.Rare]: {
-    label: "Rare",
-    colorClass: "text-amber-400",
-    bgClass: "bg-amber-500/10",
-    borderClass: "border-amber-500/30",
-    discountPct: 15,
-    icon: <Crown className="w-3 h-3" />,
-  },
-};
 
-function getRarityFromMembershipTier(
-  tier: MembershipTier | undefined,
-): RarityTier {
-  if (tier === MembershipTier.Premium) return RarityTier.Rare;
-  return RarityTier.Common;
+  const rarityLabel = formatRarityLabel(rarity);
+
+  return (
+    <div className="space-y-2" data-ocid="checkout-nft-discount">
+      <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
+        🌶️ NFT Holder Discount: {discountPercent}% off
+        {rarityLabel ? ` (${rarityLabel})` : ""}
+      </div>
+      <div className="flex justify-between text-sm">
+        <span className="text-muted-foreground">
+          NFT discount ({discountPercent}%)
+        </span>
+        <span className="font-semibold text-primary">
+          -${(Number(discountAmount) / 100).toFixed(2)}
+        </span>
+      </div>
+    </div>
+  );
 }
-
-// ─── Shipping form ────────────────────────────────────────────────────────────
 
 interface ShippingForm {
   fullName: string;
@@ -175,69 +176,7 @@ function EmptyCart() {
   );
 }
 
-// ─── Discount line ────────────────────────────────────────────────────────────
-
-function DiscountLine({
-  hasMembership,
-  discountPct,
-  discountAmount,
-  rarityTier,
-}: {
-  hasMembership: boolean;
-  discountPct: number;
-  discountAmount: bigint;
-  rarityTier: RarityTier | null;
-}) {
-  if (!hasMembership) {
-    return (
-      <div
-        className="flex items-center justify-between rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2.5 text-xs"
-        data-ocid="checkout-discount-cta"
-      >
-        <span className="flex items-center gap-1.5 text-muted-foreground">
-          <Gem className="w-3.5 h-3.5 text-primary" />
-          Unlock Lifetime Discounts
-        </span>
-        <Link
-          to="/marketplace"
-          className="font-semibold text-primary hover:text-primary/80 transition-colors"
-        >
-          Claim a Plant NFT →
-        </Link>
-      </div>
-    );
-  }
-
-  const cfg = rarityTier
-    ? RARITY_CONFIG[rarityTier]
-    : RARITY_CONFIG[RarityTier.Common];
-
-  return (
-    <div className="space-y-1.5" data-ocid="checkout-nft-discount">
-      <div className="flex justify-between text-sm">
-        <span className="flex items-center gap-1.5">
-          <span className={cfg.colorClass}>{cfg.icon}</span>
-          <span className="text-foreground font-medium">
-            NFT Loyalty Discount ({discountPct}%)
-          </span>
-          {rarityTier && (
-            <Badge
-              variant="outline"
-              className={`text-[10px] px-1.5 py-0 h-4 ml-0.5 border ${cfg.borderClass} ${cfg.bgClass} ${cfg.colorClass} font-bold`}
-            >
-              {cfg.label}
-            </Badge>
-          )}
-        </span>
-        <span className={`font-semibold ${cfg.colorClass}`}>
-          -${(Number(discountAmount) / 100).toFixed(2)}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// ─── Wallet status pill ───────────────────────────────────────────────────────
+// ─── Shipping form ────────────────────────────────────────────────────────────
 
 function WalletStatus({ principal }: { principal: string | null }) {
   if (!principal) {
@@ -503,9 +442,7 @@ export default function CheckoutPage() {
   const { isAuthenticated, login } = useAuth();
   const { items, removeItem, updateQuantity, subtotalCents, shippingCents, hasShippableItems, clearCart } =
     useCart();
-  const { data: hasMembership = false } = useHasMembership();
-  const { data: membership } = useMembership();
-  const { data: myPlants = [] } = useMyPlants();
+  const { discountPercent, rarity } = useNftDiscount();
   const placeOrder = usePlaceOrder();
 
   const [form, setForm] = useState<ShippingForm>(EMPTY_FORM);
@@ -516,25 +453,9 @@ export default function CheckoutPage() {
   const needsShipping = hasShippableItems();
   const hasPickupItems = items.some((i) => !i.shippable);
 
-  // ─ Rarity / discount ─
-  let rarityTier: RarityTier | null = null;
-  if (hasMembership && membership) {
-    rarityTier = getRarityFromMembershipTier(membership.tier);
-  } else if (myPlants.some((p) => p.nft_id)) {
-    rarityTier = RarityTier.Common;
-  }
-
-  const discountPct = rarityTier
-    ? RARITY_CONFIG[rarityTier].discountPct
-    : hasMembership
-      ? 10
-      : 0;
-
   const rawSubtotal = subtotalCents();
   const shipping = shippingCents();
-  const discountAmount = hasMembership
-    ? (rawSubtotal * BigInt(discountPct)) / BigInt(100)
-    : BigInt(0);
+  const discountAmount = discountAmountCents(rawSubtotal, discountPercent);
   const discountedSubtotal = rawSubtotal - discountAmount;
   const finalTotal = discountedSubtotal + shipping;
 
@@ -939,11 +860,10 @@ export default function CheckoutPage() {
                   <span>${(Number(rawSubtotal) / 100).toFixed(2)}</span>
                 </div>
 
-                <DiscountLine
-                  hasMembership={hasMembership}
-                  discountPct={discountPct}
+                <NftDiscountSection
+                  discountPercent={discountPercent}
+                  rarity={rarity}
                   discountAmount={discountAmount}
-                  rarityTier={rarityTier}
                 />
 
                 {shipping > 0n && (

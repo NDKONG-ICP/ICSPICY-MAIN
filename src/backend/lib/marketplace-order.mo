@@ -11,6 +11,8 @@ import Common "../types/common";
 import MarketTypes "../types/marketplace";
 import PlantTypes "../types/plants";
 import ProductShipping "../lib/product-shipping";
+import NftDiscount "../lib/nft-discount";
+import Set "mo:core/Set";
 
 module {
   public func createValidatedOrder(
@@ -19,6 +21,7 @@ module {
     productShippingConfigs : Map.Map<Common.ProductId, ProductShipping.ProductShippingConfig>,
     orderShippingCents : Map.Map<Common.OrderId, Nat>,
     orderShippingAddresses : Map.Map<Common.OrderId, MarketTypes.ShippingAddress>,
+    icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
     nextId : Nat,
     buyer : Principal,
     input : MarketTypes.CreateOrderInput,
@@ -83,7 +86,9 @@ module {
       };
       validatedItems := Array.concat(validatedItems, [validated]);
     };
-    let total = subtotal + shippingCents;
+    let discount = NftDiscount.callerDiscountFromBalances(icrc7Balances, buyer);
+    let discountedSubtotal = NftDiscount.discountedSubtotalCents(subtotal, discount.discountPercent);
+    let total = discountedSubtotal + shippingCents;
     orderShippingCents.add(nextId, shippingCents);
     let shippingText = switch (orderShippingAddresses.get(nextId)) {
       case (?a) ?ProductShipping.formatShippingAddress(a);

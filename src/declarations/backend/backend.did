@@ -286,6 +286,11 @@ type StageHistory =
    stage: PlantStage;
    timestamp: Timestamp;
  };
+type ShopListingFile = 
+ record {
+   data: vec nat8;
+   mime_type: text;
+ };
 type ShopAssignment = 
  record {
    nftId: nat;
@@ -943,6 +948,7 @@ type ICSpicy =
    getAuditLog: (offset: nat, limit: nat) -> (vec AuditEntry) query;
    getBatchGiftPack: (claim_token_id: ClaimTokenId) ->
     (opt BatchGiftPackPublic) query;
+   getCallerDiscount: () -> (CallerDiscount) query;
    getCallerMembership: () -> (opt MembershipNFTPublic) query;
    getCallerUserProfile: () -> (opt UserProfilePublic) query;
    getCallerUserRole: () -> (UserRole) query;
@@ -1005,6 +1011,7 @@ type ICSpicy =
    getScheduleByShareToken: (share_token: text) -> (opt SavedSchedule) query;
    getScheduleData: (stage: text, inputs: vec text) ->
     (vec ScheduleEntry) query;
+   getShopListingFile: (path: text) -> (opt ShopListingFile) query;
    getTokenPriceInIcp: (token: OracleToken) -> (nat) query;
    getTokenPrices: () -> (vec TokenPrice) query;
    getTray: (tray_id: TrayId) -> (opt TrayPublic) query;
@@ -1373,6 +1380,12 @@ type CommentPublic =
  };
 type CommentId = nat;
 type ClaimTokenId = text;
+type CallerDiscount = 
+ record {
+   discountPercent: nat;
+   rarity: text;
+   tokenId: opt nat;
+ };
 type BuyListedNftResult = 
  record {
    message: text;
