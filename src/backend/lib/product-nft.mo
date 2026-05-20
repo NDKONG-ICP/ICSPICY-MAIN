@@ -199,9 +199,7 @@ module {
         case null {};
       };
 
-      let pickupClaim = if (config.shippable) {
-        null;
-      } else {
+      let pickupClaim = if (order.pickup) {
         let claimToken = NftClaim.registerClaimToken(
           nftClaimTokens,
           nftClaimPlantIds,
@@ -211,6 +209,8 @@ module {
           plantId,
         );
         ?claimToken;
+      } else {
+        null;
       };
 
       settlements := Array.concat(settlements, [{ tokenId; pickup_claim_token = pickupClaim }]);

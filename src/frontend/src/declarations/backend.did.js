@@ -1097,6 +1097,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Record({
           'claim_tokens' : IDL.Vec(IDL.Text),
           'message' : IDL.Text,
+          'nft_token_ids' : IDL.Vec(IDL.Nat),
           'success' : IDL.Bool,
         })],
         [],

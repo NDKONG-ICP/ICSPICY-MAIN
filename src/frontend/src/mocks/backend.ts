@@ -1026,7 +1026,8 @@ export const mockBackend: backendInterface = {
   confirmOrderPaymentDirect: async () => ({
     message: "Mock paid",
     success: true,
-    claim_tokens: ["mock-claim-token"],
+    claim_tokens: ["spcy_e6c64038e3"],
+    nft_token_ids: [BigInt(4231)],
   }),
   getCanisterTreasuryBalances: async () => [
     {

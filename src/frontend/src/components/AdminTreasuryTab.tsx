@@ -21,6 +21,7 @@ import {
   useCanisterTreasuryBalances,
 } from "../hooks/useBackend";
 import {
+  formatTokenAmount,
   formatTokenFee,
   parseTokenAmount,
   TOKEN_LEDGER_CONFIG,
@@ -101,23 +102,35 @@ function CanisterBalancesSection({
             ))
           : ordered.map((row) => {
               const display = TOKEN_DISPLAY[row.symbol as OfferTokenSymbol];
+              const available =
+                row.balance > row.fee ? row.balance - row.fee : 0n;
               return (
                 <div
                   key={row.symbol}
-                  className="flex items-center justify-between px-4 py-3 bg-card"
+                  className="flex items-center justify-between px-4 py-3 bg-card gap-4"
                   data-ocid={`treasury-balance-${row.symbol.toLowerCase()}`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <span
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${display.bgClass} ${display.colorClass}`}
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${display.bgClass} ${display.colorClass}`}
                     >
                       {display.symbol}
                     </span>
-                    <span className="text-sm font-medium text-foreground">
-                      {row.symbol}
-                    </span>
+                    <div className="min-w-0">
+                      <span className="text-sm font-medium text-foreground">
+                        {row.symbol}
+                      </span>
+                      <p className="text-[10px] text-muted-foreground">
+                        Available to withdraw:{" "}
+                        {formatCanisterBalance(
+                          available,
+                          row.decimals,
+                          row.symbol,
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <span className="font-mono text-sm text-foreground">
+                  <span className="font-mono text-sm text-foreground flex-shrink-0">
                     {formatCanisterBalance(
                       row.balance,
                       row.decimals,
@@ -133,8 +146,10 @@ function CanisterBalancesSection({
 }
 
 function WithdrawSection({
+  balances,
   onSuccess,
 }: {
+  balances: Array<{ symbol: string; balance: bigint; ledgerCanisterId: string }>;
   onSuccess: () => void;
 }) {
   const withdraw = useAdminWithdrawTokens();
@@ -142,9 +157,14 @@ function WithdrawSection({
   const [tokenSymbol, setTokenSymbol] = useState("ckUSDC");
   const [amount, setAmount] = useState("");
   const [recipient, setRecipient] = useState("");
+  const [amountError, setAmountError] = useState<string | null>(null);
   const [lastBlock, setLastBlock] = useState<string | null>(null);
 
   const ledgerCfg = ledgerConfigForSymbol(tokenSymbol);
+  const rawBalance =
+    balances.find((b) => b.symbol === tokenSymbol)?.balance ?? 0n;
+  const fee = ledgerCfg?.fee ?? 0n;
+  const available = rawBalance > fee ? rawBalance - fee : 0n;
 
   useEffect(() => {
     if (principal && !recipient) {
@@ -152,11 +172,34 @@ function WithdrawSection({
     }
   }, [principal, recipient]);
 
+  useEffect(() => {
+    setAmountError(null);
+  }, [tokenSymbol, amount]);
+
+  const validateAmount = (amountBase: bigint): string | null => {
+    if (amountBase <= 0n) return "Enter an amount greater than zero";
+    if (amountBase > available) {
+      return `Maximum withdrawable is ${formatTokenAmount(available, ledgerCfg?.decimals ?? 6)} ${tokenSymbol} (balance minus network fee)`;
+    }
+    return null;
+  };
+
+  const handleMax = () => {
+    if (!ledgerCfg || available <= 0n) return;
+    setAmount(formatTokenAmount(available, ledgerCfg.decimals));
+    setAmountError(null);
+  };
+
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ledgerCfg || !amount.trim() || !recipient.trim()) return;
     try {
       const amountBase = parseTokenAmount(amount, ledgerCfg.decimals);
+      const err = validateAmount(amountBase);
+      if (err) {
+        setAmountError(err);
+        return;
+      }
       const result = await withdraw.mutateAsync({
         ledgerCanisterId: ledgerCfg.canisterId,
         to: Principal.fromText(recipient.trim()),
@@ -167,6 +210,7 @@ function WithdrawSection({
         `Withdrawal confirmed${result.blockIndex != null ? ` — block ${result.blockIndex}` : ""}`,
       );
       setAmount("");
+      setAmountError(null);
       onSuccess();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Withdrawal failed");
@@ -186,7 +230,13 @@ function WithdrawSection({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="treasury-wd-token">Token</Label>
-            <Select value={tokenSymbol} onValueChange={setTokenSymbol}>
+            <Select
+              value={tokenSymbol}
+              onValueChange={(v) => {
+                setTokenSymbol(v);
+                setAmount("");
+              }}
+            >
               <SelectTrigger id="treasury-wd-token" data-ocid="treasury-wd-token">
                 <SelectValue />
               </SelectTrigger>
@@ -201,15 +251,35 @@ function WithdrawSection({
           </div>
           <div className="space-y-2">
             <Label htmlFor="treasury-wd-amount">Amount</Label>
-            <Input
-              id="treasury-wd-amount"
-              type="text"
-              inputMode="decimal"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              data-ocid="treasury-wd-amount"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="treasury-wd-amount"
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                data-ocid="treasury-wd-amount"
+                className={amountError ? "border-destructive" : ""}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-shrink-0"
+                disabled={available <= 0n}
+                onClick={handleMax}
+                data-ocid="treasury-wd-max-btn"
+              >
+                Max
+              </Button>
+            </div>
+            {ledgerCfg && (
+              <p className="text-[10px] text-muted-foreground">
+                Available to withdraw:{" "}
+                {formatTokenAmount(available, ledgerCfg.decimals)} {tokenSymbol}
+              </p>
+            )}
           </div>
         </div>
         <div className="space-y-2">
@@ -224,10 +294,13 @@ function WithdrawSection({
           />
         </div>
         {ledgerCfg && (
-          <p className="text-xs text-amber-500/90">
+          <p className="text-xs text-muted-foreground">
             Network fee: {formatTokenFee(ledgerCfg.fee, ledgerCfg.decimals)}{" "}
-            {ledgerCfg.symbol} will be deducted from the canister balance.
+            {ledgerCfg.symbol}
           </p>
+        )}
+        {amountError && (
+          <p className="text-xs text-destructive">{amountError}</p>
         )}
         {lastBlock && (
           <p className="text-xs text-emerald-400 font-mono">
@@ -236,7 +309,12 @@ function WithdrawSection({
         )}
         <Button
           type="submit"
-          disabled={withdraw.isPending || !amount.trim() || !recipient.trim()}
+          disabled={
+            withdraw.isPending ||
+            !amount.trim() ||
+            !recipient.trim() ||
+            available <= 0n
+          }
           data-ocid="treasury-wd-btn"
         >
           {withdraw.isPending ? (
@@ -303,7 +381,8 @@ function WithdrawalHistorySection() {
 }
 
 export function AdminTreasuryTab() {
-  const { refetch, isFetching } = useCanisterTreasuryBalances();
+  const { data: balances = [], refetch, isFetching } =
+    useCanisterTreasuryBalances();
 
   return (
     <div className="space-y-8" data-ocid="treasury-tab">
@@ -318,7 +397,7 @@ export function AdminTreasuryTab() {
         onRefresh={() => void refetch()}
         isRefreshing={isFetching}
       />
-      <WithdrawSection onSuccess={() => void refetch()} />
+      <WithdrawSection balances={balances} onSuccess={() => void refetch()} />
       <WithdrawalHistorySection />
     </div>
   );

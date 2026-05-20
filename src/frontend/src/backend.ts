@@ -947,7 +947,7 @@ export interface backendInterface {
     }>;
     clearArtworkFiles(): Promise<void>;
     confirmICPayPayment(orderId: bigint, paymentId: string): Promise<{ message: string; success: boolean }>;
-    confirmOrderPaymentDirect(orderId: bigint, ledgerCanisterId: string, amount: bigint): Promise<{ claim_tokens: string[]; message: string; success: boolean }>;
+    confirmOrderPaymentDirect(orderId: bigint, ledgerCanisterId: string, amount: bigint): Promise<{ claim_tokens: string[]; message: string; nft_token_ids: bigint[]; success: boolean }>;
     adminWithdrawTokens(ledgerCanisterId: string, to: Principal, amount: bigint): Promise<{ blockIndex: bigint | null; message: string; success: boolean }>;
     getCanisterTreasuryBalances(): Promise<Array<{ ledgerCanisterId: string; symbol: string; balance: bigint }>>;
     getAuditLog(offset: bigint, limit: bigint): Promise<Array<{ ts: bigint; admin: Principal; action: string; detail: string }>>;
@@ -3483,7 +3483,7 @@ export class Backend implements backendInterface {
             try { return await this.actor.confirmICPayPayment(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.confirmICPayPayment(arg0, arg1); }
     }
-    async confirmOrderPaymentDirect(arg0: bigint, arg1: string, arg2: bigint): Promise<{ claim_tokens: string[]; message: string; success: boolean }> {
+    async confirmOrderPaymentDirect(arg0: bigint, arg1: string, arg2: bigint): Promise<{ claim_tokens: string[]; message: string; nft_token_ids: bigint[]; success: boolean }> {
         if (this.processError) {
             try { return await this.actor.confirmOrderPaymentDirect(arg0, arg1, arg2); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.confirmOrderPaymentDirect(arg0, arg1, arg2); }

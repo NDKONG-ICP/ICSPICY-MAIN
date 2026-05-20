@@ -333,6 +333,7 @@ export interface ICSpicy {
     {
       'claim_tokens' : Array<string>,
       'message' : string,
+      'nft_token_ids' : Array<bigint>,
       'success' : boolean,
     }
   >,

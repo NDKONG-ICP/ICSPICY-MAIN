@@ -44,6 +44,7 @@ import {
   toOptionalNatBigInt,
   USPS_SMALL_FLAT_RATE_CENTS,
 } from "../lib/cart-utils";
+import type { CartItem } from "../types";
 import {
   discountAmountCents,
   formatRarityLabel,
@@ -258,11 +259,13 @@ function PaymentStep({
   orderId,
   finalTotal,
   isPickup,
+  orderItems,
   onComplete,
 }: {
   orderId: bigint;
   finalTotal: bigint;
   isPickup: boolean;
+  orderItems: CartItem[];
   onComplete: () => void;
 }) {
   const { isAuthenticated, login, identity, principal } = useAuth();
@@ -271,6 +274,7 @@ function PaymentStep({
 
   const [payingToken, setPayingToken] = useState<StableToken | null>(null);
   const [claimTokens, setClaimTokens] = useState<string[]>([]);
+  const [nftTokenIds, setNftTokenIds] = useState<bigint[]>([]);
   const [paid, setPaid] = useState(false);
 
   const usdAmount = Number(finalTotal) / 100;
@@ -291,9 +295,9 @@ function PaymentStep({
         amount: stableAmount,
       });
       setClaimTokens(result.claim_tokens);
+      setNftTokenIds(result.nft_token_ids);
       setPaid(true);
-      toast.success("Payment confirmed!");
-      onComplete();
+      toast.success("Purchase complete!");
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Payment failed. Try again.",
@@ -301,6 +305,16 @@ function PaymentStep({
     } finally {
       setPayingToken(null);
     }
+  };
+
+  const handleContinueShopping = () => {
+    onComplete();
+    navigate({ to: "/marketplace" });
+  };
+
+  const handleViewOrders = () => {
+    onComplete();
+    navigate({ to: "/orders" });
   };
 
   if (!isAuthenticated) {
@@ -328,46 +342,122 @@ function PaymentStep({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="space-y-6 text-center py-6"
+        className="space-y-6 py-4"
         data-ocid="payment-success"
       >
-        <CheckCircle2 className="w-14 h-14 text-emerald-400 mx-auto" />
-        <div>
-          <p className="font-semibold text-foreground text-lg">Order confirmed!</p>
-          <p className="text-sm text-muted-foreground mt-1">
+        <div className="text-center space-y-2">
+          <CheckCircle2 className="w-14 h-14 text-emerald-400 mx-auto" />
+          <p className="font-display font-bold text-foreground text-xl">
+            Purchase Complete!
+          </p>
+          <p className="text-sm text-muted-foreground">
             Order #{orderId.toString()} · ${usdAmount.toFixed(2)}
           </p>
         </div>
-        {isPickup && claimTokens.length > 0 ? (
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-left space-y-2">
-            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" />
-              Pickup QR claim code
-            </p>
-            {claimTokens.map((t) => (
-              <p
-                key={t}
-                className="text-xs font-mono break-all bg-muted rounded p-2"
+
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3 text-left">
+          <p className="text-sm font-semibold text-foreground">Your items</p>
+          {orderItems.map((item, index) => {
+            const nftId = nftTokenIds[index];
+            const linePrice = formatLinePrice(
+              item.unit_price_cents,
+              item.quantity,
+              item.weight_based,
+              item.unit_label,
+            );
+            return (
+              <div
+                key={item.line_id}
+                className="border-t border-border pt-3 first:border-t-0 first:pt-0 space-y-2"
               >
-                {t}
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="text-foreground font-medium">
+                    {item.name}
+                  </span>
+                  <span className="text-foreground font-semibold flex-shrink-0">
+                    {linePrice}
+                  </span>
+                </div>
+                {nftId != null && (
+                  <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 space-y-2">
+                    <p className="text-xs text-foreground">
+                      🎨 IC SPICY #{nftId.toString()} is now in your wallet
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        to="/nft/$tokenId"
+                        params={{ tokenId: nftId.toString() }}
+                      >
+                        <Button size="sm" variant="outline" className="h-7 text-xs">
+                          View NFT
+                        </Button>
+                      </Link>
+                      <Link to="/wallet">
+                        <Button size="sm" variant="outline" className="h-7 text-xs">
+                          View in Wallet
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4 space-y-2 text-left">
+          <p className="text-sm font-semibold text-foreground">Fulfillment</p>
+          {isPickup ? (
+            <div className="space-y-2">
+              <p className="text-sm text-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+                Local Pickup — Port Charlotte, FL
               </p>
-            ))}
-            <p className="text-xs text-muted-foreground">
-              Bring this code to the nursery in Port Charlotte, FL.
+              {claimTokens.length > 0 ? (
+                <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                  <p className="text-xs text-muted-foreground">
+                    Show this code at pickup:
+                  </p>
+                  {claimTokens.map((t) => (
+                    <p
+                      key={t}
+                      className="text-xs font-mono break-all text-foreground"
+                    >
+                      {t}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Pick up at {PICKUP_ADDRESS} when your order is ready.
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground flex items-start gap-2">
+              <Package className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              Your order is paid and will ship to the address you provided.
             </p>
-          </div>
-        ) : !isPickup ? (
-          <p className="text-sm text-muted-foreground">
-            Your order is paid and will ship to the address you provided.
-          </p>
-        ) : null}
-        <Button
-          className="w-full"
-          onClick={() => navigate({ to: "/orders" })}
-          data-ocid="payment-view-orders-btn"
-        >
-          View My Orders
-        </Button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleContinueShopping}
+            data-ocid="payment-continue-shopping-btn"
+          >
+            Continue Shopping
+          </Button>
+          <Button
+            className="w-full"
+            onClick={handleViewOrders}
+            data-ocid="payment-view-orders-btn"
+          >
+            View My Orders
+          </Button>
+        </div>
       </motion.div>
     );
   }
@@ -643,6 +733,7 @@ export default function CheckoutPage() {
           orderId={pendingOrderId}
           finalTotal={finalTotalForPayment}
           isPickup={fulfillment === "pickup"}
+          orderItems={items}
           onComplete={clearCart}
         />
       </div>

@@ -909,6 +909,7 @@ type ICSpicy =
     (record {
        claim_tokens: vec text;
        message: text;
+       nft_token_ids: vec nat;
        success: bool;
      });
    counterOffer: (input: CounterOfferInput) -> (Offer);

@@ -430,6 +430,7 @@ mixin (
     success : Bool;
     message : Text;
     claim_tokens : [Text];
+    nft_token_ids : [Nat];
   };
 
   public shared ({ caller }) func confirmOrderPaymentDirect(
@@ -450,7 +451,7 @@ mixin (
       result;
     } catch (e) {
       CallerGuard.release(callerGuards, caller);
-      { success = false; message = "Unexpected error during payment"; claim_tokens = [] };
+      { success = false; message = "Unexpected error during payment"; claim_tokens = []; nft_token_ids = [] };
     };
   };
 
@@ -468,16 +469,16 @@ mixin (
   ) : async ConfirmOrderPaymentDirectResult {
     switch (orderLineNftTokenIds.get(orderId)) {
       case (?_) {
-        return { success = false; message = "Order already paid"; claim_tokens = [] };
+        return { success = false; message = "Order already paid"; claim_tokens = []; nft_token_ids = [] };
       };
       case null {};
     };
     let order = switch (orders.get(orderId)) {
-      case null return { success = false; message = "Order not found"; claim_tokens = [] };
+      case null return { success = false; message = "Order not found"; claim_tokens = []; nft_token_ids = [] };
       case (?o) o;
     };
     if (not Principal.equal(order.buyer, caller)) {
-      return { success = false; message = "Not your order"; claim_tokens = [] };
+      return { success = false; message = "Not your order"; claim_tokens = []; nft_token_ids = [] };
     };
     let token = switch (tokenFromLedgerId(ledgerCanisterId)) {
       case null {
@@ -485,6 +486,7 @@ mixin (
           success = false;
           message = "Unsupported ledger — use ckUSDC or ckUSDT";
           claim_tokens = [];
+          nft_token_ids = [];
         };
       };
       case (?t) t;
@@ -495,6 +497,7 @@ mixin (
         success = false;
         message = "Payment amount mismatch: expected " # Nat.toText(expected);
         claim_tokens = [];
+        nft_token_ids = [];
       };
     };
     let canister = selfPrincipal();
@@ -508,9 +511,10 @@ mixin (
         ?("order:" # Nat.toText(orderId)).encodeUtf8(),
       )
     ) {
-      case (#err(e)) return { success = false; message = e; claim_tokens = [] };
+      case (#err(e)) return { success = false; message = e; claim_tokens = []; nft_token_ids = [] };
       case (#ok(_block)) {};
     };
+    var settledTokenIds : [Nat] = [];
     switch (
       ProductNft.settleOrderLineItems(
         orderId, order, products, productNftTokenIds, productShippingConfigs, plants, nimsSideMaps(),
@@ -520,19 +524,18 @@ mixin (
       )
     ) {
       case (#err(e)) {
-        return { success = false; message = e; claim_tokens = [] };
+        return { success = false; message = e; claim_tokens = []; nft_token_ids = [] };
       };
       case (#ok(settlements)) {
-        var tokenIds : [Nat] = [];
         var claimTokens : [Text] = [];
         for (s in settlements.vals()) {
-          tokenIds := Array.concat(tokenIds, [s.tokenId]);
+          settledTokenIds := Array.concat(settledTokenIds, [s.tokenId]);
           switch (s.pickup_claim_token) {
             case (?t) claimTokens := Array.concat(claimTokens, [t]);
             case null {};
           };
         };
-        orderLineNftTokenIds.add(orderId, tokenIds);
+        orderLineNftTokenIds.add(orderId, settledTokenIds);
         if (claimTokens.size() > 0) {
           orderPickupClaimTokens.add(orderId, claimTokens);
         };
@@ -548,7 +551,7 @@ mixin (
       case (?t) t;
       case null [];
     };
-    { success = true; message = "Payment confirmed"; claim_tokens = stored };
+    { success = true; message = "Payment confirmed"; claim_tokens = stored; nft_token_ids = settledTokenIds };
   };
 
   // ── Canister treasury (on-ledger balances + admin withdrawal) ─────────────
@@ -618,6 +621,17 @@ mixin (
     };
     if (amount == 0) {
       return { success = false; blockIndex = null; message = "Amount must be greater than zero" };
+    };
+    let canister = selfPrincipal();
+    let balance = await IcrcPayment.balanceOf(ledgerCanisterId, canister);
+    let fee = await IcrcPayment.icrc1Fee(ledgerCanisterId);
+    if (amount + fee > balance) {
+      return {
+        success = false;
+        blockIndex = null;
+        message = "Insufficient balance: have " # Nat.toText(balance) #
+          ", need " # Nat.toText(amount + fee) # " (amount + fee)";
+      };
     };
     switch (
       await IcrcPayment.transferOut(

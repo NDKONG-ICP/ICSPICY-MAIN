@@ -121,6 +121,11 @@ module {
     await ledger.icrc1_balance_of({ owner = owner; subaccount = null });
   };
 
+  public func icrc1Fee(ledgerCanisterId : Text) : async Nat {
+    let ledger = getIcrc1Ledger(ledgerCanisterId);
+    await ledger.icrc1_fee();
+  };
+
   /// Transfer tokens from the calling canister to `to` via icrc1_transfer.
   public func transferOut(
     ledgerCanisterId : Text,

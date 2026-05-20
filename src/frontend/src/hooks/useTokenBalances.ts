@@ -97,6 +97,14 @@ export const TOKEN_LEDGER_CONFIG = [
   },
 ] as const;
 
+/** Format ledger base units as a human-readable decimal string. */
+export function formatTokenAmount(base: bigint, decimals: number): string {
+  const scale = 10n ** BigInt(decimals);
+  const whole = base / scale;
+  const frac = (base % scale).toString().padStart(decimals, "0").replace(/0+$/, "");
+  return frac.length > 0 ? `${whole}.${frac}` : whole.toString();
+}
+
 /** Parse a human amount string into ledger base units. */
 export function parseTokenAmount(input: string, decimals: number): bigint {
   const trimmed = input.trim();
