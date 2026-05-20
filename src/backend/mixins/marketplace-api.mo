@@ -1,6 +1,10 @@
 import Map "mo:core/Map";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
+import Int "mo:core/Int";
+import Time "mo:core/Time";
+import Nat "mo:core/Nat";
+import Array "mo:core/Array";
 import AccessControl "../lib/access-control";
 import Common "../types/common";
 import MarketTypes "../types/marketplace";
@@ -8,6 +12,11 @@ import PlantTypes "../types/plants";
 import MembershipTypes "../types/membership";
 import ClaimTypes "../types/claim";
 import MarketLib "../lib/marketplace";
+import MarketOrder "../lib/marketplace-order";
+import ProductNft "../lib/product-nft";
+import ProductShipping "../lib/product-shipping";
+import ICRC7 "../types/icrc7";
+import Set "mo:core/Set";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
@@ -16,28 +25,108 @@ mixin (
   plants : Map.Map<Common.PlantId, PlantTypes.Plant>,
   memberships : Map.Map<Principal, MembershipTypes.MembershipNFT>,
   claimTokens : Map.Map<Common.ClaimTokenId, ClaimTypes.ClaimToken>,
+  productNftTokenIds : Map.Map<Common.ProductId, Nat>,
+  productShippingConfigs : Map.Map<Common.ProductId, ProductShipping.ProductShippingConfig>,
+  orderLineNftTokenIds : Map.Map<Common.OrderId, [Nat]>,
+  orderPickupClaimTokens : Map.Map<Common.OrderId, [Text]>,
+  orderShippingCents : Map.Map<Common.OrderId, Nat>,
+  orderShippingAddresses : Map.Map<Common.OrderId, MarketTypes.ShippingAddress>,
+  icrc7Owners : Map.Map<Nat, ICRC7.Account>,
+  icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
+  selfPrincipal : () -> Principal,
   nextProductId : { var value : Nat },
   nextOrderId : { var value : Nat },
 ) {
-  // Admin: create a single product listing
+  func toPublic(p : MarketTypes.Product) : MarketTypes.ProductPublic {
+    MarketLib.toPublicProduct(
+      p,
+      productNftTokenIds.get(p.id),
+      productShippingConfigs.get(p.id),
+    );
+  };
+
+  func toPublicOrder(order : MarketTypes.Order) : MarketTypes.OrderPublic {
+    let shipping = orderShippingCents.get(order.id);
+    let lineNfts = switch (orderLineNftTokenIds.get(order.id)) {
+      case (?ids) ids;
+      case null [];
+    };
+    {
+      id = order.id;
+      buyer = order.buyer;
+      items = order.items;
+      subtotal_cents = MarketOrder.subtotalCents(order);
+      shipping_cents = switch shipping { case (?s) s; case null 0 };
+      total_cents = order.total_cents;
+      shipping_address = order.shipping_address;
+      shipping = orderShippingAddresses.get(order.id);
+      pickup = order.pickup;
+      status = order.status;
+      created_at = order.created_at;
+      line_nft_token_ids = lineNfts;
+    };
+  };
+
+  func saveProductConfig(productId : Common.ProductId, input : MarketTypes.CreateProductInput) {
+    let cfg = ProductShipping.applyCategoryDefaults(
+      input.category,
+      ProductShipping.configFromInput(input),
+    );
+    productShippingConfigs.add(productId, cfg);
+  };
+
+  func placeOrderInternal(caller : Principal, input : MarketTypes.CreateOrderInput) : MarketTypes.Order {
+    let orderId = nextOrderId.value;
+    switch (
+      MarketOrder.createValidatedOrder(
+        orders, products, productShippingConfigs,
+        orderShippingCents, orderShippingAddresses,
+        orderId, caller, input,
+      )
+    ) {
+      case (#err(e)) Runtime.trap(e);
+      case (#ok(order)) {
+        nextOrderId.value += 1;
+        order;
+      };
+    };
+  };
+
+  // Admin: create product listing (NFT assigned per line item at checkout, not here)
   public shared ({ caller }) func createProduct(input : MarketTypes.CreateProductInput) : async MarketTypes.ProductPublic {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Admin only");
     };
-    let product = MarketLib.createProduct(products, nextProductId.value, input);
+    let productId = nextProductId.value;
+    ignore MarketLib.createProduct(products, productId, input);
+    saveProductConfig(productId, input);
+    ProductNft.linkPlantListingNft(products, productNftTokenIds, plants, productId);
     nextProductId.value += 1;
-    MarketLib.toPublicProduct(product);
+    switch (products.get(productId)) {
+      case null Runtime.trap("Product missing after create");
+      case (?p) toPublic(p);
+    };
   };
 
-  // Admin: bulk-create multiple product listings in one call; per-item success/failure returned
   public shared ({ caller }) func bulkCreateProducts(inputs : [MarketTypes.CreateProductInput]) : async [MarketTypes.BulkCreateResult] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Admin only");
     };
-    MarketLib.bulkCreateProducts(products, nextProductId, inputs);
+    var results : [MarketTypes.BulkCreateResult] = [];
+    for (input in inputs.vals()) {
+      let productId = nextProductId.value;
+      nextProductId.value += 1;
+      ignore MarketLib.createProduct(products, productId, input);
+      saveProductConfig(productId, input);
+      ProductNft.linkPlantListingNft(products, productNftTokenIds, plants, productId);
+      switch (products.get(productId)) {
+        case null results := Array.concat(results, [#err("Product missing after create")]);
+        case (?p) results := Array.concat(results, [#ok(toPublic(p))]);
+      };
+    };
+    results;
   };
 
-  // Admin: update a product listing
   public shared ({ caller }) func updateProduct(input : MarketTypes.UpdateProductInput) : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Admin only");
@@ -45,7 +134,6 @@ mixin (
     MarketLib.updateProduct(products, input);
   };
 
-  // Admin: delete (deactivate) a product
   public shared ({ caller }) func deleteProduct(product_id : Common.ProductId) : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Admin only");
@@ -53,17 +141,13 @@ mixin (
     MarketLib.deleteProduct(products, product_id);
   };
 
-  // Admin: create an order on behalf of buyer (e.g. local pickup)
   public shared ({ caller }) func createOrder(buyer : Principal, input : MarketTypes.CreateOrderInput) : async MarketTypes.OrderPublic {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Admin only");
     };
-    let order = MarketLib.createOrder(orders, plants, memberships, claimTokens, nextOrderId.value, buyer, input);
-    nextOrderId.value += 1;
-    MarketLib.toPublicOrder(order);
+    toPublicOrder(placeOrderInternal(buyer, input));
   };
 
-  // Admin: update order status
   public shared ({ caller }) func updateOrderStatus(order_id : Common.OrderId, status : MarketTypes.OrderStatus) : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Admin only");
@@ -71,28 +155,35 @@ mixin (
     MarketLib.updateOrderStatus(orders, order_id, status);
   };
 
-  // Public: fetch a product
   public query func getProduct(product_id : Common.ProductId) : async ?MarketTypes.ProductPublic {
-    MarketLib.getProduct(products, product_id);
+    switch (products.get(product_id)) {
+      case null null;
+      case (?p) ?toPublic(p);
+    };
   };
 
-  // Public: list all active products
   public query func listProducts() : async [MarketTypes.ProductPublic] {
-    MarketLib.listProducts(products);
+    var out : [MarketTypes.ProductPublic] = [];
+    for ((_, p) in products.entries()) {
+      if (p.active) out := Array.concat(out, [toPublic(p)]);
+    };
+    out;
   };
 
-  // Public: list products by category
   public query func listProductsByCategory(category : MarketTypes.ProductCategory) : async [MarketTypes.ProductPublic] {
-    MarketLib.listProductsByCategory(products, category);
+    var out : [MarketTypes.ProductPublic] = [];
+    for ((_, p) in products.entries()) {
+      if (p.active and p.category == category) out := Array.concat(out, [toPublic(p)]);
+    };
+    out;
   };
 
-  // Authenticated: fetch an order (buyer or admin)
   public query ({ caller }) func getOrder(order_id : Common.OrderId) : async ?MarketTypes.OrderPublic {
-    switch (MarketLib.getOrder(orders, order_id)) {
-      case null { null };
-      case (?pub) {
-        if (Principal.equal(pub.buyer, caller) or AccessControl.isAdmin(accessControlState, caller)) {
-          ?pub;
+    switch (orders.get(order_id)) {
+      case null null;
+      case (?order) {
+        if (Principal.equal(order.buyer, caller) or AccessControl.isAdmin(accessControlState, caller)) {
+          ?toPublicOrder(order);
         } else {
           null;
         };
@@ -100,21 +191,33 @@ mixin (
     };
   };
 
-  // Authenticated: list all orders for the calling buyer
-  public query ({ caller }) func listOrdersByBuyer() : async [MarketTypes.OrderPublic] {
-    MarketLib.listOrdersByBuyer(orders, caller);
+  public query ({ caller }) func getOrderPickupClaimTokens(order_id : Common.OrderId) : async [Text] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      switch (orders.get(order_id)) {
+        case null return [];
+        case (?order) {
+          if (not Principal.equal(order.buyer, caller)) return [];
+        };
+      };
+    };
+    switch (orderPickupClaimTokens.get(order_id)) {
+      case (?tokens) tokens;
+      case null [];
+    };
   };
 
-  // Authenticated: buyer places their own order
+  public query ({ caller }) func listOrdersByBuyer() : async [MarketTypes.OrderPublic] {
+    var out : [MarketTypes.OrderPublic] = [];
+    for ((_, order) in orders.entries()) {
+      if (order.buyer == caller) {
+        out := Array.concat(out, [toPublicOrder(order)]);
+      };
+    };
+    out;
+  };
+
   public shared ({ caller }) func placeOrder(input : MarketTypes.CreateOrderInput) : async MarketTypes.OrderPublic {
-    // PHASE 4 TODO: When async ICRC-2 transferFrom is added below for crypto
-    // payments, wrap the async settlement section with:
-    //   CallerGuard.acquire(callerGuards, caller) → try { ... } finally { release }
-    // The mixin signature will need callerGuards : CallerGuard.GuardMap added.
-    // See main.mo _callerGuards declaration and AGENTS.md "Phase 4 wiring".
     AccessControl.requireAuthenticated(caller);
-    let order = MarketLib.createOrder(orders, plants, memberships, claimTokens, nextOrderId.value, caller, input);
-    nextOrderId.value += 1;
-    MarketLib.toPublicOrder(order);
+    toPublicOrder(placeOrderInternal(caller, input));
   };
 };

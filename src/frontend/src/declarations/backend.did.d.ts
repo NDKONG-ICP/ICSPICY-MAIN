@@ -14,6 +14,11 @@ export interface AddFeedingInput {
   'notes' : [] | [string],
   'plant_id' : PlantId,
 }
+export interface AddPlantResult {
+  'claimToken' : string,
+  'nftTokenId' : bigint,
+  'plantId' : PlantId,
+}
 export interface AddWeatherRecordInput {
   'latitude' : number,
   'temperature_max' : number,
@@ -59,6 +64,12 @@ export type ArtworkLayerId = bigint;
 export type AssignAction = { 'AssignToQR' : { 'claim_token' : string } } |
   { 'ListOnShop' : { 'product_id' : bigint } } |
   { 'Airdrop' : { 'to' : Principal } };
+export interface AuditEntry {
+  'ts' : Time,
+  'action' : string,
+  'admin' : Principal,
+  'detail' : string,
+}
 export interface BatchGiftPackPublic {
   'id' : string,
   'creator' : Principal,
@@ -71,16 +82,8 @@ export interface BatchGiftPackPublic {
 }
 export type BulkCreateResult = { 'ok' : ProductPublic } |
   { 'err' : string };
+export interface BuyListedNftResult { 'message' : string, 'success' : boolean }
 export type ClaimTokenId = string;
-export interface ClaimTokenPublic {
-  'id' : ClaimTokenId,
-  'created_at' : Timestamp,
-  'redeemed_at' : [] | [Timestamp],
-  'redeemed_by' : [] | [Principal],
-  'claim_data' : string,
-  'rarity_tier' : RarityTier,
-  'plant_id' : PlantId,
-}
 export type CommentId = bigint;
 export interface CommentPublic {
   'id' : CommentId,
@@ -115,7 +118,7 @@ export interface CounterOfferInput {
 }
 export interface CreateCommentInput { 'post_id' : PostId, 'content' : string }
 export interface CreateOrderInput {
-  'shipping_address' : [] | [string],
+  'shipping' : [] | [ShippingAddress],
   'pickup' : boolean,
   'items' : Array<OrderItem>,
 }
@@ -144,13 +147,18 @@ export interface CreatePostInput {
 }
 export interface CreateProductInput {
   'image_key' : [] | [string],
+  'shipping_flat_rate_cents' : [] | [bigint],
+  'unit_label' : [] | [string],
   'name' : string,
   'price_cents' : bigint,
   'description' : string,
   'inventory_category' : [] | [InventoryCategory],
   'image_keys' : Array<string>,
+  'shippable' : boolean,
   'category' : ProductCategory,
   'variety' : [] | [string],
+  'weight_based' : boolean,
+  'price_per_unit_cents' : [] | [bigint],
   'plant_id' : [] | [PlantId],
 }
 export interface CreateProposalInput {
@@ -206,9 +214,45 @@ export interface ICSpicy {
   'acceptOffer' : ActorMethod<[string], Offer>,
   'addAdmin' : ActorMethod<[Principal], undefined>,
   'addArtworkLayer' : ActorMethod<[string, string, bigint], ArtworkLayer>,
+  'addFeedingEntry' : ActorMethod<
+    [PlantId, string, string, string, [] | [string]],
+    boolean
+  >,
   'addFeedingRecord' : ActorMethod<[AddFeedingInput], FeedingPublic>,
+  'addNimsPlantPhoto' : ActorMethod<[PlantId, string, [] | [string]], boolean>,
+  'addPestEntry' : ActorMethod<
+    [PlantId, string, string, [] | [string], [] | [string]],
+    boolean
+  >,
+  'addPlant' : ActorMethod<
+    [bigint, PlantStage, [] | [TrayId], [] | [bigint], [] | [bigint]],
+    AddPlantResult
+  >,
+  'addPlantBatch' : ActorMethod<
+    [bigint, PlantStage, bigint, [] | [TrayId]],
+    Array<AddPlantResult>
+  >,
+  'addPlantNote' : ActorMethod<[PlantId, string], boolean>,
   'addPlantPhoto' : ActorMethod<[PlantId, string], undefined>,
+  'addVariety' : ActorMethod<
+    [
+      string,
+      string,
+      bigint,
+      bigint,
+      string,
+      [] | [string],
+      [] | [bigint],
+      [] | [bigint],
+    ],
+    bigint
+  >,
+  'addWateringEntry' : ActorMethod<
+    [PlantId, bigint, [] | [number], [] | [string]],
+    boolean
+  >,
   'addWeatherRecord' : ActorMethod<[AddWeatherRecordInput], WeatherRecord>,
+  'addWeatherSnapshot' : ActorMethod<[PlantId, WeatherSnapshot], boolean>,
   'addZonePhoto' : ActorMethod<[TrayId, string], undefined>,
   'adminSubmitToDAB' : ActorMethod<
     [string, string, string, [] | [string]],
@@ -216,6 +260,14 @@ export interface ICSpicy {
       { 'err' : string }
   >,
   'adminTransferFromPool' : ActorMethod<[bigint, Account], TransferResult>,
+  'adminUnstickOrder' : ActorMethod<
+    [bigint],
+    { 'message' : string, 'success' : boolean }
+  >,
+  'adminUnstickPepperHead' : ActorMethod<
+    [bigint],
+    { 'message' : string, 'success' : boolean }
+  >,
   'airdropNFT' : ActorMethod<[string, Principal], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignPoolNFT' : ActorMethod<[bigint, AssignAction], undefined>,
@@ -237,6 +289,10 @@ export interface ICSpicy {
   'bulkCreateProducts' : ActorMethod<
     [Array<CreateProductInput>],
     Array<BulkCreateResult>
+  >,
+  'buyListedNft' : ActorMethod<
+    [bigint, PaymentToken, bigint],
+    BuyListedNftResult
   >,
   'buyResaleListing' : ActorMethod<
     [string],
@@ -262,6 +318,7 @@ export interface ICSpicy {
   >,
   'createComment' : ActorMethod<[CreateCommentInput], CommentPublic>,
   'createDAOProposal' : ActorMethod<[CreateProposalInput], ProposalPublic>,
+  'createNimsTray' : ActorMethod<[string, Timestamp, [] | [bigint]], TrayId>,
   'createOrder' : ActorMethod<[Principal, CreateOrderInput], OrderPublic>,
   'createPlant' : ActorMethod<[CreatePlantInput], PlantPublic>,
   'createPost' : ActorMethod<[CreatePostInput], PostPublic>,
@@ -276,28 +333,48 @@ export interface ICSpicy {
   'deleteProduct' : ActorMethod<[ProductId], undefined>,
   'deleteRecipe' : ActorMethod<[RecipeId], boolean>,
   'deleteTray' : ActorMethod<[TrayId], undefined>,
+  'delistNft' : ActorMethod<[bigint], boolean>,
+  'delistPlant' : ActorMethod<[PlantId], boolean>,
   'editPost' : ActorMethod<[PostId, string], PostPublic>,
   'ensureAdminProfile' : ActorMethod<[], undefined>,
   'ensureCallerProfile' : ActorMethod<[], undefined>,
   'finalizeArtworkUpload' : ActorMethod<[], UploadResult>,
   'followUser' : ActorMethod<[Principal], undefined>,
   'generateAllPoolNFTs' : ActorMethod<[], bigint>,
-  'generateClaimToken' : ActorMethod<[PlantId, RarityTier], ClaimTokenPublic>,
+  'generateClaimToken' : ActorMethod<[bigint], string>,
+  'generateClaimTokens' : ActorMethod<
+    [Array<bigint>],
+    Array<{ 'tokenId' : bigint, 'claimToken' : string }>
+  >,
   'generatePickupQRPayload' : ActorMethod<[PlantId], string>,
   'getActiveResaleListings' : ActorMethod<[], Array<ResaleListingPublic>>,
+  'getAdminInventory' : ActorMethod<
+    [[] | [PlantStage], [] | [bigint], [] | [boolean]],
+    Array<PlantLifecycle>
+  >,
   'getAdmins' : ActorMethod<[], Array<Principal>>,
   'getArtworkFile' : ActorMethod<[string], [] | [Uint8Array | number[]]>,
   'getArtworkUploadResult' : ActorMethod<[], UploadResult>,
   'getArtworkUploadStatus' : ActorMethod<[], UploadSessionStatus>,
+  'getAuditLog' : ActorMethod<[bigint, bigint], Array<AuditEntry>>,
   'getBatchGiftPack' : ActorMethod<[ClaimTokenId], [] | [BatchGiftPackPublic]>,
   'getCallerMembership' : ActorMethod<[], [] | [MembershipNFTPublic]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfilePublic]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCanisterId' : ActorMethod<[], string>,
-  'getClaimToken' : ActorMethod<[ClaimTokenId], [] | [ClaimTokenPublic]>,
   'getClaimInfo' : ActorMethod<
     [string],
-    [] | [{ 'tokenId' : bigint, 'redeemed' : boolean, 'nftName' : string }]
+    [] | [
+      {
+        'tokenId' : bigint,
+        'redeemed' : boolean,
+        'photoUrl' : [] | [string],
+        'plantId' : [] | [PlantId],
+        'stage' : [] | [string],
+        'nftName' : string,
+        'variety' : [] | [string],
+      }
+    ]
   >,
   'getDAOProposal' : ActorMethod<[ProposalId], [] | [ProposalPublic]>,
   'getDAOStats' : ActorMethod<
@@ -311,18 +388,34 @@ export interface ICSpicy {
   'getFollowersCount' : ActorMethod<[Principal], bigint>,
   'getFollowingCount' : ActorMethod<[Principal], bigint>,
   'getForSalePlants' : ActorMethod<[], Array<PlantPublic>>,
+  'getListedNfts' : ActorMethod<[[] | [boolean]], Array<NftListingPublic>>,
   'getLoadedMetadataCount' : ActorMethod<[], bigint>,
   'getMembershipPriceInToken' : ActorMethod<[OracleToken], bigint>,
+  'getMyNftListings' : ActorMethod<[], Array<NftListingPublic>>,
   'getMyOffers' : ActorMethod<[], Array<Offer>>,
+  'getMyPlantsNims' : ActorMethod<[], Array<PlantLifecycle>>,
   'getMyResaleListings' : ActorMethod<[], Array<ResaleListingPublic>>,
   'getMySchedules' : ActorMethod<[], Array<SavedSchedule>>,
   'getMyWeatherRecords' : ActorMethod<[bigint], Array<WeatherRecord>>,
+  'getNftPoolStatus' : ActorMethod<
+    [],
+    { 'total' : bigint, 'available' : bigint }
+  >,
   'getOffer' : ActorMethod<[string], [] | [Offer]>,
   'getOffersForNft' : ActorMethod<[string], Array<Offer>>,
   'getOffersReceived' : ActorMethod<[], Array<Offer>>,
   'getOrder' : ActorMethod<[OrderId], [] | [OrderPublic]>,
+  'getOrderPickupClaimTokens' : ActorMethod<[OrderId], Array<string>>,
   'getPlant' : ActorMethod<[PlantId], [] | [PlantPublic]>,
+  'getPlantByNft' : ActorMethod<[bigint], [] | [PlantLifecycle]>,
+  'getPlantClaimToken' : ActorMethod<[PlantId], [] | [string]>,
+  'getPlantCount' : ActorMethod<[], PlantCountStats>,
+  'getPlantLifecycle' : ActorMethod<[PlantId], [] | [PlantLifecycle]>,
   'getPlantTimeline' : ActorMethod<[PlantId], [] | [PlantTimeline]>,
+  'getPlantsForSale' : ActorMethod<
+    [[] | [PlantStage], [] | [bigint]],
+    Array<PlantLifecycle>
+  >,
   'getPoolDashboard' : ActorMethod<[], PoolDashboard>,
   'getPoolNFT' : ActorMethod<[bigint], [] | [PoolNFTPublic]>,
   'getPoolNFTs' : ActorMethod<
@@ -346,11 +439,26 @@ export interface ICSpicy {
   'getTreasuryLedger' : ActorMethod<[], Array<TreasuryTransaction>>,
   'getUpgradeHistory' : ActorMethod<[PlantId], Array<LifecycleUpgradeEvent>>,
   'getUserPosts' : ActorMethod<[Principal], Array<PostPublic>>,
+  'getVariety' : ActorMethod<[bigint], [] | [VarietyPublic]>,
   'hasDAOAccess' : ActorMethod<[], boolean>,
   'hasMembership' : ActorMethod<[], boolean>,
   'icpayTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
+  >,
+  /**
+   * / ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
+   */
+  'icrc10_supported_standards' : ActorMethod<
+    [],
+    Array<{ 'url' : string, 'name' : string }>
+  >,
+  /**
+   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   */
+  'icrc28_trusted_origins' : ActorMethod<
+    [],
+    { 'trusted_origins' : Array<string> }
   >,
   'icrc37_approve_tokens' : ActorMethod<
     [Array<ApproveTokenArg>],
@@ -440,7 +548,9 @@ export interface ICSpicy {
     { 'ok' : ResaleListingPublic } |
       { 'err' : string }
   >,
+  'listNftForSale' : ActorMethod<[bigint, bigint], boolean>,
   'listOrdersByBuyer' : ActorMethod<[], Array<OrderPublic>>,
+  'listPlantForSale' : ActorMethod<[PlantId, [] | [bigint]], boolean>,
   'listPlants' : ActorMethod<[], Array<PlantPublic>>,
   'listPlantsByStage' : ActorMethod<[PlantStage], Array<PlantPublic>>,
   'listPoolNFTs' : ActorMethod<
@@ -455,9 +565,14 @@ export interface ICSpicy {
   >,
   'listRecipes' : ActorMethod<[], Array<Recipe>>,
   'listTrays' : ActorMethod<[], Array<TrayPublic>>,
+  'listVarieties' : ActorMethod<[], Array<VarietyPublic>>,
   'loadStaticMetadata' : ActorMethod<
     [Array<[bigint, Uint8Array | number[]]>],
     LoadStaticMetadataResult
+  >,
+  'markCellGerminated' : ActorMethod<
+    [TrayId, bigint, [] | [Timestamp]],
+    AddPlantResult
   >,
   'markPlantGerminated' : ActorMethod<[PlantId, Timestamp], undefined>,
   'mintEXT' : ActorMethod<[bigint, string, Array<[string, string]>], string>,
@@ -483,6 +598,11 @@ export interface ICSpicy {
     [string],
     { 'tokenId' : [] | [bigint], 'message' : string, 'success' : boolean }
   >,
+  'purchasePlant' : ActorMethod<
+    [PlantId, PaymentToken, bigint],
+    PurchasePlantResult
+  >,
+  'purchasePlantICPay' : ActorMethod<[PlantId, string], PurchasePlantResult>,
   'redeemBatchClaim' : ActorMethod<
     [ClaimTokenId],
     { 'ok' : BatchGiftPackPublic } |
@@ -495,7 +615,9 @@ export interface ICSpicy {
   'refreshTokenPrices' : ActorMethod<[], boolean>,
   'rejectOffer' : ActorMethod<[string], Offer>,
   'removeAdmin' : ActorMethod<[Principal], undefined>,
+  'removePlant' : ActorMethod<[PlantId], boolean>,
   'removePlantPhoto' : ActorMethod<[PlantId, string], undefined>,
+  'removeVariety' : ActorMethod<[bigint], boolean>,
   'removeZonePhoto' : ActorMethod<[TrayId, string], undefined>,
   'resetOrphanPoolNFT' : ActorMethod<[bigint], boolean>,
   'resetPoolNFT' : ActorMethod<
@@ -505,6 +627,7 @@ export interface ICSpicy {
   >,
   'saveCallerUserProfile' : ActorMethod<[SaveProfileInput], undefined>,
   'saveSchedule' : ActorMethod<[string, Array<string>], ScheduleId>,
+  'searchVarieties' : ActorMethod<[string], Array<VarietyPublic>>,
   'seedDefaultRecipes' : ActorMethod<[], undefined>,
   'setForSale' : ActorMethod<[PlantId, boolean], undefined>,
   'setICPaySecretKey' : ActorMethod<[string], undefined>,
@@ -533,13 +656,29 @@ export interface ICSpicy {
   'unfollowUser' : ActorMethod<[Principal], undefined>,
   'unlikePost' : ActorMethod<[PostId], bigint>,
   'updateCellData' : ActorMethod<[UpdateCellDataInput], undefined>,
+  'updateNimsPlantStage' : ActorMethod<[PlantId, PlantStage], boolean>,
   'updateOrderStatus' : ActorMethod<[OrderId, OrderStatus], undefined>,
   'updatePlantMetadata' : ActorMethod<[UpdatePlantMetadataInput], undefined>,
+  'updatePlantPrice' : ActorMethod<[PlantId, bigint], boolean>,
   'updatePlantStage' : ActorMethod<[PlantId, PlantStage, string], undefined>,
   'updateProduct' : ActorMethod<[UpdateProductInput], undefined>,
   'updateRecipe' : ActorMethod<[UpdateRecipeInput], [] | [Recipe]>,
   'updateTrayName' : ActorMethod<[TrayId, string], undefined>,
   'updateTrayOrder' : ActorMethod<[TrayId, bigint], undefined>,
+  'updateVariety' : ActorMethod<
+    [
+      bigint,
+      [] | [string],
+      [] | [string],
+      [] | [bigint],
+      [] | [bigint],
+      [] | [string],
+      [] | [string],
+      [] | [bigint],
+      [] | [bigint],
+    ],
+    boolean
+  >,
   'updateZoneNotes' : ActorMethod<[TrayId, string], undefined>,
   'uploadArtworkChunk' : ActorMethod<
     [bigint, bigint, Uint8Array | number[]],
@@ -601,6 +740,14 @@ export interface MintRWAProvenanceInput {
 export type NFTStandard = { 'EXT' : null } |
   { 'Hedera' : null } |
   { 'ICRC37' : null };
+export interface NftListingPublic {
+  'tokenId' : bigint,
+  'listedAt' : Timestamp,
+  'seller' : Principal,
+  'isActive' : boolean,
+  'plantId' : [] | [PlantId],
+  'priceUsdCents' : bigint,
+}
 export interface Offer {
   'id' : string,
   'nft_id' : string,
@@ -651,17 +798,18 @@ export interface OrderItem {
 export interface OrderPublic {
   'id' : OrderId,
   'status' : OrderStatus,
+  'subtotal_cents' : bigint,
   'shipping_address' : [] | [string],
+  'shipping_cents' : bigint,
+  'shipping' : [] | [ShippingAddress],
   'created_at' : Timestamp,
   'pickup' : boolean,
-  'payment_ref' : [] | [string],
+  'line_nft_token_ids' : Array<bigint>,
   'buyer' : Principal,
   'items' : Array<OrderItem>,
   'total_cents' : bigint,
 }
-export type OrderStatus = { 'Paid' : null } |
-  { 'AwaitingPayment' : null } |
-  { 'PickedUp' : null } |
+export type OrderStatus = { 'PickedUp' : null } |
   { 'Cancelled' : null } |
   { 'Shipped' : null } |
   { 'Pending' : null };
@@ -670,7 +818,45 @@ export type PaymentToken = { 'ICP' : null } |
   { 'ckETH' : null } |
   { 'ckUSDC' : null } |
   { 'ckUSDT' : null };
+export interface PestEntry {
+  'treatment' : [] | [string],
+  'pestName' : string,
+  'author' : Principal,
+  'notes' : [] | [string],
+  'timestamp' : Timestamp,
+  'severity' : string,
+}
+export interface PlantCountStats {
+  'total' : bigint,
+  'sold' : bigint,
+  'byStage' : Array<[PlantStage, bigint]>,
+  'forSale' : bigint,
+}
 export type PlantId = bigint;
+export interface PlantLifecycle {
+  'wateringLog' : Array<WateringEntry>,
+  'pestLog' : Array<PestEntry>,
+  'soldAt' : [] | [Timestamp],
+  'feedingLog' : Array<FeedingPublic>,
+  'nftTokenId' : [] | [bigint],
+  'notes' : Array<PlantNote>,
+  'plant' : PlantPublic,
+  'priceCents' : [] | [bigint],
+  'varietyId' : [] | [bigint],
+  'weatherSnapshots' : Array<WeatherSnapshot>,
+  'photos' : Array<PlantPhotoEntry>,
+}
+export interface PlantNote {
+  'text' : string,
+  'author' : Principal,
+  'timestamp' : Timestamp,
+}
+export interface PlantPhotoEntry {
+  'url' : string,
+  'author' : Principal,
+  'timestamp' : Timestamp,
+  'caption' : [] | [string],
+}
 export interface PlantPublic {
   'id' : PlantId,
   'nft_id' : [] | [string],
@@ -780,20 +966,31 @@ export interface PostPublic {
 export type ProductCategory = { 'Spice' : null } |
   { 'Seedling' : null } |
   { 'GardenInputs' : null } |
+  { 'FreshPodsFlatRate' : null } |
+  { 'GardenAmendment' : null } |
+  { 'FreshPodsByLb' : null } |
+  { 'DriedPods' : null } |
   { 'Gallon1' : null } |
-  { 'Gallon5' : null };
+  { 'Gallon5' : null } |
+  { 'LivePlant' : null };
 export type ProductId = bigint;
 export interface ProductPublic {
   'id' : ProductId,
   'active' : boolean,
+  'nft_token_id' : [] | [bigint],
   'image_key' : [] | [string],
+  'shipping_flat_rate_cents' : [] | [bigint],
+  'unit_label' : [] | [string],
   'name' : string,
   'price_cents' : bigint,
   'description' : string,
   'inventory_category' : [] | [InventoryCategory],
   'image_keys' : Array<string>,
+  'shippable' : boolean,
   'category' : ProductCategory,
   'variety' : [] | [string],
+  'weight_based' : boolean,
+  'price_per_unit_cents' : bigint,
   'plant_id' : [] | [PlantId],
 }
 export type ProposalId = bigint;
@@ -813,6 +1010,12 @@ export interface ProposalPublic {
 export type ProposalType = { 'General' : null } |
   { 'Seasoning' : null } |
   { 'PlantVariety' : null };
+export interface PurchasePlantResult {
+  'claimToken' : [] | [ClaimTokenId],
+  'nftTokenId' : [] | [bigint],
+  'message' : string,
+  'success' : boolean,
+}
 export interface QRAssignmentResult {
   'claimTokenId' : string,
   'nftId' : bigint,
@@ -888,6 +1091,15 @@ export interface ScheduleEntry {
   'input_name' : string,
 }
 export type ScheduleId = string;
+export interface ShippingAddress {
+  'zip' : string,
+  'city' : string,
+  'state' : string,
+  'street_line1' : string,
+  'street_line2' : [] | [string],
+  'phone' : string,
+  'full_name' : string,
+}
 export interface ShopAssignment { 'nftId' : bigint, 'price' : bigint }
 export interface StageHistory {
   'stage' : PlantStage,
@@ -909,6 +1121,7 @@ export interface SubmitOfferInput {
   'offered_token' : OfferToken,
   'offered_amount' : bigint,
 }
+export type Time = bigint;
 export type Timestamp = bigint;
 export interface TokenApproval {
   'token_id' : bigint,
@@ -1066,6 +1279,25 @@ export type Value = { 'Int' : bigint } |
   { 'Blob' : Uint8Array | number[] } |
   { 'Text' : string } |
   { 'Array' : Array<Value> };
+export interface VarietyPublic {
+  'id' : bigint,
+  'daysToMaturity' : [] | [bigint],
+  'name' : string,
+  'createdAt' : Timestamp,
+  'description' : string,
+  'imageUrl' : [] | [string],
+  'scovilleMax' : bigint,
+  'scovilleMin' : bigint,
+  'species' : string,
+  'daysToGermination' : [] | [bigint],
+}
+export interface WateringEntry {
+  'amountMl' : bigint,
+  'author' : Principal,
+  'notes' : [] | [string],
+  'timestamp' : Timestamp,
+  'phLevel' : [] | [number],
+}
 export interface WeatherRecord {
   'id' : WeatherRecordId,
   'latitude' : number,
@@ -1080,6 +1312,15 @@ export interface WeatherRecord {
   'longitude' : number,
 }
 export type WeatherRecordId = bigint;
+export interface WeatherSnapshot {
+  'source' : string,
+  'date' : string,
+  'tempHighF' : number,
+  'rainfallInches' : number,
+  'uvIndex' : number,
+  'humidity' : number,
+  'tempLowF' : number,
+}
 export interface http_header { 'value' : string, 'name' : string }
 export interface http_request_result {
   'status' : bigint,

@@ -9,6 +9,16 @@ type http_header =
    name: text;
    value: text;
  };
+type WeatherSnapshot = 
+ record {
+   date: text;
+   humidity: float64;
+   rainfallInches: float64;
+   source: text;
+   tempHighF: float64;
+   tempLowF: float64;
+   uvIndex: float64;
+ };
 type WeatherRecordId = nat;
 type WeatherRecord = 
  record {
@@ -23,6 +33,27 @@ type WeatherRecord =
    temperature_min: float64;
    user: principal;
    wind_speed: opt float64;
+ };
+type WateringEntry = 
+ record {
+   amountMl: nat;
+   author: principal;
+   notes: opt text;
+   phLevel: opt float64;
+   timestamp: Timestamp;
+ };
+type VarietyPublic = 
+ record {
+   createdAt: Timestamp;
+   daysToGermination: opt nat;
+   daysToMaturity: opt nat;
+   description: text;
+   id: nat;
+   imageUrl: opt text;
+   name: text;
+   scovilleMax: nat;
+   scovilleMin: nat;
+   species: text;
  };
 type Value = 
  variant {
@@ -231,6 +262,7 @@ type TokenApproval =
    token_id: nat;
  };
 type Timestamp = int;
+type Time = int;
 type SubmitOfferInput = 
  record {
    nft_id: text;
@@ -258,6 +290,16 @@ type ShopAssignment =
  record {
    nftId: nat;
    price: nat;
+ };
+type ShippingAddress = 
+ record {
+   city: text;
+   full_name: text;
+   phone: text;
+   state: text;
+   street_line1: text;
+   street_line2: opt text;
+   zip: text;
  };
 type ScheduleId = text;
 type ScheduleEntry = 
@@ -354,6 +396,13 @@ type QRAssignmentResult =
    claimTokenId: text;
    nftId: nat;
  };
+type PurchasePlantResult = 
+ record {
+   claimToken: opt ClaimTokenId;
+   message: text;
+   nftTokenId: opt nat;
+   success: bool;
+ };
 type ProposalType = 
  variant {
    General;
@@ -385,16 +434,27 @@ type ProductPublic =
    image_keys: vec text;
    inventory_category: opt InventoryCategory;
    name: text;
+   nft_token_id: opt nat;
    plant_id: opt PlantId;
    price_cents: nat;
+   price_per_unit_cents: nat;
+   shippable: bool;
+   shipping_flat_rate_cents: opt nat;
+   unit_label: opt text;
    variety: opt text;
+   weight_based: bool;
  };
 type ProductId = nat;
 type ProductCategory = 
  variant {
+   DriedPods;
+   FreshPodsByLb;
+   FreshPodsFlatRate;
    Gallon1;
    Gallon5;
+   GardenAmendment;
    GardenInputs;
+   LivePlant;
    Seedling;
    Spice;
  };
@@ -530,7 +590,53 @@ type PlantPublic =
    variety: text;
    watering_schedule: opt text;
  };
+type PlantPhotoEntry = 
+ record {
+   author: principal;
+   caption: opt text;
+   timestamp: Timestamp;
+   url: text;
+ };
+type PlantNote = 
+ record {
+   author: principal;
+   "text": text;
+   timestamp: Timestamp;
+ };
+type PlantLifecycle = 
+ record {
+   feedingLog: vec FeedingPublic;
+   nftTokenId: opt nat;
+   notes: vec PlantNote;
+   pestLog: vec PestEntry;
+   photos: vec PlantPhotoEntry;
+   plant: PlantPublic;
+   priceCents: opt nat;
+   soldAt: opt Timestamp;
+   varietyId: opt nat;
+   wateringLog: vec WateringEntry;
+   weatherSnapshots: vec WeatherSnapshot;
+ };
 type PlantId = nat;
+type PlantCountStats = 
+ record {
+   byStage: vec record {
+                  PlantStage;
+                  nat;
+                };
+   forSale: nat;
+   sold: nat;
+   total: nat;
+ };
+type PestEntry = 
+ record {
+   author: principal;
+   notes: opt text;
+   pestName: text;
+   severity: text;
+   timestamp: Timestamp;
+   treatment: opt text;
+ };
 type PaymentToken = 
  variant {
    ICP;
@@ -541,9 +647,7 @@ type PaymentToken =
  };
 type OrderStatus = 
  variant {
-   AwaitingPayment;
    Cancelled;
-   Paid;
    Pending;
    PickedUp;
    Shipped;
@@ -554,10 +658,13 @@ type OrderPublic =
    created_at: Timestamp;
    id: OrderId;
    items: vec OrderItem;
-   payment_ref: opt text;
+   line_nft_token_ids: vec nat;
    pickup: bool;
+   shipping: opt ShippingAddress;
    shipping_address: opt text;
+   shipping_cents: nat;
    status: OrderStatus;
+   subtotal_cents: nat;
    total_cents: nat;
  };
 type OrderItem = 
@@ -621,6 +728,15 @@ type Offer =
    seller: principal;
    status: OfferStatus;
    updated_at: Timestamp;
+ };
+type NftListingPublic = 
+ record {
+   isActive: bool;
+   listedAt: Timestamp;
+   plantId: opt PlantId;
+   priceUsdCents: nat;
+   seller: principal;
+   tokenId: nat;
  };
 type NFTStandard = 
  variant {
@@ -702,9 +818,27 @@ type ICSpicy =
    addAdmin: (p: principal) -> ();
    addArtworkLayer: (name: text, object_key: text, layer_number: nat) ->
     (ArtworkLayer);
+   addFeedingEntry: (plantId: PlantId, productName: text, nutrientType: 
+    text, dosage: text, notes: opt text) -> (bool);
    addFeedingRecord: (input: AddFeedingInput) -> (FeedingPublic);
+   addNimsPlantPhoto: (plantId: PlantId, url: text, caption: opt text) ->
+    (bool);
+   addPestEntry: (plantId: PlantId, pestName: text, severity: text,
+    treatment: opt text, notes: opt text) -> (bool);
+   addPlant: (varietyId: nat, stage: PlantStage, trayId: opt TrayId,
+    cellPosition: opt nat, price: opt nat) -> (AddPlantResult);
+   addPlantBatch: (varietyId: nat, stage: PlantStage, count: nat, trayId:
+    opt TrayId) -> (vec AddPlantResult);
+   addPlantNote: (plantId: PlantId, "text": text) -> (bool);
    addPlantPhoto: (plant_id: PlantId, photo_key: text) -> ();
+   addVariety: (name: text, species: text, scovilleMin: nat, scovilleMax:
+    nat, description: text, imageUrl: opt text, daysToGerm: opt nat,
+    daysToMature: opt nat) -> (nat);
+   addWateringEntry: (plantId: PlantId, amountMl: nat, phLevel: opt float64,
+    notes: opt text) -> (bool);
    addWeatherRecord: (input: AddWeatherRecordInput) -> (WeatherRecord);
+   addWeatherSnapshot: (plantId: PlantId, snapshot: WeatherSnapshot) ->
+    (bool);
    addZonePhoto: (tray_id: TrayId, photo_key: text) -> ();
    adminSubmitToDAB: (collectionName: text, collectionDescription: text,
     standard: text, canisterIdOverride: opt text) ->
@@ -713,6 +847,16 @@ type ICSpicy =
        ok: text;
      });
    adminTransferFromPool: (tokenId: nat, to: Account) -> (TransferResult);
+   adminUnstickOrder: (orderId: nat) ->
+    (record {
+       message: text;
+       success: bool;
+     });
+   adminUnstickPepperHead: (tokenId: nat) ->
+    (record {
+       message: text;
+       success: bool;
+     });
    airdropNFT: (_token_id: text, _recipient: principal) -> ();
    assignCallerUserRole: (_user: principal, _role: UserRole) -> ();
    assignPoolNFT: (nftId: nat, action: AssignAction) -> ();
@@ -733,6 +877,8 @@ type ICSpicy =
    beginArtworkUpload: (totalChunks: nat) -> ();
    bulkCreateProducts: (inputs: vec CreateProductInput) ->
     (vec BulkCreateResult);
+   buyListedNft: (tokenId: nat, token: PaymentToken, amount: nat) ->
+    (BuyListedNftResult);
    buyResaleListing: (listing_id: text) -> (variant {
                                               err: text;
                                               ok;
@@ -756,6 +902,8 @@ type ICSpicy =
      });
    createComment: (input: CreateCommentInput) -> (CommentPublic);
    createDAOProposal: (input: CreateProposalInput) -> (ProposalPublic);
+   createNimsTray: (name: text, date: Timestamp, varietyId: opt nat) ->
+    (TrayId);
    createOrder: (buyer: principal, input: CreateOrderInput) -> (OrderPublic);
    createPlant: (input: CreatePlantInput) -> (PlantPublic);
    createPost: (input: CreatePostInput) -> (PostPublic);
@@ -770,27 +918,46 @@ type ICSpicy =
    deleteProduct: (product_id: ProductId) -> ();
    deleteRecipe: (id: RecipeId) -> (bool);
    deleteTray: (tray_id: TrayId) -> ();
+   delistNft: (tokenId: nat) -> (bool);
+   delistPlant: (plantId: PlantId) -> (bool);
    editPost: (post_id: PostId, new_content: text) -> (PostPublic);
    ensureAdminProfile: () -> ();
    ensureCallerProfile: () -> ();
    finalizeArtworkUpload: () -> (UploadResult);
    followUser: (target: principal) -> ();
    generateAllPoolNFTs: () -> (nat);
-   generateClaimToken: (plant_id: PlantId, rarity_tier: RarityTier) ->
-    (ClaimTokenPublic);
+   generateClaimToken: (tokenId: nat) -> (text);
+   generateClaimTokens: (tokenIds: vec nat) ->
+    (vec record {
+           claimToken: text;
+           tokenId: nat;
+         });
    generatePickupQRPayload: (plant_id: PlantId) -> (text) query;
    getActiveResaleListings: () -> (vec ResaleListingPublic) query;
+   getAdminInventory: (stage: opt PlantStage, varietyId: opt nat, forSale:
+    opt bool) -> (vec PlantLifecycle) query;
    getAdmins: () -> (vec principal) query;
    getArtworkFile: (path: text) -> (opt vec nat8);
    getArtworkUploadResult: () -> (UploadResult) query;
    getArtworkUploadStatus: () -> (UploadSessionStatus) query;
+   getAuditLog: (offset: nat, limit: nat) -> (vec AuditEntry) query;
    getBatchGiftPack: (claim_token_id: ClaimTokenId) ->
     (opt BatchGiftPackPublic) query;
    getCallerMembership: () -> (opt MembershipNFTPublic) query;
    getCallerUserProfile: () -> (opt UserProfilePublic) query;
    getCallerUserRole: () -> (UserRole) query;
    getCanisterId: () -> (text) query;
-   getClaimToken: (token_id: ClaimTokenId) -> (opt ClaimTokenPublic) query;
+   getClaimInfo: (token: text) ->
+    (opt
+      record {
+        nftName: text;
+        photoUrl: opt text;
+        plantId: opt PlantId;
+        redeemed: bool;
+        stage: opt text;
+        tokenId: nat;
+        variety: opt text;
+      }) query;
    getDAOProposal: (proposal_id: ProposalId) -> (opt ProposalPublic) query;
    getDAOStats: () ->
     (record {
@@ -801,18 +968,32 @@ type ICSpicy =
    getFollowersCount: (user: principal) -> (nat) query;
    getFollowingCount: (user: principal) -> (nat) query;
    getForSalePlants: () -> (vec PlantPublic) query;
+   getListedNfts: (pepperHeadOnly: opt bool) -> (vec NftListingPublic) query;
    getLoadedMetadataCount: () -> (nat) query;
    getMembershipPriceInToken: (token: OracleToken) -> (nat) query;
+   getMyNftListings: () -> (vec NftListingPublic) query;
    getMyOffers: () -> (vec Offer) query;
+   getMyPlantsNims: () -> (vec PlantLifecycle);
    getMyResaleListings: () -> (vec ResaleListingPublic) query;
    getMySchedules: () -> (vec SavedSchedule);
    getMyWeatherRecords: (limit: nat) -> (vec WeatherRecord);
+   getNftPoolStatus: () -> (record {
+                              available: nat;
+                              total: nat;
+                            }) query;
    getOffer: (offerId: text) -> (opt Offer) query;
    getOffersForNft: (nftId: text) -> (vec Offer) query;
    getOffersReceived: () -> (vec Offer) query;
    getOrder: (order_id: OrderId) -> (opt OrderPublic) query;
+   getOrderPickupClaimTokens: (order_id: OrderId) -> (vec text) query;
    getPlant: (plant_id: PlantId) -> (opt PlantPublic) query;
+   getPlantByNft: (nftTokenId: nat) -> (opt PlantLifecycle) query;
+   getPlantClaimToken: (plantId: PlantId) -> (opt text) query;
+   getPlantCount: () -> (PlantCountStats) query;
+   getPlantLifecycle: (plantId: PlantId) -> (opt PlantLifecycle) query;
    getPlantTimeline: (plant_id: PlantId) -> (opt PlantTimeline) query;
+   getPlantsForSale: (stage: opt PlantStage, varietyId: opt nat) ->
+    (vec PlantLifecycle) query;
    getPoolDashboard: () -> (PoolDashboard);
    getPoolNFT: (nftId: nat) -> (opt PoolNFTPublic) query;
    getPoolNFTs: (filter: opt PoolNFTStatus__1, offset: nat, limit: nat) ->
@@ -833,12 +1014,21 @@ type ICSpicy =
    getUpgradeHistory: (plant_id: PlantId) ->
     (vec LifecycleUpgradeEvent) query;
    getUserPosts: (user: principal) -> (vec PostPublic) query;
+   getVariety: (id: nat) -> (opt VarietyPublic) query;
    hasDAOAccess: () -> (bool) query;
    hasMembership: () -> (bool) query;
    icpayTransform: (record {
                       context: blob;
                       response: http_request_result;
                     }) -> (http_request_result) query;
+   /// ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
+   icrc10_supported_standards: () ->
+    (vec record {
+           name: text;
+           url: text;
+         }) query;
+   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   icrc28_trusted_origins: () -> (record {trusted_origins: vec text;}) query;
    icrc37_approve_tokens: (args: vec ApproveTokenArg) ->
     (vec opt ApproveTokenResult);
    icrc37_get_token_approvals: (token_id: nat, prev: opt TokenApproval, take:
@@ -912,7 +1102,9 @@ type ICSpicy =
        err: text;
        ok: ResaleListingPublic;
      });
+   listNftForSale: (tokenId: nat, priceUsdCents: nat) -> (bool);
    listOrdersByBuyer: () -> (vec OrderPublic) query;
+   listPlantForSale: (plantId: PlantId, price: opt nat) -> (bool);
    listPlants: () -> (vec PlantPublic) query;
    listPlantsByStage: (stage: PlantStage) -> (vec PlantPublic) query;
    listPoolNFTs: (statusFilter: opt PoolNFTStatus, limit: nat) ->
@@ -923,10 +1115,13 @@ type ICSpicy =
     (vec ProductPublic) query;
    listRecipes: () -> (vec Recipe) query;
    listTrays: () -> (vec TrayPublic) query;
+   listVarieties: () -> (vec VarietyPublic) query;
    loadStaticMetadata: (entries: vec record {
                                        nat;
                                        blob;
                                      }) -> (LoadStaticMetadataResult);
+   markCellGerminated: (trayId: TrayId, cellPosition: nat, date:
+    opt Timestamp) -> (AddPlantResult);
    markPlantGerminated: (plant_id: PlantId, germination_date: Timestamp) ->
     ();
    mintEXT: (_plantId: nat, _imageKey: text, _attributes:
@@ -956,22 +1151,33 @@ type ICSpicy =
        context: blob;
        response: http_request_result;
      }) -> (http_request_result) query;
-   purchasePepperHead: (token: PaymentToken, amount: nat) ->
+   purchasePepperHead: (paymentId: text) ->
     (record {
        message: text;
        success: bool;
        tokenId: opt nat;
      });
+   purchasePlant: (plantId: PlantId, token: PaymentToken, amount: nat) ->
+    (PurchasePlantResult);
+   purchasePlantICPay: (plantId: PlantId, paymentId: text) ->
+    (PurchasePlantResult);
    redeemBatchClaim: (token_id: ClaimTokenId) ->
     (variant {
        err: text;
        ok: BatchGiftPackPublic;
      });
-   redeemClaim: (token_id: ClaimTokenId) -> (ClaimTokenPublic);
+   redeemClaim: (claimToken: text) ->
+    (record {
+       message: text;
+       success: bool;
+       tokenId: opt nat;
+     });
    refreshTokenPrices: () -> (bool);
    rejectOffer: (offerId: text) -> (Offer);
    removeAdmin: (p: principal) -> ();
+   removePlant: (plantId: PlantId) -> (bool);
    removePlantPhoto: (plant_id: PlantId, photo_key: text) -> ();
+   removeVariety: (id: nat) -> (bool);
    removeZonePhoto: (tray_id: TrayId, photo_key: text) -> ();
    resetOrphanPoolNFT: (nftId: nat) -> (bool);
    resetPoolNFT: (nftId: nat) -> (variant {
@@ -980,6 +1186,7 @@ type ICSpicy =
                                   });
    saveCallerUserProfile: (input: SaveProfileInput) -> ();
    saveSchedule: (stage: text, inputs: vec text) -> (ScheduleId);
+   searchVarieties: (searchQuery: text) -> (vec VarietyPublic) query;
    seedDefaultRecipes: () -> ();
    setForSale: (plant_id: PlantId, for_sale: bool) -> ();
    setICPaySecretKey: (key: text) -> ();
@@ -1000,14 +1207,19 @@ type ICSpicy =
    unfollowUser: (target: principal) -> ();
    unlikePost: (post_id: PostId) -> (nat);
    updateCellData: (input: UpdateCellDataInput) -> ();
+   updateNimsPlantStage: (plantId: PlantId, newStage: PlantStage) -> (bool);
    updateOrderStatus: (order_id: OrderId, status: OrderStatus) -> ();
    updatePlantMetadata: (input: UpdatePlantMetadataInput) -> ();
+   updatePlantPrice: (plantId: PlantId, price: nat) -> (bool);
    updatePlantStage: (plant_id: PlantId, new_stage: PlantStage, notes:
     text) -> ();
    updateProduct: (input: UpdateProductInput) -> ();
    updateRecipe: (input: UpdateRecipeInput) -> (opt Recipe);
    updateTrayName: (tray_id: TrayId, new_name: text) -> ();
    updateTrayOrder: (tray_id: TrayId, new_order: nat) -> ();
+   updateVariety: (id: nat, name: opt text, species: opt text, scovilleMin:
+    opt nat, scovilleMax: opt nat, description: opt text, imageUrl: opt text,
+    daysToGerm: opt nat, daysToMature: opt nat) -> (bool);
    updateZoneNotes: (tray_id: TrayId, notes: text) -> ();
    uploadArtworkChunk: (chunkIndex: nat, totalChunks: nat, data: vec nat8) ->
     (variant {
@@ -1080,7 +1292,12 @@ type CreateProductInput =
    name: text;
    plant_id: opt PlantId;
    price_cents: nat;
+   price_per_unit_cents: opt nat;
+   shippable: bool;
+   shipping_flat_rate_cents: opt nat;
+   unit_label: opt text;
    variety: opt text;
+   weight_based: bool;
  };
 type CreatePostInput = 
  record {
@@ -1111,7 +1328,7 @@ type CreateOrderInput =
  record {
    items: vec OrderItem;
    pickup: bool;
-   shipping_address: opt text;
+   shipping: opt ShippingAddress;
  };
 type CreateCommentInput = 
  record {
@@ -1155,17 +1372,12 @@ type CommentPublic =
    post_id: PostId;
  };
 type CommentId = nat;
-type ClaimTokenPublic = 
- record {
-   claim_data: text;
-   created_at: Timestamp;
-   id: ClaimTokenId;
-   plant_id: PlantId;
-   rarity_tier: RarityTier;
-   redeemed_at: opt Timestamp;
-   redeemed_by: opt principal;
- };
 type ClaimTokenId = text;
+type BuyListedNftResult = 
+ record {
+   message: text;
+   success: bool;
+ };
 type BulkCreateResult = 
  variant {
    err: text;
@@ -1181,6 +1393,13 @@ type BatchGiftPackPublic =
    plant_ids: vec PlantId;
    redeemed: bool;
    redeemed_by: opt principal;
+ };
+type AuditEntry = 
+ record {
+   action: text;
+   admin: principal;
+   detail: text;
+   ts: Time;
  };
 type AssignAction = 
  variant {
@@ -1247,6 +1466,12 @@ type AddWeatherRecordInput =
    temperature_max: float64;
    temperature_min: float64;
    wind_speed: opt float64;
+ };
+type AddPlantResult = 
+ record {
+   claimToken: text;
+   nftTokenId: nat;
+   plantId: PlantId;
  };
 type AddFeedingInput = 
  record {

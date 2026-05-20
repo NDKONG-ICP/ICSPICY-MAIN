@@ -20,6 +20,44 @@ import {
 const MOCK_PRINCIPAL = { toText: () => "aaaaa-aa" } as Principal;
 const NOW = BigInt(Date.now()) * BigInt(1_000_000);
 
+const MOCK_PRODUCT_DEFAULTS = {
+  shippable: false,
+  weight_based: false,
+  price_per_unit_cents: 0n,
+} as const;
+
+function mockProductExtras(priceCents: bigint) {
+  return {
+    ...MOCK_PRODUCT_DEFAULTS,
+    price_per_unit_cents: priceCents,
+  };
+}
+
+function mockOrderFromInput(
+  input: import("../backend").CreateOrderInput,
+  buyer: Principal,
+): import("../backend").OrderPublic {
+  const subtotal = input.items.reduce(
+    (acc, i) => acc + i.price_cents * i.quantity,
+    0n,
+  );
+  const shippingCents = input.shipping ? 1020n : 0n;
+  return {
+    id: BigInt(1),
+    status: OrderStatus.Pending,
+    subtotal_cents: subtotal,
+    shipping_cents: shippingCents,
+    shipping_address: undefined,
+    shipping: input.shipping,
+    created_at: NOW,
+    pickup: input.pickup,
+    line_nft_token_ids: [],
+    buyer,
+    items: input.items,
+    total_cents: subtotal + shippingCents,
+  };
+}
+
 export const mockBackend: backendInterface = {
   // Object-storage certification: no-op stubs. The mock backend is only
   // exercised when VITE_USE_MOCK=true, which has no real upload/download
@@ -148,16 +186,7 @@ export const mockBackend: backendInterface = {
     options: input.options,
     proposal_type: input.proposal_type,
   }),
-  createOrder: async (buyer, input) => ({
-    id: BigInt(1),
-    status: OrderStatus.Pending,
-    shipping_address: input.shipping_address,
-    created_at: NOW,
-    pickup: input.pickup,
-    buyer,
-    items: input.items,
-    total_cents: input.items.reduce((acc, i) => acc + i.price_cents * i.quantity, BigInt(0)),
-  }),
+  createOrder: async (buyer, input) => mockOrderFromInput(input, buyer),
   createPlant: async (input) => ({
     id: BigInt(1),
     nft_id: undefined,
@@ -215,6 +244,12 @@ export const mockBackend: backendInterface = {
     category: input.category,
     variety: input.variety,
     plant_id: input.plant_id,
+    shippable: input.shippable,
+    shipping_flat_rate_cents: input.shipping_flat_rate_cents,
+    weight_based: input.weight_based,
+    price_per_unit_cents: input.price_per_unit_cents ?? input.price_cents,
+    unit_label: input.unit_label,
+    nft_token_id: undefined,
   }),
   bulkCreateProducts: async (inputs) =>
     inputs.map((input) => ({
@@ -231,6 +266,12 @@ export const mockBackend: backendInterface = {
         category: input.category,
         variety: input.variety,
         plant_id: input.plant_id,
+        shippable: input.shippable,
+        shipping_flat_rate_cents: input.shipping_flat_rate_cents,
+        weight_based: input.weight_based,
+        price_per_unit_cents: input.price_per_unit_cents ?? input.price_cents,
+        unit_label: input.unit_label,
+        nft_token_id: undefined,
       },
     })),
   createRecipe: async (input) => ({
@@ -631,6 +672,7 @@ export const mockBackend: backendInterface = {
       category: ProductCategory.Seedling,
       variety: "Carolina Reaper",
       plant_id: BigInt(1),
+      ...mockProductExtras(BigInt(600)),
     },
     {
       id: BigInt(2),
@@ -644,6 +686,7 @@ export const mockBackend: backendInterface = {
       category: ProductCategory.Gallon1,
       variety: "Bhut Jolokia",
       plant_id: BigInt(2),
+      ...mockProductExtras(BigInt(2500)),
     },
     {
       id: BigInt(3),
@@ -657,6 +700,7 @@ export const mockBackend: backendInterface = {
       category: ProductCategory.GardenInputs,
       variety: undefined,
       plant_id: undefined,
+      ...mockProductExtras(BigInt(1500)),
     },
     {
       id: BigInt(4),
@@ -670,6 +714,7 @@ export const mockBackend: backendInterface = {
       category: ProductCategory.Gallon5,
       variety: "Trinidad Moruga Scorpion",
       plant_id: BigInt(3),
+      ...mockProductExtras(BigInt(4500)),
     },
   ],
   listProductsByCategory: async (category) => [],
@@ -758,16 +803,7 @@ export const mockBackend: backendInterface = {
   mintHederaNFT: async () => "hedera-nft-token-id-001",
   mintICRC37: async () => "icrc37-nft-token-id-001",
   mintRWAProvenance: async () => "rwa-nft-token-id-001",
-  placeOrder: async (input) => ({
-    id: BigInt(1),
-    status: OrderStatus.Pending,
-    shipping_address: input.shipping_address,
-    created_at: NOW,
-    pickup: input.pickup,
-    buyer: MOCK_PRINCIPAL,
-    items: input.items,
-    total_cents: input.items.reduce((acc, i) => acc + i.price_cents * i.quantity, BigInt(0)),
-  }),
+  placeOrder: async (input) => mockOrderFromInput(input, MOCK_PRINCIPAL),
   priceOracleTransform: async (input) => ({ status: BigInt(200), body: new Uint8Array(), headers: [] }),
   redeemBatchClaim: async () => ({
     __kind__: "ok" as const,

@@ -25,9 +25,15 @@ import ICRC7Lib "../lib/icrc7";
 import ICRC37Lib "../lib/icrc37";
 import Common "../types/common";
 import MarketTypes "../types/marketplace";
+import ProductShipping "../lib/product-shipping";
+import ProductNft "../lib/product-nft";
+import NimsLib "../lib/nims";
+import PlantTypes "../types/plants";
+import ClaimTypes "../types/claim";
 import ICRC7 "../types/icrc7";
 import Result "mo:core/Result";
 import Map "mo:core/Map";
+import List "mo:core/List";
 import Set "mo:core/Set";
 import Blob "mo:core/Blob";
 import Principal "mo:core/Principal";
@@ -47,6 +53,15 @@ mixin (
   accessControlState      : AccessControl.AccessControlState,
   callerGuards            : CallerGuard.GuardMap,
   orders                  : Map.Map<Common.OrderId, MarketTypes.Order>,
+  products                : Map.Map<Common.ProductId, MarketTypes.Product>,
+  productNftTokenIds      : Map.Map<Common.ProductId, Nat>,
+  productShippingConfigs  : Map.Map<Common.ProductId, ProductShipping.ProductShippingConfig>,
+  orderLineNftTokenIds    : Map.Map<Common.OrderId, [Nat]>,
+  orderPickupClaimTokens  : Map.Map<Common.OrderId, [Text]>,
+  nftClaimTokens          : Map.Map<Text, ClaimTypes.NftClaimEntry>,
+  nftClaimPlantIds        : Map.Map<Text, Common.PlantId>,
+  plantClaimTokens        : Map.Map<Common.PlantId, Text>,
+  nftTokenPlantIds        : Map.Map<Nat, Common.PlantId>,
   icrc7Owners             : Map.Map<Nat, ICRC7.Account>,
   icrc7Balances           : Map.Map<Principal, Set.Set<Nat>>,
   icrc37Approvals         : ICRC37Lib.ApprovalsMap,
@@ -54,6 +69,20 @@ mixin (
   icpaySecretKey          : { var value : Text },
   icpaySessionsConsumed   : Map.Map<Text, Nat>,
   auditLog                : { var value : AuditLog.AuditLog },
+  // Phase 6 plant purchase settlement state
+  plants                  : Map.Map<Common.PlantId, PlantTypes.Plant>,
+  feedings                : Map.Map<Common.FeedingId, PlantTypes.Feeding>,
+  plantVarietyIds         : Map.Map<Common.PlantId, Nat>,
+  plantOwners             : Map.Map<Common.PlantId, Principal>,
+  plantPrices             : Map.Map<Common.PlantId, Nat>,
+  plantSoldAt             : Map.Map<Common.PlantId, Common.Timestamp>,
+  plantTransplantedOneGal : Map.Map<Common.PlantId, Common.Timestamp>,
+  plantTransplantedFiveGal : Map.Map<Common.PlantId, Common.Timestamp>,
+  plantNotesLog           : Map.Map<Common.PlantId, List.List<PlantTypes.PlantNote>>,
+  plantWateringLog        : Map.Map<Common.PlantId, List.List<PlantTypes.WateringEntry>>,
+  plantPestLog            : Map.Map<Common.PlantId, List.List<PlantTypes.PestEntry>>,
+  plantPhotoLog           : Map.Map<Common.PlantId, List.List<PlantTypes.PlantPhotoEntry>>,
+  plantWeatherSnapshots   : Map.Map<Common.PlantId, List.List<PlantTypes.WeatherSnapshot>>,
 ) {
 
   // ── Admin key provisioning ─────────────────────────────────────────────────
@@ -355,6 +384,35 @@ mixin (
     };
     // Mark consumed (status stays #Pending; confirmed via icpaySessionsConsumed + audit log).
     icpaySessionsConsumed.add(paymentId, orderId);
+    let canister = selfPrincipal();
+    switch (
+      ProductNft.settleOrderLineItems(
+        orderId, order, products, productShippingConfigs, plants, nimsSideMaps(),
+        icrc7Owners, icrc7Balances, icrc37Approvals,
+        nftClaimTokens, nftClaimPlantIds, plantClaimTokens, nftTokenPlantIds,
+        order.buyer, canister,
+      )
+    ) {
+      case (#err(e)) {
+        ignore icpaySessionsConsumed.delete(paymentId);
+        return { success = false; message = e };
+      };
+      case (#ok(settlements)) {
+        var tokenIds : [Nat] = [];
+        var claimTokens : [Text] = [];
+        for (s in settlements.vals()) {
+          tokenIds := Array.concat(tokenIds, [s.tokenId]);
+          switch (s.pickup_claim_token) {
+            case (?t) claimTokens := Array.concat(claimTokens, [t]);
+            case null {};
+          };
+        };
+        orderLineNftTokenIds.add(orderId, tokenIds);
+        if (claimTokens.size() > 0) {
+          orderPickupClaimTokens.add(orderId, claimTokens);
+        };
+      };
+    };
     auditLog.value := AuditLog.append(auditLog.value, {
       ts     = Time.now();
       admin  = caller;
@@ -597,5 +655,82 @@ mixin (
       detail = "tokenId=" # Nat.toText(tokenId);
     });
     { success = true; message = "PepperHead returned to pool" };
+  };
+
+  func nimsSideMaps() : NimsLib.SideMaps {
+    {
+      plantVarietyIds;
+      plantOwners;
+      plantPrices;
+      plantSoldAt;
+      plantTransplantedOneGal;
+      plantTransplantedFiveGal;
+      plantNotesLog;
+      plantWateringLog;
+      plantPestLog;
+      plantPhotoLog;
+      plantWeatherSnapshots;
+    };
+  };
+
+  /// Authenticated: purchase a plant listing via ICPay.
+  public shared ({ caller }) func purchasePlantICPay(
+    plantId : Common.PlantId,
+    paymentId : Text,
+  ) : async PlantTypes.PurchasePlantResult {
+    AccessControl.requireAuthenticated(caller);
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok) {};
+    };
+    try {
+      let result = await doPurchasePlantICPay(caller, plantId, paymentId);
+      CallerGuard.release(callerGuards, caller);
+      result;
+    } catch (e) {
+      CallerGuard.release(callerGuards, caller);
+      { success = false; nftTokenId = null; claimToken = null; message = "Purchase failed" };
+    };
+  };
+
+  func doPurchasePlantICPay(
+    caller : Principal,
+    plantId : Common.PlantId,
+    paymentId : Text,
+  ) : async PlantTypes.PurchasePlantResult {
+    switch (icpaySessionsConsumed.get(paymentId)) {
+      case (?_) return { success = false; nftTokenId = null; claimToken = null; message = "Payment already used" };
+      case null {};
+    };
+    switch (await verifyICPayPayment(paymentId)) {
+      case (#err(e)) return { success = false; nftTokenId = null; claimToken = null; message = e };
+      case (#ok) {};
+    };
+    switch (icpaySessionsConsumed.get(paymentId)) {
+      case (?_) return { success = false; nftTokenId = null; claimToken = null; message = "Payment already used" };
+      case null {};
+    };
+    let canister = selfPrincipal();
+    switch (NimsLib.settlePlantPurchase(
+      plants, nimsSideMaps(), icrc7Owners, icrc7Balances, icrc37Approvals,
+      nftClaimTokens, plantClaimTokens, canister, caller, plantId,
+    )) {
+      case (#err(e)) return { success = false; nftTokenId = null; claimToken = null; message = e };
+      case (#ok(settled)) {
+        icpaySessionsConsumed.add(paymentId, plantId);
+        auditLog.value := AuditLog.append(auditLog.value, {
+          ts = Time.now();
+          admin = caller;
+          action = "plant_purchased_icpay";
+          detail = "plantId=" # Nat.toText(plantId) # " ref=" # paymentId;
+        });
+        {
+          success = true;
+          nftTokenId = ?settled.nftTokenId;
+          claimToken = ?settled.claimToken;
+          message = "Plant purchased via ICPay";
+        };
+      };
+    };
   };
 };

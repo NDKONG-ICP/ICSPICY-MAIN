@@ -186,8 +186,17 @@ export interface TrayPublic {
     nft_standard: NFTStandard;
     zone_photo_keys: Array<string>;
 }
+export interface ShippingAddress {
+    full_name: string;
+    street_line1: string;
+    street_line2?: string;
+    city: string;
+    state: string;
+    zip: string;
+    phone: string;
+}
 export interface CreateOrderInput {
-    shipping_address?: string;
+    shipping?: ShippingAddress;
     pickup: boolean;
     items: Array<OrderItem>;
 }
@@ -287,6 +296,11 @@ export interface CreateProductInput {
     category: ProductCategory;
     variety?: string;
     plant_id?: PlantId;
+    shippable: boolean;
+    shipping_flat_rate_cents?: bigint;
+    weight_based: boolean;
+    price_per_unit_cents?: bigint;
+    unit_label?: string;
 }
 export type ContainerSize = {
     __kind__: "Gal5Bucket";
@@ -471,6 +485,12 @@ export interface ProductPublic {
     category: ProductCategory;
     variety?: string;
     plant_id?: PlantId;
+    nft_token_id?: bigint;
+    shippable: boolean;
+    shipping_flat_rate_cents?: bigint;
+    weight_based: boolean;
+    price_per_unit_cents: bigint;
+    unit_label?: string;
 }
 export interface UpdateRecipeInput {
     id: RecipeId;
@@ -523,9 +543,13 @@ export type WeatherRecordId = bigint;
 export interface OrderPublic {
     id: OrderId;
     status: OrderStatus;
+    subtotal_cents: bigint;
+    shipping_cents: bigint;
     shipping_address?: string;
+    shipping?: ShippingAddress;
     created_at: Timestamp;
     pickup: boolean;
+    line_nft_token_ids: Array<bigint>;
     buyer: Principal;
     items: Array<OrderItem>;
     total_cents: bigint;
@@ -817,7 +841,12 @@ export enum ProductCategory {
     Seedling = "Seedling",
     GardenInputs = "GardenInputs",
     Gallon1 = "Gallon1",
-    Gallon5 = "Gallon5"
+    Gallon5 = "Gallon5",
+    LivePlant = "LivePlant",
+    DriedPods = "DriedPods",
+    GardenAmendment = "GardenAmendment",
+    FreshPodsByLb = "FreshPodsByLb",
+    FreshPodsFlatRate = "FreshPodsFlatRate",
 }
 export enum ProposalType {
     General = "General",
@@ -1093,7 +1122,7 @@ export interface backendInterface {
     }>;
     voteOnProposal(proposal_id: ProposalId, option_index: bigint): Promise<void>;
 }
-import type { AddFeedingInput as _AddFeedingInput, AddWeatherRecordInput as _AddWeatherRecordInput, AssignAction as _AssignAction, BatchGiftPackPublic as _BatchGiftPackPublic, BulkCreateResult as _BulkCreateResult, ClaimTokenId as _ClaimTokenId, ClaimTokenPublic as _ClaimTokenPublic, CommentId as _CommentId, CommentPublic as _CommentPublic, ContainerSize as _ContainerSize, CounterOfferInput as _CounterOfferInput, CreateOrderInput as _CreateOrderInput, CreatePlantInput as _CreatePlantInput, CreatePostInput as _CreatePostInput, CreateProductInput as _CreateProductInput, CreateProposalInput as _CreateProposalInput, CreateRecipeInput as _CreateRecipeInput, CreateTrayInput as _CreateTrayInput, FeedingId as _FeedingId, FeedingPublic as _FeedingPublic, FoundersMintInput as _FoundersMintInput, FoundersMintResult as _FoundersMintResult, InventoryCategory as _InventoryCategory, LifecycleUpgradeEvent as _LifecycleUpgradeEvent, MembershipNFTPublic as _MembershipNFTPublic, MembershipTier as _MembershipTier, NFTStandard as _NFTStandard, Offer as _Offer, OfferAction as _OfferAction, OfferHistoryEntry as _OfferHistoryEntry, OfferStatus as _OfferStatus, OfferToken as _OfferToken, OracleToken as _OracleToken, OrderId as _OrderId, OrderItem as _OrderItem, OrderPublic as _OrderPublic, OrderStatus as _OrderStatus, PlantId as _PlantId, PlantPublic as _PlantPublic, PlantStage as _PlantStage, PlantTimeline as _PlantTimeline, PoolNFTPublic as _PoolNFTPublic, PoolNFTPublic__1 as _PoolNFTPublic__1, PoolNFTRarity as _PoolNFTRarity, PoolNFTStatus as _PoolNFTStatus, PoolNFTStatus__1 as _PoolNFTStatus__1, PostId as _PostId, PostPublic as _PostPublic, ProductCategory as _ProductCategory, ProductId as _ProductId, ProductPublic as _ProductPublic, ProposalId as _ProposalId, ProposalPublic as _ProposalPublic, ProposalType as _ProposalType, RarityTier as _RarityTier, Recipe as _Recipe, RecipeId as _RecipeId, ResaleListingPublic as _ResaleListingPublic, SaveProfileInput as _SaveProfileInput, SavedSchedule as _SavedSchedule, StageHistory as _StageHistory, SubmitOfferInput as _SubmitOfferInput, Timestamp as _Timestamp, TokenPrice as _TokenPrice, TransplantInput as _TransplantInput, TrayId as _TrayId, TrayPublic as _TrayPublic, TreasuryBalance as _TreasuryBalance, TreasuryToken as _TreasuryToken, TreasuryTransaction as _TreasuryTransaction, TreasuryTxType as _TreasuryTxType, TxStatus as _TxStatus, TxType as _TxType, UpdateCellDataInput as _UpdateCellDataInput, UpdatePlantMetadataInput as _UpdatePlantMetadataInput, UpdateProductInput as _UpdateProductInput, UpdateRecipeInput as _UpdateRecipeInput, UserProfilePublic as _UserProfilePublic, UserRole as _UserRole, WalletTransaction as _WalletTransaction, WeatherRecord as _WeatherRecord, WeatherRecordId as _WeatherRecordId } from "./declarations/backend.did.d.ts";
+import type { AddFeedingInput as _AddFeedingInput, AddWeatherRecordInput as _AddWeatherRecordInput, AssignAction as _AssignAction, BatchGiftPackPublic as _BatchGiftPackPublic, BulkCreateResult as _BulkCreateResult, ClaimTokenId as _ClaimTokenId, ClaimTokenPublic as _ClaimTokenPublic, CommentId as _CommentId, CommentPublic as _CommentPublic, ContainerSize as _ContainerSize, CounterOfferInput as _CounterOfferInput, CreateOrderInput as _CreateOrderInput, CreatePlantInput as _CreatePlantInput, CreatePostInput as _CreatePostInput, CreateProductInput as _CreateProductInput, CreateProposalInput as _CreateProposalInput, CreateRecipeInput as _CreateRecipeInput, CreateTrayInput as _CreateTrayInput, FeedingId as _FeedingId, FeedingPublic as _FeedingPublic, FoundersMintInput as _FoundersMintInput, FoundersMintResult as _FoundersMintResult, InventoryCategory as _InventoryCategory, LifecycleUpgradeEvent as _LifecycleUpgradeEvent, MembershipNFTPublic as _MembershipNFTPublic, MembershipTier as _MembershipTier, NFTStandard as _NFTStandard, Offer as _Offer, OfferAction as _OfferAction, OfferHistoryEntry as _OfferHistoryEntry, OfferStatus as _OfferStatus, OfferToken as _OfferToken, OracleToken as _OracleToken, OrderId as _OrderId, OrderItem as _OrderItem, OrderPublic as _OrderPublic, OrderStatus as _OrderStatus, PlantId as _PlantId, PlantPublic as _PlantPublic, PlantStage as _PlantStage, PlantTimeline as _PlantTimeline, PoolNFTPublic as _PoolNFTPublic, PoolNFTPublic__1 as _PoolNFTPublic__1, PoolNFTRarity as _PoolNFTRarity, PoolNFTStatus as _PoolNFTStatus, PoolNFTStatus__1 as _PoolNFTStatus__1, PostId as _PostId, PostPublic as _PostPublic, ProductCategory as _ProductCategory, ProductId as _ProductId, ProductPublic as _ProductPublic, ProposalId as _ProposalId, ProposalPublic as _ProposalPublic, ProposalType as _ProposalType, RarityTier as _RarityTier, Recipe as _Recipe, RecipeId as _RecipeId, ResaleListingPublic as _ResaleListingPublic, SaveProfileInput as _SaveProfileInput, SavedSchedule as _SavedSchedule, ShippingAddress as _ShippingAddress, StageHistory as _StageHistory, SubmitOfferInput as _SubmitOfferInput, Timestamp as _Timestamp, TokenPrice as _TokenPrice, TransplantInput as _TransplantInput, TrayId as _TrayId, TrayPublic as _TrayPublic, TreasuryBalance as _TreasuryBalance, TreasuryToken as _TreasuryToken, TreasuryTransaction as _TreasuryTransaction, TreasuryTxType as _TreasuryTxType, TxStatus as _TxStatus, TxType as _TxType, UpdateCellDataInput as _UpdateCellDataInput, UpdatePlantMetadataInput as _UpdatePlantMetadataInput, UpdateProductInput as _UpdateProductInput, UpdateRecipeInput as _UpdateRecipeInput, UserProfilePublic as _UserProfilePublic, UserRole as _UserRole, WalletTransaction as _WalletTransaction, WeatherRecord as _WeatherRecord, WeatherRecordId as _WeatherRecordId } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _immutableObjectStorageCreateCertificate(arg0: string): Promise<Uint8Array> {
@@ -4225,42 +4254,76 @@ function from_candid_record_n38(_uploadFile: (file: ExternalBlob) => Promise<Uin
         standard: from_candid_NFTStandard_n39(_uploadFile, _downloadFile, value.standard)
     };
 }
+function from_candid_ShippingAddress(
+    _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>,
+    _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>,
+    value: _ShippingAddress,
+): ShippingAddress {
+    return {
+        full_name: value.full_name,
+        street_line1: value.street_line1,
+        street_line2: record_opt_to_undefined(
+            from_candid_opt_n17(_uploadFile, _downloadFile, value.street_line2),
+        ),
+        city: value.city,
+        state: value.state,
+        zip: value.zip,
+        phone: value.phone,
+    };
+}
+function to_candid_ShippingAddress(
+    _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>,
+    _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>,
+    value: ShippingAddress,
+): _ShippingAddress {
+    return {
+        full_name: value.full_name,
+        street_line1: value.street_line1,
+        street_line2: value.street_line2
+            ? candid_some(value.street_line2)
+            : candid_none(),
+        city: value.city,
+        state: value.state,
+        zip: value.zip,
+        phone: value.phone,
+    };
+}
 function from_candid_record_n52(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: _ProductId;
     active: boolean;
+    nft_token_id: [] | [bigint];
     image_key: [] | [string];
+    shipping_flat_rate_cents: [] | [bigint];
+    unit_label: [] | [string];
     name: string;
     price_cents: bigint;
     description: string;
     inventory_category: [] | [_InventoryCategory];
     image_keys: Array<string>;
+    shippable: boolean;
     category: _ProductCategory;
     variety: [] | [string];
+    weight_based: boolean;
+    price_per_unit_cents: bigint;
     plant_id: [] | [_PlantId];
-}): {
-    id: ProductId;
-    active: boolean;
-    image_key?: string;
-    name: string;
-    price_cents: bigint;
-    description: string;
-    inventory_category?: InventoryCategory;
-    image_keys: Array<string>;
-    category: ProductCategory;
-    variety?: string;
-    plant_id?: PlantId;
-} {
+}): ProductPublic {
     return {
         id: value.id,
         active: value.active,
+        nft_token_id: record_opt_to_undefined(from_candid_opt_n76(_uploadFile, _downloadFile, value.nft_token_id)),
         image_key: record_opt_to_undefined(from_candid_opt_n17(_uploadFile, _downloadFile, value.image_key)),
+        shipping_flat_rate_cents: record_opt_to_undefined(from_candid_opt_n76(_uploadFile, _downloadFile, value.shipping_flat_rate_cents)),
+        unit_label: record_opt_to_undefined(from_candid_opt_n17(_uploadFile, _downloadFile, value.unit_label)),
         name: value.name,
         price_cents: value.price_cents,
         description: value.description,
         inventory_category: record_opt_to_undefined(from_candid_opt_n53(_uploadFile, _downloadFile, value.inventory_category)),
         image_keys: value.image_keys,
+        shippable: value.shippable,
         category: from_candid_ProductCategory_n56(_uploadFile, _downloadFile, value.category),
         variety: record_opt_to_undefined(from_candid_opt_n17(_uploadFile, _downloadFile, value.variety)),
+        weight_based: value.weight_based,
+        price_per_unit_cents: value.price_per_unit_cents,
         plant_id: record_opt_to_undefined(from_candid_opt_n58(_uploadFile, _downloadFile, value.plant_id))
     };
 }
@@ -4381,28 +4444,34 @@ function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint
 function from_candid_record_n85(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: _OrderId;
     status: _OrderStatus;
+    subtotal_cents: bigint;
     shipping_address: [] | [string];
+    shipping_cents: bigint;
+    shipping: [] | [_ShippingAddress];
     created_at: _Timestamp;
     pickup: boolean;
+    line_nft_token_ids: Array<bigint>;
     buyer: Principal;
     items: Array<_OrderItem>;
     total_cents: bigint;
-}): {
-    id: OrderId;
-    status: OrderStatus;
-    shipping_address?: string;
-    created_at: Timestamp;
-    pickup: boolean;
-    buyer: Principal;
-    items: Array<OrderItem>;
-    total_cents: bigint;
-} {
+}): OrderPublic {
     return {
         id: value.id,
         status: from_candid_OrderStatus_n86(_uploadFile, _downloadFile, value.status),
+        subtotal_cents: value.subtotal_cents,
         shipping_address: record_opt_to_undefined(from_candid_opt_n17(_uploadFile, _downloadFile, value.shipping_address)),
+        shipping_cents: value.shipping_cents,
+        shipping:
+            value.shipping.length === 0
+                ? undefined
+                : from_candid_ShippingAddress(
+                      _uploadFile,
+                      _downloadFile,
+                      value.shipping[0],
+                  ),
         created_at: value.created_at,
         pickup: value.pickup,
+        line_nft_token_ids: value.line_nft_token_ids,
         buyer: value.buyer,
         items: from_candid_vec_n88(_uploadFile, _downloadFile, value.items),
         total_cents: value.total_cents
@@ -4800,18 +4869,18 @@ function from_candid_variant_n55(_uploadFile: (file: ExternalBlob) => Promise<Ui
         InGround: value.InGround
     } : value;
 }
-function from_candid_variant_n57(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    Spice: null;
-} | {
-    Seedling: null;
-} | {
-    GardenInputs: null;
-} | {
-    Gallon1: null;
-} | {
-    Gallon5: null;
-}): ProductCategory {
-    return "Spice" in value ? ProductCategory.Spice : "Seedling" in value ? ProductCategory.Seedling : "GardenInputs" in value ? ProductCategory.GardenInputs : "Gallon1" in value ? ProductCategory.Gallon1 : "Gallon5" in value ? ProductCategory.Gallon5 : value;
+function from_candid_variant_n57(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ProductCategory): ProductCategory {
+    if ("Spice" in value) return ProductCategory.Spice;
+    if ("Seedling" in value) return ProductCategory.Seedling;
+    if ("GardenInputs" in value) return ProductCategory.GardenInputs;
+    if ("Gallon1" in value) return ProductCategory.Gallon1;
+    if ("Gallon5" in value) return ProductCategory.Gallon5;
+    if ("LivePlant" in value) return ProductCategory.LivePlant;
+    if ("DriedPods" in value) return ProductCategory.DriedPods;
+    if ("GardenAmendment" in value) return ProductCategory.GardenAmendment;
+    if ("FreshPodsByLb" in value) return ProductCategory.FreshPodsByLb;
+    if ("FreshPodsFlatRate" in value) return ProductCategory.FreshPodsFlatRate;
+    return value as unknown as ProductCategory;
 }
 function from_candid_variant_n59(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     ok: null;
@@ -5513,37 +5582,28 @@ function to_candid_record_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         compositeImageKey: value.compositeImageKey
     };
 }
-function to_candid_record_n43(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    image_key?: string;
-    name: string;
-    price_cents: bigint;
-    description: string;
-    inventory_category?: InventoryCategory;
-    image_keys: Array<string>;
-    category: ProductCategory;
-    variety?: string;
-    plant_id?: PlantId;
-}): {
-    image_key: [] | [string];
-    name: string;
-    price_cents: bigint;
-    description: string;
-    inventory_category: [] | [_InventoryCategory];
-    image_keys: Array<string>;
-    category: _ProductCategory;
-    variety: [] | [string];
-    plant_id: [] | [_PlantId];
-} {
+function to_candid_record_n43(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: CreateProductInput): _CreateProductInput {
     return {
         image_key: value.image_key ? candid_some(value.image_key) : candid_none(),
+        shipping_flat_rate_cents: value.shipping_flat_rate_cents
+            ? candid_some(value.shipping_flat_rate_cents)
+            : candid_none(),
+        unit_label: value.unit_label ? candid_some(value.unit_label) : candid_none(),
         name: value.name,
         price_cents: value.price_cents,
         description: value.description,
-        inventory_category: value.inventory_category ? candid_some(to_candid_InventoryCategory_n44(_uploadFile, _downloadFile, value.inventory_category)) : candid_none(),
+        inventory_category: value.inventory_category
+            ? candid_some(to_candid_InventoryCategory_n44(_uploadFile, _downloadFile, value.inventory_category))
+            : candid_none(),
         image_keys: value.image_keys,
+        shippable: value.shippable,
         category: to_candid_ProductCategory_n46(_uploadFile, _downloadFile, value.category),
         variety: value.variety ? candid_some(value.variety) : candid_none(),
-        plant_id: value.plant_id ? candid_some(value.plant_id) : candid_none()
+        weight_based: value.weight_based,
+        price_per_unit_cents: value.price_per_unit_cents
+            ? candid_some(value.price_per_unit_cents)
+            : candid_none(),
+        plant_id: value.plant_id ? candid_some(value.plant_id) : candid_none(),
     };
 }
 function to_candid_record_n61(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -5582,19 +5642,13 @@ function to_candid_record_n71(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         proposal_type: to_candid_ProposalType_n72(_uploadFile, _downloadFile, value.proposal_type)
     };
 }
-function to_candid_record_n80(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    shipping_address?: string;
-    pickup: boolean;
-    items: Array<OrderItem>;
-}): {
-    shipping_address: [] | [string];
-    pickup: boolean;
-    items: Array<_OrderItem>;
-} {
+function to_candid_record_n80(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: CreateOrderInput): _CreateOrderInput {
     return {
-        shipping_address: value.shipping_address ? candid_some(value.shipping_address) : candid_none(),
+        shipping: value.shipping
+            ? candid_some(to_candid_ShippingAddress(_uploadFile, _downloadFile, value.shipping))
+            : candid_none(),
         pickup: value.pickup,
-        items: to_candid_vec_n81(_uploadFile, _downloadFile, value.items)
+        items: to_candid_vec_n81(_uploadFile, _downloadFile, value.items),
     };
 }
 function to_candid_record_n83(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -5908,28 +5962,31 @@ function to_candid_variant_n45(_uploadFile: (file: ExternalBlob) => Promise<Uint
         InGround: value.InGround
     } : value;
 }
-function to_candid_variant_n47(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ProductCategory): {
-    Spice: null;
-} | {
-    Seedling: null;
-} | {
-    GardenInputs: null;
-} | {
-    Gallon1: null;
-} | {
-    Gallon5: null;
-} {
-    return value == ProductCategory.Spice ? {
-        Spice: null
-    } : value == ProductCategory.Seedling ? {
-        Seedling: null
-    } : value == ProductCategory.GardenInputs ? {
-        GardenInputs: null
-    } : value == ProductCategory.Gallon1 ? {
-        Gallon1: null
-    } : value == ProductCategory.Gallon5 ? {
-        Gallon5: null
-    } : value;
+function to_candid_variant_n47(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ProductCategory): _ProductCategory {
+    switch (value) {
+        case ProductCategory.Spice:
+            return { Spice: null };
+        case ProductCategory.Seedling:
+            return { Seedling: null };
+        case ProductCategory.GardenInputs:
+            return { GardenInputs: null };
+        case ProductCategory.Gallon1:
+            return { Gallon1: null };
+        case ProductCategory.Gallon5:
+            return { Gallon5: null };
+        case ProductCategory.LivePlant:
+            return { LivePlant: null };
+        case ProductCategory.DriedPods:
+            return { DriedPods: null };
+        case ProductCategory.GardenAmendment:
+            return { GardenAmendment: null };
+        case ProductCategory.FreshPodsByLb:
+            return { FreshPodsByLb: null };
+        case ProductCategory.FreshPodsFlatRate:
+            return { FreshPodsFlatRate: null };
+        default:
+            return value as unknown as _ProductCategory;
+    }
 }
 function to_candid_variant_n63(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: TreasuryToken): {
     ICP: null;

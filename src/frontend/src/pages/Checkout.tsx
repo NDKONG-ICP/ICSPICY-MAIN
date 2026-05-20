@@ -36,6 +36,12 @@ import {
 } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
 import { useICPay } from "../hooks/useICPay";
+import { PlantCheckoutPanel } from "../components/PlantCheckoutPanel";
+import {
+  formatLinePrice,
+  PICKUP_ADDRESS,
+  USPS_SMALL_FLAT_RATE_CENTS,
+} from "../lib/cart-utils";
 
 // ─── Rarity config ─────────────────────────────────────────────────────────
 
@@ -92,7 +98,7 @@ interface ShippingForm {
   city: string;
   state: string;
   zip: string;
-  email: string;
+  phone: string;
 }
 
 const EMPTY_FORM: ShippingForm = {
@@ -102,19 +108,13 @@ const EMPTY_FORM: ShippingForm = {
   city: "",
   state: "",
   zip: "",
-  email: "",
+  phone: "",
 };
 
-function formatAddress(f: ShippingForm) {
-  return [
-    f.fullName,
-    f.address1,
-    f.address2,
-    `${f.city}, ${f.state} ${f.zip}`,
-    f.email,
-  ]
-    .filter(Boolean)
-    .join(", ");
+function getProductEmoji(category: string) {
+  if (category === "Spice") return "🧂";
+  if (category === "GardenInputs" || category === "GardenAmendment") return "🌿";
+  return "🌶️";
 }
 
 // ─── Auth gate ────────────────────────────────────────────────────────────────
@@ -486,19 +486,35 @@ function PaymentStep({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
+  const plantIdParam =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("plantId")
+      : null;
+
+  if (plantIdParam) {
+    return (
+      <div className="container max-w-2xl py-8 px-4">
+        <h1 className="text-2xl font-display font-bold mb-6">Plant Checkout</h1>
+        <PlantCheckoutPanel plantId={BigInt(plantIdParam)} />
+      </div>
+    );
+  }
+
   const { isAuthenticated, login } = useAuth();
-  const { items, removeItem, updateQuantity, totalCents, clearCart } =
+  const { items, removeItem, updateQuantity, subtotalCents, shippingCents, hasShippableItems, clearCart } =
     useCart();
   const { data: hasMembership = false } = useHasMembership();
   const { data: membership } = useMembership();
   const { data: myPlants = [] } = useMyPlants();
   const placeOrder = usePlaceOrder();
 
-  const [pickup, setPickup] = useState(false);
   const [form, setForm] = useState<ShippingForm>(EMPTY_FORM);
   const [submitted, setSubmitted] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<bigint | null>(null);
   const [finalTotalForPayment, setFinalTotalForPayment] = useState<bigint>(0n);
+
+  const needsShipping = hasShippableItems();
+  const hasPickupItems = items.some((i) => !i.shippable);
 
   // ─ Rarity / discount ─
   let rarityTier: RarityTier | null = null;
@@ -514,20 +530,22 @@ export default function CheckoutPage() {
       ? 10
       : 0;
 
-  const rawTotal = totalCents();
+  const rawSubtotal = subtotalCents();
+  const shipping = shippingCents();
   const discountAmount = hasMembership
-    ? (rawTotal * BigInt(discountPct)) / BigInt(100)
+    ? (rawSubtotal * BigInt(discountPct)) / BigInt(100)
     : BigInt(0);
-  const finalTotal = rawTotal - discountAmount;
+  const discountedSubtotal = rawSubtotal - discountAmount;
+  const finalTotal = discountedSubtotal + shipping;
 
   const isFormValid =
-    pickup ||
+    !needsShipping ||
     (form.fullName.trim() !== "" &&
       form.address1.trim() !== "" &&
       form.city.trim() !== "" &&
       form.state.trim() !== "" &&
       form.zip.trim() !== "" &&
-      form.email.trim() !== "");
+      form.phone.trim() !== "");
 
   const updateField =
     (key: keyof ShippingForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -544,16 +562,26 @@ export default function CheckoutPage() {
 
     try {
       const order = await placeOrder.mutateAsync({
-        pickup,
-        shipping_address: pickup ? undefined : formatAddress(form),
+        pickup: !needsShipping,
+        shipping: needsShipping
+          ? {
+              full_name: form.fullName.trim(),
+              street_line1: form.address1.trim(),
+              street_line2: form.address2.trim() || undefined,
+              city: form.city.trim(),
+              state: form.state.trim(),
+              zip: form.zip.trim(),
+              phone: form.phone.trim(),
+            }
+          : undefined,
         items: items.map((item) => ({
           product_id: item.product_id,
           plant_id: item.plant_id,
-          price_cents: item.price_cents,
+          price_cents: item.unit_price_cents,
           quantity: BigInt(item.quantity),
         })),
       });
-      setFinalTotalForPayment(finalTotal);
+      setFinalTotalForPayment(BigInt(order.total_cents));
       setPendingOrderId(order.id);
     } catch {
       toast.error("Failed to place order. Please try again.");
@@ -605,14 +633,14 @@ export default function CheckoutPage() {
               <div className="space-y-3">
                 {items.map((item) => (
                   <motion.div
-                    key={item.product_id.toString()}
+                    key={item.line_id}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border"
                     data-ocid="cart-item"
                   >
                     <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center text-2xl flex-shrink-0">
-                      {item.category === "Spice" ? "🧂" : "🌶️"}
+                      {getProductEmoji(item.category)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground text-sm truncate">
@@ -623,15 +651,21 @@ export default function CheckoutPage() {
                           {item.variety}
                         </p>
                       )}
+                      <p className="text-[10px] text-primary/80 mt-0.5">
+                        🎫 NFT included
+                        {item.shippable ? " · Ships" : " · Local pickup"}
+                      </p>
                       <p className="text-primary text-sm font-bold mt-0.5">
-                        ${(Number(item.price_cents) / 100).toFixed(2)} ea.
+                        {item.weight_based && item.unit_label
+                          ? `$${(Number(item.unit_price_cents) / 100).toFixed(2)}/${item.unit_label}`
+                          : `$${(Number(item.unit_price_cents) / 100).toFixed(2)} ea.`}
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <button
                         type="button"
                         onClick={() =>
-                          updateQuantity(item.product_id, item.quantity - 1)
+                          updateQuantity(item.line_id, item.quantity - 1)
                         }
                         className="w-7 h-7 rounded bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-smooth"
                         aria-label="Decrease quantity"
@@ -640,13 +674,17 @@ export default function CheckoutPage() {
                       </button>
                       <span className="w-6 text-center text-sm font-bold text-foreground">
                         {item.quantity}
+                        {item.weight_based && item.unit_label
+                          ? ` ${item.unit_label}`
+                          : ""}
                       </span>
                       <button
                         type="button"
                         onClick={() =>
-                          updateQuantity(item.product_id, item.quantity + 1)
+                          updateQuantity(item.line_id, item.quantity + 1)
                         }
-                        className="w-7 h-7 rounded bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-smooth"
+                        disabled={item.unique_listing}
+                        className="w-7 h-7 rounded bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-smooth disabled:opacity-40"
                         aria-label="Increase quantity"
                       >
                         <Plus className="w-3 h-3" />
@@ -654,15 +692,17 @@ export default function CheckoutPage() {
                     </div>
                     <div className="w-16 text-right flex-shrink-0">
                       <p className="text-sm font-bold text-foreground">
-                        $
-                        {(
-                          Number(item.price_cents * BigInt(item.quantity)) / 100
-                        ).toFixed(2)}
+                        {formatLinePrice(
+                          item.unit_price_cents,
+                          item.quantity,
+                          item.weight_based,
+                          item.unit_label,
+                        )}
                       </p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => removeItem(item.product_id)}
+                      onClick={() => removeItem(item.line_id)}
                       className="p-1.5 text-muted-foreground hover:text-destructive transition-smooth"
                       aria-label="Remove item"
                       data-ocid="cart-remove-item"
@@ -674,72 +714,52 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Fulfillment toggle */}
+            {/* Fulfillment — auto-detected from cart */}
             <div>
               <h2 className="font-display font-semibold text-foreground text-lg mb-3">
-                Fulfillment Method
+                Fulfillment
               </h2>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <button
-                  type="button"
-                  onClick={() => setPickup(false)}
-                  className={[
-                    "flex flex-col items-center gap-2 p-4 rounded-xl border text-sm font-medium transition-smooth",
-                    !pickup
-                      ? "bg-primary/10 border-primary text-primary"
-                      : "bg-card border-border text-muted-foreground hover:border-border/80",
-                  ].join(" ")}
-                  data-ocid="checkout-shipping-btn"
-                >
-                  <Package className="w-6 h-6" />
-                  <span>Ship to me</span>
-                  <span className="text-xs opacity-70 font-normal">
-                    Enter shipping address
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPickup(true)}
-                  className={[
-                    "flex flex-col items-center gap-2 p-4 rounded-xl border text-sm font-medium transition-smooth",
-                    pickup
-                      ? "bg-primary/10 border-primary text-primary"
-                      : "bg-card border-border text-muted-foreground hover:border-border/80",
-                  ].join(" ")}
-                  data-ocid="checkout-pickup-btn"
-                >
-                  <MapPin className="w-6 h-6" />
-                  <span>Local Pickup</span>
-                  <span className="text-xs opacity-70 font-normal">
-                    Port Charlotte, FL
-                  </span>
-                </button>
-              </div>
 
-              {pickup ? (
+              {hasPickupItems && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-3 p-4 rounded-xl bg-secondary/40 border border-border"
+                  className="flex items-start gap-3 p-4 rounded-xl bg-secondary/40 border border-border mb-4"
+                  data-ocid="checkout-pickup-info"
                 >
                   <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-foreground">
-                      IC SPICY Nursery — Port Charlotte, FL
+                      Local Pickup — {PICKUP_ADDRESS}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      After placing your order, you'll receive a confirmation
-                      with pickup details and a QR code for pickup verification.
-                      We'll coordinate a time that works for you.
+                      Pickup items receive a QR claim code after payment. Bring
+                      it to the nursery to collect your order.
                     </p>
                   </div>
                 </motion.div>
-              ) : (
+              )}
+
+              {needsShipping ? (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-3"
+                  data-ocid="checkout-shipping-form"
                 >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Package className="w-4 h-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">
+                      Shipping address
+                    </p>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] border-primary/30 text-primary ml-auto"
+                    >
+                      USPS Small Flat Rate · $
+                      {(Number(USPS_SMALL_FLAT_RATE_CENTS) / 100).toFixed(2)}
+                    </Badge>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="sm:col-span-2">
                       <Label
@@ -763,7 +783,7 @@ export default function CheckoutPage() {
                         htmlFor="address1"
                         className="text-xs font-medium mb-1.5 block"
                       >
-                        Address Line 1 *
+                        Street Address *
                       </Label>
                       <Input
                         id="address1"
@@ -780,7 +800,7 @@ export default function CheckoutPage() {
                         htmlFor="address2"
                         className="text-xs font-medium mb-1.5 block"
                       >
-                        Address Line 2
+                        Apt / Suite
                       </Label>
                       <Input
                         id="address2"
@@ -848,29 +868,34 @@ export default function CheckoutPage() {
                     </div>
                     <div className="sm:col-span-2">
                       <Label
-                        htmlFor="email"
+                        htmlFor="phone"
                         className="text-xs font-medium mb-1.5 block"
                       >
-                        Email *
+                        Phone *
                       </Label>
                       <Input
-                        id="email"
-                        type="email"
-                        value={form.email}
-                        onChange={updateField("email")}
-                        placeholder="you@example.com"
+                        id="phone"
+                        type="tel"
+                        value={form.phone}
+                        onChange={updateField("phone")}
+                        placeholder="(941) 555-0100"
                         required
-                        className={`text-sm ${submitted && !form.email ? "border-destructive" : ""}`}
-                        data-ocid="checkout-email-input"
+                        className={`text-sm ${submitted && !form.phone ? "border-destructive" : ""}`}
+                        data-ocid="checkout-phone-input"
                       />
                     </div>
                   </div>
                   {submitted && !isFormValid && (
                     <p className="text-xs text-destructive">
-                      Please fill in all required fields.
+                      Please fill in all required shipping fields.
                     </p>
                   )}
                 </motion.div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  All items in your cart are local pickup only — no shipping
+                  address needed.
+                </p>
               )}
             </div>
           </div>
@@ -885,16 +910,21 @@ export default function CheckoutPage() {
               <div className="space-y-2 text-sm mb-4">
                 {items.map((item) => (
                   <div
-                    key={item.product_id.toString()}
+                    key={item.line_id}
                     className="flex justify-between text-muted-foreground"
                   >
                     <span className="truncate mr-2 min-w-0">
                       {item.name} ×{item.quantity}
+                      {item.weight_based && item.unit_label
+                        ? ` ${item.unit_label}`
+                        : ""}
                     </span>
                     <span className="flex-shrink-0">
                       $
                       {(
-                        Number(item.price_cents * BigInt(item.quantity)) / 100
+                        Number(
+                          item.unit_price_cents * BigInt(item.quantity),
+                        ) / 100
                       ).toFixed(2)}
                     </span>
                   </div>
@@ -906,7 +936,7 @@ export default function CheckoutPage() {
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Subtotal</span>
-                  <span>${(Number(rawTotal) / 100).toFixed(2)}</span>
+                  <span>${(Number(rawSubtotal) / 100).toFixed(2)}</span>
                 </div>
 
                 <DiscountLine
@@ -916,15 +946,24 @@ export default function CheckoutPage() {
                   rarityTier={rarityTier}
                 />
 
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>{pickup ? "Local Pickup" : "Shipping"}</span>
-                  <Badge
-                    variant="outline"
-                    className="text-xs border-primary/30 text-primary"
-                  >
-                    TBD
-                  </Badge>
-                </div>
+                {shipping > 0n && (
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>USPS Small Flat Rate shipping</span>
+                    <span>${(Number(shipping) / 100).toFixed(2)}</span>
+                  </div>
+                )}
+
+                {!needsShipping && hasPickupItems && (
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Local pickup</span>
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-primary/30 text-primary"
+                    >
+                      Free
+                    </Badge>
+                  </div>
+                )}
               </div>
 
               <Separator className="mb-4" />

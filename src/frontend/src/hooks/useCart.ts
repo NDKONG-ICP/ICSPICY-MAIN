@@ -1,15 +1,23 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CartItem } from "../types/index.ts";
+import {
+  cartHasShippable,
+  lineTotalCents,
+  USPS_SMALL_FLAT_RATE_CENTS,
+} from "../lib/cart-utils";
 
 interface CartStore {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  removeItem: (productId: bigint) => void;
-  updateQuantity: (productId: bigint, quantity: number) => void;
+  removeItem: (lineId: string) => void;
+  updateQuantity: (lineId: string, quantity: number) => void;
   clearCart: () => void;
+  subtotalCents: () => bigint;
+  shippingCents: () => bigint;
   totalCents: () => bigint;
   itemCount: () => number;
+  hasShippableItems: () => boolean;
 }
 
 export const useCart = create<CartStore>()(
@@ -19,15 +27,14 @@ export const useCart = create<CartStore>()(
 
       addItem: (item) =>
         set((state) => {
-          const existing = state.items.find(
-            (i) =>
-              i.product_id === item.product_id && i.plant_id === item.plant_id,
-          );
+          const existing = state.items.find((i) => i.line_id === item.line_id);
           if (existing) {
+            if (existing.unique_listing) return state;
+            const nextQty = existing.quantity + item.quantity;
             return {
               items: state.items.map((i) =>
-                i.product_id === item.product_id && i.plant_id === item.plant_id
-                  ? { ...i, quantity: i.quantity + item.quantity }
+                i.line_id === item.line_id
+                  ? { ...i, quantity: nextQty }
                   : i,
               ),
             };
@@ -35,39 +42,45 @@ export const useCart = create<CartStore>()(
           return { items: [...state.items, item] };
         }),
 
-      removeItem: (productId) =>
+      removeItem: (lineId) =>
         set((state) => ({
-          items: state.items.filter((i) => i.product_id !== productId),
+          items: state.items.filter((i) => i.line_id !== lineId),
         })),
 
-      updateQuantity: (productId, quantity) =>
+      updateQuantity: (lineId, quantity) =>
         set((state) => ({
           items:
             quantity <= 0
-              ? state.items.filter((i) => i.product_id !== productId)
-              : state.items.map((i) =>
-                  i.product_id === productId ? { ...i, quantity } : i,
-                ),
+              ? state.items.filter((i) => i.line_id !== lineId)
+              : state.items.map((i) => {
+                  if (i.line_id !== lineId) return i;
+                  const maxQty = i.unique_listing ? 1 : quantity;
+                  const next = i.unique_listing ? 1 : Math.max(1, quantity);
+                  return { ...i, quantity: i.unique_listing ? maxQty : next };
+                }),
         })),
 
       clearCart: () => set({ items: [] }),
 
-      totalCents: () => {
+      subtotalCents: () => {
         const { items } = get();
         return items.reduce(
-          (sum, item) => sum + item.price_cents * BigInt(item.quantity),
-          BigInt(0),
+          (sum, item) => sum + lineTotalCents(item.unit_price_cents, item.quantity),
+          0n,
         );
       },
 
-      itemCount: () => {
-        const { items } = get();
-        return items.reduce((sum, item) => sum + item.quantity, 0);
-      },
+      shippingCents: () =>
+        cartHasShippable(get().items) ? USPS_SMALL_FLAT_RATE_CENTS : 0n,
+
+      totalCents: () => get().subtotalCents() + get().shippingCents(),
+
+      itemCount: () => get().items.length,
+
+      hasShippableItems: () => cartHasShippable(get().items),
     }),
     {
       name: "icspicy-cart",
-      // bigint serialization
       storage: {
         getItem: (name) => {
           const str = localStorage.getItem(name);

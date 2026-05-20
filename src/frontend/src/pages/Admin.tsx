@@ -36,6 +36,7 @@ import {
   Gift,
   ImagePlus,
   Layers,
+  Leaf,
   MoreVertical,
   Package,
   Plus,
@@ -71,6 +72,7 @@ import {
 import type { ArtworkLayer } from "../backend";
 import type { BatchGiftPackPublic } from "../backend";
 import type { FoundersMintInput, FoundersMintResult } from "../backend";
+import { AdminNimsPanel } from "../components/AdminNimsPanel";
 import { useAuth } from "../hooks/useAuth";
 import {
   useAddArtworkLayer,
@@ -1215,6 +1217,11 @@ const FOR_SALE_CATEGORIES = [
   { label: "Gallon (5 gal)", value: ProductCategory.Gallon5 },
   { label: "Spice", value: ProductCategory.Spice },
   { label: "Garden Inputs", value: ProductCategory.GardenInputs },
+  { label: "Live Plant", value: ProductCategory.LivePlant },
+  { label: "Dried Pods", value: ProductCategory.DriedPods },
+  { label: "Garden Amendment", value: ProductCategory.GardenAmendment },
+  { label: "Fresh Pods (by lb)", value: ProductCategory.FreshPodsByLb },
+  { label: "Fresh Pods (Flat Rate Box)", value: ProductCategory.FreshPodsFlatRate },
 ] as const;
 
 const DESC_MAX = 500;
@@ -1241,14 +1248,22 @@ function AddForSaleItemForm({
     const stageNote = fsStage ? ` · Stage/Size: ${fsStage}` : "";
     const qtyNote = qty > 1 ? ` · Qty available: ${qty}` : "";
     try {
+      const priceCents = BigInt(Math.round(Number.parseFloat(fsPrice) * 100));
+      const isFreshByLb = fsCategory === ProductCategory.FreshPodsByLb;
+      const isFreshFlat = fsCategory === ProductCategory.FreshPodsFlatRate;
       await createProduct.mutateAsync({
         name: fsName,
         description: `${fsDesc}${stageNote}${qtyNote}`.trim(),
-        price_cents: BigInt(Math.round(Number.parseFloat(fsPrice) * 100)),
+        price_cents: priceCents,
         category: fsCategory,
         variety: fsStage || undefined,
         image_key: fsImageKeys[0] ?? undefined,
         image_keys: fsImageKeys,
+        shippable: isFreshFlat,
+        shipping_flat_rate_cents: isFreshFlat ? 1020n : undefined,
+        weight_based: isFreshByLb,
+        price_per_unit_cents: isFreshByLb ? priceCents : undefined,
+        unit_label: isFreshByLb ? "lb" : undefined,
       });
       toast.success(`"${fsName}" added to shop!`);
       setFsName("");
@@ -1541,6 +1556,8 @@ function BulkUploadPanel() {
         variety: r.subcategory || undefined,
         image_key: undefined as string | undefined,
         image_keys: [],
+        shippable: false,
+        weight_based: false,
       }));
       const results = await bulkCreate.mutateAsync(inputs);
       const created = results.filter((r) => "ok" in r).length;
@@ -1830,6 +1847,8 @@ function ProductsTab() {
         variety: variety && variety !== "__none__" ? variety : undefined,
         image_key: imageKey ?? undefined,
         image_keys: imageKey ? [imageKey] : [],
+        shippable: false,
+        weight_based: false,
       });
       toast.success("Product created!");
       setName("");
@@ -6351,6 +6370,14 @@ export default function AdminPage() {
               Plants
             </TabsTrigger>
             <TabsTrigger
+              value="nims"
+              className="text-xs gap-1.5 flex-1"
+              data-ocid="admin-tab-nims"
+            >
+              <Leaf className="w-3.5 h-3.5" />
+              NIMS
+            </TabsTrigger>
+            <TabsTrigger
               value="products"
               className="text-xs gap-1.5 flex-1"
               data-ocid="admin-tab-products"
@@ -6453,6 +6480,9 @@ export default function AdminPage() {
           </TabsContent>
           <TabsContent value="plants">
             <PlantsTab />
+          </TabsContent>
+          <TabsContent value="nims">
+            <AdminNimsPanel />
           </TabsContent>
           <TabsContent value="products">
             <ProductsTab />

@@ -270,4 +270,80 @@ module {
     custom_notes : Text;
     rarity_tier : Nat; // 10, 12, or 15
   };
+
+  // ── Phase 6 NIMS lifecycle types (stored in side maps) ─────────────────────
+
+  public type PlantNote = {
+    timestamp : Common.Timestamp;
+    author : Principal;
+    text : Text;
+  };
+
+  public type WateringEntry = {
+    timestamp : Common.Timestamp;
+    author : Principal;
+    amountMl : Nat;
+    phLevel : ?Float;
+    notes : ?Text;
+  };
+
+  public type PestEntry = {
+    timestamp : Common.Timestamp;
+    author : Principal;
+    pestName : Text;
+    severity : Text;
+    treatment : ?Text;
+    notes : ?Text;
+  };
+
+  public type PlantPhotoEntry = {
+    timestamp : Common.Timestamp;
+    author : Principal;
+    url : Text;
+    caption : ?Text;
+  };
+
+  public type WeatherSnapshot = {
+    date : Text;
+    tempHighF : Float;
+    tempLowF : Float;
+    humidity : Float;
+    rainfallInches : Float;
+    uvIndex : Float;
+    source : Text;
+  };
+
+  public type PlantLifecycle = {
+    plant : PlantPublic;
+    varietyId : ?Nat;
+    nftTokenId : ?Nat;
+    priceCents : ?Nat;
+    soldAt : ?Common.Timestamp;
+    notes : [PlantNote];
+    feedingLog : [FeedingPublic];
+    wateringLog : [WateringEntry];
+    pestLog : [PestEntry];
+    photos : [PlantPhotoEntry];
+    weatherSnapshots : [WeatherSnapshot];
+  };
+
+  public type PlantCountStats = {
+    total : Nat;
+    forSale : Nat;
+    sold : Nat;
+    byStage : [(PlantStage, Nat)];
+  };
+
+  public type AddPlantResult = {
+    plantId : Common.PlantId;
+    nftTokenId : Nat;
+    claimToken : Text;
+  };
+
+  public type PurchasePlantResult = {
+    success : Bool;
+    nftTokenId : ?Nat;
+    claimToken : ?Common.ClaimTokenId;
+    message : Text;
+  };
 };

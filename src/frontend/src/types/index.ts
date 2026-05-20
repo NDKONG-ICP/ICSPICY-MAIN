@@ -85,13 +85,21 @@ export interface PoolStats {
 }
 
 export interface CartItem {
+  line_id: string;
   product_id: bigint;
   plant_id?: bigint;
   name: string;
   variety?: string;
-  price_cents: bigint;
+  unit_price_cents: bigint;
   quantity: number;
   category: string;
+  shippable?: boolean;
+  weight_based?: boolean;
+  unit_label?: string;
+  unique_listing?: boolean;
+  nft_token_id?: bigint;
+  /** @deprecated use unit_price_cents */
+  price_cents?: bigint;
 }
 
 export interface WalletBalance {

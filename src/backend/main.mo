@@ -45,7 +45,13 @@ import PoolAPI "mixins/pool-api";
 import PoolLib "lib/pool";
 import PoolTypes "types/pool";
 import AuditLog   "lib/audit-log";
+import ProductShipping "lib/product-shipping";
 import PaymentAPI "mixins/payment-api";
+import VarietyAPI "mixins/variety-api";
+import VarietyTypes "types/variety";
+import NimsAPI "mixins/nims-api";
+import NftResaleAPI "mixins/nft-resale-api";
+import ResaleTypes "types/nft-resale";
 
 shared(msg) persistent actor class ICSpicy() = Self {
   transient let initialDeployer = msg.caller;
@@ -176,6 +182,25 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // RWA Provenance NFT tokens (ICRC-37 with full lifecycle metadata)
   let rwaTokens      = Map.empty<Text, PlantTypes.RWATokenMetadata>();
 
+  // ── Phase 6 NIMS: variety catalog + lifecycle side maps ────────────────────
+  //
+  // Extended plant data lives in side maps to preserve stable-memory
+  // compatibility with the existing Plant record shape.
+
+  let varieties                 = Map.empty<Nat, VarietyTypes.Variety>();
+  let nextVarietyId             = { var value : Nat = 1 };
+  let plantVarietyIds           = Map.empty<Common.PlantId, Nat>();
+  let plantOwners               = Map.empty<Common.PlantId, Principal>();
+  let plantPrices               = Map.empty<Common.PlantId, Nat>();
+  let plantSoldAt               = Map.empty<Common.PlantId, Common.Timestamp>();
+  let plantTransplantedOneGal   = Map.empty<Common.PlantId, Common.Timestamp>();
+  let plantTransplantedFiveGal  = Map.empty<Common.PlantId, Common.Timestamp>();
+  let plantNotesLog             = Map.empty<Common.PlantId, List.List<PlantTypes.PlantNote>>();
+  let plantWateringLog          = Map.empty<Common.PlantId, List.List<PlantTypes.WateringEntry>>();
+  let plantPestLog              = Map.empty<Common.PlantId, List.List<PlantTypes.PestEntry>>();
+  let plantPhotoLog             = Map.empty<Common.PlantId, List.List<PlantTypes.PlantPhotoEntry>>();
+  let plantWeatherSnapshots     = Map.empty<Common.PlantId, List.List<PlantTypes.WeatherSnapshot>>();
+
   // ── ICRC-7 NFT collection state (8888 tokens) ──────────────────────────────
   //
   // Source of truth for token ownership. icrc7Owners maps token_id → owning
@@ -281,7 +306,21 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   let claimTokens    = Map.empty<Common.ClaimTokenId, ClaimTypes.ClaimToken>();
   // Phase 4: spcy_<10hex> → NftClaimEntry (tokenId + redeemed flag)
-  let nftClaimTokens = Map.empty<Text, ClaimTypes.NftClaimEntry>();
+  let nftClaimTokens   = Map.empty<Text, ClaimTypes.NftClaimEntry>();
+  let nftClaimPlantIds = Map.empty<Text, Common.PlantId>();
+  let plantClaimTokens = Map.empty<Common.PlantId, Text>();
+  let nftTokenPlantIds = Map.empty<Nat, Common.PlantId>();
+
+  // Phase 6: ICRC-7 peer-to-peer NFT resale (tokenId-keyed)
+  let nftListings = Map.empty<Nat, ResaleTypes.NftListing>();
+
+  // Mandatory NFT per shop product listing (live plant preview only; sale assigns per line)
+  let productNftTokenIds = Map.empty<Common.ProductId, Nat>();
+  let productShippingConfigs = Map.empty<Common.ProductId, ProductShipping.ProductShippingConfig>();
+  let orderLineNftTokenIds = Map.empty<Common.OrderId, [Nat]>();
+  let orderPickupClaimTokens = Map.empty<Common.OrderId, [Text]>();
+  let orderShippingCents = Map.empty<Common.OrderId, Nat>();
+  let orderShippingAddresses = Map.empty<Common.OrderId, MarketTypes.ShippingAddress>();
 
   // ── Schedule state (KNF application schedule builder) ─────────────────────
 
@@ -404,7 +443,61 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // ── Mixins ─────────────────────────────────────────────────────────────────
 
   include PlantsAPI(accessControlState, plants, trays, trayOwners, feedings, stageHistory, weatherRecords, weatherIndex, artworkLayers, rwaTokens, nextPlantId, nextTrayId, nextFeedingId, nextWeatherRecordId, nextArtworkLayerId);
-  include MarketplaceAPI(accessControlState, products, orders, plants, memberships, claimTokens, nextProductId, nextOrderId);
+  include VarietyAPI(accessControlState, varieties, plantVarietyIds, nextVarietyId);
+  include NimsAPI(
+    accessControlState,
+    callerGuards,
+    plants,
+    trays,
+    trayOwners,
+    feedings,
+    stageHistory,
+    varieties,
+    plantVarietyIds,
+    plantOwners,
+    plantPrices,
+    plantSoldAt,
+    plantTransplantedOneGal,
+    plantTransplantedFiveGal,
+    plantNotesLog,
+    plantWateringLog,
+    plantPestLog,
+    plantPhotoLog,
+    plantWeatherSnapshots,
+    nftClaimTokens,
+    nftClaimPlantIds,
+    plantClaimTokens,
+    nftTokenPlantIds,
+    icrc7Owners,
+    icrc7Balances,
+    icrc37Approvals,
+    claimTokens,
+    rwaTokens,
+    func() : Principal { Principal.fromActor(Self) },
+    auditLog,
+    nextPlantId,
+    nextTrayId,
+    nextFeedingId,
+  );
+  include MarketplaceAPI(
+    accessControlState,
+    products,
+    orders,
+    plants,
+    memberships,
+    claimTokens,
+    productNftTokenIds,
+    productShippingConfigs,
+    orderLineNftTokenIds,
+    orderPickupClaimTokens,
+    orderShippingCents,
+    orderShippingAddresses,
+    icrc7Owners,
+    icrc7Balances,
+    func() : Principal { Principal.fromActor(Self) },
+    nextProductId,
+    nextOrderId,
+  );
   include DAOAPI(accessControlState, proposals, plants, memberships, nextProposalId);
   include CommunityAPI(accessControlState, posts, comments, profiles, nextPostId, nextCommentId);
   include MembershipAPI(accessControlState, memberships, nextMembershipId);
@@ -429,10 +522,47 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include ClaimAPI(
     accessControlState,
     nftClaimTokens,
+    nftClaimPlantIds,
+    plantClaimTokens,
+    nftTokenPlantIds,
+    plants,
+    feedings,
+    plantVarietyIds,
+    plantOwners,
+    plantPrices,
+    plantSoldAt,
+    plantTransplantedOneGal,
+    plantTransplantedFiveGal,
+    plantNotesLog,
+    plantWateringLog,
+    plantPestLog,
+    plantPhotoLog,
+    plantWeatherSnapshots,
     icrc7Owners,
     icrc7Balances,
     func() : Principal { Principal.fromActor(Self) },
     auditLog,
+  );
+  include NftResaleAPI(
+    accessControlState,
+    callerGuards,
+    nftListings,
+    icrc7Owners,
+    icrc7Balances,
+    icrc37Approvals,
+    plants,
+    plantVarietyIds,
+    plantOwners,
+    plantPrices,
+    plantSoldAt,
+    plantTransplantedOneGal,
+    plantTransplantedFiveGal,
+    plantNotesLog,
+    plantWateringLog,
+    plantPestLog,
+    plantPhotoLog,
+    plantWeatherSnapshots,
+    nftTokenPlantIds,
   );
   include ScheduleAPI(accessControlState, savedSchedules, scheduleShareIndex);
   include LifecycleUpgradeAPI(accessControlState, plants, stageHistory, rwaTokens, upgradeEvents, artworkLayers);
@@ -447,6 +577,15 @@ shared(msg) persistent actor class ICSpicy() = Self {
     accessControlState,
     callerGuards,
     orders,
+    products,
+    productNftTokenIds,
+    productShippingConfigs,
+    orderLineNftTokenIds,
+    orderPickupClaimTokens,
+    nftClaimTokens,
+    nftClaimPlantIds,
+    plantClaimTokens,
+    nftTokenPlantIds,
     icrc7Owners,
     icrc7Balances,
     icrc37Approvals,
@@ -454,6 +593,19 @@ shared(msg) persistent actor class ICSpicy() = Self {
     icpaySecretKey,
     icpaySessionsConsumed,
     auditLog,
+    plants,
+    feedings,
+    plantVarietyIds,
+    plantOwners,
+    plantPrices,
+    plantSoldAt,
+    plantTransplantedOneGal,
+    plantTransplantedFiveGal,
+    plantNotesLog,
+    plantWateringLog,
+    plantPestLog,
+    plantPhotoLog,
+    plantWeatherSnapshots,
   );
 
   // ── Audit log query ────────────────────────────────────────────────────────

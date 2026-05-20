@@ -104,8 +104,17 @@ export interface TrayPublic {
     nft_standard: NFTStandard;
     zone_photo_keys: Array<string>;
 }
+export interface ShippingAddress {
+    full_name: string;
+    street_line1: string;
+    street_line2?: string;
+    city: string;
+    state: string;
+    zip: string;
+    phone: string;
+}
 export interface CreateOrderInput {
-    shipping_address?: string;
+    shipping?: ShippingAddress;
     pickup: boolean;
     items: Array<OrderItem>;
 }
@@ -205,6 +214,11 @@ export interface CreateProductInput {
     category: ProductCategory;
     variety?: string;
     plant_id?: PlantId;
+    shippable: boolean;
+    shipping_flat_rate_cents?: bigint;
+    weight_based: boolean;
+    price_per_unit_cents?: bigint;
+    unit_label?: string;
 }
 export type ContainerSize = {
     __kind__: "Gal5Bucket";
@@ -389,6 +403,12 @@ export interface ProductPublic {
     category: ProductCategory;
     variety?: string;
     plant_id?: PlantId;
+    nft_token_id?: bigint;
+    shippable: boolean;
+    shipping_flat_rate_cents?: bigint;
+    weight_based: boolean;
+    price_per_unit_cents: bigint;
+    unit_label?: string;
 }
 export interface UpdateRecipeInput {
     id: RecipeId;
@@ -441,9 +461,13 @@ export type WeatherRecordId = bigint;
 export interface OrderPublic {
     id: OrderId;
     status: OrderStatus;
+    subtotal_cents: bigint;
+    shipping_cents: bigint;
     shipping_address?: string;
+    shipping?: ShippingAddress;
     created_at: Timestamp;
     pickup: boolean;
+    line_nft_token_ids: Array<bigint>;
     buyer: Principal;
     items: Array<OrderItem>;
     total_cents: bigint;
@@ -735,7 +759,12 @@ export enum ProductCategory {
     Seedling = "Seedling",
     GardenInputs = "GardenInputs",
     Gallon1 = "Gallon1",
-    Gallon5 = "Gallon5"
+    Gallon5 = "Gallon5",
+    LivePlant = "LivePlant",
+    DriedPods = "DriedPods",
+    GardenAmendment = "GardenAmendment",
+    FreshPodsByLb = "FreshPodsByLb",
+    FreshPodsFlatRate = "FreshPodsFlatRate",
 }
 export enum ProposalType {
     General = "General",

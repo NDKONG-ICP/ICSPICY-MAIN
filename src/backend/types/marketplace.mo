@@ -5,11 +5,18 @@ module {
   // InventoryCategory mirrors ContainerSize for NIMS transplant items
   // and stays consistent with types/plants.mo ContainerSize.
   public type ProductCategory = {
+    // Legacy shop categories (stable — do not remove)
     #Seedling;
     #Gallon1;
     #Gallon5;
     #Spice;
     #GardenInputs;
+    // Phase 6 product types
+    #LivePlant;
+    #DriedPods;
+    #GardenAmendment;
+    #FreshPodsByLb;
+    #FreshPodsFlatRate;
   };
 
   public type InventoryCategory = {
@@ -35,6 +42,16 @@ module {
     var plant_id : ?Common.PlantId; // linked NIMS plant when applicable
   };
 
+  public type ShippingAddress = {
+    full_name : Text;
+    street_line1 : Text;
+    street_line2 : ?Text;
+    city : Text;
+    state : Text;
+    zip : Text;
+    phone : Text;
+  };
+
   public type ProductPublic = {
     id : Common.ProductId;
     name : Text;
@@ -47,6 +64,12 @@ module {
     image_key : ?Text;
     image_keys : [Text];
     plant_id : ?Common.PlantId;
+    nft_token_id : ?Nat;
+    shippable : Bool;
+    shipping_flat_rate_cents : ?Nat;
+    weight_based : Bool;
+    price_per_unit_cents : Nat;
+    unit_label : ?Text;
   };
 
   public type CreateProductInput = {
@@ -56,9 +79,14 @@ module {
     category : ProductCategory;
     inventory_category : ?InventoryCategory;
     variety : ?Text;
-    image_key : ?Text;       // legacy single-image; ignored when image_keys is non-empty
-    image_keys : [Text];     // preferred multi-image (0–5)
+    image_key : ?Text;
+    image_keys : [Text];
     plant_id : ?Common.PlantId;
+    shippable : Bool;
+    shipping_flat_rate_cents : ?Nat;
+    weight_based : Bool;
+    price_per_unit_cents : ?Nat;
+    unit_label : ?Text;
   };
 
   public type UpdateProductInput = {
@@ -104,16 +132,20 @@ module {
     id : Common.OrderId;
     buyer : Principal;
     items : [OrderItem];
+    subtotal_cents : Nat;
+    shipping_cents : Nat;
     total_cents : Nat;
     shipping_address : ?Text;
+    shipping : ?ShippingAddress;
     pickup : Bool;
     status : OrderStatus;
     created_at : Common.Timestamp;
+    line_nft_token_ids : [Nat];
   };
 
   public type CreateOrderInput = {
     items : [OrderItem];
-    shipping_address : ?Text;
+    shipping : ?ShippingAddress;
     pickup : Bool;
   };
 

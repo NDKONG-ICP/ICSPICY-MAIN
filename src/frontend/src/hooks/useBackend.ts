@@ -587,9 +587,37 @@ export function usePlaceOrder() {
   const { actor } = useBackendActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreateOrderInput) => {
+    mutationFn: async (input: {
+      items: Array<{
+        product_id: bigint;
+        plant_id?: bigint;
+        price_cents: bigint;
+        quantity: bigint;
+      }>;
+      shipping?: {
+        full_name: string;
+        street_line1: string;
+        street_line2?: string;
+        city: string;
+        state: string;
+        zip: string;
+        phone: string;
+      };
+      pickup: boolean;
+    }) => {
       if (!actor) throw new Error("Not connected");
-      return actor.placeOrder(input);
+      const backendActor = actor as unknown as {
+        placeOrder: (i: {
+          items: typeof input.items;
+          shipping: [] | [typeof input.shipping & object];
+          pickup: boolean;
+        }) => Promise<{ id: bigint; total_cents: bigint }>;
+      };
+      return backendActor.placeOrder({
+        items: input.items,
+        shipping: input.shipping ? [input.shipping] : [],
+        pickup: input.pickup,
+      });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["myOrders"] }),
   });
@@ -1189,7 +1217,25 @@ export function useGetClaimInfo(token: string | undefined) {
     queryKey: ["claimInfo", token],
     queryFn: async () => {
       if (!actor || !token) return null;
-      return actor.getClaimInfo(token);
+      const raw = (await actor.getClaimInfo(token)) as {
+        tokenId: bigint;
+        redeemed: boolean;
+        nftName: string;
+        plantId?: [] | [bigint];
+        variety?: [] | [string];
+        stage?: [] | [string];
+        photoUrl?: [] | [string];
+      } | null;
+      if (!raw) return null;
+      return {
+        tokenId: raw.tokenId,
+        redeemed: raw.redeemed,
+        nftName: raw.nftName,
+        plantId: raw.plantId?.[0],
+        variety: raw.variety?.[0],
+        stage: raw.stage?.[0],
+        photoUrl: raw.photoUrl?.[0],
+      };
     },
     enabled: !!actor && !isFetching && !!token,
     staleTime: 30_000,

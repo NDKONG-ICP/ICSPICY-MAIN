@@ -13,6 +13,7 @@ import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import Result "mo:core/Result";
 import Principal "mo:core/Principal";
+import ProductShipping "../lib/product-shipping";
 
 module {
   // ---------------------------------------------------------------------------
@@ -117,7 +118,7 @@ module {
       let id = nextId.value;
       nextId.value += 1;
       let product = createProduct(products, id, input);
-      #ok(toPublicProduct(product));
+      #ok(toPublicProduct(product, null, null));
     });
   };
 
@@ -138,12 +139,16 @@ module {
     for (item in input.items.values()) {
       total += item.price_cents * item.quantity;
     };
+    let shippingText = switch (input.shipping) {
+      case (?a) ?ProductShipping.formatShippingAddress(a);
+      case null null;
+    };
     let order : Types.Order = {
       id = nextId;
       buyer = buyer;
       items = input.items;
       total_cents = total;
-      shipping_address = input.shipping_address;
+      shipping_address = shippingText;
       pickup = input.pickup;
       var status = #Pending;
       created_at = Time.now();
@@ -173,7 +178,7 @@ module {
   ) : ?Types.ProductPublic {
     switch (products.get(product_id)) {
       case null { null };
-      case (?p) { ?toPublicProduct(p) };
+      case (?p) { ?toPublicProduct(p, null, null) };
     };
   };
 
@@ -183,7 +188,7 @@ module {
     let results = List.empty<Types.ProductPublic>();
     for ((_, p) in products.entries()) {
       if (p.active) {
-        results.add(toPublicProduct(p));
+        results.add(toPublicProduct(p, null, null));
       };
     };
     results.toArray();
@@ -196,7 +201,7 @@ module {
     let results = List.empty<Types.ProductPublic>();
     for ((_, p) in products.entries()) {
       if (p.active and p.category == category) {
-        results.add(toPublicProduct(p));
+        results.add(toPublicProduct(p, null, null));
       };
     };
     results.toArray();
@@ -225,7 +230,11 @@ module {
     results.toArray();
   };
 
-  public func toPublicProduct(p : Types.Product) : Types.ProductPublic {
+  public func toPublicProduct(
+    p : Types.Product,
+    nftTokenId : ?Nat,
+    config : ?ProductShipping.ProductShippingConfig,
+  ) : Types.ProductPublic {
     // Backward compat: if image_keys is empty but image_key is set, surface [image_key]
     let keys : [Text] = if (p.image_keys.size() > 0) {
       p.image_keys;
@@ -235,7 +244,7 @@ module {
         case null { [] };
       };
     };
-    {
+    let base = {
       id = p.id;
       name = p.name;
       description = p.description;
@@ -247,19 +256,34 @@ module {
       image_key = p.image_key;
       image_keys = keys;
       plant_id = p.plant_id;
+      nft_token_id = nftTokenId;
+      shippable = false;
+      shipping_flat_rate_cents = null;
+      weight_based = false;
+      price_per_unit_cents = p.price_cents;
+      unit_label = null;
     };
+    ProductShipping.enrichProductPublic(base, config, nftTokenId);
   };
 
   public func toPublicOrder(o : Types.Order) : Types.OrderPublic {
+    var subtotal : Nat = 0;
+    for (item in o.items.vals()) {
+      subtotal += item.price_cents * item.quantity;
+    };
     {
       id = o.id;
       buyer = o.buyer;
       items = o.items;
+      subtotal_cents = subtotal;
+      shipping_cents = if (o.total_cents > subtotal) o.total_cents - subtotal else 0;
       total_cents = o.total_cents;
       shipping_address = o.shipping_address;
+      shipping = null;
       pickup = o.pickup;
       status = o.status;
       created_at = o.created_at;
+      line_nft_token_ids = [];
     };
   };
 };

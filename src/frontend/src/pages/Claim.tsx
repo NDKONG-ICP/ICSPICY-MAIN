@@ -23,6 +23,52 @@ import {
 import type { Value } from "../declarations/backend.did";
 import { getNftImageUrl } from "../lib/nft-config";
 
+function PlantPreview({
+  variety,
+  stage,
+  photoUrl,
+  tokenId,
+}: {
+  variety?: string;
+  stage?: string;
+  photoUrl?: string;
+  tokenId: bigint;
+}) {
+  if (!variety && !stage && !photoUrl) return null;
+  const imgSrc = photoUrl
+    ? photoUrl.startsWith("http")
+      ? photoUrl
+      : `/api/object-storage/${photoUrl}`
+    : getNftImageUrl(tokenId);
+
+  return (
+    <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
+      {imgSrc && (
+        <img
+          src={imgSrc}
+          alt={variety ?? "Plant"}
+          className="w-full aspect-video rounded-lg object-cover"
+        />
+      )}
+      <div className="flex flex-wrap gap-2 justify-center">
+        {variety && (
+          <Badge variant="secondary" className="text-xs">
+            {variety}
+          </Badge>
+        )}
+        {stage && (
+          <Badge variant="outline" className="text-xs">
+            {stage}
+          </Badge>
+        )}
+      </div>
+      <p className="text-[11px] text-center text-muted-foreground">
+        Live plant from IC SPICY Nursery — Port Charlotte, FL
+      </p>
+    </div>
+  );
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getTextField(
@@ -191,6 +237,12 @@ export default function ClaimPage() {
               </p>
               <RarityBadge rarity={rarity} />
             </div>
+            <PlantPreview
+              variety={claimInfo.variety}
+              stage={claimInfo.stage}
+              photoUrl={claimInfo.photoUrl}
+              tokenId={claimInfo.tokenId}
+            />
             <div className="rounded-xl border border-border bg-muted/30 px-4 py-4 text-center space-y-1.5">
               <CheckCircle2 className="mx-auto h-5 w-5 text-muted-foreground" />
               <p className="text-sm font-semibold text-foreground">
@@ -235,6 +287,12 @@ export default function ClaimPage() {
                   Your NFT lives on the Internet Computer.
                 </p>
               </div>
+              <PlantPreview
+                variety={claimInfo.variety}
+                stage={claimInfo.stage}
+                photoUrl={claimInfo.photoUrl}
+                tokenId={wonTokenId}
+              />
               <Button
                 asChild
                 className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-semibold"
@@ -296,6 +354,13 @@ export default function ClaimPage() {
               IC SPICY · Internet Computer
             </p>
           </div>
+
+          <PlantPreview
+            variety={claimInfo.variety}
+            stage={claimInfo.stage}
+            photoUrl={claimInfo.photoUrl}
+            tokenId={claimInfo.tokenId}
+          />
 
           {/* Error banner */}
           {localError && (

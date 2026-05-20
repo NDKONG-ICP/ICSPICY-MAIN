@@ -66,10 +66,68 @@ import {
   useTokenPrices,
 } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
+import { ShopPlantsSection } from "../components/ShopPlantsSection";
+import { NftResaleSection } from "../components/NftResaleSection";
+import { lineIdForProduct } from "../lib/cart-utils";
 import { OFFER_TOKENS, TOKEN_DECIMALS, TOKEN_DISPLAY } from "../types/index";
 import type { OfferTokenSymbol, Product } from "../types/index";
 
 // ─── Category config ──────────────────────────────────────────────────────────
+
+type ShopProduct = Product & {
+  shippable?: boolean;
+  weight_based?: boolean;
+  price_per_unit_cents?: bigint;
+  unit_label?: string;
+  nft_token_id?: bigint;
+};
+
+function productUnitPrice(p: ShopProduct): bigint {
+  if (p.weight_based && p.price_per_unit_cents !== undefined) {
+    return p.price_per_unit_cents;
+  }
+  return p.price_cents;
+}
+
+function productToCartItem(p: ShopProduct, quantity: number): import("../types/index").CartItem {
+  return {
+    line_id: lineIdForProduct(p.id, p.plant_id),
+    product_id: p.id,
+    plant_id: p.plant_id,
+    name: p.name,
+    variety: p.variety,
+    unit_price_cents: productUnitPrice(p),
+    quantity,
+    category: p.category as string,
+    shippable: p.shippable,
+    weight_based: p.weight_based,
+    unit_label: p.unit_label,
+    unique_listing: p.plant_id !== undefined,
+    nft_token_id: p.nft_token_id,
+  };
+}
+
+type ShopTab = "plants" | "products" | "pepperhead" | "nft-resale";
+
+const SHOP_TABS: Array<{ label: string; emoji: string; value: ShopTab }> = [
+  { label: "Plants", emoji: "🌱", value: "plants" },
+  { label: "Products", emoji: "🧂", value: "products" },
+  { label: "PepperHead", emoji: "👑", value: "pepperhead" },
+  { label: "NFT Resale", emoji: "♻️", value: "nft-resale" },
+];
+
+const NON_PLANT_CATEGORIES = new Set([
+  "Spice",
+  "GardenInputs",
+  "GardenAmendment",
+  "DriedPods",
+  "FreshPodsByLb",
+  "FreshPodsFlatRate",
+]);
+
+function isNonPlantProduct(category: string): boolean {
+  return NON_PLANT_CATEGORIES.has(category);
+}
 
 type TabValue = ProductCategory | "resale" | "offers" | null;
 
@@ -1107,10 +1165,11 @@ function OffersTab({ priceE8sMap }: { priceE8sMap: Map<string, bigint> }) {
 // ─── Cart Drawer ──────────────────────────────────────────────────────────────
 
 function CartFloat({ hasMembership }: { hasMembership: boolean }) {
-  const { items, itemCount, totalCents, removeItem, updateQuantity } =
+  const { items, itemCount, totalCents, shippingCents, removeItem, updateQuantity } =
     useCart();
   const [open, setOpen] = useState(false);
   const count = itemCount();
+  const shipping = shippingCents();
   const rawTotal = totalCents();
   const total = hasMembership ? (rawTotal * BigInt(9)) / BigInt(10) : rawTotal;
 
@@ -1160,7 +1219,7 @@ function CartFloat({ hasMembership }: { hasMembership: boolean }) {
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {items.map((item) => (
                 <div
-                  key={item.product_id.toString()}
+                  key={item.line_id}
                   className="flex items-center gap-3 p-3 rounded-lg bg-secondary/40 border border-border"
                   data-ocid="cart-sidebar-item"
                 >
@@ -1176,20 +1235,21 @@ function CartFloat({ hasMembership }: { hasMembership: boolean }) {
                         {item.variety}
                       </p>
                     )}
+                    <p className="text-[10px] text-primary/80">🎫 NFT included</p>
                     <p className="text-xs text-primary font-bold mt-0.5">
                       {hasMembership
                         ? formatPrice(
-                            item.price_cents * BigInt(item.quantity),
+                            item.unit_price_cents * BigInt(item.quantity),
                             true,
                           )
-                        : `$${(Number(item.price_cents * BigInt(item.quantity)) / 100).toFixed(2)}`}
+                        : `$${(Number(item.unit_price_cents * BigInt(item.quantity)) / 100).toFixed(2)}`}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button
                       type="button"
                       onClick={() =>
-                        updateQuantity(item.product_id, item.quantity - 1)
+                        updateQuantity(item.line_id, item.quantity - 1)
                       }
                       className="w-6 h-6 rounded flex items-center justify-center bg-secondary hover:bg-muted transition-smooth"
                       aria-label="Decrease"
@@ -1202,16 +1262,17 @@ function CartFloat({ hasMembership }: { hasMembership: boolean }) {
                     <button
                       type="button"
                       onClick={() =>
-                        updateQuantity(item.product_id, item.quantity + 1)
+                        updateQuantity(item.line_id, item.quantity + 1)
                       }
-                      className="w-6 h-6 rounded flex items-center justify-center bg-secondary hover:bg-muted transition-smooth"
+                      disabled={item.unique_listing}
+                      className="w-6 h-6 rounded flex items-center justify-center bg-secondary hover:bg-muted transition-smooth disabled:opacity-40"
                       aria-label="Increase"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
                     <button
                       type="button"
-                      onClick={() => removeItem(item.product_id)}
+                      onClick={() => removeItem(item.line_id)}
                       className="w-6 h-6 ml-1 text-muted-foreground hover:text-destructive transition-smooth"
                       aria-label="Remove"
                     >
@@ -1232,6 +1293,12 @@ function CartFloat({ hasMembership }: { hasMembership: boolean }) {
                   <span className="text-muted-foreground line-through">
                     ${(Number(rawTotal) / 100).toFixed(2)}
                   </span>
+                </div>
+              )}
+              {shipping > 0n && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>USPS Small Flat Rate shipping</span>
+                  <span>${(Number(shipping) / 100).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-foreground font-bold">
@@ -1491,30 +1558,25 @@ function ProductModal({
   hasMembership,
   onClose,
 }: {
-  product: Product;
+  product: ShopProduct;
   hasMembership: boolean;
   onClose: () => void;
 }) {
   const addItem = useCart((s) => s.addItem);
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState(product.weight_based ? 1 : 1);
   const imageKeys = getProductImageKeys(product);
+  const unitPrice = productUnitPrice(product);
 
   const handleAdd = () => {
-    addItem({
-      product_id: product.id,
-      name: product.name,
-      variety: product.variety,
-      price_cents: product.price_cents,
-      quantity: qty,
-      category: product.category,
-    });
+    addItem(productToCartItem(product, qty));
     toast.success(`Added ${qty}× ${product.name} to cart`);
     onClose();
   };
 
   const displayPrice = hasMembership
-    ? (Number(product.price_cents) / 100) * 0.9
-    : Number(product.price_cents) / 100;
+    ? (Number(unitPrice) / 100) * 0.9
+    : Number(unitPrice) / 100;
+  const lineTotal = displayPrice * qty;
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -1549,6 +1611,21 @@ function ProductModal({
           {product.description}
         </p>
 
+        <div className="flex items-center gap-2 mb-4">
+          <Badge variant="outline" className="text-xs gap-1">
+            🎫 NFT included
+          </Badge>
+          {product.shippable ? (
+            <Badge variant="secondary" className="text-xs">
+              Ships USPS Flat Rate
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="text-xs">
+              Local pickup only
+            </Badge>
+          )}
+        </div>
+
         {hasMembership && (
           <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-950/30 border border-amber-700/30 mb-4">
             <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
@@ -1562,6 +1639,9 @@ function ProductModal({
           <div>
             <p className="text-2xl font-display font-bold text-primary">
               ${displayPrice.toFixed(2)}
+              {product.weight_based && product.unit_label
+                ? ` / ${product.unit_label}`
+                : ""}
             </p>
             {hasMembership && (
               <p className="text-xs text-muted-foreground line-through">
@@ -1582,11 +1662,13 @@ function ProductModal({
             </button>
             <span className="w-8 text-center font-bold text-foreground">
               {qty}
+              {product.weight_based && product.unit_label ? ` ${product.unit_label}` : ""}
             </span>
             <button
               type="button"
-              onClick={() => setQty(qty + 1)}
-              className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-smooth"
+              onClick={() => setQty(product.plant_id !== undefined ? 1 : qty + 1)}
+              disabled={product.plant_id !== undefined}
+              className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-smooth disabled:opacity-40"
               aria-label="Increase quantity"
               data-ocid="modal-qty-increase"
             >
@@ -1601,7 +1683,7 @@ function ProductModal({
           data-ocid="modal-add-to-cart"
         >
           <ShoppingCart className="w-4 h-4" />
-          Add {qty} to Cart — ${(displayPrice * qty).toFixed(2)}
+          Add to Cart — ${lineTotal.toFixed(2)}
         </Button>
       </DialogContent>
     </Dialog>
@@ -1615,30 +1697,24 @@ function ProductCard({
   hasMembership,
   onSelect,
 }: {
-  product: Product;
+  product: ShopProduct;
   hasMembership: boolean;
   onSelect: () => void;
 }) {
   const addItem = useCart((s) => s.addItem);
   const imageKeys = getProductImageKeys(product);
   const firstImage = imageKeys[0];
+  const unitPrice = productUnitPrice(product);
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addItem({
-      product_id: product.id,
-      name: product.name,
-      variety: product.variety,
-      price_cents: product.price_cents,
-      quantity: 1,
-      category: product.category,
-    });
+    addItem(productToCartItem(product, 1));
     toast.success(`Added ${product.name} to cart`);
   };
 
   const displayPrice = hasMembership
-    ? (Number(product.price_cents) / 100) * 0.9
-    : Number(product.price_cents) / 100;
+    ? (Number(unitPrice) / 100) * 0.9
+    : Number(unitPrice) / 100;
 
   return (
     <motion.div
@@ -1687,10 +1763,14 @@ function ProductCard({
                 {product.variety}
               </p>
             )}
+            <p className="text-[10px] text-primary/80 mt-0.5">🎫 NFT included</p>
           </div>
           <div className="text-right flex-shrink-0">
             <span className="font-bold text-primary text-sm">
               ${displayPrice.toFixed(2)}
+              {product.weight_based && product.unit_label
+                ? `/${product.unit_label}`
+                : ""}
             </span>
             {hasMembership && (
               <p className="text-xs text-muted-foreground line-through leading-none">
@@ -1742,11 +1822,15 @@ function ProductGrid({ count = 8 }: { count?: number }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MarketplacePage() {
+  const [shopTab, setShopTab] = useState<ShopTab>("plants");
   const [activeTab, setActiveTab] = useState<TabValue>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ShopProduct | null>(null);
 
-  const isResaleTab = activeTab === "resale";
-  const isOffersTab = activeTab === "offers";
+  const isResaleTab = shopTab === "nft-resale";
+  const isOffersTab = false;
+  const isProductsTab = shopTab === "products";
+  const isPepperHeadTab = shopTab === "pepperhead";
+  const isPlantsTab = shopTab === "plants";
   const activeCategory =
     isResaleTab || isOffersTab ? null : (activeTab as ProductCategory | null);
 
@@ -1768,6 +1852,8 @@ export default function MarketplacePage() {
 
   const products = activeCategory ? catProducts : allProducts;
   const isLoading = activeCategory ? catLoading : allLoading;
+  const shopProducts =
+    products?.filter((p) => isNonPlantProduct(p.category as string)) ?? [];
 
   return (
     <div>
@@ -1785,8 +1871,77 @@ export default function MarketplacePage() {
         </p>
       </div>
 
-      {/* Member discount notice */}
-      {hasMembership && (
+      {/* Primary shop tabs (Phase 6) */}
+      <div
+        className="flex items-center gap-1.5 flex-wrap mb-6 p-1 rounded-xl bg-secondary/40 border border-border w-fit"
+        data-ocid="shop-primary-tabs"
+      >
+        {SHOP_TABS.map(({ label, emoji, value }) => (
+          <button
+            type="button"
+            key={value}
+            onClick={() => setShopTab(value)}
+            className={[
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-smooth",
+              shopTab === value
+                ? "bg-primary text-primary-foreground shadow-subtle"
+                : "text-muted-foreground hover:text-foreground hover:bg-card",
+            ].join(" ")}
+          >
+            <span>{emoji}</span>
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
+
+      {isPlantsTab && <ShopPlantsSection />}
+
+      {isPepperHeadTab && (
+        <MembershipPricingCard
+          membershipPrices={membershipPrices}
+          priceUpdated={priceUpdated}
+        />
+      )}
+
+      {isProductsTab && (
+        <>
+          {isLoading ? (
+            <ProductGrid />
+          ) : shopProducts.length > 0 ? (
+            <div
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
+              data-ocid="product-list"
+            >
+              {shopProducts.map((p) => (
+                <ProductCard
+                  key={p.id.toString()}
+                  product={p as ShopProduct}
+                  hasMembership={hasMembership}
+                  onSelect={() => setSelectedProduct(p as ShopProduct)}
+                />
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-20 text-center"
+            >
+              <div className="text-7xl mb-4">🧂</div>
+              <h3 className="font-display font-semibold text-foreground text-xl mb-2">
+                No products listed yet
+              </h3>
+              <p className="text-muted-foreground text-sm max-w-xs">
+                Dried pods, spices, and garden amendments will appear here.
+              </p>
+            </motion.div>
+          )}
+        </>
+      )}
+
+      {isResaleTab && <NftResaleSection />}
+
+      {hasMembership && (isPlantsTab || isProductsTab) && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1808,113 +1963,6 @@ export default function MarketplacePage() {
         </motion.div>
       )}
 
-      {/* Resale info banner */}
-      {isResaleTab && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-3 p-4 rounded-xl bg-cyan-950/30 border border-cyan-700/30 mb-6"
-          data-ocid="resale-info-banner"
-        >
-          <ArrowLeftRight className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-cyan-300">
-              Plant NFT Resale Market
-            </p>
-            <p className="text-xs text-cyan-400/80">
-              Buy NFTs directly from other holders. The rarity tier discount
-              transfers to you immediately upon purchase.
-            </p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Category filter tabs */}
-      <div
-        className="flex items-center gap-1.5 flex-wrap mb-8 p-1 rounded-xl bg-secondary/40 border border-border w-fit"
-        data-ocid="marketplace-filter"
-      >
-        {CATEGORIES.map(({ label, emoji, value, price }) => (
-          <button
-            type="button"
-            key={label}
-            onClick={() => setActiveTab(value)}
-            className={[
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-smooth",
-              activeTab === value
-                ? "bg-primary text-primary-foreground shadow-subtle"
-                : "text-muted-foreground hover:text-foreground hover:bg-card",
-            ].join(" ")}
-            data-ocid="marketplace-filter-tab"
-          >
-            <span>{emoji}</span>
-            <span>{label}</span>
-            {price && (
-              <span
-                className={`text-xs opacity-70 ${activeTab === value ? "text-primary-foreground" : "text-muted-foreground"}`}
-              >
-                {price}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Content area */}
-      {isOffersTab ? (
-        <OffersTab priceE8sMap={priceE8sMap} />
-      ) : isResaleTab ? (
-        <ResaleTab priceE8sMap={priceE8sMap} />
-      ) : isLoading ? (
-        <ProductGrid />
-      ) : products && products.length > 0 ? (
-        <div className="space-y-10">
-          {/* Membership pricing card — show prominently */}
-          {(activeTab === null || activeTab === null) && (
-            <MembershipPricingCard
-              membershipPrices={membershipPrices}
-              priceUpdated={priceUpdated}
-            />
-          )}
-          <div
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
-            data-ocid="product-list"
-          >
-            {products.map((p) => (
-              <ProductCard
-                key={p.id.toString()}
-                product={p}
-                hasMembership={hasMembership}
-                onSelect={() => setSelectedProduct(p)}
-              />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-col items-center justify-center py-20 text-center"
-          data-ocid="marketplace-empty"
-        >
-          <div className="text-7xl mb-4">🌶️</div>
-          <h3 className="font-display font-semibold text-foreground text-xl mb-2">
-            No products in this category
-          </h3>
-          <p className="text-muted-foreground text-sm max-w-xs mb-6">
-            Our next harvest is incoming. Check back soon for fresh chili
-            plants!
-          </p>
-          <Button
-            variant="outline"
-            className="border-primary/40 text-primary hover:bg-primary/10"
-            onClick={() => setActiveTab(null)}
-          >
-            View all products
-          </Button>
-        </motion.div>
-      )}
-
       {/* Product detail modal */}
       {selectedProduct && (
         <ProductModal
@@ -1925,7 +1973,7 @@ export default function MarketplacePage() {
       )}
 
       {/* Floating cart */}
-      {!isResaleTab && !isOffersTab && (
+      {(isPlantsTab || isProductsTab || isPepperHeadTab) && (
         <CartFloat hasMembership={hasMembership} />
       )}
     </div>
