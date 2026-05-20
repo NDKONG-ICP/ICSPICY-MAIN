@@ -54,47 +54,69 @@ export interface TokenBalanceRow {
   symbol: string;
   canisterId: string;
   decimals: number;
+  fee: bigint;
   balance: bigint;
   formattedBalance: string;
 }
 
-const LEDGERS: Array<{
-  symbol: string;
-  canisterId: string;
-  decimals: number;
-  fractionDigits: number;
-}> = [
+export const TOKEN_LEDGER_CONFIG = [
   {
     symbol: "ICP",
     canisterId: "ryjl3-tyaaa-aaaaa-aaaba-cai",
     decimals: 8,
     fractionDigits: 4,
+    fee: 10_000n,
   },
   {
     symbol: "ckBTC",
     canisterId: "mxzaz-hqaaa-aaaar-qaada-cai",
     decimals: 8,
     fractionDigits: 4,
+    fee: 10n,
   },
   {
     symbol: "ckETH",
     canisterId: "ss2fx-dyaaa-aaaar-qacoq-cai",
     decimals: 18,
     fractionDigits: 4,
+    fee: 2_000_000_000_000_000n,
   },
   {
     symbol: "ckUSDC",
     canisterId: "xevnm-gaaaa-aaaar-qafnq-cai",
     decimals: 6,
     fractionDigits: 2,
+    fee: 10_000n,
   },
   {
     symbol: "ckUSDT",
     canisterId: "cngnf-vqaaa-aaaar-qag4q-cai",
     decimals: 6,
     fractionDigits: 2,
+    fee: 10_000n,
   },
-];
+] as const;
+
+/** Parse a human amount string into ledger base units. */
+export function parseTokenAmount(input: string, decimals: number): bigint {
+  const trimmed = input.trim();
+  if (!trimmed || !/^\d+(\.\d+)?$/.test(trimmed)) {
+    throw new Error("Enter a valid amount");
+  }
+  const [whole, frac = ""] = trimmed.split(".");
+  const fracPadded = frac.padEnd(decimals, "0").slice(0, decimals);
+  return BigInt(whole + fracPadded);
+}
+
+/** Format a fee (base units) for display. */
+export function formatTokenFee(fee: bigint, decimals: number): string {
+  const base = 10n ** BigInt(decimals);
+  const whole = fee / base;
+  const frac = fee % base;
+  if (frac === 0n) return whole.toString();
+  const fracStr = frac.toString().padStart(decimals, "0").replace(/0+$/, "");
+  return `${whole}.${fracStr}`;
+}
 
 function formatBalance(
   raw: bigint,
@@ -119,13 +141,14 @@ export function useTokenBalances() {
     queryFn: async () => {
       if (!principal) return [];
       const rows: TokenBalanceRow[] = [];
-      for (const L of LEDGERS) {
+      for (const L of TOKEN_LEDGER_CONFIG) {
         try {
           const bal = await balanceOf(identity, L.canisterId, principal);
           rows.push({
             symbol: L.symbol,
             canisterId: L.canisterId,
             decimals: L.decimals,
+            fee: L.fee,
             balance: bal,
             formattedBalance: formatBalance(bal, L.decimals, L.fractionDigits),
           });
@@ -134,6 +157,7 @@ export function useTokenBalances() {
             symbol: L.symbol,
             canisterId: L.canisterId,
             decimals: L.decimals,
+            fee: L.fee,
             balance: 0n,
             formattedBalance: "—",
           });

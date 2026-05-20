@@ -23,9 +23,9 @@ const queryClient = new QueryClient({
 });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <ICSpicyAuthProvider>
-    <QueryClientProvider client={queryClient}>
+  <QueryClientProvider client={queryClient}>
+    <ICSpicyAuthProvider>
       <App />
-    </QueryClientProvider>
-  </ICSpicyAuthProvider>,
+    </ICSpicyAuthProvider>
+  </QueryClientProvider>,
 );

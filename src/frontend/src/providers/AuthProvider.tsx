@@ -1,6 +1,5 @@
 import { useAuthClient } from "@dfinity/use-auth-client";
-import type { HttpAgentOptions, Identity } from "@dfinity/agent";
-import { createActorWithConfig } from "@caffeineai/core-infrastructure";
+import { Actor, HttpAgent, type Identity } from "@dfinity/agent";
 import { Principal } from "@icp-sdk/core/principal";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,12 +10,26 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { createActor, type Backend } from "../backend";
+import { Backend, ExternalBlob } from "../backend";
+import type { _SERVICE } from "../declarations/backend.did";
+import { idlFactory } from "../declarations/backend.did.js";
 import {
   BACKEND_CANISTER_ID,
   II_DERIVATION_ORIGIN,
   II_PROVIDER,
 } from "../lib/auth-config";
+
+const IC_HOST = import.meta.env.DEV
+  ? "http://127.0.0.1:4943"
+  : "https://icp-api.io";
+
+async function uploadFile(file: ExternalBlob): Promise<Uint8Array> {
+  return file.getBytes();
+}
+
+async function downloadFile(bytes: Uint8Array): Promise<ExternalBlob> {
+  return ExternalBlob.fromBytes(bytes as Uint8Array<ArrayBuffer>);
+}
 
 export interface AuthState {
   isAuthenticated: boolean;
@@ -29,14 +42,6 @@ export interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null);
-
-function hasAccessControl(actor: unknown): boolean {
-  return (
-    typeof actor === "object" &&
-    actor !== null &&
-    "_initializeAccessControl" in actor
-  );
-}
 
 export function ICSpicyAuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -72,18 +77,21 @@ export function ICSpicyAuthProvider({ children }: { children: ReactNode }) {
   const actorQuery = useQuery({
     queryKey: ["auth-backend-actor", principalText],
     queryFn: async () => {
-      const agentOptions: HttpAgentOptions | undefined = identity
-        ? { identity: identity as HttpAgentOptions["identity"] }
-        : undefined;
-      const actor = await createActorWithConfig<Backend>(createActor, {
-        agentOptions,
+      const agent = await HttpAgent.create({
+        host: IC_HOST,
+        identity: identity ?? undefined,
       });
-      if (identity && hasAccessControl(actor)) {
-        await (
-          actor as { _initializeAccessControl: () => Promise<unknown> }
-        )._initializeAccessControl();
+
+      if (import.meta.env.DEV) {
+        await agent.fetchRootKey();
       }
-      return actor;
+
+      const rawActor = Actor.createActor<_SERVICE>(idlFactory, {
+        agent,
+        canisterId: BACKEND_CANISTER_ID,
+      });
+
+      return new Backend(rawActor, uploadFile, downloadFile);
     },
     enabled: authClient != null,
     staleTime: Number.POSITIVE_INFINITY,
