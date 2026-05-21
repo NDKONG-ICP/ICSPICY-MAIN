@@ -1,6 +1,7 @@
 import { useActor } from "./useActor";
 import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { refreshAllTrayGrids, refreshNimsDashboardStats } from "../lib/nims-query";
 import { createActor } from "../backend";
 import { useIcrc7Actor } from "../lib/icrc7-actor";
 import { toNatBigInt, toOptionalNatBigInt } from "../lib/cart-utils";
@@ -323,10 +324,14 @@ export function useTransplantCell() {
       if (!actor) throw new Error("Not connected");
       return actor.transplantCell(input);
     },
-    onSuccess: () => {
+    onSettled: async () => {
+      await refreshAllTrayGrids(qc);
+      await refreshNimsDashboardStats(qc);
       qc.invalidateQueries({ queryKey: ["myPlants"] });
+      qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
       qc.invalidateQueries({ queryKey: ["plants"] });
       qc.invalidateQueries({ queryKey: ["trays"] });
+      qc.invalidateQueries({ queryKey: ["myTrays"] });
     },
   });
 }

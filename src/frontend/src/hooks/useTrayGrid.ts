@@ -5,3 +5,5 @@ export {
   useMarkCellDead,
   useWaterEntireTray,
 } from "./useNimsDashboard";
+
+export { trayGridQueryKey, refreshTrayGrid } from "../lib/nims-query";

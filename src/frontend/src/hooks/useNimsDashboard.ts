@@ -10,6 +10,12 @@ import type {
   TrayCellPublic,
   TrayId,
 } from "../declarations/backend.did";
+import {
+  refreshAllTrayGrids,
+  refreshNimsDashboardStats,
+  refreshTrayGrid,
+  trayGridQueryKey,
+} from "../lib/nims-query";
 import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
 import type { Backend } from "../backend";
@@ -50,7 +56,7 @@ export function useTrayGrid(trayId: TrayId | null) {
   const actor = useNimsOpsActor();
   const { actorReady } = useActorReady();
   return useQuery({
-    queryKey: ["trayGrid", trayId?.toString(), actorReady],
+    queryKey: trayGridQueryKey(trayId),
     queryFn: async () => {
       if (!actor || trayId == null) return [];
       return actor.getTrayGrid(trayId);
@@ -103,9 +109,9 @@ export function usePlantSeed() {
         args.datePlanted ?? null,
       );
     },
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["trayGrid", vars.trayId.toString()] });
-      qc.invalidateQueries({ queryKey: ["nimsDashboardStats"] });
+    onSettled: async (_data, _err, vars) => {
+      await refreshTrayGrid(qc, vars.trayId);
+      await refreshNimsDashboardStats(qc);
     },
   });
 }
@@ -126,9 +132,9 @@ export function useMarkCellGerminated() {
         args.date ?? null,
       );
     },
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["trayGrid", vars.trayId.toString()] });
-      qc.invalidateQueries({ queryKey: ["nimsDashboardStats"] });
+    onSettled: async (_data, _err, vars) => {
+      await refreshTrayGrid(qc, vars.trayId);
+      await refreshNimsDashboardStats(qc);
     },
   });
 }
@@ -153,8 +159,9 @@ export function useMarkCellDead() {
         args.photoUrl ?? null,
       );
     },
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["trayGrid", vars.trayId.toString()] });
+    onSettled: async (_data, _err, vars) => {
+      await refreshTrayGrid(qc, vars.trayId);
+      await refreshNimsDashboardStats(qc);
     },
   });
 }
@@ -177,8 +184,8 @@ export function useWaterEntireTray() {
         args.notes ?? null,
       );
     },
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["trayGrid", vars.trayId.toString()] });
+    onSettled: async (_data, _err, vars) => {
+      await refreshTrayGrid(qc, vars.trayId);
       qc.invalidateQueries({ queryKey: ["nimsActivity"] });
     },
   });
