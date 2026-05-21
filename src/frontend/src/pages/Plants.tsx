@@ -15,6 +15,7 @@ import { PlantStage } from "../backend";
 import { StageBadge } from "../components/ui/StageBadge";
 import { usePlants } from "../hooks/useBackend";
 import type { Plant } from "../types";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 type FilterValue = "all" | PlantStage;
 
@@ -146,6 +147,8 @@ function PlantCardSkeleton() {
 }
 
 export default function PlantsPage() {
+  usePageTitle("Plants");
+
   const [activeFilter, setActiveFilter] = useState<FilterValue>("all");
   const { data: plants, isLoading } = usePlants();
 

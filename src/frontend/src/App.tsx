@@ -40,7 +40,6 @@ function AuthCacheSync() {
     // doesn't persist into the next session.
     if (!isInitializing && (!isAuthenticated || isAnon)) {
       if (prevReadyRef.current) {
-        console.log("[AuthCacheSync] Sign-out detected — clearing all cache");
         qc.clear();
         prevPrincipalRef.current = "anon";
         prevReadyRef.current = false;
@@ -64,19 +63,9 @@ function AuthCacheSync() {
       // Transitioning from anonymous → authenticated.
       // ActorReadyProvider already cleared cache and re-fetched profile.
       // Just ensure profile query is fresh for this principal.
-      console.log(
-        "[AuthCacheSync] Principal confirmed:",
-        principalText,
-        "— refreshing profile",
-      );
       qc.invalidateQueries({ queryKey: ["profile", principalText] });
     } else {
       // Principal switched (different II identity) — clear everything.
-      console.log(
-        "[AuthCacheSync] Principal changed to:",
-        principalText,
-        "— clearing all cache",
-      );
       qc.clear();
       qc.invalidateQueries({ queryKey: ["profile", principalText] });
     }
@@ -92,12 +81,14 @@ const PlantDetailPage = lazy(() => import("./pages/PlantDetail"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const DAOPage = lazy(() => import("./pages/DAO"));
 const CommunityPage = lazy(() => import("./pages/Community"));
+const CommunityProfilePage = lazy(() => import("./pages/CommunityProfile"));
 const AdminPage = lazy(() => import("./pages/Admin"));
 const CheckoutPage = lazy(() => import("./pages/Checkout"));
 const OrdersPage = lazy(() => import("./pages/Orders"));
 const WalletPage = lazy(() => import("./pages/Wallet"));
 const NIMSPage = lazy(() => import("./pages/NIMS"));
 const CookBookPage = lazy(() => import("./pages/CookBook"));
+const CookbookRecipeDetailPage = lazy(() => import("./pages/CookbookRecipeDetail"));
 const ScheduleBuilderPage = lazy(() => import("./pages/ScheduleBuilder"));
 const ClaimPage = lazy(() => import("./pages/Claim"));
 const NFTDetailPage = lazy(() => import("./pages/NFTDetail"));
@@ -114,18 +105,6 @@ function AdminGuard() {
   const { actorReady, probeError } = useActorReady();
   const { isAuthenticated, isInitializing, principal } = useAuth();
   const { data: isAdmin, isPending: isAdminPending } = useIsAdmin();
-
-  if (typeof window !== "undefined") {
-    console.log("[AdminGuard]", {
-      principal: principal?.toText() ?? "anon",
-      isAuthenticated,
-      isInitializing,
-      actorReady,
-      probeError,
-      isAdmin,
-      isAdminPending,
-    });
-  }
 
   // Case 1: II is still initializing (restoring from IndexedDB after Chrome redirect).
   // MUST show loader here — isAdmin is synchronous but principal is not yet known.
@@ -337,6 +316,12 @@ const communityRoute = createRoute({
   component: CommunityPage,
 });
 
+const communityProfileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/profile/$principal",
+  component: CommunityProfilePage,
+});
+
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin",
@@ -365,6 +350,12 @@ const nimsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/nims",
   component: NIMSPage,
+});
+
+const cookbookDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/cookbook/$slug",
+  component: CookbookRecipeDetailPage,
 });
 
 const cookbookRoute = createRoute({
@@ -407,6 +398,7 @@ const routeTree = rootRoute.addChildren([
   plantDetailRoute,
   plantNfcRoute,
   profileRoute,
+  communityProfileRoute,
   daoRoute,
   communityRoute,
   adminRoute,
@@ -414,6 +406,7 @@ const routeTree = rootRoute.addChildren([
   ordersRoute,
   walletRoute,
   nimsRoute,
+  cookbookDetailRoute,
   cookbookRoute,
   scheduleBuilderRoute,
   claimRoute,

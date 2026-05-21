@@ -135,6 +135,44 @@ mixin (
     true;
   };
 
+  func isCommunityImagePath(path : Text) : Bool {
+    let prefix = "community-images/";
+    if (path.size() < prefix.size()) return false;
+    var pathIter = path.chars();
+    for (pc in prefix.chars()) {
+      switch (pathIter.next()) {
+        case null return false;
+        case (?c) { if (c != pc) return false };
+      };
+    };
+    true;
+  };
+
+  /// Authenticated users: community post images (community-images/*).
+  public shared ({ caller }) func storeCommunityImage(
+    path     : Text,
+    data     : [Nat8],
+    mimeType : Text,
+  ) : async Types.StoredFile {
+    AccessControl.requireAuthenticated(caller);
+    if (not isCommunityImagePath(path)) {
+      Runtime.trap("Invalid path: must start with community-images/");
+    };
+    if (data.size() > 1_000_000) {
+      Runtime.trap("File too large (max 1 MB)");
+    };
+    ArtworkLib.storeFile(storedFiles, path, data, mimeType, Time.now());
+  };
+
+  /// Public: community images stored via storeCommunityImage (community-images/* only).
+  public query func getCommunityImageFile(path : Text) : async ?Types.ShopListingFile {
+    if (not isCommunityImagePath(path)) return null;
+    switch (storedFiles.get(path)) {
+      case (?file) ?{ data = file.data; mime_type = file.mime_type };
+      case null null;
+    };
+  };
+
   /// Authenticated users: NIMS plant photos (progress, pest evidence, death records).
   /// Path must start with `nims-photos/`.
   public shared ({ caller }) func storeNimsPhotoFile(

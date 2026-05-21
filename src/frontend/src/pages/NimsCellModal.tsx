@@ -52,6 +52,7 @@ import {
   useUpdateCellData,
   useUpdatePlantStage,
 } from "../hooks/useBackend";
+import { useCreateGerminationSchedule } from "../hooks/usePlantingSchedule";
 import { ProvenanceModal } from "./NImsProvenanceModal";
 import {
   CONTAINER_SIZE_OPTIONS,
@@ -179,6 +180,7 @@ export function CellDetailModal({
   const removePhoto = useRemovePlantPhoto();
   const setForSale = useSetForSale();
   const markGerminated = useMarkPlantGerminated();
+  const createGerminationSchedule = useCreateGerminationSchedule();
   const updateStage = useUpdatePlantStage();
   const triggerUpgrade = useTriggerLifecycleUpgrade();
   const storePhoto = useStorePhotoFile();
@@ -207,12 +209,23 @@ export function CellDetailModal({
 
   async function handleMarkGerminated() {
     if (!plant) return;
+    const germinationDateNs = BigInt(Date.now() * 1_000_000);
     try {
       await markGerminated.mutateAsync({
         plantId: plant.id,
-        date: BigInt(Date.now() * 1_000_000),
+        date: germinationDateNs,
       });
-      toast.success("Marked as germinated!");
+      const plantName =
+        plant.common_name?.[0] ?? plant.variety ?? plant.genetics ?? "Plant";
+      try {
+        await createGerminationSchedule.mutateAsync({
+          plantName,
+          germinationDateNs,
+        });
+        toast.success("Marked as germinated — schedule events created!");
+      } catch {
+        toast.success("Marked as germinated!");
+      }
       onClose();
     } catch (_e) {
       toast.error("Failed to mark germinated");

@@ -17,15 +17,19 @@ function useBackendActor() {
 export function useListedNfts(pepperHeadOnly?: boolean) {
   const actor = useBackendActor();
   const { actorReady } = useActorReady();
+  const { isAuthenticated } = useAuth();
+  // Public query — browse all sellers' listings. Do NOT use getMyNftListings here.
+  const enabled = !!actor && (!isAuthenticated || actorReady);
   return useQuery({
-    queryKey: ["nftListings", pepperHeadOnly ?? "all", actorReady],
+    queryKey: ["nftListings", pepperHeadOnly ?? "all"],
     queryFn: async () => {
       if (!actor) return [];
+      // Candid ?Bool null — JS agent expects [] (not null).
       return actor.getListedNfts(
         pepperHeadOnly !== undefined ? [pepperHeadOnly] : [],
       );
     },
-    enabled: actorReady,
+    enabled,
   });
 }
 

@@ -5,7 +5,9 @@ export interface PlantingRecommendation {
   notes: string;
 }
 
-/** Zone 10a (Port Charlotte FL) — UF/IFAS-style monthly guide. Phase 9: GPS zone. */
+export type SupportedZone = "9b" | "10a" | "10b";
+
+/** Zone 10a (Port Charlotte FL) — UF/IFAS-style monthly guide. */
 const ZONE_10A_CALENDAR: Record<number, PlantingRecommendation[]> = {
   1: [
     { name: "Peppers", action: "Start Indoors", emoji: "🌶️", notes: "Start seeds indoors for spring transplant" },
@@ -81,9 +83,38 @@ const ZONE_10A_CALENDAR: Record<number, PlantingRecommendation[]> = {
   ],
 };
 
-export const PLANTING_ZONE_LABEL = "Zone 10a";
+const ZONE_OVERLAY: Record<SupportedZone, string> = {
+  "9b": "(9b cooler) ",
+  "10a": "",
+  "10b": "(10b hottest) ",
+};
 
-export function getPlantingRecommendations(month?: number): PlantingRecommendation[] {
+export const ZONE_LABELS: Record<SupportedZone, string> = {
+  "9b": "Zone 9b — Central FL",
+  "10a": "Zone 10a — Port Charlotte, FL",
+  "10b": "Zone 10b — South FL",
+};
+
+export const SUPPORTED_ZONES: SupportedZone[] = ["9b", "10a", "10b"];
+
+export const PLANTING_ZONE_LABEL = ZONE_LABELS["10a"];
+
+export function normalizeZone(zone: string): SupportedZone {
+  const z = zone.trim().toLowerCase();
+  if (z === "9b" || z === "10a" || z === "10b") return z;
+  return "10a";
+}
+
+export function getPlantingRecommendations(
+  month?: number,
+  zone: SupportedZone = "10a",
+): PlantingRecommendation[] {
   const m = month ?? new Date().getMonth() + 1;
-  return ZONE_10A_CALENDAR[m] ?? [];
+  const base = ZONE_10A_CALENDAR[m] ?? [];
+  const overlay = ZONE_OVERLAY[zone];
+  if (!overlay) return base;
+  return base.map((row) => ({
+    ...row,
+    notes: `${overlay}${row.notes}`,
+  }));
 }

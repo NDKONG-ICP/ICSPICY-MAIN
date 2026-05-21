@@ -1,10 +1,10 @@
 // ICRC-7 actor bridge — uses Internet Identity from useAuth.
 
-import { loadConfig } from "@caffeineai/core-infrastructure";
 import { Actor, type ActorSubclass, HttpAgent } from "@icp-sdk/core/agent";
 import { useQuery } from "@tanstack/react-query";
 import { type _SERVICE, idlFactory } from "../declarations/backend.did";
 import { useAuth } from "../hooks/useAuth";
+import { BACKEND_CANISTER_ID, IC_HOST } from "./auth-config";
 
 const ICRC7_ACTOR_QUERY_KEY = "icrc7_actor";
 
@@ -20,29 +20,17 @@ export function useIcrc7Actor(): {
   const q = useQuery({
     queryKey: [ICRC7_ACTOR_QUERY_KEY, principalText],
     queryFn: async () => {
-      const config = await loadConfig();
       const agentOpts = isAuthenticated && identity ? { identity } : {};
-      const backendHost =
-        config.backend_host &&
-        config.backend_host !== "undefined" &&
-        config.backend_host !== ""
-          ? config.backend_host
-          : undefined;
       const agent = new HttpAgent({
+        host: IC_HOST,
         ...agentOpts,
-        ...(backendHost ? { host: backendHost } : {}),
       });
-      const isLocal =
-        process.env.DFX_NETWORK === "local" ||
-        !!(backendHost ?? window.location.hostname).match(
-          /localhost|127\.0\.0\.1/,
-        );
-      if (isLocal) {
+      if (import.meta.env.DEV) {
         await agent.fetchRootKey().catch(() => {});
       }
       return Actor.createActor<_SERVICE>(idlFactory, {
         agent,
-        canisterId: config.backend_canister_id,
+        canisterId: BACKEND_CANISTER_ID,
       });
     },
     staleTime: Number.POSITIVE_INFINITY,

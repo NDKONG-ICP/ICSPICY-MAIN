@@ -71,66 +71,27 @@ import { ShopListingImage } from "../components/ShopListingImage";
 import { NftResaleSection } from "../components/NftResaleSection";
 import { lineIdForProduct, lineTotalCents, formatLinePrice, toNatBigInt, toOptionalNatBigInt } from "../lib/cart-utils";
 import {
-  CATALOG_CATEGORY_TABS,
-  CATEGORY_DISPLAY,
-  isCatalogProduct,
-} from "../lib/shop-products";
-import {
   discountAmountCents,
   discountedSubtotalCents,
   discountedUnitPriceCents,
   formatRarityLabel,
 } from "../lib/discount-utils";
+import {
+  CATALOG_CATEGORY_TABS,
+  CATEGORY_DISPLAY,
+  filterActiveShopProducts,
+  filterNonPlantProducts,
+  getProductImageKeys,
+  maxPurchasableQuantity,
+  productToCartItem,
+  productUnitPrice,
+  type ShopProduct,
+} from "../lib/shop-products";
 import { OFFER_TOKENS, TOKEN_DECIMALS, TOKEN_DISPLAY } from "../types/index";
 import type { OfferTokenSymbol, Product } from "../types/index";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 // ─── Category config ──────────────────────────────────────────────────────────
-
-type ShopProduct = Product & {
-  shippable?: boolean;
-  weight_based?: boolean;
-  price_per_unit_cents?: bigint;
-  unit_label?: string;
-  nft_token_id?: bigint;
-  inventory_remaining?: bigint;
-};
-
-function productUnitPrice(p: ShopProduct): bigint {
-  if (p.weight_based && p.price_per_unit_cents !== undefined) {
-    return p.price_per_unit_cents;
-  }
-  return p.price_cents;
-}
-
-function maxPurchasableQuantity(product: ShopProduct): number | null {
-  if (product.weight_based || product.plant_id !== undefined) return null;
-  if (product.inventory_remaining === undefined) return 1;
-  return Number(product.inventory_remaining);
-}
-
-function productToCartItem(p: ShopProduct, quantity: number): import("../types/index").CartItem {
-  const productId = toNatBigInt(p.id);
-  const plantId = toOptionalNatBigInt(p.plant_id);
-  const maxQty = maxPurchasableQuantity(p);
-  const qty =
-    maxQty === null ? quantity : Math.min(quantity, Math.max(1, maxQty));
-  return {
-    line_id: lineIdForProduct(productId, plantId),
-    product_id: productId,
-    plant_id: plantId,
-    name: p.name,
-    variety: p.variety,
-    unit_price_cents: Number(productUnitPrice(p)),
-    quantity: qty,
-    category: p.category as string,
-    shippable: p.shippable,
-    weight_based: p.weight_based,
-    unit_label: p.unit_label,
-    unique_listing: p.plant_id !== undefined,
-    nft_token_id: p.nft_token_id,
-    inventory_remaining: p.inventory_remaining,
-  };
-}
 
 type ShopTab = "plants" | "products" | "pepperhead" | "nft-resale";
 
@@ -260,15 +221,6 @@ function getProductEmoji(category: string) {
   if (category === ProductCategory.Spice) return "🧂";
   if (category === ProductCategory.GardenInputs) return "🌿";
   return "🌶️";
-}
-
-// Get all image keys from a product, with backward-compat fallback
-function getProductImageKeys(product: Product): string[] {
-  // image_keys may not exist yet in bindings — check at runtime
-  const p = product as Product & { image_keys?: string[] };
-  if (p.image_keys && p.image_keys.length > 0) return p.image_keys;
-  if (product.image_key) return [product.image_key];
-  return [];
 }
 
 function formatTokenAmount(amount: bigint, symbol: OfferTokenSymbol): string {
@@ -1858,11 +1810,11 @@ function ProductsCatalogSection({
     <section className="space-y-6">
       <div className="text-center space-y-2 py-2">
         <h2 className="text-2xl font-display font-bold text-foreground">
-          Pods, Spices &amp; Garden Goods
+          Shop Catalog
         </h2>
         <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-          Catalog listings from the shop — dried and fresh pods, artisan spices,
-          and garden amendments. Each purchase includes an IC SPICY NFT.
+          Dried and fresh pods, artisan spices, garden amendments, and inputs.
+          Each purchase includes an IC SPICY NFT.
         </p>
       </div>
 
@@ -1915,8 +1867,7 @@ function ProductsCatalogSection({
             No products in this category yet
           </h3>
           <p className="text-muted-foreground text-sm max-w-xs">
-            Dried pods, spices, and garden amendments will appear here when
-            listed in Admin.
+            Active shop listings will appear here when added in Admin.
           </p>
         </motion.div>
       )}
@@ -1950,6 +1901,8 @@ function ProductGrid({ count = 8 }: { count?: number }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MarketplacePage() {
+  usePageTitle("Shop");
+
   const [shopTab, setShopTab] = useState<ShopTab>("plants");
   const [selectedProduct, setSelectedProduct] = useState<ShopProduct | null>(null);
 
@@ -1961,17 +1914,9 @@ export default function MarketplacePage() {
   const { data: allProducts, isLoading: allLoading } = useProducts();
   const { discountPercent, rarity } = useNftDiscount();
 
-  const catalogProducts =
-    allProducts
-      ?.filter((p) => {
-        const pub = p as ShopProduct & { active?: boolean };
-        if (!(pub.active ?? true)) return false;
-        if (!isCatalogProduct(p.category as string)) return false;
-        const remaining = pub.inventory_remaining;
-        if (remaining !== undefined && remaining <= 0n) return false;
-        return true;
-      })
-      .map((p) => p as ShopProduct) ?? [];
+  const catalogProducts = filterNonPlantProducts(
+    filterActiveShopProducts(allProducts as ShopProduct[]),
+  );
 
   return (
     <div>
@@ -2037,7 +1982,9 @@ export default function MarketplacePage() {
         </motion.div>
       )}
 
-      {isPlantsTab && <ShopPlantsSection />}
+      {isPlantsTab && (
+        <ShopPlantsSection onSelectProduct={setSelectedProduct} />
+      )}
 
       {isPepperHeadTab && <PepperHeadShopCard />}
 

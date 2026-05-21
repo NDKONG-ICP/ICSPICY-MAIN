@@ -32,6 +32,7 @@ import {
   useTokenOwner,
 } from "../hooks/useBackend";
 import { getNftImageUrl, isValidTokenId } from "../lib/nft-config";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 // ── Metadata helpers ────────────────────────────────────────────────────────
 
@@ -656,6 +657,15 @@ export default function NFTDetailPage() {
   // "9999", "abc", floats, hex, etc. — the four ICRC hooks then short-
   // circuit via their `enabled` gate, never firing a network call.
   const id = isValidTokenId(rawId);
+
+  usePageTitle(
+    id !== null && id !== undefined
+      ? `NFT #${id.toString()}`
+      : rawId?.trim().length
+        ? `NFT · ${rawId}`
+        : "NFT",
+  );
+
 
   const { data: metadata, isLoading: loadingMetadata } = useTokenMetadata(id);
   const { data: owner, isLoading: loadingOwner } = useTokenOwner(id);

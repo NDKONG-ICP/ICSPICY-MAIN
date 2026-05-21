@@ -45,6 +45,7 @@ import {
   discountAmountCents,
   formatRarityLabel,
 } from "../lib/discount-utils";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 // ─── Discount line ────────────────────────────────────────────────────────────
 
@@ -506,6 +507,8 @@ function PaymentStep({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
+  usePageTitle("Checkout");
+
   const plantIdParam =
     typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("plantId")
@@ -582,26 +585,7 @@ export default function CheckoutPage() {
           quantity: BigInt(item.quantity),
         })),
       };
-      console.log("[checkout] placeOrder request", {
-        isAuthenticated,
-        fulfillment,
-        itemCount: items.length,
-        orderInput: {
-          ...orderInput,
-          items: orderInput.items.map((item) => ({
-            product_id: item.product_id.toString(),
-            plant_id: item.plant_id?.toString() ?? null,
-            price_cents: item.price_cents.toString(),
-            quantity: item.quantity.toString(),
-          })),
-        },
-      });
       const order = await placeOrder.mutateAsync(orderInput);
-      console.log("[checkout] placeOrder response", {
-        id: order?.id?.toString() ?? null,
-        total_cents: order?.total_cents?.toString() ?? null,
-        raw: order ?? null,
-      });
       if (!order?.id) {
         throw new Error("placeOrder returned null or missing id");
       }

@@ -44,6 +44,12 @@ export type {
   GerminationSubmit,
 } from "./GerminationModal";
 
+export { RemovePlantModal } from "./RemovePlantModal";
+export type { RemovePlantModalProps } from "./RemovePlantModal";
+
+export { TransplantedCellModal } from "./TransplantedCellModal";
+export type { TransplantedCellModalProps } from "./TransplantedCellModal";
+
 export { TransplantModal } from "./TransplantModal";
 export type {
   TransplantModalProps,

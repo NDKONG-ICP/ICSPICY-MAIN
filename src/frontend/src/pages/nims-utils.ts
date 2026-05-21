@@ -330,7 +330,7 @@ export function printTrayMap(trayName: string, plants: PrintPlant[]): void {
     <span class="legend-item"><span class="legend-dot" style="background:#fafafa;border-color:#ddd;border-style:dashed"></span>Empty</span>
   </div>
   <div class="footer">
-    <span>IC SPICY Nursery Management System · <a href="https://caffeine.ai" target="_blank">caffeine.ai</a></span>
+    <span>IC SPICY Nursery Management System</span>
     <span>Generated ${dateStr}</span>
   </div>
 </div>
@@ -475,7 +475,7 @@ export function printGardenLayout(
     <span class="legend-item"><span class="ldot" style="background:#fafafa;border-color:#ddd;border-style:dashed"></span>Empty</span>
   </div>
   <div class="footer">
-    <span>IC SPICY Nursery Management System · caffeine.ai</span>
+    <span>IC SPICY Nursery Management System</span>
     <span>Generated ${dateStr}</span>
   </div>
 </div>

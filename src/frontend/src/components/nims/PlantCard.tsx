@@ -131,16 +131,14 @@ export function PlantLifecycleCard({
 
 export function PlantCard({ plant, onClick }: PlantInventoryCardProps) {
   const container = containerHumansize(plant.container_size);
-  return (
-    <button
-      type="button"
-      data-ocid="nims-plant-card"
-      onClick={onClick}
-      className={cn(
-        "w-full rounded-xl border border-border bg-card p-4 text-left shadow-sm transition hover:bg-accent/20",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-      )}
-    >
+  const className = cn(
+    "w-full rounded-xl border border-border bg-card p-4 text-left shadow-sm transition hover:bg-accent/20",
+    onClick && "cursor-pointer",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+  );
+
+  const content = (
+    <>
       <div className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-primary">
           <Leaf className="size-5" aria-hidden />
@@ -174,6 +172,20 @@ export function PlantCard({ plant, onClick }: PlantInventoryCardProps) {
       >
         {plant.lastActivityText}
       </p>
-    </button>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button type="button" data-ocid="nims-plant-card" onClick={onClick} className={className}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div data-ocid="nims-plant-card" className={className}>
+      {content}
+    </div>
   );
 }

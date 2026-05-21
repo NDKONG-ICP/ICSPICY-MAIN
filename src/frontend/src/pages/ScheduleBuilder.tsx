@@ -30,6 +30,8 @@ import {
   useGetScheduleData,
   useSaveSchedule,
 } from "../hooks/useBackend";
+import { usePageTitle } from "../hooks/usePageTitle";
+import { PlantingCalendarPanel } from "../components/PlantingCalendarPanel";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -814,6 +816,8 @@ function MobileSection({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ScheduleBuilderPage() {
+  usePageTitle("Schedule Builder");
+
   const { isAuthenticated, login } = useAuth();
   const [selectedStage, setSelectedStage] = useState<string>("");
   const [selectedInputs, setSelectedInputs] = useState<string[]>([]);
@@ -926,6 +930,7 @@ export default function ScheduleBuilderPage() {
     }, 100);
   };
 
+  const [pageTab, setPageTab] = useState<"knf" | "planting">("planting");
   const stageMeta = GROWTH_STAGES.find((s) => s.value === selectedStage);
   const canBuild = !!selectedStage && selectedInputs.length > 0;
 
@@ -994,6 +999,37 @@ export default function ScheduleBuilderPage() {
           </div>
         </motion.div>
 
+        <div className="flex gap-2 mb-8 p-1 rounded-xl bg-muted/30 border border-border max-w-md">
+          <button
+            type="button"
+            onClick={() => setPageTab("planting")}
+            className={[
+              "flex-1 text-sm py-2 rounded-lg font-medium transition-smooth",
+              pageTab === "planting"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground",
+            ].join(" ")}
+          >
+            📅 Planting Calendar
+          </button>
+          <button
+            type="button"
+            onClick={() => setPageTab("knf")}
+            className={[
+              "flex-1 text-sm py-2 rounded-lg font-medium transition-smooth",
+              pageTab === "knf"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground",
+            ].join(" ")}
+          >
+            🧪 KNF Feed Schedule
+          </button>
+        </div>
+
+        {pageTab === "planting" ? (
+          <PlantingCalendarPanel />
+        ) : (
+        <>
         {/* ── Two-column layout (sidebar + main) ──────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
           {/* ── Left Panel ─────────────────────────────────────────────── */}
@@ -1414,6 +1450,8 @@ export default function ScheduleBuilderPage() {
             </motion.div>
           )}
         </div>
+        </>
+        )}
       </div>
     </>
   );

@@ -1,0 +1,4057 @@
+{
+  "recipes": [
+    {
+      "title": "Fermented Plant Juice (FPJ)",
+      "slug": "fermented-plant-juice-fpj",
+      "category": "KNF",
+      "difficulty": "Beginner",
+      "prep_time": "45 minutes active",
+      "fermentation_time": "5\u201310 days",
+      "total_time": "About 7\u201310 days",
+      "description": "FPJ captures vegetative growth hormones and soluble nutrition from fast-growing plant tips via brown-sugar osmosis. For peppers, it is the primary liquid \u2018food\u2019 while plants are building leaves and roots before heavy flowering.",
+      "ingredients": [
+        {
+          "name": "Vigorous shoot tips",
+          "amount": "1\u00d7 vs sugar weight",
+          "is_optional": false,
+          "notes": "Comfrey, sweet potato vine, or moringa\u2014no disease"
+        },
+        {
+          "name": "Unrefined brown sugar",
+          "amount": "match plant weight",
+          "is_optional": false
+        },
+        {
+          "name": "Breathable ferment vessel",
+          "amount": "1",
+          "is_optional": false,
+          "notes": "Bucket/jar + cloth"
+        },
+        {
+          "name": "Labels + marker",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Harvest tips near dawn when turgor is high; skip rinsing to preserve epiphytic microbes.",
+          "duration": "20 min",
+          "tips": "Do not use pesticide-laden weeds."
+        },
+        {
+          "step_number": 2,
+          "instruction": "Chop to thumb-length pieces to rupture cells without liquefying the mash.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Alternate thin layers of plant and sugar, pressing firmly to exclude air.",
+          "duration": "15 min",
+          "tips": "Liquid should begin weeping within a day."
+        },
+        {
+          "step_number": 4,
+          "instruction": "Cover with cloth; store warm-shade; date the batch."
+        },
+        {
+          "step_number": 5,
+          "instruction": "When bubbling slows and aroma is tangy-sweet, strain through muslin.",
+          "duration": "25 min"
+        },
+        {
+          "step_number": 6,
+          "instruction": "Bottle amber liquid in glass with head space; refrigerate only if indoor temps exceed ~85\u00b0F.",
+          "duration": "10 min"
+        },
+        {
+          "step_number": 7,
+          "instruction": "Compost the marc or fold into an IMO3 pile to close the loop.",
+          "duration": "10 min"
+        }
+      ],
+      "tips": [
+        "Pull back FPJ as clusters set\u2014 lingering vegetative pushes delay pod fill in some cultivars.",
+        "Pair FPJ foliars with LAB drench on different nights to keep leaf surfaces from overloading."
+      ],
+      "safety_notes": [
+        "Discard ferments dominated by continuous black, foul anaerobic slime or acrid ammonia with no balancing sour-sweet note."
+      ],
+      "application_rate": "1:500\u20131:1,000 (seedlings toward the weaker end)",
+      "application_frequency": "Every 7\u201310 days during vegetative growth",
+      "best_for": [
+        "Seedlings after true leaves",
+        "Field canopy expansion",
+        "Recovery from mechanical damage"
+      ],
+      "tags": [
+        "KNF",
+        "FPJ",
+        "foliar"
+      ],
+      "related_slugs": [
+        "oriental-herbal-nutrient-ohn",
+        "brown-rice-vinegar-brv",
+        "maintenance-foliar-cocktail"
+      ],
+      "is_published": true,
+      "display_order": 1
+    },
+    {
+      "title": "Fermented Fruit Juice (FFJ)",
+      "slug": "fermented-fruit-juice-ffj",
+      "category": "KNF",
+      "difficulty": "Beginner",
+      "prep_time": "40 minutes",
+      "fermentation_time": "7\u201314 days",
+      "total_time": "1\u20132 weeks",
+      "description": "FFJ uses ripe fruit and brown sugar to yield a reproductive-stage liquid rich in sugars, acids, and aromatics. It complements mineral inputs once peppers move from canopy building into flowering, fruit set, and ripening.",
+      "ingredients": [
+        {
+          "name": "Ripe / overripe fruit",
+          "amount": "1\u00d7 vs sugar",
+          "is_optional": false,
+          "notes": "Papaya, banana, fig\u2014trim rot"
+        },
+        {
+          "name": "Brown sugar",
+          "amount": "match fruit",
+          "is_optional": false
+        },
+        {
+          "name": "Jar + overflow tray",
+          "amount": "1",
+          "is_optional": false,
+          "notes": "Condensing greenhouses need trays"
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Remove stems, cores, and bruises; dice fruit for dense packing.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Layer fruit and sugar, pressing each layer to express juice.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Cover with cloth; monitor overflow during warm weather.",
+          "tips": "Ant-proof the footprint."
+        },
+        {
+          "step_number": 4,
+          "instruction": "After activity slows, strain through muslin; discard marc to hot compost.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Bottle, date, and store cool-dark; smell should stay fruity-acidic.",
+          "duration": "10 min"
+        },
+        {
+          "step_number": 6,
+          "instruction": "Optional second soak of marc in light brine for weaker secondary press\u2014label separately.",
+          "duration": "15 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Begin FFJ as buds appear; taper FPJ so nitrogen does not swamp fruit loading.",
+        "Mix weaker FFJ with WCA during rapid fruit expansion to buffer calcium demand."
+      ],
+      "safety_notes": [
+        "Discard ferments dominated by continuous black, foul anaerobic slime or acrid ammonia with no balancing sour-sweet note."
+      ],
+      "application_rate": "1:500\u20131:1,000 with clean, low-mineral water",
+      "application_frequency": "Every 7\u201314 days from bloom through ripening",
+      "best_for": [
+        "Fruit sizing",
+        "Brix finishing",
+        "Container-grown reproductive plants"
+      ],
+      "tags": [
+        "KNF",
+        "FFJ"
+      ],
+      "related_slugs": [
+        "water-soluble-calcium-wca",
+        "fermented-seawater-fsw",
+        "bud-break-wca-ffj-spray"
+      ],
+      "is_published": true,
+      "display_order": 2
+    },
+    {
+      "title": "Fish Amino Acid (FAA)",
+      "slug": "fish-amino-acid-faa",
+      "category": "KNF",
+      "difficulty": "Intermediate",
+      "prep_time": "1 hour setup",
+      "fermentation_time": "6\u201312 months",
+      "total_time": "Multi-month",
+      "description": "Ferments fish scraps under brown sugar to supply amino nitrogen and trace proteins without synthetic ammonium shock. It belongs in the vegetative toolbox but always heavily diluted and rotated with microbial inputs.",
+      "ingredients": [
+        {
+          "name": "Fresh fish scraps",
+          "amount": "1 part",
+          "is_optional": false,
+          "notes": "Heads & frames; keep chilled until pack"
+        },
+        {
+          "name": "Brown sugar",
+          "amount": "1 part",
+          "is_optional": false
+        },
+        {
+          "name": "HDPE drum with gas relief",
+          "amount": "1",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Dice fish small; alternate equal layers, pressing out air voids.",
+          "duration": "30 min",
+          "tips": "Work cool."
+        },
+        {
+          "step_number": 2,
+          "instruction": "Seal with burp schedule or fermentation lock\u2014never rigid glass without head-room.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Burp weekly at first; later monthly; liquid rises as solids collapse.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Mature FAA smells savory-fermented, not purely septic.",
+          "tips": "If uncertain, wait longer or dilute more."
+        },
+        {
+          "step_number": 5,
+          "instruction": "Strain; bottle amber liquid; solids bury in active compost\u2014away from waterways.",
+          "duration": "40 min"
+        }
+      ],
+      "tips": [
+        "Separate FAA days from heavy IMO liquid drenches so biology can process nitrogen gradually.",
+        "Older FAA is milder\u2014mark vintage and expect to stretch dilution on sensitive peppers."
+      ],
+      "safety_notes": [
+        "Pressurized jars can rupture\u2014never hermetically seal a warming batch.",
+        "Discard ferments dominated by continuous black, foul anaerobic slime or acrid ammonia with no balancing sour-sweet note."
+      ],
+      "application_rate": "Begin ~1:1,200 for seedlings; vigorous adults sometimes accept 1:500",
+      "application_frequency": "10\u201314 day intervals during leafy growth phases",
+      "best_for": [
+        "Canopy repair",
+        "Chlorosis correction when biology is already active"
+      ],
+      "tags": [
+        "KNF",
+        "FAA",
+        "nitrogen"
+      ],
+      "related_slugs": [
+        "lactic-acid-bacteria-lab",
+        "imo-stage-3-field-compost",
+        "transplant-imo-lab-drench"
+      ],
+      "is_published": true,
+      "display_order": 3
+    },
+    {
+      "title": "Lactic Acid Bacteria Serum (LAB)",
+      "slug": "lactic-acid-bacteria-lab",
+      "category": "MicrobialCultures",
+      "difficulty": "Intermediate",
+      "prep_time": "30 minutes",
+      "fermentation_time": "3\u20137 days rice wash; optional milk curd 1 day",
+      "total_time": "About 7\u201310 days",
+      "description": "LAB serum harvests lactobacilli from rice-wash fermentation or from milk curds, then stabilizes the clarified fluid with sugar for shelf life. In humid pepper houses it keeps anaerobic pockets in check and complements IMO drenches without synthetic fungicides.",
+      "ingredients": [
+        {
+          "name": "Organic rice",
+          "amount": "1 cup",
+          "is_optional": false
+        },
+        {
+          "name": "Non-chlorinated water",
+          "amount": "2 L",
+          "is_optional": false
+        },
+        {
+          "name": "Whole milk (optional)",
+          "amount": "500 mL",
+          "is_optional": true,
+          "notes": "Skip for vegan batches"
+        },
+        {
+          "name": "Brown sugar",
+          "amount": "match finished liquid volume",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Perform a gentle first rinse of rice; decant the cloudy fraction into a jar.",
+          "duration": "10 min",
+          "tips": "Later rinses are discarded."
+        },
+        {
+          "step_number": 2,
+          "instruction": "Loosely cover; wait until the liquid sours pleasantly (~3 days).",
+          "tips": "Temperature controls timing."
+        },
+        {
+          "step_number": 3,
+          "instruction": "Strain rice wash liquid; optionally inoculate milk to curd and harvest whey.",
+          "duration": "24\u201348 h",
+          "tips": "Stop milk path if curds smell off."
+        },
+        {
+          "step_number": 4,
+          "instruction": "Collect the translucent fraction beneath foam or curds.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Mix 1:1 with brown sugar to stabilize; stir until dissolved.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 6,
+          "instruction": "Bottle refrigerated; label concentration date.",
+          "duration": "10 min"
+        },
+        {
+          "step_number": 7,
+          "instruction": "Field-apply at extreme dilution\u2014start at 1:2,000 on seedlings.",
+          "tips": "Observe gloss vs. stickiness."
+        }
+      ],
+      "tips": [
+        "Chlorinated municipal water kills LAB\u2014use filtered or rested water overnight.",
+        "Alternate with FFJ/WCA sprays so acids do not accumulate on waxy leaves in one pass."
+      ],
+      "safety_notes": [
+        "Do not aerosolize concentrated acid without PPE; dilute before spraying.",
+        "Discard ferments dominated by continuous black, foul anaerobic slime or acrid ammonia with no balancing sour-sweet note."
+      ],
+      "application_rate": "1:500\u20131:2,000",
+      "application_frequency": "Weekly during establishment; monthly once soils stabilize",
+      "best_for": [
+        "Humid disease pressure",
+        "Compost odor",
+        "Post-transplant establishment"
+      ],
+      "tags": [
+        "LAB",
+        "microbes",
+        "KNF"
+      ],
+      "related_slugs": [
+        "imo-stage-2-liquid-culture",
+        "root-zone-lab-treatment",
+        "transplant-imo-lab-drench"
+      ],
+      "is_published": true,
+      "display_order": 4
+    },
+    {
+      "title": "Oriental Herbal Nutrient (OHN)",
+      "slug": "oriental-herbal-nutrient-ohn",
+      "category": "KNF",
+      "difficulty": "Advanced",
+      "prep_time": "2 days initial packing",
+      "fermentation_time": "Months of alcohol cycles",
+      "total_time": "Many months to years",
+      "description": "OHN macerates five traditional botanicals through alternating alcohol and vinegar phases to produce a resilient immune-support tonic. Small amounts travel into almost every maintenance spray because it buffers stress during Florida heat snaps and wind events.",
+      "ingredients": [
+        {
+          "name": "Angelica, cinnamon, licorice, ginger, garlic (fresh/dried per CGNF guidance)",
+          "amount": "Equal portions to start",
+          "is_optional": false,
+          "notes": "Source food-grade, mold-free"
+        },
+        {
+          "name": "Distilled or sugar-cane spirit (~30\u201335% abv)",
+          "amount": "Enough to cover first soak",
+          "is_optional": false,
+          "notes": "Local laws apply"
+        },
+        {
+          "name": "High-quality brown rice vinegar (BRV)",
+          "amount": "Reserved for later extraction cycles",
+          "is_optional": false
+        },
+        {
+          "name": "Sterilized glass jars",
+          "amount": "One per botanical layer",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Chop herbs roughly; pack each botanical separately\u2014never moldy inputs.",
+          "duration": "45 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Pour alcohol to cover; seal lightly; store dark, labeling alcohol pulls.",
+          "duration": "30 d first pass"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Drain alcohol fraction; reserve; begin vinegar soak per schedule.",
+          "tips": "Cycle per CGNF pacing."
+        },
+        {
+          "step_number": 4,
+          "instruction": "Repeat alcohol/vinegar alternations until plant cellulose surrenders color.",
+          "tips": "Patience defines quality."
+        },
+        {
+          "step_number": 5,
+          "instruction": "Combine equal finished extracts (or prescribed ratios) into master OHN.",
+          "duration": "60 min",
+          "tips": "Keep notes on vintage."
+        },
+        {
+          "step_number": 6,
+          "instruction": "Rest combined OHN; decant clear fraction; sugar-stabilize if protocol demands.",
+          "duration": "14 d"
+        },
+        {
+          "step_number": 7,
+          "instruction": "Bottle dark glass; OHN improves with age when stored cool.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 8,
+          "instruction": "Always shake before dilute use so oils redistribute.",
+          "duration": "2 min"
+        },
+        {
+          "step_number": 9,
+          "instruction": "Never smell-test directly from concentrate\u2014waft vapors to avoid ethanol inhalation."
+        },
+        {
+          "step_number": 10,
+          "instruction": "Document batch codes for traceability in nursery QA logs.",
+          "duration": "15 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Use fractions of a teaspoon per gallon on maintenance sprays\u2014OHN is potent.",
+        "If licensing or alcohol sourcing blocks you, purchase inspected OHN and log supplier COA."
+      ],
+      "safety_notes": [
+        "High-proof alcohol and vapors are flammable\u2014no open flame.",
+        "Potassium hydroxide and hot oils cause severe burns\u2014nitrile gloves, eye protection, ventilation, and no aluminum vessels."
+      ],
+      "application_rate": "~\u00be tsp OHN per gallon when paired with FPJ + BRV maintenance cocktail",
+      "application_frequency": "Every 10\u201312 days alongside normal KNF rotations",
+      "best_for": [
+        "Heat/wind stress",
+        "Immune maintenance",
+        "Seedling hardening when extremely dilute"
+      ],
+      "tags": [
+        "KNF",
+        "OHN",
+        "herbal"
+      ],
+      "related_slugs": [
+        "brown-rice-vinegar-brv",
+        "fermented-plant-juice-fpj",
+        "maintenance-foliar-cocktail"
+      ],
+      "is_published": true,
+      "display_order": 5
+    },
+    {
+      "title": "Homemade Brown Rice Vinegar (BRV)",
+      "slug": "brown-rice-vinegar-brv",
+      "category": "FermentedInputs",
+      "difficulty": "Advanced",
+      "prep_time": "1 hour",
+      "fermentation_time": "6\u201318+ months",
+      "total_time": "Years for premium batches",
+      "description": "BRV is slow dual-stage vinegar from whole brown rice\u2014first sugar wine, then acetification. It extracts eggshell calcium for WCA/WCP and appears in nearly every KNF spray as a gentle acidifier and mildew deterrent.",
+      "ingredients": [
+        {
+          "name": "Whole brown rice",
+          "amount": "per vessel volume",
+          "is_optional": false,
+          "notes": "Organic if possible"
+        },
+        {
+          "name": "Koji / yeast / vinegar mother",
+          "amount": "per local starter availability",
+          "is_optional": true,
+          "notes": "Mother accelerates acetate stage"
+        },
+        {
+          "name": "Food-grade storage barrel or glass demijohn",
+          "amount": "1",
+          "is_optional": false,
+          "notes": "Acetobacter needs air but limits fruit fly"
+        },
+        {
+          "name": "Breathable yet insect-proof vents",
+          "amount": "1 set",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Steam rice fluffy; cool; inoculate with koji or trusted wine yeast to saccharify.",
+          "duration": "4 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Maintain anaerobic alcohol stage until specific gravity stabilizes.",
+          "duration": "14\u201330 d"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Introduce cellulose-wrapped mother or raw vinegar back-slop; introduce oxygen gently.",
+          "tips": "Never seal air-tight now."
+        },
+        {
+          "step_number": 4,
+          "instruction": "Hold 60\u201385\u00b0F with stable oxygen; acetification may take months.",
+          "duration": "Months"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Taste monthly; stop at balanced sour\u2014not harsh industrial acetate burn."
+        },
+        {
+          "step_number": 6,
+          "instruction": "Pull finished BRV; pasteurize only if required by your SOP\u2014otherwise raw vinegar for living extracts.",
+          "duration": "45 min",
+          "tips": "Pasteurization kills extract microbes."
+        },
+        {
+          "step_number": 7,
+          "instruction": "Age in glass; acid matures; record each pull\u2019s pH.",
+          "duration": "Ongoing",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "If home BRV stalls, source verified brown rice vinegar commercially while your batch ages.",
+        "Use the same vintage for each extraction batch so WCA saturation rates stay predictable."
+      ],
+      "safety_notes": [
+        "Discard ferments dominated by continuous black, foul anaerobic slime or acrid ammonia with no balancing sour-sweet note."
+      ],
+      "application_rate": "1:1,000 in sprays (component) or full-strength as extract solvent only",
+      "application_frequency": "Component of maintenance sprays every 10\u201312 days",
+      "best_for": [
+        "Mildew management",
+        "WCA/WCP extraction acid",
+        "Spray tank pH fine-tuning"
+      ],
+      "tags": [
+        "BRV",
+        "vinegar",
+        "KNF"
+      ],
+      "related_slugs": [
+        "water-soluble-calcium-wca",
+        "water-soluble-calcium-phosphate-wcp",
+        "oriental-herbal-nutrient-ohn"
+      ],
+      "is_published": true,
+      "display_order": 6
+    },
+    {
+      "title": "Water-Soluble Calcium (WCA)",
+      "slug": "water-soluble-calcium-wca",
+      "category": "SoilAmendment",
+      "difficulty": "Intermediate",
+      "prep_time": "1 hour",
+      "fermentation_time": "7\u201310 days",
+      "total_time": "~10 days",
+      "description": "WCA dissolves calcium carbonate from roasted eggshells into brown rice vinegar, creating a foliar-available calcium spray. It targets blossom-end rot risk and fruit cracking when rapid cell expansion outruns internal calcium supply in peppers.",
+      "ingredients": [
+        {
+          "name": "Clean eggshells",
+          "amount": "to 1:10 with vinegar",
+          "is_optional": false,
+          "notes": "Membrane removed"
+        },
+        {
+          "name": "Finished BRV",
+          "amount": "Jar 2/3 full before adding shells",
+          "is_optional": false,
+          "notes": "3\u20135% acetic is typical"
+        },
+        {
+          "name": "Muslin straining cloth",
+          "amount": "1",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Dry-clean shells; roast until lightly tan\u2014not chalk-white ash.",
+          "duration": "45 min",
+          "tips": "Removes organics that rot."
+        },
+        {
+          "step_number": 2,
+          "instruction": "Break shells to pea size to increase surface area.",
+          "duration": "10 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Add to vinegar slowly; observe bubbling CO\u2082\u2014vent if foam threatens overflow.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Rest capped with cloth 7\u201310 days until bubbling stops.",
+          "tips": "Signals saturation."
+        },
+        {
+          "step_number": 5,
+          "instruction": "Strain; label saturated WCA; store dark/cool.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 6,
+          "instruction": "Confirm no grit in spray lines\u2014filter twice for greenhouse foggers.",
+          "duration": "15 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Apply after peak transpiration (dusk) to maximize passive uptake through young fruits.",
+        "Rotate nights with seawater sprays so salinity and calcium stay balanced."
+      ],
+      "safety_notes": [
+        "Acid + shells release CO\u2082 in closed jars\u2014never seal glass tightly during initial reaction."
+      ],
+      "application_rate": "1:1,000 foliar typical (see kitchen measure tables for your tank)",
+      "application_frequency": "7\u201310 days during rapid pod expansion",
+      "best_for": [
+        "Blossom-end rot prevention",
+        "Fruit skin integrity",
+        "Calcium spot-foliar"
+      ],
+      "tags": [
+        "WCA",
+        "calcium",
+        "KNF"
+      ],
+      "related_slugs": [
+        "brown-rice-vinegar-brv",
+        "fermented-fruit-juice-ffj",
+        "blossom-end-rot-prevention"
+      ],
+      "is_published": true,
+      "display_order": 7
+    },
+    {
+      "title": "Water-Soluble Calcium Phosphate (WCP)",
+      "slug": "water-soluble-calcium-phosphate-wcp",
+      "category": "SoilAmendment",
+      "difficulty": "Intermediate",
+      "prep_time": "1 hour burn + soak",
+      "fermentation_time": "7\u201310 days",
+      "total_time": "~10 days",
+      "description": "WCP solubilizes phosphate from properly burned bones using BRV, supporting flowering, root flush, and seed maturity. It complements WCA as peppers transition from vegetative mass into reproductive allocation.",
+      "ingredients": [
+        {
+          "name": "Vertebrate bones (fish, poultry, livestock)",
+          "amount": "Enough to fill jar 1/3",
+          "is_optional": false,
+          "notes": "High-temp burn to remove organics"
+        },
+        {
+          "name": "Brown rice vinegar",
+          "amount": "cover bones + 1 inch",
+          "is_optional": false
+        },
+        {
+          "name": "Heat-safe crucible / outdoor burner",
+          "amount": "1",
+          "is_optional": false,
+          "notes": "Local open-burn laws apply"
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Low-temperature burn bones until brittle, chalk-white-gray\u2014not charcoal.",
+          "duration": "60 min",
+          "tips": "Vent smoke safely."
+        },
+        {
+          "step_number": 2,
+          "instruction": "Cool; crack bones; pack loosely in glass or ceramic\u2014not metal with long soaks.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Cover with BRV; vent CO\u2082 if foaming.",
+          "duration": "10 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Soak 7\u201310 days; top vinegar if evaporation exposes bone."
+        },
+        {
+          "step_number": 5,
+          "instruction": "Strain liquid WCP; store labeled; solids may re-soak weaker.",
+          "duration": "25 min"
+        }
+      ],
+      "tips": [
+        "Apply during pre-bloom and early fruit set\u2014not a substitute for soil P tests if deficiency is extreme.",
+        "Never dump raw vinegar concentrates into irrigation reservoirs\u2014mix dilute first."
+      ],
+      "safety_notes": [
+        "Burning bones releases odors/particulates\u2014PPE + neighbor courtesy."
+      ],
+      "application_rate": "1:1,000 foliar baseline",
+      "application_frequency": "Every 10\u201314 days during flowering and early fruit",
+      "best_for": [
+        "Flower power",
+        "Pod set support",
+        "Phosphorus correction alongside biology"
+      ],
+      "tags": [
+        "WCP",
+        "phosphate",
+        "KNF"
+      ],
+      "related_slugs": [
+        "water-soluble-calcium-wca",
+        "brown-rice-vinegar-brv",
+        "bud-break-wca-ffj-spray"
+      ],
+      "is_published": true,
+      "display_order": 8
+    },
+    {
+      "title": "Clean Ocean Seawater Dilution (Mineral Drench)",
+      "slug": "diluted-seawater-minerals",
+      "category": "KNF",
+      "difficulty": "Beginner",
+      "prep_time": "20 minutes",
+      "fermentation_time": null,
+      "total_time": "Same day",
+      "description": "Well-sourced seawater contributes trace minerals that strengthen fruit quality and can help manage certain fungal threats when properly diluted. On Florida farms it must be captured away from harmful algal blooms or urban plume runoff.",
+      "ingredients": [
+        {
+          "name": "Clean seawater",
+          "amount": "1 part",
+          "is_optional": false,
+          "notes": "Gulf/Atlantic, away from discharge"
+        },
+        {
+          "name": "Non-chlorinated fresh water",
+          "amount": "20\u201330 parts",
+          "is_optional": false,
+          "notes": "Match your ripening stage schedule"
+        },
+        {
+          "name": "Salinity test refractometer",
+          "amount": "1",
+          "is_optional": true,
+          "notes": "Optional but wise"
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Sample only during calm, clear tide windows; avoid red-tide advisories.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Filter through coffee mesh to remove debris and plankton.",
+          "duration": "10 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Dilute start 1:30 for first ripening passes; tighten only with observation.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply as evening foliar or drench when stomata are open but sun won\u2019t bake salt."
+        },
+        {
+          "step_number": 5,
+          "instruction": "Log electrical conductivity if fertigating so totals stay within pepper tolerance.",
+          "duration": "10 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Advance dilution strength gradually as pods mature\u2014never jump from 1:40 to 1:10 overnight.",
+        "Pause seawater if margins desiccate\u2014pair with fresh OM mulches."
+      ],
+      "safety_notes": [
+        "Salinity burns tissue when concentrated\u2014always pre-dilute and spot-test a branch."
+      ],
+      "application_rate": "Commonly 1:20\u20131:30 during ripening (follow observation)",
+      "application_frequency": "Every 10\u201314 days through final swell",
+      "best_for": [
+        "Late brix finishing",
+        "Trace mineral supplementation"
+      ],
+      "tags": [
+        "seawater",
+        "minerals",
+        "KNF"
+      ],
+      "related_slugs": [
+        "fermented-seawater-fsw",
+        "ripening-seawater-progression",
+        "anthracnose-suppression-spray"
+      ],
+      "is_published": true,
+      "display_order": 9
+    },
+    {
+      "title": "Fermented Seawater (FSW)",
+      "slug": "fermented-seawater-fsw",
+      "category": "FermentedInputs",
+      "difficulty": "Intermediate",
+      "prep_time": "45 minutes",
+      "fermentation_time": "12\u201372 hours",
+      "total_time": "2\u20134 days (weather dependent)",
+      "description": "Fermented seawater marries diluted seawater with rice-wash microbes and a small FPJ fraction so minerals arrive with active biology. Growers on the humid Gulf and Atlantic coasts use it preventively during anthracnose pressure on ripe pods.",
+      "ingredients": [
+        {
+          "name": "Seawater",
+          "amount": "diluted 1:30 first",
+          "is_optional": false,
+          "notes": "Quality as per seawater recipe"
+        },
+        {
+          "name": "Rice wash / LAB serum",
+          "amount": "1:200 in final tank",
+          "is_optional": false,
+          "notes": "Adds lactic cohort"
+        },
+        {
+          "name": "Mature FPJ",
+          "amount": "1:500 equivalent in tank math",
+          "is_optional": true,
+          "notes": "Mugwort blends historically"
+        },
+        {
+          "name": "Fresh water",
+          "amount": "bulk of volume",
+          "is_optional": false,
+          "notes": "Chlorine-free"
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Build base dilution seawater per ripening plan (start weakest).",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Add rice wash or diluted LAB before oils or acids hit the tank.",
+          "duration": "5 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Add FPJ last; stir gently; avoid whipping excess foam.",
+          "duration": "5 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Allow warm-weather ferments 12\u201324 h; extend if overcast or cool.",
+          "tips": "Smell stays sea-mineral, not sour milk."
+        },
+        {
+          "step_number": 5,
+          "instruction": "Strain if precipitate forms; spray dusk or dawn.",
+          "duration": "10 min"
+        },
+        {
+          "step_number": 6,
+          "instruction": "Clean tank jets after salt sprays to prevent clogging.",
+          "duration": "15 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Alternate FSW nights with JS/JHS programs so surfaces aren\u2019t coated daily with minerals + sulfur.",
+        "Use greenhouse staging\u2014first road-test low tunnels before whole block sprays."
+      ],
+      "safety_notes": [
+        "Same salinity cautions as plain seawater; never spray drought-stressed plants at midday."
+      ],
+      "application_rate": "Dilution anchored to seawater recipe; biology additives stay trace",
+      "application_frequency": "Preventive every 10\u201314 days during humid fruiting",
+      "best_for": [
+        "Anthracnose-prone finishing blocks",
+        "Late-season mineral uplift"
+      ],
+      "tags": [
+        "FSW",
+        "ferment",
+        "minerals"
+      ],
+      "related_slugs": [
+        "diluted-seawater-minerals",
+        "lactic-acid-bacteria-lab",
+        "fermented-plant-juice-fpj"
+      ],
+      "is_published": true,
+      "display_order": 10
+    },
+    {
+      "title": "IMO Stage 1 \u2014 Forest Floor Rice Capture",
+      "slug": "imo-stage-1-rice-capture",
+      "category": "MicrobialCultures",
+      "difficulty": "Intermediate",
+      "prep_time": "Variable by stage",
+      "fermentation_time": "Stage-dependent",
+      "total_time": "Weeks to months",
+      "description": "Capture indigenous microbes from locally adapted leaf litter using steamed rice as a substrate. It is the start of every IMO sequence and should reflect your watershed\u2019s fungal:bacterial balance\u2014not bagged off-site inoculants.",
+      "ingredients": [
+        {
+          "name": "Core inputs per sub-method",
+          "amount": "See stage recipe headings",
+          "is_optional": false,
+          "notes": "Always local"
+        },
+        {
+          "name": "Non-chlorinated water",
+          "amount": "Bulk",
+          "is_optional": false
+        },
+        {
+          "name": "Lab notebook + temperature log",
+          "amount": "1",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Locate healthy forest edge or old-growth understory free of chemical drift.",
+          "duration": "30 min",
+          "tips": "Morning is ideal."
+        },
+        {
+          "step_number": 2,
+          "instruction": "Steam rice to al dente; cool to blood temperature.",
+          "duration": "45 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Place handful on bamboo tray/box; bury lightly under native litter; cover loosely.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Return in 3\u20135 days; IMO1 is ready when fungal hyphae dominate with clean white bloom.",
+          "duration": "5 min",
+          "tips": "Skip technicolor molds."
+        },
+        {
+          "step_number": 5,
+          "instruction": "Harvest only what you need; leave biomass to regenerate microflora.",
+          "duration": "15 min",
+          "tips": "Ethical wildcrafting rules."
+        },
+        {
+          "step_number": 6,
+          "instruction": "Document GPS + date for traceability.",
+          "duration": "5 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Never equate IMO with random bagged EM\u2014traceability to your biome matters.",
+        "If molds discolor, consult local extension before repeating collection from the same cluster."
+      ],
+      "safety_notes": [
+        "Wild collection respects land access rules; tick / wildlife awareness in understory work."
+      ],
+      "application_rate": "Liquid IMO2 commonly 1:500\u20131:1,000; solids site-specific",
+      "application_frequency": "Per crop phenology\u2014often weekly establishment then monthly",
+      "best_for": [
+        "Soil biology foundation",
+        "Suppression via diversity",
+        "Nursery block hygiene"
+      ],
+      "tags": [
+        "IMO",
+        "microbes",
+        "KNF"
+      ],
+      "related_slugs": [],
+      "is_published": true,
+      "display_order": 11
+    },
+    {
+      "title": "IMO Stage 2 \u2014 Sugar-Stabilized Liquid",
+      "slug": "imo-stage-2-liquid-culture",
+      "category": "MicrobialCultures",
+      "difficulty": "Intermediate",
+      "prep_time": "Variable by stage",
+      "fermentation_time": "Stage-dependent",
+      "total_time": "Weeks to months",
+      "description": "Preserved IMO1 myceliated rice with brown sugar draws osmotic liquid teeming with captured microbes. This concentrate becomes the inoculant backbone for field expansions and compost integrations.",
+      "ingredients": [
+        {
+          "name": "Core inputs per sub-method",
+          "amount": "See stage recipe headings",
+          "is_optional": false,
+          "notes": "Always local"
+        },
+        {
+          "name": "Non-chlorinated water",
+          "amount": "Bulk",
+          "is_optional": false
+        },
+        {
+          "name": "Lab notebook + temperature log",
+          "amount": "1",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Combine captured IMO1 rice 1:1 by weight with brown sugar.",
+          "duration": "20 min",
+          "tips": "Sterile gloves."
+        },
+        {
+          "step_number": 2,
+          "instruction": "Pack tightly to exclude air; cover breathable.",
+          "duration": "10 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "After 7 days, collect dense syrup\u2014this is your IMO2 stock.",
+          "tips": "Syrup should sweet-sour."
+        },
+        {
+          "step_number": 4,
+          "instruction": "Decant; bottle dark glass; label potency date.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Store cool; use aliquots for expansion instead of reopening whole stock weekly."
+        },
+        {
+          "step_number": 6,
+          "instruction": "Sanitize transfer tools with boiling water\u2014not bleach\u2014which kills target biota.",
+          "duration": "15 min"
+        }
+      ],
+      "tips": [
+        "Never equate IMO with random bagged EM\u2014traceability to your biome matters.",
+        "If molds discolor, consult local extension before repeating collection from the same cluster."
+      ],
+      "safety_notes": [
+        "Wild collection respects land access rules; tick / wildlife awareness in understory work."
+      ],
+      "application_rate": "Liquid IMO2 commonly 1:500\u20131:1,000; solids site-specific",
+      "application_frequency": "Per crop phenology\u2014often weekly establishment then monthly",
+      "best_for": [
+        "Soil biology foundation",
+        "Suppression via diversity",
+        "Nursery block hygiene"
+      ],
+      "tags": [
+        "IMO",
+        "microbes",
+        "KNF"
+      ],
+      "related_slugs": [
+        "imo-stage-1-rice-capture"
+      ],
+      "is_published": true,
+      "display_order": 12
+    },
+    {
+      "title": "IMO Stage 3 \u2014 Aerobic Field Compost Activation",
+      "slug": "imo-stage-3-field-compost",
+      "category": "Composting",
+      "difficulty": "Advanced",
+      "prep_time": "Variable by stage",
+      "fermentation_time": "Stage-dependent",
+      "total_time": "Weeks to months",
+      "description": "Turns liquid IMO into low-temperature compost piles that expand microbial mass on carbon stacks. Stage three is where structure and moisture discipline matter most in Florida afternoon storms.",
+      "ingredients": [
+        {
+          "name": "Core inputs per sub-method",
+          "amount": "See stage recipe headings",
+          "is_optional": false,
+          "notes": "Always local"
+        },
+        {
+          "name": "Non-chlorinated water",
+          "amount": "Bulk",
+          "is_optional": false
+        },
+        {
+          "name": "Lab notebook + temperature log",
+          "amount": "1",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Form loose windrow/pile using local carbon, nitrogen, mineral amendments per farm plan.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Dilute IMO2 1:500\u20131:1,000 into chlorine-free water; even distribution matters.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Turn pile when core hits ~50\u00b0C (122\u00b0F) max: do not exceed KNF thermal guidance.",
+          "duration": "15 min daily",
+          "tips": "Florida heat spikes fast."
+        },
+        {
+          "step_number": 4,
+          "instruction": "Maintain field moisture like a wrung sponge\u2014never anaerobic slime for long."
+        },
+        {
+          "step_number": 5,
+          "instruction": "Harvest friable, sweet-earth smelling compost.",
+          "duration": "1 d"
+        },
+        {
+          "step_number": 6,
+          "instruction": "Sieve if needed for potting integration.",
+          "duration": "45 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Never equate IMO with random bagged EM\u2014traceability to your biome matters.",
+        "If molds discolor, consult local extension before repeating collection from the same cluster."
+      ],
+      "safety_notes": [
+        "Wild collection respects land access rules; tick / wildlife awareness in understory work."
+      ],
+      "application_rate": "Liquid IMO2 commonly 1:500\u20131:1,000; solids site-specific",
+      "application_frequency": "Per crop phenology\u2014often weekly establishment then monthly",
+      "best_for": [
+        "Soil biology foundation",
+        "Suppression via diversity",
+        "Nursery block hygiene"
+      ],
+      "tags": [
+        "IMO",
+        "microbes",
+        "KNF"
+      ],
+      "related_slugs": [
+        "imo-stage-2-liquid-culture",
+        "lactic-acid-bacteria-lab"
+      ],
+      "is_published": true,
+      "display_order": 13
+    },
+    {
+      "title": "IMO Stage 4 \u2014 Finished Soil Amendment Blend",
+      "slug": "imo-stage-4-soil-amendment",
+      "category": "SoilAmendment",
+      "difficulty": "Advanced",
+      "prep_time": "Variable by stage",
+      "fermentation_time": "Stage-dependent",
+      "total_time": "Weeks to months",
+      "description": "Combines matured IMO3 with mineral inputs, FAA/OHN/Fish ferments, and local soil to create a stable inoculated amendment. It is the product many growers bucket onto beds, container mixes, and transplant holes.",
+      "ingredients": [
+        {
+          "name": "Core inputs per sub-method",
+          "amount": "See stage recipe headings",
+          "is_optional": false,
+          "notes": "Always local"
+        },
+        {
+          "name": "Non-chlorinated water",
+          "amount": "Bulk",
+          "is_optional": false
+        },
+        {
+          "name": "Lab notebook + temperature log",
+          "amount": "1",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Combine matured IMO3 with equal parts indigenous topsoil + compost.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Add small FAA, OHN, WCP/WCA concentrates per soil test targets.",
+          "duration": "45 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Integrate biochar or crushed shell if pH adjustments demand buffering.",
+          "duration": "60 min",
+          "tips": true
+        },
+        {
+          "step_number": 4,
+          "instruction": "Mix to uniform color; moisture ~40%.",
+          "duration": "45 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Cure 7\u201314 days under shade cloth; turn twice weekly."
+        },
+        {
+          "step_number": 6,
+          "instruction": "Apply as topdress or incorporate pre-plant.",
+          "duration": "Variable"
+        }
+      ],
+      "tips": [
+        "Never equate IMO with random bagged EM\u2014traceability to your biome matters.",
+        "If molds discolor, consult local extension before repeating collection from the same cluster."
+      ],
+      "safety_notes": [
+        "Wild collection respects land access rules; tick / wildlife awareness in understory work."
+      ],
+      "application_rate": "Liquid IMO2 commonly 1:500\u20131:1,000; solids site-specific",
+      "application_frequency": "Per crop phenology\u2014often weekly establishment then monthly",
+      "best_for": [
+        "Soil biology foundation",
+        "Suppression via diversity",
+        "Nursery block hygiene"
+      ],
+      "tags": [
+        "IMO",
+        "microbes",
+        "KNF"
+      ],
+      "related_slugs": [
+        "imo-stage-3-field-compost",
+        "fish-amino-acid-faa",
+        "oriental-herbal-nutrient-ohn"
+      ],
+      "is_published": true,
+      "display_order": 14
+    },
+    {
+      "title": "IMO Stage 5 \u2014 Fish-Enhanced Microbial Expansion (Optional)",
+      "slug": "imo-stage-5-fish-enhanced-imo",
+      "category": "SoilAmendment",
+      "difficulty": "Advanced",
+      "prep_time": "Variable by stage",
+      "fermentation_time": "Stage-dependent",
+      "total_time": "Weeks to months",
+      "description": "Optional fifth stage introduces fish hydrolysate fractions to push fungal energy in specific tree/shrub contexts; adapt cautiously for annual peppers to avoid nitrogen spike timing errors.",
+      "ingredients": [
+        {
+          "name": "Core inputs per sub-method",
+          "amount": "See stage recipe headings",
+          "is_optional": false,
+          "notes": "Always local"
+        },
+        {
+          "name": "Non-chlorinated water",
+          "amount": "Bulk",
+          "is_optional": false
+        },
+        {
+          "name": "Lab notebook + temperature log",
+          "amount": "1",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Start only after mastering IMO4; source sustainable fish hydrolysate fractions.",
+          "duration": "30 min",
+          "tips": "Regulatory awareness."
+        },
+        {
+          "step_number": 2,
+          "instruction": "Blend trace amounts into compost windrow to steer fungal consortium.",
+          "duration": "60 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Monitor nitrogen release so pepper leaf tips don\u2019t burn\u2014pull back if cupping appears."
+        },
+        {
+          "step_number": 4,
+          "instruction": "Restrict to perennial windbreak mulch unless annual beds expressly need fungal dominance."
+        },
+        {
+          "step_number": 5,
+          "instruction": "Document application rates; not every pepper rotation benefits.",
+          "duration": "20 min"
+        }
+      ],
+      "tips": [
+        "Never equate IMO with random bagged EM\u2014traceability to your biome matters.",
+        "If molds discolor, consult local extension before repeating collection from the same cluster."
+      ],
+      "safety_notes": [
+        "Wild collection respects land access rules; tick / wildlife awareness in understory work."
+      ],
+      "application_rate": "Liquid IMO2 commonly 1:500\u20131:1,000; solids site-specific",
+      "application_frequency": "Per crop phenology\u2014often weekly establishment then monthly",
+      "best_for": [
+        "Soil biology foundation",
+        "Suppression via diversity",
+        "Nursery block hygiene"
+      ],
+      "tags": [
+        "IMO",
+        "microbes",
+        "KNF"
+      ],
+      "related_slugs": [
+        "imo-stage-4-soil-amendment",
+        "fish-amino-acid-faa"
+      ],
+      "is_published": true,
+      "display_order": 15
+    },
+    {
+      "title": "JADAM Microorganism Solution (JMS)",
+      "slug": "jadam-microorganism-solution-jms",
+      "category": "JADAM",
+      "difficulty": "Beginner",
+      "prep_time": "45 minutes",
+      "fermentation_time": "2\u20134 days",
+      "total_time": "~1 week",
+      "description": "JMS is JADAM\u2019s simplified aerobic microbe broth that activates indigenous soil life without the lengthy IMO sequence. It fits nursery operations that need fast-turn biology between short pepper rotations.",
+      "ingredients": [
+        {
+          "name": "Leaf mold or quality compost",
+          "amount": "handful per 20 L",
+          "is_optional": false,
+          "notes": "Local biology"
+        },
+        {
+          "name": "Potato or rice starch water",
+          "amount": "2 L",
+          "is_optional": false,
+          "notes": "Feeds burst bloom"
+        },
+        {
+          "name": "Non-chlorinated water",
+          "amount": "remainder of batch",
+          "is_optional": false
+        },
+        {
+          "name": "Sea salt pinch",
+          "amount": "per official ratios",
+          "is_optional": true,
+          "notes": "Trace minerals"
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Boil starch water; cool to blood temp; dissolve pinch salt if protocol demands.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Whisk in compost/leaf mold until evenly turbid.",
+          "duration": "10 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Aerate 12 hours with aquarium pump or swirl hourly.",
+          "duration": "12 h"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Strain through mesh; dilute 1:100\u20131:500 for field sprays.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Use fresh batches\u2014JMS isn\u2019t a months-long concentrate."
+        }
+      ],
+      "tips": [
+        "Good for bridging between KNF heavy ferments when time is tight.",
+        "Log smell: malty/earthy good; rotten eggs means anaerobic failure."
+      ],
+      "safety_notes": [
+        "Small-batch odors attract wildlife\u2014secure greenhouse vents overnight."
+      ],
+      "application_rate": "Usually 1:100 to 1:500",
+      "application_frequency": "Weekly for 3 weeks post-transplant, then monthly",
+      "best_for": [
+        "Fast biology kickstarts",
+        "Lease farms with uncertain history"
+      ],
+      "tags": [
+        "JADAM",
+        "JMS"
+      ],
+      "related_slugs": [
+        "lactic-acid-bacteria-lab",
+        "aerated-compost-tea"
+      ],
+      "is_published": true,
+      "display_order": 16
+    },
+    {
+      "title": "JADAM Wetting Agent (JWA)",
+      "slug": "jadam-wetting-agent-jwa",
+      "category": "PestControl",
+      "difficulty": "Intermediate",
+      "prep_time": "2 hours",
+      "fermentation_time": null,
+      "total_time": "Half day (cool-down included)",
+      "description": "JWA is a potassium-saponified vegetable oil soap that helps sprays coat waxy pepper leaves evenly. Always add JWA last in the tank after diluting sulfur or oils to avoid locked-in emulsions.",
+      "ingredients": [
+        {
+          "name": "Soft rain or distilled water",
+          "amount": "500 mL initial",
+          "is_optional": false
+        },
+        {
+          "name": "Potassium hydroxide (KOH)",
+          "amount": "200 g",
+          "is_optional": false,
+          "notes": "Food or lab grade"
+        },
+        {
+          "name": "Cold-pressed plant oil",
+          "amount": "1 L",
+          "is_optional": false,
+          "notes": "Soy or sunflower typical"
+        },
+        {
+          "name": "Stainless pot",
+          "amount": "1",
+          "is_optional": false,
+          "notes": "No aluminum"
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Dissolve KOH in water outdoors\u2014exothermic, caustic fumes.",
+          "duration": "20 min",
+          "tips": "Full PPE."
+        },
+        {
+          "step_number": 2,
+          "instruction": "Add oil slowly while stirring until thick soap forms.",
+          "duration": "60 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Let saponify until pH stabilizes per strip logging.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Dilute stock into labeled bottles; store cool.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Foam-test in a jar of your spray water before batching expensive inputs.",
+          "duration": "10 min"
+        }
+      ],
+      "tips": [
+        "Typical spray use ~1\u20132 mL/L\u2014last ingredient into the tank.",
+        "Hard well water may need citric pretreatment\u2014test jar foam stability."
+      ],
+      "safety_notes": [
+        "Potassium hydroxide and hot oils cause severe burns\u2014nitrile gloves, eye protection, ventilation, and no aluminum vessels."
+      ],
+      "application_rate": "\u22481\u20132 mL per liter of spray solution",
+      "application_frequency": "Whenever using JS, JHS, neem, or mineral suspensions",
+      "best_for": [
+        "Foliar coverage",
+        "Soft-bodied insect washes combined with JHS"
+      ],
+      "tags": [
+        "JADAM",
+        "JWA",
+        "surfactant"
+      ],
+      "related_slugs": [
+        "jadam-sulfur-js",
+        "jadam-herbal-solution-jhs",
+        "powdery-mildew-js-jwa"
+      ],
+      "is_published": true,
+      "display_order": 17
+    },
+    {
+      "title": "JADAM Sulfur (JS) Fungicide",
+      "slug": "jadam-sulfur-js",
+      "category": "PestControl",
+      "difficulty": "Advanced",
+      "prep_time": "1 hour",
+      "fermentation_time": null,
+      "total_time": "Same day",
+      "description": "JS dissolves elemental sulfur with KOH to create a powerful organic fungicide without lime-sulfur\u2019s steel corrosion. Pepper growers lean on JS + JWA during Florida\u2019s mildew windows but must respect heat/humidity phytotoxicity thresholds.",
+      "ingredients": [
+        {
+          "name": "Elemental sulfur (ag powder)",
+          "amount": "1 kg batch basis",
+          "is_optional": false
+        },
+        {
+          "name": "Potassium hydroxide",
+          "amount": "1 kg (paired)",
+          "is_optional": false
+        },
+        {
+          "name": "Rainwater",
+          "amount": "5\u20136 L",
+          "is_optional": false,
+          "notes": "Soft water essential"
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Combine KOH + sulfur + water gradually; expect heat\u2014stir non-aluminum pot.",
+          "duration": "45 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Dissolve fully to wine-dark solution without grit."
+        },
+        {
+          "step_number": 3,
+          "instruction": "Bottle aged concentrate; label molar-ish batch strength.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Never mix the same day with copper sprays\u2014phytotoxic pairings.",
+          "duration": "5 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Store concentrate in opaque HDPE, log pH monthly, and shake before any dilution so suspended sulfur stays even.",
+          "duration": "10 min",
+          "tips": "Replace stock if crystals precipitate unevenly after cool storage."
+        }
+      ],
+      "tips": [
+        "Dilute 100:1 to 200:1 for maintenance; tighten only on confirmed infection.",
+        "Spray early/late\u2014never >95\u00b0F canopy temps."
+      ],
+      "safety_notes": [
+        "Potassium hydroxide and hot oils cause severe burns\u2014nitrile gloves, eye protection, ventilation, and no aluminum vessels."
+      ],
+      "application_rate": "Typically 100:1 to 500:1 dilution from concentrate (see severity tables)",
+      "application_frequency": "At most every 7 days during active mildew\u2014rotate modes of action",
+      "best_for": [
+        "Powdery mildew",
+        "Certain anthracnose pressure windows"
+      ],
+      "tags": [
+        "JS",
+        "fungicide",
+        "JADAM"
+      ],
+      "related_slugs": [
+        "jadam-wetting-agent-jwa",
+        "powdery-mildew-js-jwa",
+        "anthracnose-suppression-spray"
+      ],
+      "is_published": true,
+      "display_order": 18
+    },
+    {
+      "title": "JADAM Herbal Solution (JHS)",
+      "slug": "jadam-herbal-solution-jhs",
+      "category": "PestControl",
+      "difficulty": "Intermediate",
+      "prep_time": "1 hour",
+      "fermentation_time": "3\u20137 days",
+      "total_time": "~1 week",
+      "description": "JHS ferments repellant / insecticidal herbs into a stable extract used soft or hot depending on pest pressure. Farm-scaled batches respect USDA organic approved species lists\u2014always verify before shipping peppers.",
+      "ingredients": [
+        {
+          "name": "Fresh aromatic herbs (mint, mugwort, hot peppers, etc.)",
+          "amount": "500 g \u2013 1 kg",
+          "is_optional": false,
+          "notes": "Verify OMRI/EU lists"
+        },
+        {
+          "name": "Brown sugar",
+          "amount": "match herb weight",
+          "is_optional": false
+        },
+        {
+          "name": "Large jar with cloth seal",
+          "amount": "1",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Wash only if contaminant risk; otherwise wildcrafted herbs prefer dry-brush cleaning.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Chop fine; alternate herb and sugar layers.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Ferment until aromatic syrup stabilizes (3\u20137 days warm).",
+          "tips": "Stir daily."
+        },
+        {
+          "step_number": 4,
+          "instruction": "Strain; stabilize; store refrigerated if your bay runs >80\u00b0F nights.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Dilute with JWA for coverage; rotate weekly with JS to avoid resistance.",
+          "duration": "15 min"
+        }
+      ],
+      "tips": [
+        "Spot-test each cultivar\u2014superhots sometimes show marginal burn when oils concentrate.",
+        "Night applications preserve pollinators on adjacent rows."
+      ],
+      "safety_notes": [
+        "Eye/skin sensitivity to hot pepper extracts\u2014use goggles when macerating."
+      ],
+      "application_rate": "Often 200:1 stock dilution window\u2014tighten only with scouting logs",
+      "application_frequency": "Weekly during outbreaks; back to 14 days when clean",
+      "best_for": [
+        "Aphid complexes",
+        "Whitefly pairing with traps",
+        "Mite suppression adjunct"
+      ],
+      "tags": [
+        "JHS",
+        "JADAM",
+        "herbal"
+      ],
+      "related_slugs": [
+        "jadam-wetting-agent-jwa",
+        "aphid-jhs-rotation",
+        "whitefly-herbal-ferment-program"
+      ],
+      "is_published": true,
+      "display_order": 19
+    },
+    {
+      "title": "Pyroligneous Acid (Wood Vinegar / WS)",
+      "slug": "pyroligneous-wood-vinegar-ws",
+      "category": "FermentedInputs",
+      "difficulty": "Advanced",
+      "prep_time": "1 day kiln prep",
+      "fermentation_time": "Condensation capture",
+      "total_time": "Batch-dependent",
+      "description": "Wood vinegar is the condensed smoke fraction from controlled biomass pyrolysis\u2014distinct from culinary smoke flavorings. In disciplined KNF it is used in tiny dilutions for soil biology signaling\u2014not choked into reservoir irrigation unchecked.",
+      "ingredients": [
+        {
+          "name": "Hardwood feedstock (kiln-dried chunks)",
+          "amount": "per retort volume",
+          "is_optional": false,
+          "notes": "Avoid treated lumber"
+        },
+        {
+          "name": "Condensing train + heat-safe collection vessels",
+          "amount": "1",
+          "is_optional": false,
+          "notes": "Professional kiln recommended"
+        },
+        {
+          "name": "pH / density logging notebook",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Only proceed if local regulations and insurance cover small-batch pyrolysis.",
+          "duration": "60 min",
+          "tips": "Commercial source often safer."
+        },
+        {
+          "step_number": 2,
+          "instruction": "Fraction crude pyroligneous acid into light/middle/heavy cuts during cooling.",
+          "tips": "Discard tar-heavy heels."
+        },
+        {
+          "step_number": 3,
+          "instruction": "Age 3\u20136 months vented so harsh phenolics mellow.",
+          "duration": "Months"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Dilute 1:500\u20131:1,000 for exploratory soil drenches; never foliar-heavy raw.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "If sourcing retail pyroligneous acid, verify agricultural grade\u2014not barbecue smokefluid.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Consider purchasing vetted agricultural wood vinegar before building kilns solely for peppers.",
+        "Great for shifting bacterial slag soils toward fungal balance when combined with carbon."
+      ],
+      "safety_notes": [
+        "Fire + carbon monoxide hazard\u2014no improvised indoor attempts.",
+        "Potassium hydroxide and hot oils cause severe burns\u2014nitrile gloves, eye protection, ventilation, and no aluminum vessels."
+      ],
+      "application_rate": "Trace\u2014begin near 1:1,000 drench trials on a sacrificial row",
+      "application_frequency": "Quarterly at most unless soil logs justify repetition",
+      "best_for": [
+        "Biology signaling",
+        "Anaerobic soil rebalance (expert use only)"
+      ],
+      "tags": [
+        "WS",
+        "wood vinegar",
+        "soil"
+      ],
+      "related_slugs": [
+        "biochar-imo-charge",
+        "soil-biology-recovery-program"
+      ],
+      "is_published": true,
+      "display_order": 20
+    },
+    {
+      "title": "JADAM Liquid Fertilizer from Green Manure (JLF)",
+      "slug": "jadam-liquid-fertilizer-jlf",
+      "category": "JADAM",
+      "difficulty": "Intermediate",
+      "prep_time": "2 hours",
+      "fermentation_time": "10\u201320 days",
+      "total_time": "~3 weeks",
+      "description": "JLF-style green manure ferments dissolve nitrogen and minerals from cover crops and weeds into a liquid accessible for fertigation or foliar. It aligns with JADAM\u2019s cost discipline while still closing nutrient loops on-farm.",
+      "ingredients": [
+        {
+          "name": "Chopped cover crop / legume biomass",
+          "amount": "fills \u2154 vessel",
+          "is_optional": false,
+          "notes": "Avoid seeded heads unless hot-killed"
+        },
+        {
+          "name": "Loose mature compost starter",
+          "amount": "2\u20135% mass",
+          "is_optional": true,
+          "notes": "Kickstarts biology"
+        },
+        {
+          "name": "Non-chlorinated water",
+          "amount": "to cover",
+          "is_optional": false
+        },
+        {
+          "name": "Breathable lid system",
+          "amount": "1",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Shred biomass; pack vessel; exclude air gaps",
+          "duration": "45 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Add water until submerged; stir daily first week.",
+          "duration": "15 min daily"
+        },
+        {
+          "step_number": 3,
+          "instruction": "When aroma steadies sweet-sour, strain press solids.",
+          "duration": "60 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Dilute 1:50\u20131:200 onto soil; avoid heavy foliar unless filtered finely.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Return solids to windrow.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate green manure species to diversify amino profiles year to year.",
+        "Night irrigation reduces phototoxicity where particulates remain."
+      ],
+      "safety_notes": [
+        "Discard ferments dominated by continuous black, foul anaerobic slime or acrid ammonia with no balancing sour-sweet note."
+      ],
+      "application_rate": "Highly variable\u2014start weak on sandier soils",
+      "application_frequency": "Weekly for hungry rotations; back off when sap tests climb",
+      "best_for": [
+        "Low-input farms",
+        "Post-cover-crop pepper blocks"
+      ],
+      "tags": [
+        "JLF",
+        "JADAM",
+        "fertilizer"
+      ],
+      "related_slugs": [
+        "fermented-plant-juice-fpj",
+        "aerated-compost-tea"
+      ],
+      "is_published": true,
+      "display_order": 21
+    },
+    {
+      "title": "Rice Wash Water Capture",
+      "slug": "rice-wash-water-capture",
+      "category": "MicrobialCultures",
+      "difficulty": "Beginner",
+      "prep_time": "30\u201390 minutes",
+      "fermentation_time": null,
+      "total_time": "Same day unless noted",
+      "description": "The first cloudy rice rinse is a low-tech microbial broth starter used across KNF and JADAM contexts. It inoculates seedlings, primes compost teas, and extends LAB without expensive starters.",
+      "ingredients": [
+        {
+          "name": "Primary inputs",
+          "amount": "per table above",
+          "is_optional": false
+        },
+        {
+          "name": "Clean water",
+          "amount": "majority of volume",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Rinse organic rice once with body-temp water\u2014capture only that first cloud.",
+          "duration": "5 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Dilute into irrigation or sprinkle trays immediately or ferment 24 h lightly covered."
+        },
+        {
+          "step_number": 3,
+          "instruction": "Use within 48 h or route into LAB mother jars.",
+          "duration": "5 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Never rely on fifth+ rinses\u2014mostly starch without biology.",
+          "duration": "2 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Log smell + turbidity to train crew eyes.",
+          "duration": "5 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Treat living teas like dairy\u2014time and temperature dominantly affect quality.",
+        "Keep logs tying each batch to cultivars sprayed for traceability."
+      ],
+      "safety_notes": [
+        "Verify PPE for dusts when handling dry compost in humid houses."
+      ],
+      "application_rate": "Soil drench typically 10\u201320 gal finished tea / 1000 sq ft\u2014adjust per media",
+      "application_frequency": "Monthly maintenance or weekly recovery after stress events",
+      "best_for": [
+        "Rhizosphere bursts",
+        "Bridge biology between KNF ferments"
+      ],
+      "tags": [
+        "compost",
+        "tea",
+        "biology"
+      ],
+      "related_slugs": [
+        "lactic-acid-bacteria-lab",
+        "jadam-microorganism-solution-jms"
+      ],
+      "is_published": true,
+      "display_order": 22
+    },
+    {
+      "title": "KNF Maintenance Foliar (FPJ + OHN + BRV)",
+      "slug": "maintenance-foliar-cocktail",
+      "category": "Other",
+      "difficulty": "Beginner",
+      "prep_time": "30\u201390 minutes",
+      "fermentation_time": null,
+      "total_time": "Same day unless noted",
+      "description": "The backbone KNF maintenance mix stacks vegetative nutrition (FPJ) with herbal resilience (OHN) and mild acidification (BRV). Use it only when plants show healthy uptake\u2014never as a daily firehose.",
+      "ingredients": [
+        {
+          "name": "Primary inputs",
+          "amount": "per table above",
+          "is_optional": false
+        },
+        {
+          "name": "Clean water",
+          "amount": "majority of volume",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Blend equal micro-doses of FPJ, OHN, and BRV into the spray tank at target total dilution (often ~1:500 each).",
+          "duration": "15 min",
+          "tips": "Agitate gently."
+        },
+        {
+          "step_number": 2,
+          "instruction": "Fill tank with clean, low-EC water; verify pH and EC baselines.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Spot-test a few flagship plants before house-wide deployment.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Spray dusk or dawn under calm air; stop if margins crinkle overnight.",
+          "duration": "60 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Rinse nozzles\u2014sugars ferment in lines if idle.",
+          "duration": "20 min"
+        }
+      ],
+      "tips": [
+        "Treat living teas like dairy\u2014time and temperature dominantly affect quality.",
+        "Keep logs tying each batch to cultivars sprayed for traceability."
+      ],
+      "safety_notes": [
+        "Verify PPE for dusts when handling dry compost in humid houses."
+      ],
+      "application_rate": "Soil drench typically 10\u201320 gal finished tea / 1000 sq ft\u2014adjust per media",
+      "application_frequency": "Monthly maintenance or weekly recovery after stress events",
+      "best_for": [
+        "Rhizosphere bursts",
+        "Bridge biology between KNF ferments"
+      ],
+      "tags": [
+        "compost",
+        "tea",
+        "biology"
+      ],
+      "related_slugs": [
+        "lactic-acid-bacteria-lab",
+        "jadam-microorganism-solution-jms"
+      ],
+      "is_published": true,
+      "display_order": 23
+    },
+    {
+      "title": "Seed Priming Soak (WCA + OHN + LAB)",
+      "slug": "seed-priming-soak-wca-ohn-lab",
+      "category": "KNF",
+      "difficulty": "Intermediate",
+      "prep_time": "30\u201390 minutes",
+      "fermentation_time": null,
+      "total_time": "Same day unless noted",
+      "description": "Combines dilute mineral calcium, herbal immune tone, and lactic biology for a controlled seed soak before sowing superhots. It tightens germination curves without synthetic seed treatments barred on farm.",
+      "ingredients": [
+        {
+          "name": "Primary inputs",
+          "amount": "per table above",
+          "is_optional": false
+        },
+        {
+          "name": "Clean water",
+          "amount": "majority of volume",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Assemble mature inputs diluted warmer than final soak EC target.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Soak seeds 6\u201312 h depending on thickness\u2014never exceed pepper tolerance.",
+          "tips": "Agitate hourly."
+        },
+        {
+          "step_number": 3,
+          "instruction": "Drain on sterile towel; air dry sowing window ~1 h to prevent rot.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Sow immediately into sterile media; maintain diurnal temps per cultivar.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Log emergence % vs untreated controls for QA."
+        }
+      ],
+      "tips": [
+        "Treat living teas like dairy\u2014time and temperature dominantly affect quality.",
+        "Keep logs tying each batch to cultivars sprayed for traceability."
+      ],
+      "safety_notes": [
+        "Verify PPE for dusts when handling dry compost in humid houses."
+      ],
+      "application_rate": "Soil drench typically 10\u201320 gal finished tea / 1000 sq ft\u2014adjust per media",
+      "application_frequency": "Monthly maintenance or weekly recovery after stress events",
+      "best_for": [
+        "Rhizosphere bursts",
+        "Bridge biology between KNF ferments"
+      ],
+      "tags": [
+        "compost",
+        "tea",
+        "biology"
+      ],
+      "related_slugs": [
+        "lactic-acid-bacteria-lab",
+        "jadam-microorganism-solution-jms"
+      ],
+      "is_published": true,
+      "display_order": 24
+    },
+    {
+      "title": "Aerated Compost Tea (Non-Thermal Extract)",
+      "slug": "aerated-compost-tea",
+      "category": "Composting",
+      "difficulty": "Intermediate",
+      "prep_time": "30\u201390 minutes",
+      "fermentation_time": null,
+      "total_time": "Same day unless noted",
+      "description": "Active aeration multiplies beneficial bacteria/fungi from verified compost into a 24\u201336 h living extract. Use it as a soil drench\u2014not always a miracle foliar on waxy pepper leaves without adjuvants.",
+      "ingredients": [
+        {
+          "name": "Primary inputs",
+          "amount": "per table above",
+          "is_optional": false
+        },
+        {
+          "name": "Clean water",
+          "amount": "majority of volume",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Start with lab-tested compost low in human pathogens.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Bag in 400-micron mesh; suspend in chlorine-free water with vigorous bubbles.",
+          "tips": "Maintain DO >6 mg/L."
+        },
+        {
+          "step_number": 3,
+          "instruction": "Feed modest microbe foods (unsulfured molasses) only if protocol demands.",
+          "duration": "5 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Brew 24\u201336 h; stop before anaerobic biofilm slicks dominate.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Use within 4 h of ceasing aeration.",
+          "duration": "15 min"
+        }
+      ],
+      "tips": [
+        "Treat living teas like dairy\u2014time and temperature dominantly affect quality.",
+        "Keep logs tying each batch to cultivars sprayed for traceability."
+      ],
+      "safety_notes": [
+        "Verify PPE for dusts when handling dry compost in humid houses."
+      ],
+      "application_rate": "Soil drench typically 10\u201320 gal finished tea / 1000 sq ft\u2014adjust per media",
+      "application_frequency": "Monthly maintenance or weekly recovery after stress events",
+      "best_for": [
+        "Rhizosphere bursts",
+        "Bridge biology between KNF ferments"
+      ],
+      "tags": [
+        "compost",
+        "tea",
+        "biology"
+      ],
+      "related_slugs": [
+        "lactic-acid-bacteria-lab",
+        "jadam-microorganism-solution-jms"
+      ],
+      "is_published": true,
+      "display_order": 25
+    },
+    {
+      "title": "Static Compost Extract (Passive Steep)",
+      "slug": "static-compost-extract",
+      "category": "Composting",
+      "difficulty": "Beginner",
+      "prep_time": "Site dependent",
+      "fermentation_time": "Varies",
+      "total_time": "Multi-week",
+      "description": "Passive extraction steeps finished compost without aerators\u2014ideal when power fails or travel interrupts brewing. Microbial diversity is lower than active tea but still valuable for soil drenches.",
+      "ingredients": [
+        {
+          "name": "Primary feedstocks",
+          "amount": "per site inventory",
+          "is_optional": false
+        },
+        {
+          "name": "Moisture meter / compost thermometer",
+          "amount": "1 set",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Site system; manage vectors (leachate, flies, rodents) per county rules.",
+          "duration": "1 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Balance C:N and moisture targets for the method selected.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Monitor temperature and/or worm biomass depending on system.",
+          "duration": "ongoing"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Harvest stable product; screen to media grade for potting mixes.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Document analyticals if selling castings or compost externally.",
+          "duration": "30 min",
+          "tips": true
+        },
+        {
+          "step_number": 6,
+          "instruction": "Integrate with greenhouse sanitation SOP.",
+          "duration": "30 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Never rely on one compost method\u2014cohort systems hedge equipment failure.",
+        "Match particle size to drip emitters if fertigating extracts."
+      ],
+      "safety_notes": [
+        "Heat exhaustion during summer pile turns\u2014crew hydration + shade planning."
+      ],
+      "application_rate": "Incorporate per soil test and crop rotation plan",
+      "application_frequency": "Whenever organic matter drops below management targets",
+      "best_for": [
+        "Carbon building",
+        "Water-holding capacity",
+        "Microbial housing"
+      ],
+      "tags": [
+        "compost",
+        "soil"
+      ],
+      "related_slugs": [
+        "imo-stage-3-field-compost",
+        "vermicompost-system"
+      ],
+      "is_published": true,
+      "display_order": 26
+    },
+    {
+      "title": "Bokashi Bucket Anaerobic Ferment",
+      "slug": "bokashi-pre-compost",
+      "category": "Composting",
+      "difficulty": "Beginner",
+      "prep_time": "Site dependent",
+      "fermentation_time": "Varies",
+      "total_time": "Multi-week",
+      "description": "Bokashi ferments kitchen and light crop residues anaerobically before soil incorporation, jump-starting decomposition in tight urban yards growing peppers in containers.",
+      "ingredients": [
+        {
+          "name": "Primary feedstocks",
+          "amount": "per site inventory",
+          "is_optional": false
+        },
+        {
+          "name": "Moisture meter / compost thermometer",
+          "amount": "1 set",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Site system; manage vectors (leachate, flies, rodents) per county rules.",
+          "duration": "1 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Balance C:N and moisture targets for the method selected.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Monitor temperature and/or worm biomass depending on system.",
+          "duration": "ongoing"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Harvest stable product; screen to media grade for potting mixes.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Document analyticals if selling castings or compost externally.",
+          "duration": "30 min",
+          "tips": true
+        },
+        {
+          "step_number": 6,
+          "instruction": "Integrate with greenhouse sanitation SOP.",
+          "duration": "30 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Never rely on one compost method\u2014cohort systems hedge equipment failure.",
+        "Match particle size to drip emitters if fertigating extracts."
+      ],
+      "safety_notes": [
+        "Heat exhaustion during summer pile turns\u2014crew hydration + shade planning."
+      ],
+      "application_rate": "Incorporate per soil test and crop rotation plan",
+      "application_frequency": "Whenever organic matter drops below management targets",
+      "best_for": [
+        "Carbon building",
+        "Water-holding capacity",
+        "Microbial housing"
+      ],
+      "tags": [
+        "compost",
+        "soil"
+      ],
+      "related_slugs": [
+        "imo-stage-3-field-compost",
+        "vermicompost-system"
+      ],
+      "is_published": true,
+      "display_order": 27
+    },
+    {
+      "title": "Vermicompost Trench System",
+      "slug": "vermicompost-system",
+      "category": "Composting",
+      "difficulty": "Intermediate",
+      "prep_time": "Site dependent",
+      "fermentation_time": "Varies",
+      "total_time": "Multi-week",
+      "description": "Maintains steady castings output paired with composting worms that tolerate Florida heat if moisture discipline holds. Castings feed potting mixes and side-dress programs.",
+      "ingredients": [
+        {
+          "name": "Primary feedstocks",
+          "amount": "per site inventory",
+          "is_optional": false
+        },
+        {
+          "name": "Moisture meter / compost thermometer",
+          "amount": "1 set",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Site system; manage vectors (leachate, flies, rodents) per county rules.",
+          "duration": "1 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Balance C:N and moisture targets for the method selected.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Monitor temperature and/or worm biomass depending on system.",
+          "duration": "ongoing"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Harvest stable product; screen to media grade for potting mixes.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Document analyticals if selling castings or compost externally.",
+          "duration": "30 min",
+          "tips": true
+        },
+        {
+          "step_number": 6,
+          "instruction": "Integrate with greenhouse sanitation SOP.",
+          "duration": "30 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Never rely on one compost method\u2014cohort systems hedge equipment failure.",
+        "Match particle size to drip emitters if fertigating extracts."
+      ],
+      "safety_notes": [
+        "Heat exhaustion during summer pile turns\u2014crew hydration + shade planning."
+      ],
+      "application_rate": "Incorporate per soil test and crop rotation plan",
+      "application_frequency": "Whenever organic matter drops below management targets",
+      "best_for": [
+        "Carbon building",
+        "Water-holding capacity",
+        "Microbial housing"
+      ],
+      "tags": [
+        "compost",
+        "soil"
+      ],
+      "related_slugs": [
+        "imo-stage-3-field-compost",
+        "vermicompost-system"
+      ],
+      "is_published": true,
+      "display_order": 28
+    },
+    {
+      "title": "Leaf Mold Understory Digest",
+      "slug": "leaf-mold-understory",
+      "category": "Composting",
+      "difficulty": "Beginner",
+      "prep_time": "Site dependent",
+      "fermentation_time": "Varies",
+      "total_time": "Multi-week",
+      "description": "Accelerates fungal breakdown of live oak / hardwood leaves common to Gulf Coast farms for mulch that sponges irrigation.",
+      "ingredients": [
+        {
+          "name": "Primary feedstocks",
+          "amount": "per site inventory",
+          "is_optional": false
+        },
+        {
+          "name": "Moisture meter / compost thermometer",
+          "amount": "1 set",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Site system; manage vectors (leachate, flies, rodents) per county rules.",
+          "duration": "1 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Balance C:N and moisture targets for the method selected.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Monitor temperature and/or worm biomass depending on system.",
+          "duration": "ongoing"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Harvest stable product; screen to media grade for potting mixes.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Document analyticals if selling castings or compost externally.",
+          "duration": "30 min",
+          "tips": true
+        },
+        {
+          "step_number": 6,
+          "instruction": "Integrate with greenhouse sanitation SOP.",
+          "duration": "30 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Never rely on one compost method\u2014cohort systems hedge equipment failure.",
+        "Match particle size to drip emitters if fertigating extracts."
+      ],
+      "safety_notes": [
+        "Heat exhaustion during summer pile turns\u2014crew hydration + shade planning."
+      ],
+      "application_rate": "Incorporate per soil test and crop rotation plan",
+      "application_frequency": "Whenever organic matter drops below management targets",
+      "best_for": [
+        "Carbon building",
+        "Water-holding capacity",
+        "Microbial housing"
+      ],
+      "tags": [
+        "compost",
+        "soil"
+      ],
+      "related_slugs": [
+        "imo-stage-3-field-compost",
+        "vermicompost-system"
+      ],
+      "is_published": true,
+      "display_order": 29
+    },
+    {
+      "title": "Biochar Charge with IMO Extract",
+      "slug": "biochar-imo-charge",
+      "category": "SoilAmendment",
+      "difficulty": "Advanced",
+      "prep_time": "Site dependent",
+      "fermentation_time": "Varies",
+      "total_time": "Multi-week",
+      "description": "Soaks kiln biochar in dilute IMO2 + compost tea so inner pores host beneficial biology instead of adsorbing nutrients unused.",
+      "ingredients": [
+        {
+          "name": "Primary feedstocks",
+          "amount": "per site inventory",
+          "is_optional": false
+        },
+        {
+          "name": "Moisture meter / compost thermometer",
+          "amount": "1 set",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Site system; manage vectors (leachate, flies, rodents) per county rules.",
+          "duration": "1 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Balance C:N and moisture targets for the method selected.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Monitor temperature and/or worm biomass depending on system.",
+          "duration": "ongoing"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Harvest stable product; screen to media grade for potting mixes.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Document analyticals if selling castings or compost externally.",
+          "duration": "30 min",
+          "tips": true
+        },
+        {
+          "step_number": 6,
+          "instruction": "Integrate with greenhouse sanitation SOP.",
+          "duration": "30 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Never rely on one compost method\u2014cohort systems hedge equipment failure.",
+        "Match particle size to drip emitters if fertigating extracts."
+      ],
+      "safety_notes": [
+        "Heat exhaustion during summer pile turns\u2014crew hydration + shade planning."
+      ],
+      "application_rate": "Incorporate per soil test and crop rotation plan",
+      "application_frequency": "Whenever organic matter drops below management targets",
+      "best_for": [
+        "Carbon building",
+        "Water-holding capacity",
+        "Microbial housing"
+      ],
+      "tags": [
+        "compost",
+        "soil"
+      ],
+      "related_slugs": [
+        "imo-stage-3-field-compost",
+        "vermicompost-system"
+      ],
+      "is_published": true,
+      "display_order": 30
+    },
+    {
+      "title": "Johnson-Su Mycorrhizae-Lean Bioreactor",
+      "slug": "johnson-su-bioreactor",
+      "category": "Composting",
+      "difficulty": "Advanced",
+      "prep_time": "Site dependent",
+      "fermentation_time": "Varies",
+      "total_time": "Multi-week",
+      "description": "Passive 1-year fungal-forward compost optimized by researchers for mycorrhizal associations that benefit peppers in long-season plantings.",
+      "ingredients": [
+        {
+          "name": "Primary feedstocks",
+          "amount": "per site inventory",
+          "is_optional": false
+        },
+        {
+          "name": "Moisture meter / compost thermometer",
+          "amount": "1 set",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Site system; manage vectors (leachate, flies, rodents) per county rules.",
+          "duration": "1 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Balance C:N and moisture targets for the method selected.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Monitor temperature and/or worm biomass depending on system.",
+          "duration": "ongoing"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Harvest stable product; screen to media grade for potting mixes.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Document analyticals if selling castings or compost externally.",
+          "duration": "30 min",
+          "tips": true
+        },
+        {
+          "step_number": 6,
+          "instruction": "Integrate with greenhouse sanitation SOP.",
+          "duration": "30 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Never rely on one compost method\u2014cohort systems hedge equipment failure.",
+        "Match particle size to drip emitters if fertigating extracts."
+      ],
+      "safety_notes": [
+        "Heat exhaustion during summer pile turns\u2014crew hydration + shade planning."
+      ],
+      "application_rate": "Incorporate per soil test and crop rotation plan",
+      "application_frequency": "Whenever organic matter drops below management targets",
+      "best_for": [
+        "Carbon building",
+        "Water-holding capacity",
+        "Microbial housing"
+      ],
+      "tags": [
+        "compost",
+        "soil"
+      ],
+      "related_slugs": [
+        "imo-stage-3-field-compost",
+        "vermicompost-system"
+      ],
+      "is_published": true,
+      "display_order": 31
+    },
+    {
+      "title": "Thermophilic Windrow with Biology Turn Cues",
+      "slug": "thermophilic-windrow",
+      "category": "Composting",
+      "difficulty": "Intermediate",
+      "prep_time": "Site dependent",
+      "fermentation_time": "Varies",
+      "total_time": "Multi-week",
+      "description": "Manages poultry litter + bedding + farm residues with temperature, oxygen, and moisture gates\u2014prevents ammonia plant burns when later applied around peppers.",
+      "ingredients": [
+        {
+          "name": "Primary feedstocks",
+          "amount": "per site inventory",
+          "is_optional": false
+        },
+        {
+          "name": "Moisture meter / compost thermometer",
+          "amount": "1 set",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Site system; manage vectors (leachate, flies, rodents) per county rules.",
+          "duration": "1 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Balance C:N and moisture targets for the method selected.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Monitor temperature and/or worm biomass depending on system.",
+          "duration": "ongoing"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Harvest stable product; screen to media grade for potting mixes.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Document analyticals if selling castings or compost externally.",
+          "duration": "30 min",
+          "tips": true
+        },
+        {
+          "step_number": 6,
+          "instruction": "Integrate with greenhouse sanitation SOP.",
+          "duration": "30 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Never rely on one compost method\u2014cohort systems hedge equipment failure.",
+        "Match particle size to drip emitters if fertigating extracts."
+      ],
+      "safety_notes": [
+        "Heat exhaustion during summer pile turns\u2014crew hydration + shade planning."
+      ],
+      "application_rate": "Incorporate per soil test and crop rotation plan",
+      "application_frequency": "Whenever organic matter drops below management targets",
+      "best_for": [
+        "Carbon building",
+        "Water-holding capacity",
+        "Microbial housing"
+      ],
+      "tags": [
+        "compost",
+        "soil"
+      ],
+      "related_slugs": [
+        "imo-stage-3-field-compost",
+        "vermicompost-system"
+      ],
+      "is_published": true,
+      "display_order": 32
+    },
+    {
+      "title": "Fungal-Dominant Mulch Layer (Woody)",
+      "slug": "fungal-dominant-mulch",
+      "category": "SoilAmendment",
+      "difficulty": "Beginner",
+      "prep_time": "Site dependent",
+      "fermentation_time": "Varies",
+      "total_time": "Multi-week",
+      "description": "Applies partially composted wood chips + IMO4 dusting to feed fungi that partner with pepper roots in permaculture rows.",
+      "ingredients": [
+        {
+          "name": "Primary feedstocks",
+          "amount": "per site inventory",
+          "is_optional": false
+        },
+        {
+          "name": "Moisture meter / compost thermometer",
+          "amount": "1 set",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Site system; manage vectors (leachate, flies, rodents) per county rules.",
+          "duration": "1 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Balance C:N and moisture targets for the method selected.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Monitor temperature and/or worm biomass depending on system.",
+          "duration": "ongoing"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Harvest stable product; screen to media grade for potting mixes.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Document analyticals if selling castings or compost externally.",
+          "duration": "30 min",
+          "tips": true
+        },
+        {
+          "step_number": 6,
+          "instruction": "Integrate with greenhouse sanitation SOP.",
+          "duration": "30 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Never rely on one compost method\u2014cohort systems hedge equipment failure.",
+        "Match particle size to drip emitters if fertigating extracts."
+      ],
+      "safety_notes": [
+        "Heat exhaustion during summer pile turns\u2014crew hydration + shade planning."
+      ],
+      "application_rate": "Incorporate per soil test and crop rotation plan",
+      "application_frequency": "Whenever organic matter drops below management targets",
+      "best_for": [
+        "Carbon building",
+        "Water-holding capacity",
+        "Microbial housing"
+      ],
+      "tags": [
+        "compost",
+        "soil"
+      ],
+      "related_slugs": [
+        "imo-stage-3-field-compost",
+        "vermicompost-system"
+      ],
+      "is_published": true,
+      "display_order": 33
+    },
+    {
+      "title": "Bone Char / Char Phosphate Mineral Puck",
+      "slug": "bone-char-mineral-adjustment",
+      "category": "SoilAmendment",
+      "difficulty": "Advanced",
+      "prep_time": "Site dependent",
+      "fermentation_time": "Varies",
+      "total_time": "Multi-week",
+      "description": "Refines burned bone fractions into controlled-release mineral sites inside char pores for multi-season availability compared to quick liquids alone.",
+      "ingredients": [
+        {
+          "name": "Primary feedstocks",
+          "amount": "per site inventory",
+          "is_optional": false
+        },
+        {
+          "name": "Moisture meter / compost thermometer",
+          "amount": "1 set",
+          "is_optional": false
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Site system; manage vectors (leachate, flies, rodents) per county rules.",
+          "duration": "1 h"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Balance C:N and moisture targets for the method selected.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Monitor temperature and/or worm biomass depending on system.",
+          "duration": "ongoing"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Harvest stable product; screen to media grade for potting mixes.",
+          "duration": "2 h"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Document analyticals if selling castings or compost externally.",
+          "duration": "30 min",
+          "tips": true
+        },
+        {
+          "step_number": 6,
+          "instruction": "Integrate with greenhouse sanitation SOP.",
+          "duration": "30 min",
+          "tips": true
+        }
+      ],
+      "tips": [
+        "Never rely on one compost method\u2014cohort systems hedge equipment failure.",
+        "Match particle size to drip emitters if fertigating extracts."
+      ],
+      "safety_notes": [
+        "Heat exhaustion during summer pile turns\u2014crew hydration + shade planning."
+      ],
+      "application_rate": "Incorporate per soil test and crop rotation plan",
+      "application_frequency": "Whenever organic matter drops below management targets",
+      "best_for": [
+        "Carbon building",
+        "Water-holding capacity",
+        "Microbial housing"
+      ],
+      "tags": [
+        "compost",
+        "soil"
+      ],
+      "related_slugs": [
+        "imo-stage-3-field-compost",
+        "vermicompost-system"
+      ],
+      "is_published": true,
+      "display_order": 34
+    },
+    {
+      "title": "Comfrey Leaf Plant Extract (Non-FPJ)",
+      "slug": "comfrey-leaf-plant-extract",
+      "category": "PlantExtracts",
+      "difficulty": "Beginner",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Water steeps of comfrey provide a fast potassium-lean tea for emergency correction separate from FPJ ferment workflows. Use as a spot drench, not a replacement for FPJ stability.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "fermented-plant-juice-fpj"
+      ],
+      "is_published": true,
+      "display_order": 35
+    },
+    {
+      "title": "Ripening-Stage Seawater Progression (Schedule)",
+      "slug": "ripening-seawater-progression",
+      "category": "KNF",
+      "difficulty": "Intermediate",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Coordinates dilution stepping from 1:30 toward 1:20 only when scouting shows safe margin burn levels. Pairs with FFJ and WCA rather than substituting soil tests.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "diluted-seawater-minerals",
+        "fermented-fruit-juice-ffj"
+      ],
+      "is_published": true,
+      "display_order": 36
+    },
+    {
+      "title": "Anthracnose Preventive Spray (FSW + Rotations)",
+      "slug": "anthracnose-suppression-spray",
+      "category": "PestControl",
+      "difficulty": "Intermediate",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Stacks fermented seawater rotations with cultural humidity control for fruit-rot fungi endemic to Florida wet seasons.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "fermented-seawater-fsw",
+        "jadam-sulfur-js"
+      ],
+      "is_published": true,
+      "display_order": 37
+    },
+    {
+      "title": "Powdery Mildew Night Program (JS + JWA)",
+      "slug": "powdery-mildew-js-jwa",
+      "category": "PestControl",
+      "difficulty": "Intermediate",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Combines JADAM sulfur with JWA for coverage on dense pepper canopies during mildew spikes\u2014never tank-mix copper day-of.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "jadam-sulfur-js",
+        "jadam-wetting-agent-jwa"
+      ],
+      "is_published": true,
+      "display_order": 38
+    },
+    {
+      "title": "Aphid Management Rotation (JHS + Habitat)",
+      "slug": "aphid-jhs-rotation",
+      "category": "PestControl",
+      "difficulty": "Beginner",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Rotates JHS sprays with banker plants and power-wash resets to keep aphid complexes from booming inside poly tunnels.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "jadam-herbal-solution-jhs"
+      ],
+      "is_published": true,
+      "display_order": 39
+    },
+    {
+      "title": "Whitefly Herbal Ferment Program",
+      "slug": "whitefly-herbal-ferment-program",
+      "category": "PestControl",
+      "difficulty": "Intermediate",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Pairs JHS fractions with yellow sticky monitoring and reflective mulches for mobile adult knockdown without nightly worker exposure to harsh synthetics.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "jadam-herbal-solution-jhs",
+        "jadam-wetting-agent-jwa"
+      ],
+      "is_published": true,
+      "display_order": 40
+    },
+    {
+      "title": "Chili\u2013Garlic Repellent Spray (Kitchen Scale)",
+      "slug": "chili-garlic-insect-spray",
+      "category": "PestControl",
+      "difficulty": "Beginner",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Blends superhot pepper extracts with garlic sulfides as a contact irritant for soft-bodied insects\u2014label well and rotate.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "jadam-herbal-solution-jhs"
+      ],
+      "is_published": true,
+      "display_order": 41
+    },
+    {
+      "title": "Cold-Pressed Neem Oil Emulsion",
+      "slug": "neem-oil-emulsion",
+      "category": "PestControl",
+      "difficulty": "Intermediate",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Properly emulsified azadirachtin from neem manages certain chewing/boring pests when timed away from peak pollinator hours.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "jadam-wetting-agent-jwa"
+      ],
+      "is_published": true,
+      "display_order": 42
+    },
+    {
+      "title": "Soft Soap Cleaner Spray (JWA-Based)",
+      "slug": "soft-soap-jwa-cleaner-spray",
+      "category": "PestControl",
+      "difficulty": "Beginner",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Uses dilute JWA to rinse honeydew and sooty mold to restore photosynthesis before biologicals arrive.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "jadam-wetting-agent-jwa"
+      ],
+      "is_published": true,
+      "display_order": 43
+    },
+    {
+      "title": "Transplant Establishment Drench (IMO Liquids + LAB)",
+      "slug": "transplant-imo-lab-drench",
+      "category": "MicrobialCultures",
+      "difficulty": "Beginner",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Scheduled within 72 h of transplant, this drench links dilute IMO2 with LAB to reduce shock and jumpstart rhizosheath formation.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "imo-stage-2-liquid-culture",
+        "lactic-acid-bacteria-lab"
+      ],
+      "is_published": true,
+      "display_order": 44
+    },
+    {
+      "title": "Bud-Break Spray (WCA + FFJ)",
+      "slug": "bud-break-wca-ffj-spray",
+      "category": "PlantExtracts",
+      "difficulty": "Intermediate",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Delivers reproductive minerals and fruit-stage sugars as clusters form\u2014never a substitute for irrigation EC control.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "water-soluble-calcium-wca",
+        "fermented-fruit-juice-ffj"
+      ],
+      "is_published": true,
+      "display_order": 45
+    },
+    {
+      "title": "Root-Zone LAB Revitalizer",
+      "slug": "root-zone-lab-treatment",
+      "category": "MicrobialCultures",
+      "difficulty": "Beginner",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Targets anaerobic pockets discovered during soil probes\u2014LAB pushes redox toward beneficial fermentation without bleach shock.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "lactic-acid-bacteria-lab"
+      ],
+      "is_published": true,
+      "display_order": 46
+    },
+    {
+      "title": "Blossom-End Rot Prevention Protocol (Calcium Delivery Discipline)",
+      "slug": "blossom-end-rot-prevention",
+      "category": "SoilAmendment",
+      "difficulty": "Intermediate",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Integrates WCA timing, irrigation uniformity, and transpiration management so calcium reaches distal fruits\u2014not just soil sufficiency tests.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "water-soluble-calcium-wca",
+        "diluted-seawater-minerals"
+      ],
+      "is_published": true,
+      "display_order": 47
+    },
+    {
+      "title": "Soil Biology Recovery After Chemical Load",
+      "slug": "soil-biology-recovery-program",
+      "category": "Other",
+      "difficulty": "Advanced",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Phases carbon, residue-digesting teas, and low-dose IMO/JMS for fields coming off long synthetic programs before superhot contract grows.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "jadam-microorganism-solution-jms",
+        "imo-stage-4-soil-amendment"
+      ],
+      "is_published": true,
+      "display_order": 48
+    },
+    {
+      "title": "Molasses\u2013Microbe Field Drench",
+      "slug": "molasses-microbe-field-drench",
+      "category": "FermentedInputs",
+      "difficulty": "Beginner",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "A restrained unsulfured molasses + indigenous biology drench used sparingly to feed existing microbes\u2014not unlimited sugar flooding.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "aerated-compost-tea",
+        "lactic-acid-bacteria-lab"
+      ],
+      "is_published": true,
+      "display_order": 49
+    },
+    {
+      "title": "Zone 10a Perennial Pepper Winter TLC",
+      "slug": "zone-10a-perennial-pepper-winter-tlc",
+      "category": "Other",
+      "difficulty": "Intermediate",
+      "prep_time": "Varies",
+      "fermentation_time": null,
+      "total_time": "Scouting dependent",
+      "description": "Hard-prune, refresh IMO4, and rotate mild foliars after main harvest so old wood superhots reset without synthetic growth regulators.",
+      "ingredients": [
+        {
+          "name": "Primary components",
+          "amount": "per program SOP",
+          "is_optional": false,
+          "notes": "Update seasonally"
+        },
+        {
+          "name": "Water quality test strips / EC meter",
+          "amount": "1",
+          "is_optional": true
+        }
+      ],
+      "steps": [
+        {
+          "step_number": 1,
+          "instruction": "Scout canopy + fruit zones; log pest/disease pressures with photos.",
+          "duration": "30 min"
+        },
+        {
+          "step_number": 2,
+          "instruction": "Select least-toxic effective base per threshold tables.",
+          "duration": "20 min"
+        },
+        {
+          "step_number": 3,
+          "instruction": "Tank-mix only compatible partners; add JWA last when needed.",
+          "duration": "15 min"
+        },
+        {
+          "step_number": 4,
+          "instruction": "Apply in environmental windows noted on labels + farm learning.",
+          "duration": "var"
+        },
+        {
+          "step_number": 5,
+          "instruction": "Re-scout 72 h post to confirm efficacy; pivot if resistance suspected.",
+          "duration": "30 min"
+        }
+      ],
+      "tips": [
+        "Rotate chemistries and biologicals\u2014pepper IPM is a scouting sport.",
+        "Document what happens overnight after sprays\u2014phytotoxicity shows fast in heat."
+      ],
+      "safety_notes": [
+        "PPE per label even for exempt minimum-risk formulas when scale increases."
+      ],
+      "application_rate": "Threshold-based\u2014never calendar-only",
+      "application_frequency": "Trigger-based + preventive intervals only when justified",
+      "best_for": [
+        "Field peppers",
+        "High-tunnel humidity mgmt",
+        "Retail-facing food safety optics"
+      ],
+      "tags": [
+        "IPM",
+        "peppers",
+        "Florida"
+      ],
+      "related_slugs": [
+        "imo-stage-4-soil-amendment",
+        "maintenance-foliar-cocktail"
+      ],
+      "is_published": true,
+      "display_order": 50
+    }
+  ]
+}

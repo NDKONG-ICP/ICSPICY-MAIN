@@ -53,6 +53,7 @@ import CallerGuard "../lib/caller-guard";
 import Cert "../lib/cert";
 import IcrcLib "../lib/icrc7";
 import NftDiscount "../lib/nft-discount";
+import AdminIcrc7Lib "../lib/admin-icrc7";
 import Icrc37Lib "../lib/icrc37";
 import JsonMini "../lib/json-mini";
 
@@ -766,5 +767,135 @@ mixin (
   /// Storewide NFT holder discount for the calling principal (highest tier wins).
   public query ({ caller }) func getCallerDiscount() : async NftDiscount.CallerDiscount {
     NftDiscount.callerDiscountFromBalances(icrc7Balances, caller);
+  };
+
+  public shared({caller}) func adminReturnToPool(
+    tokenId : Nat,
+  ) : async ICRC7.TransferResult {
+    AccessControl.requireAdmin(accessControlState, caller);
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err msg) { Runtime.trap("Request already in flight: " # msg) };
+      case (#ok) {};
+    };
+    try {
+      let currentOwner = switch (icrc7Owners.get(tokenId)) {
+        case null return #Err(#NonExistingTokenId);
+        case (?o) o;
+      };
+      let poolAccount : ICRC7.Account = {
+        owner = selfPrincipal();
+        subaccount = null;
+      };
+      if (IcrcLib.accountsEqual(currentOwner, poolAccount)) {
+        return #Err(#GenericError { error_code = 1; message = "Already in pool" });
+      };
+      switch (IcrcLib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?currentOwner, poolAccount)) {
+        case (#err(msg)) return #Err(#GenericError { error_code = 2; message = msg });
+        case (#ok) {};
+      };
+      ignore Icrc37Lib.removeAllApprovals(icrc37Approvals, tokenId);
+      let blockIndex = nextBlockIndex.value;
+      nextBlockIndex.value += 1;
+      #Ok(blockIndex);
+    } finally {
+      CallerGuard.release(callerGuards, caller);
+    };
+  };
+
+  public shared({caller}) func adminBatchAirdrop(
+    recipients : [Principal],
+    useRandom : Bool,
+    startTokenId : ?Nat,
+  ) : async [{
+    recipient : Principal;
+    token_id : Nat;
+    success : Bool;
+    message : Text;
+  }] {
+    AccessControl.requireAdmin(accessControlState, caller);
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err msg) { Runtime.trap("Request already in flight: " # msg) };
+      case (#ok) {};
+    };
+    try {
+      var out : [{
+        recipient : Principal;
+        token_id : Nat;
+        success : Bool;
+        message : Text;
+      }] = [];
+      var cursor = switch (startTokenId) { case (?s) s; case null 1 };
+      var i : Nat = 0;
+      for (recipient in recipients.vals()) {
+        let seed = if (useRandom) i * 997 + recipients.size() else 0;
+        let picked = AdminIcrc7Lib.findNextPoolToken(
+          icrc7Owners, selfPrincipal(), cursor, seed,
+        );
+        switch (picked) {
+          case null {
+            out := Array.concat(out, [{
+              recipient;
+              token_id = 0;
+              success = false;
+              message = "No pool token available";
+            }]);
+          };
+          case (?tokenId) {
+            let toAccount : ICRC7.Account = { owner = recipient; subaccount = null };
+            let poolAccount : ICRC7.Account = {
+              owner = selfPrincipal();
+              subaccount = null;
+            };
+            let transferResult = switch (icrc7Owners.get(tokenId)) {
+              case null #Err(#NonExistingTokenId);
+              case (?currentOwner) {
+                if (not IcrcLib.accountsEqual(currentOwner, poolAccount)) {
+                  #Err(#Unauthorized)
+                } else {
+                  switch (
+                    IcrcLib.assignOwnership(
+                      icrc7Owners, icrc7Balances, tokenId, ?currentOwner, toAccount,
+                    )
+                  ) {
+                    case (#err(msg)) {
+                      #Err(#GenericError { error_code = 2; message = msg })
+                    };
+                    case (#ok) {
+                      ignore Icrc37Lib.removeAllApprovals(icrc37Approvals, tokenId);
+                      let blockIndex = nextBlockIndex.value;
+                      nextBlockIndex.value += 1;
+                      #Ok(blockIndex)
+                    };
+                  }
+                }
+              };
+            };
+            switch (transferResult) {
+              case (#Ok(_)) {
+                out := Array.concat(out, [{
+                  recipient;
+                  token_id = tokenId;
+                  success = true;
+                  message = "Transferred";
+                }]);
+                cursor := tokenId + 1;
+              };
+              case (#Err(_)) {
+                out := Array.concat(out, [{
+                  recipient;
+                  token_id = tokenId;
+                  success = false;
+                  message = "Transfer failed";
+                }]);
+              };
+            };
+          };
+        };
+        i += 1;
+      };
+      out
+    } finally {
+      CallerGuard.release(callerGuards, caller);
+    };
   };
 };

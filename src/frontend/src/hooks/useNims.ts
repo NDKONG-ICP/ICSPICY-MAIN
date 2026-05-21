@@ -5,6 +5,7 @@ import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
 import type {
   AddPlantResult,
+  ContainerSize,
   PaymentToken,
   PlantCountStats,
   PlantId,
@@ -14,6 +15,14 @@ import type {
   TrayId,
   VarietyPublic,
 } from "../declarations/backend.did";
+import {
+  callRemovePlant,
+  callTransplantPlant,
+} from "../lib/nims-backend-calls";
+import {
+  refreshAllTrayGrids,
+  refreshNimsDashboardStats,
+} from "../lib/nims-query";
 
 import type { Backend } from "../backend";
 
@@ -283,6 +292,53 @@ export function useAddPlantNote() {
     },
     onSuccess: (_, { plantId }) => {
       qc.invalidateQueries({ queryKey: ["plantLifecycle", plantId.toString()] });
+    },
+  });
+}
+
+export function useRemovePlant() {
+  const { identity } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (plantId: PlantId) => {
+      if (!identity) throw new Error("Not connected");
+      return callRemovePlant(identity, plantId);
+    },
+    onSettled: async () => {
+      await refreshAllTrayGrids(qc);
+      await refreshNimsDashboardStats(qc);
+      qc.invalidateQueries({ queryKey: ["adminInventory"] });
+      qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
+      qc.invalidateQueries({ queryKey: ["plantCount"] });
+      qc.invalidateQueries({ queryKey: ["plantsForSale"] });
+      qc.invalidateQueries({ queryKey: ["plantLifecycle"] });
+    },
+  });
+}
+
+export function useTransplantPlant() {
+  const { identity } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      plantId: PlantId;
+      container: ContainerSize;
+      locationNotes?: string;
+    }) => {
+      if (!identity) throw new Error("Not connected");
+      return callTransplantPlant(
+        identity,
+        args.plantId,
+        args.container,
+        args.locationNotes ?? null,
+      );
+    },
+    onSettled: async (_, __, vars) => {
+      await refreshAllTrayGrids(qc);
+      await refreshNimsDashboardStats(qc);
+      qc.invalidateQueries({ queryKey: ["adminInventory"] });
+      qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
+      qc.invalidateQueries({ queryKey: ["plantLifecycle", vars.plantId.toString()] });
     },
   });
 }

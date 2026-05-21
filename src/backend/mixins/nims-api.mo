@@ -195,11 +195,30 @@ mixin (
   public shared ({ caller }) func removePlant(plantId : Common.PlantId) : async Bool {
     if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
     let ok = NimsLib.removePlant(
-      plants, sideMaps(), icrc7Owners, icrc7Balances, icrc37Approvals,
+      plants, trays, sideMaps(), icrc7Owners, icrc7Balances, icrc37Approvals,
       selfPrincipal(), plantId,
     );
     if (ok) logAdmin(caller, "remove_plant", "plantId=" # Nat.toText(plantId));
     ok;
+  };
+
+  public shared ({ caller }) func transplantPlant(
+    plantId : Common.PlantId,
+    newContainer : PlantTypes.ContainerSize,
+    locationNotes : ?Text,
+  ) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    switch (
+      NimsLib.transplantPlantInternal(
+        plants, stageHistory, caller, nimsIsAdmin, plantId, newContainer, locationNotes,
+      )
+    ) {
+      case (#err(e)) Runtime.trap(e);
+      case (#ok(_)) {
+        logAdmin(caller, "transplant_plant", "plantId=" # Nat.toText(plantId));
+        true;
+      };
+    };
   };
 
   public shared ({ caller }) func updateNimsPlantStage(

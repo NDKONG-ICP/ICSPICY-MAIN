@@ -15,13 +15,10 @@ import type { _SERVICE } from "../declarations/backend.did";
 import { idlFactory } from "../declarations/backend.did.js";
 import {
   BACKEND_CANISTER_ID,
+  IC_HOST,
   II_DERIVATION_ORIGIN,
   II_PROVIDER,
 } from "../lib/auth-config";
-
-const IC_HOST = import.meta.env.DEV
-  ? "http://127.0.0.1:4943"
-  : "https://icp-api.io";
 
 async function uploadFile(file: ExternalBlob): Promise<Uint8Array> {
   return file.getBytes();

@@ -18,6 +18,8 @@ function emptyTrayCell(position: bigint): TrayCellPublic {
     position,
     daysSincePlanted: [],
     germinatedAt: [],
+    inventoryPlantId: [],
+    containerLabel: [],
   };
 }
 
@@ -47,6 +49,7 @@ export function TrayGrid({ cells, onCellClick }: TrayGridProps) {
           const varietyName = unwrap(cell.varietyName);
           const nftTokenId = unwrap(cell.nftTokenId);
           const daysSincePlanted = unwrap(cell.daysSincePlanted);
+          const containerLabel = unwrap(cell.containerLabel);
           return (
             <TrayCell
               key={idx}
@@ -55,6 +58,7 @@ export function TrayGrid({ cells, onCellClick }: TrayGridProps) {
               varietyName={varietyName}
               daysSincePlanted={daysSincePlanted}
               nftTokenId={nftTokenId}
+              containerLabel={containerLabel}
               onClick={() => onCellClick(cell.position)}
             />
           );

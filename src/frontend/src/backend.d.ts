@@ -90,6 +90,15 @@ export interface ResaleListingPublic {
     plant_id: PlantId;
 }
 export type RecipeId = bigint;
+export type {
+    RecipePublic as Recipe,
+    RecipeCategory,
+    Difficulty,
+    Ingredient,
+    RecipeStep,
+    CreateRecipeInput,
+    UpdateRecipeInput,
+} from "./declarations/backend.did";
 export interface LifecycleUpgradeEvent {
     new_stage: string;
     old_nft_id?: string;
@@ -352,22 +361,6 @@ export interface ShopListingFile {
     data: Uint8Array;
     mime_type: string;
 }
-export interface Recipe {
-    id: RecipeId;
-    updated_at: Timestamp;
-    photo_key?: string;
-    name: string;
-    tags: Array<string>;
-    description: string;
-    created_at: Timestamp;
-    instructions: Array<string>;
-    is_featured: boolean;
-    shop_link?: string;
-    shop_link_label?: string;
-    application_notes: string;
-    full_name: string;
-    ingredients: Array<string>;
-}
 export interface ProposalPublic {
     id: ProposalId;
     title: string;
@@ -420,20 +413,6 @@ export interface ProductPublic {
     price_per_unit_cents: bigint;
     unit_label?: string;
     inventory_remaining?: bigint;
-}
-export interface UpdateRecipeInput {
-    id: RecipeId;
-    photo_key?: string;
-    name?: string;
-    tags?: Array<string>;
-    description?: string;
-    instructions?: Array<string>;
-    is_featured?: boolean;
-    shop_link?: string;
-    shop_link_label?: string;
-    application_notes?: string;
-    full_name?: string;
-    ingredients?: Array<string>;
 }
 export interface ShopAssignment {
     nftId: bigint;
@@ -697,19 +676,6 @@ export interface TreasuryBalance {
     balance_e8s: bigint;
 }
 export type ScheduleId = string;
-export interface CreateRecipeInput {
-    photo_key?: string;
-    name: string;
-    tags: Array<string>;
-    description: string;
-    instructions: Array<string>;
-    is_featured: boolean;
-    shop_link?: string;
-    shop_link_label?: string;
-    application_notes: string;
-    full_name: string;
-    ingredients: Array<string>;
-}
 export type ProductId = bigint;
 export interface LayerSummary {
     file_names: Array<string>;
@@ -874,7 +840,9 @@ export interface backendInterface {
     createPlant(input: CreatePlantInput): Promise<PlantPublic>;
     createPost(input: CreatePostInput): Promise<PostPublic>;
     createProduct(input: CreateProductInput): Promise<ProductPublic>;
-    createRecipe(input: CreateRecipeInput): Promise<Recipe>;
+    createRecipe(input: CreateRecipeInput): Promise<{
+        recipe_id: RecipeId;
+    }>;
     createTray(input: CreateTrayInput): Promise<TrayPublic>;
     dabTransform(input: TransformationInput): Promise<TransformationOutput>;
     deletePost(post_id: PostId): Promise<void>;
@@ -1015,7 +983,7 @@ export interface backendInterface {
     storeArtworkFile(path: string, data: Uint8Array, mimeType: string): Promise<StoredFile>;
     submitOffer(input: SubmitOfferInput): Promise<Offer>;
     toggleCooked(plant_id: PlantId): Promise<void>;
-    toggleRecipeFeatured(id: RecipeId): Promise<Recipe | null>;
+    toggleRecipeFeatured(id: RecipeId): Promise<boolean>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     transplantCell(input: TransplantInput): Promise<PlantPublic>;
     treasuryDeposit(token: TreasuryToken, amount: bigint, memo: string | null): Promise<TreasuryTransaction>;
@@ -1029,7 +997,7 @@ export interface backendInterface {
     updatePlantMetadata(input: UpdatePlantMetadataInput): Promise<void>;
     updatePlantStage(plant_id: PlantId, new_stage: PlantStage, notes: string): Promise<void>;
     updateProduct(input: UpdateProductInput): Promise<void>;
-    updateRecipe(input: UpdateRecipeInput): Promise<Recipe | null>;
+    updateRecipe(input: UpdateRecipeInput): Promise<boolean>;
     updateTrayName(tray_id: TrayId, new_name: string): Promise<void>;
     updateTrayOrder(tray_id: TrayId, new_order: bigint): Promise<void>;
     updateZoneNotes(tray_id: TrayId, notes: string): Promise<void>;

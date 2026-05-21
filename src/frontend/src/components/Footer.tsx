@@ -56,9 +56,6 @@ const FOOTER_LINKS = [
 
 export function Footer() {
   const year = new Date().getFullYear();
-  const hostname =
-    typeof window !== "undefined" ? window.location.hostname : "";
-  const caffeineUrl = `https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(hostname)}`;
 
   return (
     <footer className="bg-card border-t border-border" data-ocid="footer">
@@ -130,19 +127,19 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground text-center sm:text-left">
             © {year} IC SPICY. All rights reserved. Port Charlotte, FL. FDACS
             Registered Nursery.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Built with love using{" "}
+          <p className="text-xs text-muted-foreground text-center sm:text-right">
+            Built on the{" "}
             <a
-              href={caffeineUrl}
+              href="https://internetcomputer.org"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              caffeine.ai
+              Internet Computer
             </a>
           </p>
         </div>

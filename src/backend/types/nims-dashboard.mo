@@ -19,6 +19,9 @@ module {
     germinatedAt : ?Common.Timestamp;
     nftTokenId : ?Nat;
     daysSincePlanted : ?Nat;
+    /** Inventory plant after tray transplant (for blue cell links). */
+    inventoryPlantId : ?Common.PlantId;
+    containerLabel : ?Text;
   };
 
   public type ActivityEntry = {

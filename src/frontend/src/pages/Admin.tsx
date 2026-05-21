@@ -69,10 +69,14 @@ import {
   RarityTier,
 } from "../backend";
 import type { ArtworkLayer } from "../backend";
-import type { BatchGiftPackPublic } from "../backend";
 import type { FoundersMintInput, FoundersMintResult } from "../backend";
 import { AdminNimsPanel } from "../components/AdminNimsPanel";
 import { AdminTreasuryTab } from "../components/AdminTreasuryTab";
+import { AdminBatchGiftsTab } from "../components/admin/AdminBatchGiftsTab";
+import { AdminCommunityTab } from "../components/admin/AdminCommunityTab";
+import { AdminNFTPoolTab } from "../components/admin/AdminNFTPoolTab";
+import { AdminOrdersTab } from "../components/admin/AdminOrdersTab";
+import { AdminQRLabelsTab } from "../components/admin/AdminQRLabelsTab";
 import { useAuth } from "../hooks/useAuth";
 import {
   useAddArtworkLayer,
@@ -84,7 +88,6 @@ import {
   useBatchMintFoundersCollection,
   useBeginArtworkUpload,
   useBulkCreateProducts,
-  useCreateBatchGiftPack,
   useCreatePlant,
   useCreateProduct,
   useCreateProposal,
@@ -92,7 +95,6 @@ import {
   useDeleteProduct,
   useFinalizeArtworkUpload,
   useGenerateAllPoolNFTs,
-  useGenerateClaimToken,
   useGeneratePickupQR,
   useGetPoolDashboard,
   useListArtworkFiles,
@@ -109,14 +111,15 @@ import {
   useResetPoolNFT,
   useStorePhotoFile,
   useTrays,
-  useTriggerLifecycleUpgrade,
   useUpdateOrderStatus,
   useUpdatePlantMetadata,
   useUpdatePlantStage,
   useUpdateProduct,
   useUploadArtworkChunk,
 } from "../hooks/useBackend";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { CHILI_VARIETIES } from "../types/index";
+import { BACKEND_CANISTER_ID } from "@/lib/auth-config";
 import type { Plant, Product, Tray } from "../types/index";
 import { compressImage } from "../utils/imageUtils";
 import AdminCookBookTab from "./AdminCookBookTab";
@@ -4264,259 +4267,6 @@ function RWAProvenanceTab() {
   );
 }
 
-// ─── QR Labels & Claim Tokens Tab ───────────────────────────────────────────
-
-function QRLabelsTab() {
-  const { data: plants } = usePlants();
-  const generateClaim = useGenerateClaimToken();
-  const triggerUpgrade = useTriggerLifecycleUpgrade();
-
-  const [claimPlantId, setClaimPlantId] = useState("");
-  const [claimRarity, setClaimRarity] = useState<RarityTier>(RarityTier.Common);
-  const [generatedClaims, setGeneratedClaims] = useState<
-    Array<{ plantId: string; tokenId: string; rarity: RarityTier; url: string }>
-  >([]);
-
-  const [upgradePlantId, setUpgradePlantId] = useState("");
-  const [upgradeToStage, setUpgradeToStage] = useState("Seedling");
-
-  const handleGenerateClaim = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!claimPlantId) return;
-    try {
-      const result = await generateClaim.mutateAsync({
-        plantId: BigInt(claimPlantId),
-        rarityTier: claimRarity,
-      });
-      const claimUrl = `${window.location.origin}/claim/${result.id}`;
-      setGeneratedClaims((prev) => [
-        {
-          plantId: claimPlantId,
-          tokenId: result.id,
-          rarity: claimRarity,
-          url: claimUrl,
-        },
-        ...prev,
-      ]);
-      toast.success(`Claim token generated for plant #${claimPlantId}`);
-    } catch {
-      toast.error("Failed to generate claim token.");
-    }
-  };
-
-  const handleTriggerUpgrade = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!upgradePlantId) return;
-    try {
-      const newNftId = await triggerUpgrade.mutateAsync({
-        plantId: BigInt(upgradePlantId),
-        newStage: upgradeToStage,
-      });
-      toast.success(
-        `Lifecycle upgrade complete! New NFT: ${newNftId.slice(0, 16)}…`,
-      );
-      setUpgradePlantId("");
-    } catch {
-      toast.error("Lifecycle upgrade failed.");
-    }
-  };
-
-  const handlePrintQR = (url: string) => {
-    const win = window.open("", "_blank");
-    if (!win) return;
-    win.document.write(`
-      <html><head><title>IC SPICY QR Label</title>
-      <style>body{font-family:sans-serif;text-align:center;padding:40px}img{width:200px;height:200px}p{margin:8px 0;font-size:14px}</style>
-      </head><body>
-      <p style="font-size:20px;font-weight:bold">🌶 IC SPICY</p>
-      <p>Scan to claim your plant NFT</p>
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}" alt="QR" />
-      <p style="font-size:11px;word-break:break-all">${url}</p>
-      <script>window.print()</script>
-      </body></html>
-    `);
-    win.document.close();
-  };
-
-  const RARITY_LABELS: Record<RarityTier, string> = {
-    [RarityTier.Common]: "🟢 Common — 10% discount",
-    [RarityTier.Uncommon]: "🔵 Uncommon — 12% discount",
-    [RarityTier.Rare]: "🟣 Rare — 15% discount",
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Generate Claim Token */}
-      <form
-        onSubmit={handleGenerateClaim}
-        className="p-5 rounded-xl bg-card border border-border space-y-4"
-        data-ocid="admin-qr-claim-form"
-      >
-        <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
-          <QrCode className="w-4 h-4 text-primary" />
-          Generate QR Claim Token
-        </h3>
-        <p className="text-xs text-muted-foreground">
-          Generate a scannable QR label for any plant. When a customer scans it,
-          they can claim the NFT directly from their phone and receive a
-          lifetime discount.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-xs">Plant</Label>
-            <Select value={claimPlantId} onValueChange={setClaimPlantId}>
-              <SelectTrigger className="mt-1" data-ocid="admin-qr-plant-select">
-                <SelectValue placeholder="Select plant" />
-              </SelectTrigger>
-              <SelectContent>
-                {plants?.map((p) => (
-                  <SelectItem key={p.id.toString()} value={p.id.toString()}>
-                    #{p.id.toString()} {p.variety} — {STAGE_LABELS[p.stage]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Rarity Tier</Label>
-            <Select
-              value={claimRarity}
-              onValueChange={(v) => setClaimRarity(v as RarityTier)}
-            >
-              <SelectTrigger
-                className="mt-1"
-                data-ocid="admin-qr-rarity-select"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(RARITY_LABELS).map(([tier, label]) => (
-                  <SelectItem key={tier} value={tier}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <Button
-          type="submit"
-          size="sm"
-          disabled={generateClaim.isPending || !claimPlantId}
-          className="bg-primary"
-          data-ocid="admin-gen-claim-btn"
-        >
-          <QrCode className="w-4 h-4" />
-          {generateClaim.isPending ? "Generating…" : "Generate QR Claim Token"}
-        </Button>
-      </form>
-
-      {/* Generated claim tokens */}
-      {generatedClaims.length > 0 && (
-        <div className="space-y-3" data-ocid="admin-generated-claims">
-          <h3 className="font-display font-semibold text-foreground text-sm flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-primary" />
-            Generated Claim Tokens (this session)
-          </h3>
-          {generatedClaims.map(({ plantId, tokenId, rarity, url }) => (
-            <div
-              key={tokenId}
-              className="flex items-start justify-between gap-3 p-4 rounded-xl bg-card border border-border"
-              data-ocid="admin-claim-token-row"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground">
-                  Plant #{plantId} — {rarity}
-                </p>
-                <code className="text-[10px] text-primary break-all font-mono block mt-0.5">
-                  {tokenId}
-                </code>
-                <p className="text-[10px] text-muted-foreground mt-0.5 break-all">
-                  {url}
-                </p>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-shrink-0 h-8 text-xs border-border"
-                onClick={() => handlePrintQR(url)}
-                data-ocid="admin-print-qr-btn"
-              >
-                <Printer className="w-3.5 h-3.5 mr-1" />
-                Print
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Automated Lifecycle Upgrade Trigger */}
-      <form
-        onSubmit={handleTriggerUpgrade}
-        className="p-5 rounded-xl bg-card border border-primary/20 space-y-4"
-        data-ocid="admin-lifecycle-upgrade-form"
-      >
-        <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
-          <Zap className="w-4 h-4 text-primary" />
-          Automated Lifecycle Upgrade Trigger
-        </h3>
-        <p className="text-xs text-muted-foreground">
-          Trigger a burn-and-mint NFT upgrade for a plant. The old NFT is burned
-          and a new one is minted with updated lifecycle metadata.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-xs">Plant</Label>
-            <Select value={upgradePlantId} onValueChange={setUpgradePlantId}>
-              <SelectTrigger
-                className="mt-1"
-                data-ocid="admin-lifecycle-plant-select"
-              >
-                <SelectValue placeholder="Select plant" />
-              </SelectTrigger>
-              <SelectContent>
-                {plants?.map((p) => (
-                  <SelectItem key={p.id.toString()} value={p.id.toString()}>
-                    #{p.id.toString()} {p.variety} — {STAGE_LABELS[p.stage]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Upgrade To Stage</Label>
-            <Select value={upgradeToStage} onValueChange={setUpgradeToStage}>
-              <SelectTrigger
-                className="mt-1"
-                data-ocid="admin-lifecycle-stage-select"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Seedling">🌿 Seedling</SelectItem>
-                <SelectItem value="Mature">🌶️ Mature</SelectItem>
-                <SelectItem value="Harvested">🧺 Harvested</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <Button
-          type="submit"
-          size="sm"
-          disabled={triggerUpgrade.isPending || !upgradePlantId}
-          className="bg-primary"
-          data-ocid="admin-lifecycle-trigger-btn"
-        >
-          <Flame className="w-4 h-4" />
-          {triggerUpgrade.isPending
-            ? "Upgrading…"
-            : "Trigger Lifecycle Upgrade"}
-        </Button>
-      </form>
-    </div>
-  );
-}
-
 // ─── Batch Gift Packs Tab ─────────────────────────────────────────────────────
 
 const RARITY_COLORS: Record<string, string> = {
@@ -4531,428 +4281,19 @@ const RARITY_EMOJI: Record<string, string> = {
   [RarityTier.Uncommon]: "🔵",
   [RarityTier.Rare]: "🟣",
 };
-
-function getRarityFromPct(pct: bigint): RarityTier {
-  if (pct >= 15) return RarityTier.Rare;
-  if (pct >= 12) return RarityTier.Uncommon;
-  return RarityTier.Common;
-}
-
 function BatchGiftPacksTab() {
-  const { data: plants, isLoading: plantsLoading } = usePlants();
-  const createPack = useCreateBatchGiftPack();
-
-  // Plants eligible = those with an nft_id (NFT minted)
-  const eligiblePlants = plants?.filter((p) => !!p.nft_id) ?? [];
-
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [packName, setPackName] = useState("");
-  const [packDesc, setPackDesc] = useState("");
-  const [generatedPacks, setGeneratedPacks] = useState<
-    Array<{ pack: BatchGiftPackPublic; name: string; plantNames: string[] }>
-  >([]);
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedIds.size === 0) {
-      toast.error("Select at least one plant with a minted NFT.");
-      return;
-    }
-    try {
-      const plantIds = Array.from(selectedIds).map((id) => BigInt(id));
-      const pack = await createPack.mutateAsync(plantIds);
-      const selectedPlantNames = eligiblePlants
-        .filter((p) => selectedIds.has(p.id.toString()))
-        .map((p) => `${p.variety} #${p.id.toString()}`);
-      setGeneratedPacks((prev) => [
-        { pack, name: packName || "Gift Pack", plantNames: selectedPlantNames },
-        ...prev,
-      ]);
-      toast.success(
-        `Batch gift pack created! ${selectedIds.size} NFTs bundled.`,
-      );
-      setSelectedIds(new Set());
-      setPackName("");
-      setPackDesc("");
-    } catch (err) {
-      toast.error(
-        `Failed to create pack: ${err instanceof Error ? err.message : "Unknown error"}`,
-      );
-    }
-  };
-
-  const handlePrintQR = (entry: {
-    pack: BatchGiftPackPublic;
-    name: string;
-    plantNames: string[];
-  }) => {
-    const url = `${window.location.origin}/claim/${entry.pack.claim_token_id}`;
-    const rarity = getRarityFromPct(entry.pack.highest_rarity_pct);
-    const discountPct = Number(entry.pack.highest_rarity_pct);
-    const win = window.open("", "_blank");
-    if (!win) return;
-    const plantListHtml = entry.plantNames
-      .map((n) => `<li style="margin:4px 0;font-size:13px">${n}</li>`)
-      .join("");
-    win.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>IC SPICY Gift Pack QR Label</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body {
-            font-family: 'Inter', sans-serif;
-            background: #0a0a0b;
-            color: #f1f0ef;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 40px 20px;
-          }
-          .card {
-            background: linear-gradient(135deg, #161618 0%, #1a1a1e 100%);
-            border: 2px solid #22d3ee44;
-            border-radius: 20px;
-            padding: 36px 32px;
-            max-width: 420px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 0 60px #22d3ee15;
-          }
-          .logo { font-size: 28px; font-weight: 700; color: #22d3ee; margin-bottom: 4px; letter-spacing: -0.5px; }
-          .logo span { color: #f1f0ef; }
-          .subtitle { font-size: 12px; color: #71717a; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 1px; }
-          .pack-name { font-size: 20px; font-weight: 700; color: #f1f0ef; margin-bottom: 6px; }
-          .tagline { font-size: 14px; color: #22d3ee; margin-bottom: 24px; }
-          .qr-wrap { background: #fff; border-radius: 12px; display: inline-flex; padding: 12px; margin-bottom: 20px; }
-          .qr-wrap img { display: block; width: 180px; height: 180px; }
-          .rarity-badge {
-            display: inline-block;
-            padding: 4px 14px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-            border: 1px solid #22d3ee44;
-            color: #22d3ee;
-            background: #22d3ee11;
-            margin-bottom: 16px;
-          }
-          .plants-section { text-align: left; margin-bottom: 20px; }
-          .plants-section h4 { font-size: 11px; color: #71717a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-          .plants-section ul { list-style: none; padding: 0; }
-          .discount { font-size: 13px; color: #a1a1aa; margin-bottom: 12px; }
-          .discount strong { color: #22d3ee; }
-          .url-text { font-size: 10px; color: #52525b; word-break: break-all; margin-top: 16px; }
-          @media print {
-            body { background: #fff; padding: 0; }
-            .card { box-shadow: none; border-color: #ccc; background: #fff; color: #111; }
-            .logo, .tagline { color: #000; }
-            .rarity-badge { border-color: #ccc; color: #333; background: #f5f5f5; }
-            .discount, .url-text, .plants-section h4 { color: #555; }
-            .plants-section ul li { color: #222; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="card">
-          <div class="logo">🌶 IC <span>SPICY</span></div>
-          <div class="subtitle">Rare Chili Plant NFT</div>
-          <div class="pack-name">${entry.name || "Batch Gift Pack"}</div>
-          <div class="tagline">Scan to claim your gift plants! 🎁</div>
-          <div class="qr-wrap">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=000000&qzone=1" alt="QR Code" />
-          </div>
-          <div class="rarity-badge">${RARITY_EMOJI[rarity]} ${rarity} · ${discountPct}% Discount</div>
-          <div class="discount">Includes a <strong>${discountPct}% lifetime storewide discount</strong> upon claim</div>
-          <div class="plants-section">
-            <h4>${entry.plantNames.length} Plant NFT${entry.plantNames.length !== 1 ? "s" : ""} Included</h4>
-            <ul>${plantListHtml}</ul>
-          </div>
-          <div class="url-text">${url}</div>
-        </div>
-        <script>window.addEventListener('load', () => setTimeout(() => window.print(), 800))</script>
-      </body>
-      </html>
-    `);
-    win.document.close();
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Create New Batch Pack */}
-      <form
-        onSubmit={handleCreate}
-        className="p-5 rounded-xl bg-card border border-border space-y-5"
-        data-ocid="admin-batch-pack-form"
-      >
-        <div>
-          <h3 className="font-display font-semibold text-foreground flex items-center gap-2 mb-1">
-            <Gift className="w-4 h-4 text-primary" />
-            Create New Batch Gift Pack
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Bundle multiple plant NFTs into a single QR code. When a customer
-            scans it, all NFTs are claimed at once. Only plants with minted NFTs
-            are eligible.
-          </p>
-        </div>
-
-        {/* Pack metadata */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-xs">Pack Name (optional)</Label>
-            <Input
-              value={packName}
-              onChange={(e) => setPackName(e.target.value)}
-              placeholder="e.g. Holiday Hot Pack 2026"
-              className="mt-1 text-sm"
-              data-ocid="admin-batch-pack-name"
-            />
-          </div>
-          <div>
-            <Label className="text-xs">Description (optional)</Label>
-            <Input
-              value={packDesc}
-              onChange={(e) => setPackDesc(e.target.value)}
-              placeholder="3 rare varieties, perfect gift…"
-              className="mt-1 text-sm"
-              data-ocid="admin-batch-pack-desc"
-            />
-          </div>
-        </div>
-
-        {/* Plant multi-select */}
-        <div>
-          <Label className="text-xs mb-2 block">
-            Select Plants with Minted NFTs
-            <span className="ml-2 text-primary font-medium">
-              ({selectedIds.size} selected)
-            </span>
-          </Label>
-          {plantsLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((k) => (
-                <Skeleton key={k} className="h-12 w-full rounded-lg" />
-              ))}
-            </div>
-          ) : eligiblePlants.length === 0 ? (
-            <div
-              className="flex flex-col items-center py-8 text-muted-foreground rounded-xl bg-muted/20 border border-dashed border-border"
-              data-ocid="admin-batch-pack-empty"
-            >
-              <Gift className="w-8 h-8 mb-2 opacity-30" />
-              <p className="text-sm font-medium">No plants with minted NFTs</p>
-              <p className="text-xs mt-1">
-                Mint an NFT for a plant first via the NFT Minting or RWA
-                Provenance tab.
-              </p>
-            </div>
-          ) : (
-            <div
-              className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1"
-              data-ocid="admin-batch-pack-plant-picker"
-            >
-              {eligiblePlants.map((plant) => {
-                const id = plant.id.toString();
-                const isSelected = selectedIds.has(id);
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => toggleSelect(id)}
-                    className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-smooth ${
-                      isSelected
-                        ? "bg-primary/10 border-primary/50"
-                        : "bg-muted/10 border-border hover:border-primary/30"
-                    }`}
-                    data-ocid={`admin-batch-plant-${id}`}
-                  >
-                    <div
-                      className={`w-4 h-4 mt-0.5 rounded border flex-shrink-0 flex items-center justify-center transition-smooth ${
-                        isSelected
-                          ? "bg-primary border-primary"
-                          : "border-border"
-                      }`}
-                    >
-                      {isSelected && (
-                        <svg
-                          viewBox="0 0 12 12"
-                          fill="none"
-                          className="w-2.5 h-2.5"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M2 6l3 3 5-5"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        #{id} — {plant.variety}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {STAGE_LABELS[plant.stage]} · NFT:{" "}
-                        <span className="text-primary font-mono">
-                          {plant.nft_id?.slice(0, 10)}…
-                        </span>
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3 pt-1">
-          <Button
-            type="submit"
-            size="sm"
-            disabled={createPack.isPending || selectedIds.size === 0}
-            className="bg-primary"
-            data-ocid="admin-create-batch-pack-btn"
-          >
-            <Gift className="w-4 h-4" />
-            {createPack.isPending
-              ? "Creating…"
-              : `Create Pack & Generate QR (${selectedIds.size})`}
-          </Button>
-          {selectedIds.size > 0 && (
-            <button
-              type="button"
-              onClick={() => setSelectedIds(new Set())}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Clear selection
-            </button>
-          )}
-        </div>
-      </form>
-
-      {/* Existing Packs (this session) */}
-      <div data-ocid="admin-existing-batch-packs">
-        <h3 className="font-display font-semibold text-foreground text-sm flex items-center gap-2 mb-3">
-          <Package className="w-4 h-4 text-primary" />
-          Existing Packs
-          <span className="text-xs font-normal text-muted-foreground ml-1">
-            (this session)
-          </span>
-        </h3>
-
-        {generatedPacks.length === 0 ? (
-          <div
-            className="text-center py-10 text-muted-foreground rounded-xl bg-muted/10 border border-dashed border-border"
-            data-ocid="admin-batch-packs-empty"
-          >
-            <QrCode className="w-8 h-8 mx-auto mb-2 opacity-30" />
-            <p className="text-sm font-medium">No packs created yet</p>
-            <p className="text-xs mt-1">
-              Create a batch pack above to generate a shareable QR code.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {generatedPacks.map(({ pack, name, plantNames }) => {
-              const claimUrl = `${window.location.origin}/claim/${pack.claim_token_id}`;
-              const rarity = getRarityFromPct(pack.highest_rarity_pct);
-              const discountPct = Number(pack.highest_rarity_pct);
-              return (
-                <motion.div
-                  key={pack.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-5 rounded-xl bg-card border border-border"
-                  data-ocid="admin-batch-pack-row"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex gap-4 items-start min-w-0">
-                      {/* QR preview */}
-                      <div className="flex-shrink-0 bg-foreground p-1.5 rounded-lg">
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(claimUrl)}&bgcolor=ffffff&color=000000`}
-                          alt="QR Code"
-                          className="w-16 h-16 block"
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-foreground text-sm">
-                          {name}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${RARITY_COLORS[rarity]}`}
-                          >
-                            {RARITY_EMOJI[rarity]} {rarity} — {discountPct}%
-                            discount
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {pack.redeemed ? (
-                              <span className="text-muted-foreground line-through">
-                                Claimed
-                              </span>
-                            ) : (
-                              <span className="text-primary">Unclaimed</span>
-                            )}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1.5">
-                          {plantNames.length} plant
-                          {plantNames.length !== 1 ? "s" : ""} ·{" "}
-                          {plantNames.join(", ")}
-                        </p>
-                        <code className="text-[10px] text-primary/70 font-mono mt-1 block break-all">
-                          {pack.claim_token_id}
-                        </code>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-shrink-0 h-8 text-xs border-border gap-1"
-                      onClick={() => handlePrintQR({ pack, name, plantNames })}
-                      data-ocid="admin-batch-reprint-qr-btn"
-                    >
-                      <Printer className="w-3.5 h-3.5" />
-                      Print QR Label
-                    </Button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <AdminBatchGiftsTab />;
 }
 
 // ─── Canister ID Bar ──────────────────────────────────────────────────────────
 
 function CanisterIdBar() {
   const [copied, setCopied] = useState(false);
-  const dashboardUrl = "https://caffeine.ai/dashboard";
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(dashboardUrl).then(() => {
+    navigator.clipboard.writeText(BACKEND_CANISTER_ID).then(() => {
       setCopied(true);
-      toast.success("Dashboard link copied!");
+      toast.success("Canister ID copied!");
       setTimeout(() => setCopied(false), 2000);
     });
   };
@@ -4965,11 +4306,11 @@ function CanisterIdBar() {
       <div className="flex items-center gap-2 flex-wrap">
         <Cpu className="w-4 h-4 text-primary flex-shrink-0" />
         <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
-          Backend Canister ID
+          IC SPICY Admin · Backend canister
         </span>
-        <span className="text-xs text-muted-foreground">
-          Assigned at deployment — visible in your Caffeine dashboard
-        </span>
+        <code className="text-[11px] font-mono px-2 py-0.5 rounded bg-muted/80 text-muted-foreground max-w-full break-all">
+          {BACKEND_CANISTER_ID}
+        </code>
         <Button
           size="sm"
           variant="outline"
@@ -4978,22 +4319,13 @@ function CanisterIdBar() {
           data-ocid="admin-copy-canister-id"
         >
           <Copy className="w-3 h-3" />
-          {copied ? "Copied!" : "Copy Link"}
+          {copied ? "Copied!" : "Copy ID"}
         </Button>
       </div>
       <p className="text-[11px] text-muted-foreground leading-relaxed">
-        Your canister ID is visible in the{" "}
-        <a
-          href={dashboardUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline inline-flex items-center gap-0.5"
-        >
-          Caffeine dashboard
-          <ExternalLink className="w-2.5 h-2.5" />
-        </a>{" "}
-        after deployment. Use it to register your NFT collection with the DAB
-        registry at{" "}
+        This is your NFT ledger / backend principal on ICP — set in{" "}
+        <span className="font-mono">auth-config</span> per deployment. Register the
+        collection with the DAB registry at{" "}
         <a
           href="https://dab.ooo"
           target="_blank"
@@ -5224,33 +4556,24 @@ function FoundersCollectionTab() {
           </h3>
         </div>
 
-        {/* Canister ID info */}
+        {/* Canister ID */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-muted-foreground">Canister ID:</span>
-          <span className="text-xs font-mono text-muted-foreground">
-            Visible in your{" "}
-            <a
-              href="https://caffeine.ai/dashboard"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline inline-flex items-center gap-0.5"
-            >
-              Caffeine dashboard
-              <ExternalLink className="w-2.5 h-2.5" />
-            </a>
-          </span>
+          <code className="text-[11px] font-mono text-muted-foreground break-all px-2 py-0.5 rounded bg-muted/80">
+            {BACKEND_CANISTER_ID}
+          </code>
           <button
             type="button"
             onClick={() =>
               navigator.clipboard
-                .writeText("https://caffeine.ai/dashboard")
-                .then(() => toast.success("Dashboard link copied!"))
+                .writeText(BACKEND_CANISTER_ID)
+                .then(() => toast.success("Canister ID copied!"))
             }
             className="text-[10px] px-2 py-0.5 rounded border border-primary/30 text-primary hover:bg-primary/10 transition-smooth flex items-center gap-1"
             data-ocid="admin-dab-copy-canister"
           >
             <Copy className="w-2.5 h-2.5" />
-            Copy Link
+            Copy ID
           </button>
         </div>
 
@@ -5651,6 +4974,8 @@ function FoundersCard({
 // silently redirected before this component ever mounts.
 
 export default function AdminPage() {
+  usePageTitle("IC SPICY Admin");
+
   return (
     <div data-ocid="admin-panel">
       <div className="mb-8">
@@ -5793,6 +5118,14 @@ export default function AdminPage() {
               Founders
             </TabsTrigger>
             <TabsTrigger
+              value="community"
+              className="text-xs gap-1.5 flex-1"
+              data-ocid="admin-tab-community"
+            >
+              <Users className="w-3.5 h-3.5" />
+              Community
+            </TabsTrigger>
+            <TabsTrigger
               value="treasury"
               className="text-xs gap-1.5 flex-1"
               data-ocid="admin-tab-treasury"
@@ -5815,7 +5148,7 @@ export default function AdminPage() {
             <ProductsTab />
           </TabsContent>
           <TabsContent value="orders">
-            <OrdersTab />
+            <AdminOrdersTab />
           </TabsContent>
           <TabsContent value="nft">
             <NFTMintingTab />
@@ -5824,7 +5157,7 @@ export default function AdminPage() {
             <AdminDAOTab />
           </TabsContent>
           <TabsContent value="nft-pool">
-            <NFTPoolTab />
+            <AdminNFTPoolTab />
           </TabsContent>
           <TabsContent value="artwork">
             <ArtworkCollectionTab />
@@ -5836,13 +5169,16 @@ export default function AdminPage() {
             <AdminCookBookTab />
           </TabsContent>
           <TabsContent value="qr-labels">
-            <QRLabelsTab />
+            <AdminQRLabelsTab />
           </TabsContent>
           <TabsContent value="batch-gifts">
             <BatchGiftPacksTab />
           </TabsContent>
           <TabsContent value="founders">
             <FoundersCollectionTab />
+          </TabsContent>
+          <TabsContent value="community">
+            <AdminCommunityTab />
           </TabsContent>
           <TabsContent value="treasury">
             <AdminTreasuryTab />

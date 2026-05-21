@@ -21,6 +21,7 @@ import { ArrowLeftRight, Loader2, Tag, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { PaymentToken } from "../declarations/backend.did";
+import { useActorReady } from "../hooks/useActorReady";
 import { useAuth } from "../hooks/useAuth";
 import { useMyNftTokenIds } from "../hooks/useMyNftIds";
 import {
@@ -278,18 +279,30 @@ function MyListingRow({ listing }: { listing: NftListingPublic }) {
 
 export function NftResaleSection() {
   const { isAuthenticated, login, principal } = useAuth();
+  const { actorReady } = useActorReady();
   const [filter, setFilter] = useState<"all" | "plants" | "pepperheads">("all");
   const [listOpen, setListOpen] = useState(false);
   const pepperHeadOnly = filter === "pepperheads" ? true : undefined;
-  const { data: listings = [], isLoading } = useListedNfts(pepperHeadOnly);
+  const {
+    data: allListings = [],
+    isLoading: listingsLoading,
+    isFetching: listingsFetching,
+    isFetched: listingsFetched,
+  } = useListedNfts(pepperHeadOnly);
   const { data: myListings = [] } = useMyNftListings();
   const { data: ownedIds = [] } = useMyNftTokenIds();
   const callerPrincipal = principal?.toText() ?? null;
 
+  const browsePending =
+    listingsLoading ||
+    listingsFetching ||
+    (isAuthenticated && !actorReady) ||
+    !listingsFetched;
+
   const filtered = useMemo(() => {
-    if (filter !== "plants") return listings;
-    return listings.filter((l) => l.plantId.length > 0);
-  }, [listings, filter]);
+    if (filter !== "plants") return allListings;
+    return allListings.filter((l) => l.plantId.length > 0);
+  }, [allListings, filter]);
 
   return (
     <section className="space-y-6">
@@ -343,7 +356,7 @@ export function NftResaleSection() {
         </div>
       )}
 
-      {isLoading ? (
+      {browsePending ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }, (_, i) => (
             <Skeleton key={i} className="aspect-square rounded-xl" />

@@ -20,6 +20,7 @@ import { OrderStatus } from "../backend";
 import { useAuth } from "../hooks/useAuth";
 import { useMyOrders } from "../hooks/useBackend";
 import type { Order } from "../types/index";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -219,6 +220,8 @@ function OrderRow({ order }: { order: Order }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function OrdersPage() {
+  usePageTitle("Orders");
+
   const { isAuthenticated, login } = useAuth();
   const { data: orders, isLoading } = useMyOrders();
 

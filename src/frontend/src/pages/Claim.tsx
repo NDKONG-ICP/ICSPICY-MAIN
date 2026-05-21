@@ -22,6 +22,7 @@ import {
 } from "../hooks/useBackend";
 import type { Value } from "../declarations/backend.did";
 import { getNftImageUrl } from "../lib/nft-config";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 function PlantPreview({
   variety,
@@ -173,6 +174,8 @@ function PageShell({ children }: { children: React.ReactNode }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ClaimPage() {
+  usePageTitle("Claim");
+
   const { claimToken } = useParams({ from: "/claim/$claimToken" });
   const { isAuthenticated, login } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);

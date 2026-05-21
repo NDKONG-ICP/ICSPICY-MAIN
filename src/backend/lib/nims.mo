@@ -15,6 +15,7 @@ import Array "mo:core/Array";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Result "mo:core/Result";
+import Prim "mo:prim";
 import Common "../types/common";
 import Types "../types/plants";
 import VarietyTypes "../types/variety";
@@ -414,8 +415,92 @@ module {
     NftClaim.findPlantIdByTokenId(nftTokenPlantIds, plants, tokenId)
   };
 
+  func containerRank(s : Types.ContainerSize) : Nat {
+    switch (s) {
+      case (#Oz16) 1;
+      case (#Cell72) 1;
+      case (#Cell128) 1;
+      case (#Pot4Inch) 2;
+      case (#Pot6Inch) 3;
+      case (#Gal1) 4;
+      case (#Gal1New) 4;
+      case (#Gal3) 5;
+      case (#Gal3New) 5;
+      case (#Gal5) 6;
+      case (#Gal5Bucket) 6;
+      case (#Gal5GrowBag) 6;
+      case (#Gal7Pot) 7;
+      case (#Gal7GrowBag) 7;
+      case (#Gal10GrowBag) 8;
+      case (#Gal15GrowBag) 9;
+      case (#InGround) 10;
+      case (#Other _) 5;
+    };
+  };
+
+  func isContainerUpgrade(from : Types.ContainerSize, to : Types.ContainerSize) : Bool {
+    let fromRank = containerRank(from);
+    let toRank = containerRank(to);
+    toRank > fromRank or (toRank == fromRank and from != to);
+  };
+
+  func returnNftToPool(
+    plant : Types.Plant,
+    icrc7Owners : Map.Map<Nat, ICRC7.Account>,
+    icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
+    icrc37Approvals : ICRC37Lib.ApprovalsMap,
+    canister : Principal,
+  ) {
+    switch (nftTokenIdOf(plant)) {
+      case (?tokenId) {
+        let canisterAccount : ICRC7.Account = { owner = canister; subaccount = null };
+        let fromAccount = switch (icrc7Owners.get(tokenId)) {
+          case (?a) a;
+          case null Runtime.trap("NFT owner not found");
+        };
+        switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?fromAccount, canisterAccount)) {
+          case (#err(e)) Runtime.trap("Return NFT to pool failed: " # e);
+          case (#ok) {};
+        };
+        ignore ICRC37Lib.removeAllApprovals(icrc37Approvals, tokenId);
+      };
+      case null {};
+    };
+  };
+
+  func clearTrayCellForPlant(
+    trays : Map.Map<Common.TrayId, Types.Tray>,
+    plant : Types.Plant,
+  ) {
+    if (plant.tray_id == 0) return;
+    let pos = plant.cell_position;
+    if (pos < 1 or pos > 72) return;
+    switch (trays.get(plant.tray_id)) {
+      case (?tray) {
+        switch (tray.cells[pos - 1]) {
+          case (?pid) {
+            if (pid == plant.id) {
+              let newCells = tray.cells.toVarArray<?Common.PlantId>();
+              newCells[pos - 1] := null;
+              tray.cells := Prim.Array_tabulate<?Common.PlantId>(newCells.size(), func(i : Nat) { newCells[i] });
+            };
+          };
+          case null {};
+        };
+      };
+      case null {};
+    };
+  };
+
+  func deletePlantSideMaps(side : SideMaps, plantId : Common.PlantId) {
+    ignore side.plantVarietyIds.delete(plantId);
+    ignore side.plantPrices.delete(plantId);
+    ignore side.plantOwners.delete(plantId);
+  };
+
   public func removePlant(
     plants : Map.Map<Common.PlantId, Types.Plant>,
+    trays : Map.Map<Common.TrayId, Types.Tray>,
     side : SideMaps,
     icrc7Owners : Map.Map<Nat, ICRC7.Account>,
     icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
@@ -427,25 +512,74 @@ module {
       case null false;
       case (?plant) {
         if (plant.sold) Runtime.trap("Cannot remove sold plant");
-        switch (nftTokenIdOf(plant)) {
-          case (?tokenId) {
-            let canisterAccount : ICRC7.Account = { owner = canister; subaccount = null };
-            let fromAccount = switch (icrc7Owners.get(tokenId)) {
-              case (?a) a;
-              case null Runtime.trap("NFT owner not found");
+        returnNftToPool(plant, icrc7Owners, icrc7Balances, icrc37Approvals, canister);
+        clearTrayCellForPlant(trays, plant);
+        switch (plant.transplant_plant_id) {
+          case (?childId) {
+            switch (plants.get(childId)) {
+              case (?child) {
+                returnNftToPool(child, icrc7Owners, icrc7Balances, icrc37Approvals, canister);
+                clearTrayCellForPlant(trays, child);
+                ignore plants.delete(childId);
+                deletePlantSideMaps(side, childId);
+              };
+              case null {};
             };
-            switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?fromAccount, canisterAccount)) {
-              case (#err(e)) Runtime.trap("Return NFT to pool failed: " # e);
-              case (#ok) {};
-            };
-            ignore ICRC37Lib.removeAllApprovals(icrc37Approvals, tokenId);
           };
           case null {};
         };
         ignore plants.delete(plantId);
-        ignore side.plantVarietyIds.delete(plantId);
-        ignore side.plantPrices.delete(plantId);
+        deletePlantSideMaps(side, plantId);
         true;
+      };
+    };
+  };
+
+  public func transplantPlantInternal(
+    plants : Map.Map<Common.PlantId, Types.Plant>,
+    stageHistory : Map.Map<Common.PlantId, List.List<Types.StageHistory>>,
+    caller : Principal,
+    adminCheck : Principal -> Bool,
+    plantId : Common.PlantId,
+    newContainer : Types.ContainerSize,
+    locationNotes : ?Text,
+  ) : Result.Result<(), Text> {
+    switch (plants.get(plantId)) {
+      case null return #err("Plant not found");
+      case (?plant) {
+        if (not adminCheck(caller) and plant.created_by != caller) {
+          return #err("Unauthorized: must be plant owner or admin");
+        };
+        if (plant.is_cooked) return #err("Plant is dead");
+        if (plant.sold) return #err("Plant is sold");
+        if (plant.is_transplanted) {
+          return #err("This is a tray history record — open the inventory plant to repot");
+        };
+        switch (plant.container_size) {
+          case null return #err("Plant is still in a tray cell — transplant from the tray first");
+          case (?current) {
+            if (not isContainerUpgrade(current, newContainer)) {
+              return #err("Choose a larger or different container");
+            };
+          };
+        };
+        plant.container_size := ?newContainer;
+        switch (locationNotes) {
+          case (?n) plant.additional_notes := ?n;
+          case null {};
+        };
+        let now = Time.now();
+        let notes = "Repotted to " # PlantsLib.containerSizeText(newContainer);
+        let history = switch (stageHistory.get(plantId)) {
+          case (?h) h;
+          case null {
+            let h = List.empty<Types.StageHistory>();
+            stageHistory.add(plantId, h);
+            h;
+          };
+        };
+        history.add({ stage = plant.stage; timestamp = now; notes = notes });
+        #ok(());
       };
     };
   };
@@ -798,18 +932,60 @@ module {
       let pos = i + 1;
       switch (tray.cells[i]) {
         case null {
-          { position = pos; status = #Empty; plantId = null; varietyName = null; plantedAt = null; germinatedAt = null; nftTokenId = null; daysSincePlanted = null };
+          {
+            position = pos;
+            status = #Empty;
+            plantId = null;
+            varietyName = null;
+            plantedAt = null;
+            germinatedAt = null;
+            nftTokenId = null;
+            daysSincePlanted = null;
+            inventoryPlantId = null;
+            containerLabel = null;
+          };
         };
         case (?pid) {
           switch (plants.get(pid)) {
             case null {
-              { position = pos; status = #Empty; plantId = null; varietyName = null; plantedAt = null; germinatedAt = null; nftTokenId = null; daysSincePlanted = null };
+              {
+                position = pos;
+                status = #Empty;
+                plantId = null;
+                varietyName = null;
+                plantedAt = null;
+                germinatedAt = null;
+                nftTokenId = null;
+                daysSincePlanted = null;
+                inventoryPlantId = null;
+                containerLabel = null;
+              };
             };
             case (?plant) {
               let status = cellStatusForPlant(plant);
               let varietyName = switch (side.plantVarietyIds.get(pid)) {
                 case null ?plant.variety;
                 case (?vid) ?plant.variety;
+              };
+              let (inventoryPlantId, containerLabel) = switch (status) {
+                case (#Transplanted) {
+                  switch (plant.transplant_plant_id) {
+                    case (?invId) {
+                      switch (plants.get(invId)) {
+                        case (?inv) {
+                          let containerText = switch (inv.container_size) {
+                            case (?c) ?PlantsLib.containerSizeText(c);
+                            case null ?"Inventory";
+                          };
+                          (?invId, containerText);
+                        };
+                        case null (null, null);
+                      };
+                    };
+                    case null (null, null);
+                  };
+                };
+                case (_) (null, null);
               };
               {
                 position = pos;
@@ -820,6 +996,8 @@ module {
                 germinatedAt = plant.germination_date;
                 nftTokenId = nftTokenIdOf(plant);
                 daysSincePlanted = ?daysBetween(plant.planting_date, now);
+                inventoryPlantId;
+                containerLabel;
               };
             };
           };

@@ -1,114 +1,346 @@
 import Map "mo:core/Map";
+import Set "mo:core/Set";
+import Nat "mo:core/Nat";
 import AccessControl "../lib/access-control";
+import AuditLog "../lib/audit-log";
 import Common "../types/common";
 import CommunityTypes "../types/community";
 import CommunityLib "../lib/community";
+import Principal "mo:core/Principal";
+import Time "mo:core/Time";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
   posts : Map.Map<Common.PostId, CommunityTypes.Post>,
   comments : Map.Map<Common.CommentId, CommunityTypes.Comment>,
   profiles : Map.Map<Principal, CommunityTypes.UserProfile>,
+  tips : Map.Map<Nat, CommunityTypes.Tip>,
+  bannedUsers : Set.Set<Principal>,
   nextPostId : { var value : Nat },
   nextCommentId : { var value : Nat },
+  nextTipId : { var value : Nat },
+  auditLog : { var value : AuditLog.AuditLog },
 ) {
-  // Authenticated: create a community post
-  public shared ({ caller }) func createPost(input : CommunityTypes.CreatePostInput) : async CommunityTypes.PostPublic {
+  // ── Posts ───────────────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func createPost(
+    input : CommunityTypes.CreatePostInput,
+  ) : async CommunityTypes.PostPublic {
     AccessControl.requireAuthenticated(caller);
-    let post = CommunityLib.createPost(posts, nextPostId.value, caller, input);
+    let post = CommunityLib.createPost(
+      posts, profiles, bannedUsers, nextPostId.value, caller, input,
+    );
     nextPostId.value += 1;
     post;
   };
 
-  // Authenticated: edit own post within 48 hours of creation
-  public shared ({ caller }) func editPost(post_id : Common.PostId, new_content : Text) : async CommunityTypes.PostPublic {
+  public shared ({ caller }) func editPost(
+    post_id : Common.PostId,
+    new_content : Text,
+  ) : async Bool {
     AccessControl.requireAuthenticated(caller);
     CommunityLib.editPost(posts, caller, post_id, new_content);
   };
 
-  // Authenticated: delete own post within 48 hours of creation
-  public shared ({ caller }) func deletePost(post_id : Common.PostId) : async () {
+  public shared ({ caller }) func deletePost(post_id : Common.PostId) : async Bool {
     AccessControl.requireAuthenticated(caller);
-    CommunityLib.deletePost(posts, caller, post_id);
+    CommunityLib.deletePost(
+      posts, caller, post_id,
+      AccessControl.isAdmin(accessControlState, caller),
+    );
   };
 
-  // Authenticated: like a post — returns updated like count
-  public shared ({ caller }) func likePost(post_id : Common.PostId) : async Nat {
+  public shared ({ caller }) func likePost(post_id : Common.PostId) : async Bool {
     AccessControl.requireAuthenticated(caller);
-    CommunityLib.likePost(posts, post_id, caller);
+    CommunityLib.toggleLikePost(posts, profiles, bannedUsers, post_id, caller);
   };
 
-  // Authenticated: unlike a post — returns updated like count
   public shared ({ caller }) func unlikePost(post_id : Common.PostId) : async Nat {
     AccessControl.requireAuthenticated(caller);
-    CommunityLib.unlikePost(posts, post_id, caller);
+    CommunityLib.unlikePost(posts, profiles, bannedUsers, post_id, caller);
   };
 
-  // Authenticated: add a comment to a post
-  public shared ({ caller }) func createComment(input : CommunityTypes.CreateCommentInput) : async CommunityTypes.CommentPublic {
+  public query ({ caller }) func hasLikedPost(post_id : Common.PostId) : async Bool {
+    CommunityLib.hasLikedPost(posts, post_id, caller);
+  };
+
+  // ── Comments ────────────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func createComment(
+    input : CommunityTypes.CreateCommentInput,
+  ) : async CommunityTypes.CommentPublic {
     AccessControl.requireAuthenticated(caller);
-    let comment = CommunityLib.createComment(comments, profiles, nextCommentId.value, caller, input);
+    let comment = CommunityLib.createComment(
+      comments, posts, profiles, bannedUsers, nextCommentId.value, caller, input,
+    );
     nextCommentId.value += 1;
     comment;
   };
 
-  // Authenticated: follow another user
-  public shared ({ caller }) func followUser(target : Principal) : async () {
+  public shared ({ caller }) func addComment(
+    post_id : Common.PostId,
+    content : Text,
+    is_anonymous : Bool,
+  ) : async CommunityTypes.CommentPublic {
     AccessControl.requireAuthenticated(caller);
-    CommunityLib.followUser(profiles, caller, target);
+    let comment = CommunityLib.createComment(
+      comments, posts, profiles, bannedUsers, nextCommentId.value, caller,
+      { post_id; content; anonymous = is_anonymous },
+    );
+    nextCommentId.value += 1;
+    comment;
   };
 
-  // Authenticated: unfollow a user
+  public shared ({ caller }) func deleteComment(comment_id : Common.CommentId) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    CommunityLib.deleteComment(
+      comments, caller, comment_id,
+      AccessControl.isAdmin(accessControlState, caller),
+    );
+  };
+
+  public shared ({ caller }) func likeComment(comment_id : Common.CommentId) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    CommunityLib.toggleLikeComment(comments, profiles, bannedUsers, comment_id, caller);
+  };
+
+  // ── Follows ─────────────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func followUser(target : Principal) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    CommunityLib.toggleFollow(profiles, bannedUsers, caller, target);
+  };
+
   public shared ({ caller }) func unfollowUser(target : Principal) : async () {
     AccessControl.requireAuthenticated(caller);
-    CommunityLib.unfollowUser(profiles, caller, target);
+    CommunityLib.unfollowUser(profiles, bannedUsers, caller, target);
   };
 
-  // Authenticated: save caller's profile
-  public shared ({ caller }) func saveCallerUserProfile(input : CommunityTypes.SaveProfileInput) : async () {
+  public query ({ caller }) func isFollowing(target : Principal) : async Bool {
+    CommunityLib.isFollowing(profiles, caller, target);
+  };
+
+  public query ({ caller }) func getFollowers(
+    user : Principal,
+    offset : Nat,
+    limit : Nat,
+  ) : async [CommunityTypes.UserProfilePublic] {
+    CommunityLib.getFollowers(
+      profiles, posts, accessControlState, user, caller, offset, limit,
+    );
+  };
+
+  public query ({ caller }) func getFollowing(
+    user : Principal,
+    offset : Nat,
+    limit : Nat,
+  ) : async [CommunityTypes.UserProfilePublic] {
+    CommunityLib.getFollowing(
+      profiles, posts, accessControlState, user, caller, offset, limit,
+    );
+  };
+
+  // ── Tips ────────────────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func recordTip(
+    input : CommunityTypes.RecordTipInput,
+  ) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    let ok = CommunityLib.recordTip(
+      tips, posts, profiles, nextTipId.value, caller, input,
+    );
+    if (ok) {
+      nextTipId.value += 1;
+      auditLog.value := AuditLog.append(auditLog.value, {
+        ts = Time.now();
+        admin = caller;
+        action = "community_tip";
+        detail = "post=" # Nat.toText(input.post_id)
+          # " amount=" # Nat.toText(input.amount)
+          # " block=" # Nat.toText(input.block_index);
+      });
+    };
+    ok;
+  };
+
+  // ── Profiles ────────────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func saveCallerUserProfile(
+    input : CommunityTypes.SaveProfileInput,
+  ) : async Bool {
     AccessControl.requireAuthenticated(caller);
     CommunityLib.saveProfile(profiles, caller, input);
   };
 
-  // Authenticated: ensure caller has a profile, creating one if absent.
-  // Idempotent — safe to call on every sign-in for any user.
+  public shared ({ caller }) func saveProfile(
+    input : CommunityTypes.SaveProfileInput,
+  ) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    CommunityLib.saveProfile(profiles, caller, input);
+  };
+
   public shared ({ caller }) func ensureCallerProfile() : async () {
     AccessControl.requireAuthenticated(caller);
     CommunityLib.ensureCallerProfile(profiles, caller);
   };
 
-  // Authenticated: get caller's own profile
   public query ({ caller }) func getCallerUserProfile() : async ?CommunityTypes.UserProfilePublic {
-    CommunityLib.getCallerUserProfile(profiles, caller);
+    CommunityLib.getCallerUserProfile(profiles, posts, accessControlState, caller);
   };
 
-  // Public: get any user's public profile
-  public query func getPublicProfile(user : Principal) : async ?CommunityTypes.UserProfilePublic {
-    CommunityLib.getPublicProfile(profiles, user);
+  public query ({ caller }) func getCallerProfile() : async ?CommunityTypes.UserProfilePublic {
+    CommunityLib.getCallerUserProfile(profiles, posts, accessControlState, caller);
   };
 
-  // Public: list all posts newest-first; caller needed for like/follow status
+  public query ({ caller }) func getPublicProfile(
+    user : Principal,
+  ) : async ?CommunityTypes.UserProfilePublic {
+    CommunityLib.getPublicProfile(profiles, posts, accessControlState, user, caller);
+  };
+
+  public query ({ caller }) func getProfile(
+    user : Principal,
+  ) : async ?CommunityTypes.UserProfilePublic {
+    CommunityLib.getPublicProfile(profiles, posts, accessControlState, user, caller);
+  };
+
+  public query ({ caller }) func searchUsers(
+    search : Text,
+    limit : Nat,
+  ) : async [CommunityTypes.UserProfilePublic] {
+    CommunityLib.searchUsers(
+      profiles, posts, accessControlState, caller, search, limit,
+    );
+  };
+
+  // ── Feeds ───────────────────────────────────────────────────────────────────
+
   public query ({ caller }) func listPosts() : async [CommunityTypes.PostPublic] {
-    CommunityLib.listPosts(posts, comments, profiles, caller);
+    CommunityLib.listPosts(posts, comments, tips, profiles, bannedUsers, caller);
   };
 
-  // Public: list comments for a post sorted oldest-first
-  public query func listCommentsByPost(post_id : Common.PostId) : async [CommunityTypes.CommentPublic] {
-    CommunityLib.listCommentsByPost(comments, profiles, post_id);
+  public query ({ caller }) func getGlobalFeed(
+    offset : Nat,
+    limit : Nat,
+  ) : async [CommunityTypes.PostPublic] {
+    CommunityLib.getGlobalFeed(
+      posts, comments, tips, profiles, bannedUsers, caller, offset, limit,
+    );
   };
 
-  // Public: get follower count for a user
+  public query ({ caller }) func getFollowingFeed(
+    offset : Nat,
+    limit : Nat,
+  ) : async [CommunityTypes.PostPublic] {
+    CommunityLib.getFollowingFeed(
+      posts, comments, tips, profiles, bannedUsers, caller, offset, limit,
+    );
+  };
+
+  public query ({ caller }) func getTrendingPosts(limit : Nat) : async [CommunityTypes.PostPublic] {
+    CommunityLib.getTrendingPosts(
+      posts, comments, tips, profiles, bannedUsers, caller, limit,
+    );
+  };
+
+  public query ({ caller }) func getUserPosts(
+    user : Principal,
+    offset : Nat,
+    limit : Nat,
+  ) : async [CommunityTypes.PostPublic] {
+    CommunityLib.getUserPosts(
+      posts, comments, tips, profiles, bannedUsers, user, caller, offset, limit,
+    );
+  };
+
+  public query ({ caller }) func getPostWithComments(
+    post_id : Common.PostId,
+  ) : async ?CommunityTypes.PostWithComments {
+    CommunityLib.getPostWithComments(
+      posts, comments, tips, profiles, bannedUsers, post_id, caller, false,
+    );
+  };
+
+  public query ({ caller }) func listCommentsByPost(
+    post_id : Common.PostId,
+  ) : async [CommunityTypes.CommentPublic] {
+    CommunityLib.listCommentsByPost(comments, profiles, post_id, caller);
+  };
+
   public query func getFollowersCount(user : Principal) : async Nat {
     CommunityLib.getFollowersCount(profiles, user);
   };
 
-  // Public: get following count for a user
   public query func getFollowingCount(user : Principal) : async Nat {
     CommunityLib.getFollowingCount(profiles, user);
   };
 
-  // Public: get all posts by a specific user (for profile page)
-  public query ({ caller }) func getUserPosts(user : Principal) : async [CommunityTypes.PostPublic] {
-    CommunityLib.getUserPosts(posts, comments, profiles, user, caller);
+  // ── Admin moderation ────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func adminDeletePost(post_id : Common.PostId) : async Bool {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let ok = CommunityLib.deletePost(posts, caller, post_id, true);
+    if (ok) {
+      auditLog.value := AuditLog.append(auditLog.value, {
+        ts = Time.now();
+        admin = caller;
+        action = "community_post_deleted";
+        detail = "post=" # Nat.toText(post_id);
+      });
+    };
+    ok;
+  };
+
+  public shared ({ caller }) func adminDeleteComment(
+    comment_id : Common.CommentId,
+  ) : async Bool {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let ok = CommunityLib.deleteComment(comments, caller, comment_id, true);
+    if (ok) {
+      auditLog.value := AuditLog.append(auditLog.value, {
+        ts = Time.now();
+        admin = caller;
+        action = "community_comment_deleted";
+        detail = "comment=" # Nat.toText(comment_id);
+      });
+    };
+    ok;
+  };
+
+  public shared ({ caller }) func banUser(user : Principal) : async () {
+    AccessControl.requireAdmin(accessControlState, caller);
+    CommunityLib.banUser(bannedUsers, user);
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "community_user_banned";
+      detail = user.toText();
+    });
+  };
+
+  public shared ({ caller }) func unbanUser(user : Principal) : async () {
+    AccessControl.requireAdmin(accessControlState, caller);
+    CommunityLib.unbanUser(bannedUsers, user);
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "community_user_unbanned";
+      detail = user.toText();
+    });
+  };
+
+  public shared query ({ caller }) func listAllPostsAdmin(
+    offset : Nat,
+    limit : Nat,
+  ) : async [CommunityTypes.PostPublic] {
+    AccessControl.requireAdmin(accessControlState, caller);
+    CommunityLib.listAllPostsAdmin(
+      posts, comments, tips, profiles, caller, offset, limit,
+    );
+  };
+
+  public shared query ({ caller }) func isUserBanned(user : Principal) : async Bool {
+    AccessControl.requireAdmin(accessControlState, caller);
+    CommunityLib.isUserBanned(bannedUsers, user);
   };
 };

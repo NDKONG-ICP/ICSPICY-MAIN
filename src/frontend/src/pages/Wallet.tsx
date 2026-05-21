@@ -20,13 +20,25 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Principal } from "@dfinity/principal";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Coins, Copy, Flame, Link2, Loader2, Send, ShoppingBag, User } from "lucide-react";
+import {
+  Coins,
+  Copy,
+  Flame,
+  Link2,
+  Loader2,
+  Send,
+  ShoppingBag,
+  User,
+} from "lucide-react";
 import { ConnectButton } from "../components/ConnectButton";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
+import { BACKEND_CANISTER_ID } from "../lib/auth-config";
 import { getNftImageUrl } from "../lib/nft-config";
+import { transferNft } from "../lib/nft-transfer";
 import { sendTokens } from "../lib/ledger-transfer";
 import { useAuth } from "../hooks/useAuth";
+import { useIsAdmin } from "../hooks/useBackend";
 import { useMyNftTokenIds } from "../hooks/useMyNftIds";
 import {
   formatTokenFee,
@@ -34,6 +46,7 @@ import {
   type TokenBalanceRow,
   useTokenBalances,
 } from "../hooks/useTokenBalances";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 function truncatePid(p: string, head = 5, tail = 5) {
   if (p.length <= head + tail + 3) return p;
@@ -268,13 +281,218 @@ function TokenCircle({ label, className }: { label: string; className?: string }
   );
 }
 
+function NftTransferDialog({
+  tokenId,
+  open,
+  onOpenChange,
+  onSuccess,
+  defaultRecipient,
+  title = "Transfer NFT",
+  description = "This will transfer ownership of this NFT permanently.",
+  confirmLabel = "Transfer",
+}: {
+  tokenId: bigint;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+  defaultRecipient?: string;
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
+}) {
+  const { identity } = useAuth();
+  const [recipient, setRecipient] = useState(defaultRecipient ?? "");
+  const [sending, setSending] = useState(false);
+
+  async function handleTransfer() {
+    if (!identity) {
+      toast.error("Sign in with Internet Identity first");
+      return;
+    }
+    const to = recipient.trim();
+    if (!to) {
+      toast.error("Enter a recipient principal");
+      return;
+    }
+    try {
+      Principal.fromText(to);
+    } catch {
+      toast.error("Invalid principal");
+      return;
+    }
+    setSending(true);
+    try {
+      await transferNft(identity, tokenId, to);
+      toast.success("NFT transferred");
+      onOpenChange(false);
+      setRecipient(defaultRecipient ?? "");
+      onSuccess();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "NFT transfer failed");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) setRecipient(defaultRecipient ?? "");
+        onOpenChange(v);
+      }}
+    >
+      <DialogContent className="bg-card border-border sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <div className="flex gap-3 items-center">
+          <img
+            src={getNftImageUrl(tokenId)}
+            alt={`IC SPICY #${tokenId}`}
+            className="h-16 w-16 rounded-md object-cover border border-border"
+          />
+          <div>
+            <p className="font-medium">IC SPICY #{tokenId.toString()}</p>
+            <p className="text-xs text-muted-foreground">
+              Warning: permanent on-chain transfer
+            </p>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="nft-transfer-recipient">Recipient principal</Label>
+          <Input
+            id="nft-transfer-recipient"
+            placeholder="aaaaa-aa"
+            value={recipient}
+            onChange={(e) => setRecipient(e.target.value)}
+            className="font-mono text-sm"
+            disabled={sending}
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={sending}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={() => void handleTransfer()}
+            disabled={sending}
+            className="gap-2"
+          >
+            {sending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Transferring…
+              </>
+            ) : (
+              confirmLabel
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function WalletNftCard({
+  tokenId,
+  isAdmin,
+  onTransferred,
+}: {
+  tokenId: bigint;
+  isAdmin: boolean;
+  onTransferred: () => void;
+}) {
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [returnOpen, setReturnOpen] = useState(false);
+
+  return (
+    <>
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <Link
+          to="/nft/$tokenId"
+          params={{ tokenId: tokenId.toString() }}
+          className="group block"
+        >
+          <div className="aspect-square bg-muted relative">
+            <img
+              src={getNftImageUrl(tokenId)}
+              alt={`IC SPICY #${tokenId}`}
+              className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+              loading="lazy"
+            />
+          </div>
+          <div className="p-2 text-center">
+            <span className="text-sm font-medium text-foreground">
+              #{tokenId.toString()}
+            </span>
+          </div>
+        </Link>
+        <div className="px-2 pb-2 flex flex-col gap-1">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="w-full text-xs"
+            onClick={() => setTransferOpen(true)}
+          >
+            Transfer
+          </Button>
+          {isAdmin && (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              className="w-full text-xs"
+              onClick={() => setReturnOpen(true)}
+            >
+              Send back to canister
+            </Button>
+          )}
+        </div>
+      </div>
+      <NftTransferDialog
+        tokenId={tokenId}
+        open={transferOpen}
+        onOpenChange={setTransferOpen}
+        onSuccess={onTransferred}
+      />
+      <NftTransferDialog
+        tokenId={tokenId}
+        open={returnOpen}
+        onOpenChange={setReturnOpen}
+        onSuccess={onTransferred}
+        defaultRecipient={BACKEND_CANISTER_ID}
+        title="Return NFT to canister pool"
+        description="Admin only — returns this NFT to the IC SPICY backend canister for reassignment."
+        confirmLabel="Send to canister"
+      />
+    </>
+  );
+}
+
 export default function WalletPage() {
+  usePageTitle("Wallet");
+
   const { isAuthenticated, isInitializing, principal } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
   const queryClient = useQueryClient();
   const { data: balances, isLoading: balLoading } = useTokenBalances();
 
   function refreshBalances() {
     void queryClient.invalidateQueries({ queryKey: ["tokenBalances"] });
+  }
+
+  function refreshNfts() {
+    void queryClient.invalidateQueries({ queryKey: ["icrc7_tokens_of"] });
+    void queryClient.invalidateQueries({ queryKey: ["myNftTokenIds"] });
   }
   const { data: tokenIds, isLoading: nftsLoading } = useMyNftTokenIds();
   const [copied, setCopied] = useState(false);
@@ -405,26 +623,12 @@ export default function WalletPage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {nftCards.map(({ id }) => (
-              <Link
+              <WalletNftCard
                 key={id.toString()}
-                to="/nft/$tokenId"
-                params={{ tokenId: id.toString() }}
-                className="group rounded-lg border border-border bg-card overflow-hidden hover:border-primary/50 transition-colors"
-              >
-                <div className="aspect-square bg-muted relative">
-                  <img
-                    src={getNftImageUrl(id)}
-                    alt={`IC SPICY #${id}`}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="p-2 text-center">
-                  <span className="text-sm font-medium text-foreground">
-                    #{id.toString()}
-                  </span>
-                </div>
-              </Link>
+                tokenId={id}
+                isAdmin={!!isAdmin}
+                onTransferred={refreshNfts}
+              />
             ))}
           </div>
         )}

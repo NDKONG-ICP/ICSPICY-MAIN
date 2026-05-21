@@ -47,11 +47,14 @@ import PoolTypes "types/pool";
 import AuditLog   "lib/audit-log";
 import ProductShipping "lib/product-shipping";
 import PaymentAPI "mixins/payment-api";
+import AdminShopAPI "mixins/admin-shop-api";
 import VarietyAPI "mixins/variety-api";
 import VarietyTypes "types/variety";
 import SeedBankTypes "types/seed-bank";
 import NimsAPI "mixins/nims-api";
+import PlantingScheduleTypes "types/planting-schedule";
 import SeedBankAPI "mixins/seed-bank-api";
+import PlantingScheduleAPI "mixins/planting-schedule-api";
 import NftResaleAPI "mixins/nft-resale-api";
 import ResaleTypes "types/nft-resale";
 
@@ -302,6 +305,9 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let posts    = Map.empty<Common.PostId, CommunityTypes.Post>();
   let comments = Map.empty<Common.CommentId, CommunityTypes.Comment>();
   let profiles = Map.empty<Principal, CommunityTypes.UserProfile>();
+  let communityTips = Map.empty<Nat, CommunityTypes.Tip>();
+  let communityBannedUsers = Set.empty<Principal>();
+  let nextTipId = { var value : Nat = 1 };
 
   // ── Membership state ───────────────────────────────────────────────────────
 
@@ -310,6 +316,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // ── Recipes (CookBook) state ───────────────────────────────────────────────
 
   let recipes      = Map.empty<Common.RecipeId, RecipeTypes.Recipe>();
+  let recipeFavorites = Map.empty<Principal, Set.Set<Common.RecipeId>>();
   let nextRecipeId = { var value : Nat = 1 };
 
   // ── Claim token state (QR label → NFT claim flow) ─────────────────────────
@@ -337,6 +344,10 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   let savedSchedules      = Map.empty<Common.ScheduleId, ClaimTypes.SavedSchedule>();
   let scheduleShareIndex  = Map.empty<Text, Common.ScheduleId>();
+
+  // ── Phase 9: USDA zone calendars + owner-scoped planting schedule events ─
+  let plantingEvents      = Map.empty<Nat, PlantingScheduleTypes.PlantingEvent>();
+  let nextPlantingEventId = { var value : Nat = 1 };
 
   // ── Lifecycle upgrade event log (plant NFT burn-and-mint history) ──────────
 
@@ -439,6 +450,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
           var username = "Admin";
           var bio = "";
           var avatar_key : ?Text = null;
+          var location : ?Text = null;
           var follows = Set.empty<Principal>();
           created_at = 0;
         });
@@ -449,7 +461,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // ── Initialization ─────────────────────────────────────────────────────────
 
   // Seed default KNF recipes on first install (idempotent — skipped if already populated).
-  RecipesLib.seedRecipes(recipes, nextRecipeId);
+  RecipesLib.seedRecipes(recipes, nextRecipeId, initialDeployer);
 
   // ── Mixins ─────────────────────────────────────────────────────────────────
 
@@ -524,7 +536,18 @@ shared(msg) persistent actor class ICSpicy() = Self {
     nextOrderId,
   );
   include DAOAPI(accessControlState, proposals, plants, memberships, nextProposalId);
-  include CommunityAPI(accessControlState, posts, comments, profiles, nextPostId, nextCommentId);
+  include CommunityAPI(
+    accessControlState,
+    posts,
+    comments,
+    profiles,
+    communityTips,
+    communityBannedUsers,
+    nextPostId,
+    nextCommentId,
+    nextTipId,
+    auditLog,
+  );
   include MembershipAPI(accessControlState, memberships, nextMembershipId);
   include NFTAPI(plants);
   include ICRC7API(
@@ -543,7 +566,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     icrc37Approvals,
     certStore,
   );
-  include RecipesAPI(accessControlState, recipes, nextRecipeId);
+  include RecipesAPI(accessControlState, recipes, recipeFavorites, nextRecipeId, auditLog);
   include ClaimAPI(
     accessControlState,
     nftClaimTokens,
@@ -590,6 +613,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     nftTokenPlantIds,
   );
   include ScheduleAPI(accessControlState, savedSchedules, scheduleShareIndex);
+  include PlantingScheduleAPI(accessControlState, plantingEvents, nextPlantingEventId);
   include LifecycleUpgradeAPI(accessControlState, plants, stageHistory, rwaTokens, upgradeEvents, artworkLayers);
   include BatchGiftAndResaleAPI(accessControlState, batchGiftPacks, resaleListings, claimTokens, plants, rwaTokens, claimMemberships);
   include OffersAPI(accessControlState, offers, treasuryState, treasuryTxLog, priceOracleState, nextOfferId, nextTreasuryTxId);
@@ -633,6 +657,24 @@ shared(msg) persistent actor class ICSpicy() = Self {
     plantPhotoLog,
     plantWeatherSnapshots,
     priceOracleState,
+  );
+  include AdminShopAPI(
+    accessControlState,
+    products,
+    orders,
+    orderLineNftTokenIds,
+    orderPickupClaimTokens,
+    orderShippingCents,
+    orderShippingAddresses,
+    icpaySessionsConsumed,
+    nftClaimTokens,
+    nftClaimPlantIds,
+    plantClaimTokens,
+    icrc7Owners,
+    nftTokenPlantIds,
+    productNftTokenIds,
+    func() : Principal { Principal.fromActor(Self) },
+    auditLog,
   );
 
   // ── Audit log query ────────────────────────────────────────────────────────

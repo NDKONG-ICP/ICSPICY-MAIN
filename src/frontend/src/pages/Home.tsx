@@ -17,6 +17,7 @@ import {
 import { motion } from "motion/react";
 import { SiFacebook, SiInstagram, SiTiktok, SiX } from "react-icons/si";
 import { CHILI_VARIETIES, SOCIAL_LINKS } from "../types";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 // ── Heat level registry ──────────────────────────────────────────────────────
 const HEAT_LEVELS: Record<string, { level: number; label: string }> = {
@@ -137,6 +138,8 @@ function HeatBadge({ level }: { level: number }) {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function HomePage() {
+  usePageTitle("Home");
+
   const scrollToAbout = () => {
     document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
   };

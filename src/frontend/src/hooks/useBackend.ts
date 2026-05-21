@@ -1,10 +1,14 @@
-import { useActor } from "./useActor";
 import type { Principal } from "@icp-sdk/core/principal";
+import type { ActorSubclass } from "@dfinity/agent";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { refreshAllTrayGrids, refreshNimsDashboardStats } from "../lib/nims-query";
 import { createActor } from "../backend";
-import { useIcrc7Actor } from "../lib/icrc7-actor";
 import { toNatBigInt, toOptionalNatBigInt } from "../lib/cart-utils";
+import { useIcrc7Actor } from "../lib/icrc7-actor";
+import {
+  refreshAllTrayGrids,
+  refreshNimsDashboardStats,
+} from "../lib/nims-query";
+import { useActor } from "./useActor";
 
 import type {
   AddFeedingInput,
@@ -19,7 +23,6 @@ import type {
   CreatePostInput,
   CreateProductInput,
   CreateProposalInput,
-  CreateRecipeInput,
   CreateTrayInput,
   MembershipTier,
   MintRWAProvenanceInput,
@@ -44,14 +47,25 @@ import type {
   UpdateCellDataInput,
   UpdatePlantMetadataInput,
   UpdateProductInput,
-  UpdateRecipeInput,
   UserRole,
 } from "../backend";
+import type {
+  CreateRecipeInput,
+  UpdateRecipeInput,
+  RecipePublic,
+  _SERVICE as BackendServiceRaw,
+} from "../declarations/backend.did";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
 
-function useBackendActor() {
+export function useBackendActor() {
   return useActor<import("../backend").Backend>(createActor);
+}
+
+function cookbookRaw(actor: import("../backend").Backend | null) {
+  if (!actor) return null;
+  return (actor as unknown as { actor: ActorSubclass<BackendServiceRaw> })
+    .actor;
 }
 
 // ─── Products ───────────────────────────────────────────────────────────────
@@ -631,26 +645,7 @@ export function usePlaceOrder() {
         shipping: input.shipping,
         pickup: input.pickup,
       };
-      console.log("[usePlaceOrder] calling backend.placeOrder", {
-        pickup: payload.pickup,
-        shipping: payload.shipping ?? null,
-        items: payload.items.map((item) => ({
-          product_id: item.product_id.toString(),
-          plant_id: item.plant_id?.toString() ?? null,
-          price_cents: item.price_cents.toString(),
-          quantity: item.quantity.toString(),
-        })),
-      });
       const result = await actor.placeOrder(payload);
-      console.log("[usePlaceOrder] backend.placeOrder response", {
-        id: result?.id?.toString() ?? null,
-        total_cents: result?.total_cents?.toString() ?? null,
-        subtotal_cents: result?.subtotal_cents?.toString() ?? null,
-        shipping_cents: result?.shipping_cents?.toString() ?? null,
-        pickup: result?.pickup ?? null,
-        status: result?.status ?? null,
-        raw: result ?? null,
-      });
       if (!result?.id) {
         throw new Error(
           `placeOrder returned empty result: ${JSON.stringify(result)}`,
@@ -1005,22 +1000,6 @@ export function useIsAdmin() {
   // Once isInitializing=false, we have a definitive answer — no waiting needed.
   const isPending = isInitializing;
 
-  // Always log — never gated on NODE_ENV so it's visible in preview builds too.
-  console.log("[useIsAdmin] principal check →", {
-    principalText,
-    principalTextLength: principalText.length,
-    principalCharCodes: principalText
-      .slice(0, 10)
-      .split("")
-      .map((c) => c.charCodeAt(0)),
-    isAuthenticated,
-    isInitializing,
-    isAdmin,
-    adminPidList: Array.from(ADMIN_PIDS),
-    exactMatch: ADMIN_PIDS.has(principalText),
-    trimmedMatch: ADMIN_PIDS.has(principalText.trim()),
-  });
-
   return {
     data: isAdmin,
     isPending,
@@ -1115,29 +1094,36 @@ export function useGeneratePickupQR() {
   });
 }
 
-// ─── Recipes ─────────────────────────────────────────────────────────────────
+// ─── Recipes (raw Candid — see hooks/useCookbook.ts for grids & detail) ──────
 
 export function useListRecipes() {
   const { actor, isFetching } = useBackendActor();
+  const { actorReady } = useActorReady();
   return useQuery({
-    queryKey: ["recipes"],
-    queryFn: async () => {
+    queryKey: ["recipes", actorReady],
+    queryFn: async (): Promise<Array<RecipePublic>> => {
       if (!actor) return [];
-      return actor.listRecipes();
+      const svc = cookbookRaw(actor);
+      if (!svc) return [];
+      return svc.listRecipes();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !isFetching && actorReady,
   });
 }
 
 export function useGetRecipe(id: RecipeId | undefined) {
   const { actor, isFetching } = useBackendActor();
+  const { actorReady } = useActorReady();
   return useQuery({
     queryKey: ["recipe", id?.toString()],
-    queryFn: async () => {
+    queryFn: async (): Promise<RecipePublic | null> => {
       if (!actor || id === undefined) return null;
-      return actor.getRecipe(id);
+      const svc = cookbookRaw(actor);
+      if (!svc) return null;
+      const opt = await svc.getRecipe(id);
+      return opt.length === 0 ? null : opt[0] ?? null;
     },
-    enabled: !!actor && !isFetching && id !== undefined,
+    enabled: !!actor && !isFetching && id !== undefined && actorReady,
   });
 }
 
@@ -1145,11 +1131,18 @@ export function useCreateRecipe() {
   const { actor } = useBackendActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreateRecipeInput) => {
+    mutationFn: async (
+      input: CreateRecipeInput,
+    ): Promise<{ recipe_id: RecipeId }> => {
       if (!actor) throw new Error("Not connected");
-      return actor.createRecipe(input);
+      const svc = cookbookRaw(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.createRecipe(input);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["recipes"] }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["recipes"] });
+      await qc.invalidateQueries({ queryKey: ["cookbook"] });
+    },
   });
 }
 
@@ -1159,9 +1152,14 @@ export function useUpdateRecipe() {
   return useMutation({
     mutationFn: async (input: UpdateRecipeInput) => {
       if (!actor) throw new Error("Not connected");
-      return actor.updateRecipe(input);
+      const svc = cookbookRaw(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.updateRecipe(input);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["recipes"] }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["recipes"] });
+      await qc.invalidateQueries({ queryKey: ["cookbook"] });
+    },
   });
 }
 
@@ -1171,9 +1169,14 @@ export function useDeleteRecipe() {
   return useMutation({
     mutationFn: async (id: RecipeId) => {
       if (!actor) throw new Error("Not connected");
-      return actor.deleteRecipe(id);
+      const svc = cookbookRaw(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.deleteRecipe(id);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["recipes"] }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["recipes"] });
+      await qc.invalidateQueries({ queryKey: ["cookbook"] });
+    },
   });
 }
 
@@ -1183,9 +1186,14 @@ export function useToggleRecipeFeatured() {
   return useMutation({
     mutationFn: async (id: RecipeId) => {
       if (!actor) throw new Error("Not connected");
-      return actor.toggleRecipeFeatured(id);
+      const svc = cookbookRaw(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.toggleRecipeFeatured(id);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["recipes"] }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["recipes"] });
+      await qc.invalidateQueries({ queryKey: ["cookbook"] });
+    },
   });
 }
 
@@ -1195,9 +1203,14 @@ export function useSeedDefaultRecipes() {
   return useMutation({
     mutationFn: async () => {
       if (!actor) throw new Error("Not connected");
-      return actor.seedDefaultRecipes();
+      const svc = cookbookRaw(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.seedDefaultRecipes();
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["recipes"] }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["recipes"] });
+      await qc.invalidateQueries({ queryKey: ["cookbook"] });
+    },
   });
 }
 

@@ -29,6 +29,7 @@ import { useMembership, useProfile, useSaveProfile } from "../hooks/useBackend";
 import { useAuth } from "../hooks/useAuth";
 import { useMyNftTokenIds } from "../hooks/useMyNftIds";
 import { getNftImageUrl } from "../lib/nft-config";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 function truncatePid(p: string, head = 6, tail = 6) {
   if (p.length <= head + tail + 3) return p;
@@ -36,6 +37,8 @@ function truncatePid(p: string, head = 6, tail = 6) {
 }
 
 export default function ProfilePage() {
+  usePageTitle("Profile");
+
   const { isAuthenticated, isInitializing, principal } = useAuth();
   const { data: profile, isPending: profilePending } = useProfile();
   const { data: membership } = useMembership();

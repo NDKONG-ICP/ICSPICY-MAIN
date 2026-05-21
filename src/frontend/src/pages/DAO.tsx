@@ -46,6 +46,7 @@ import {
   useVoteOnProposal,
 } from "../hooks/useDAO";
 import type { CreateProposalInput, Proposal, ProposalId } from "../types/index";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 // ─── Type configs ─────────────────────────────────────────────────────────────
 
@@ -628,6 +629,8 @@ function NoAccessBanner() {
 // ─── Main DAO Page ────────────────────────────────────────────────────────────
 
 export default function DAOPage() {
+  usePageTitle("DAO");
+
   const { isAuthenticated, login } = useAuth();
   const { data: hasAccess, isLoading: accessLoading } = useHasDAOAccess();
   const { data: proposals, isLoading: proposalsLoading } = useProposals();

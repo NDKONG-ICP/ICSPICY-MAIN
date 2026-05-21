@@ -7,6 +7,7 @@ export type TrayCellProps = {
   varietyName?: string;
   daysSincePlanted?: bigint;
   nftTokenId?: bigint;
+  containerLabel?: string;
   onClick?: () => void;
 };
 
@@ -35,14 +36,18 @@ export function TrayCell({
   varietyName,
   daysSincePlanted,
   nftTokenId,
+  containerLabel,
   onClick,
 }: TrayCellProps) {
+  const isTransplanted = "Transplanted" in status;
   const label = varietyName ?? cellStatusLabel(status);
   const subtitle =
     typeof daysSincePlanted === "bigint"
       ? `d ${daysSincePlanted.toString()}`
       : undefined;
   const pid = nftTokenId?.toString();
+  const movedText =
+    isTransplanted && containerLabel ? `Moved · ${containerLabel}` : undefined;
 
   return (
     <button
@@ -61,7 +66,9 @@ export function TrayCell({
         {position.toString()}
       </span>
       <span className="truncate text-white">{label}</span>
-      {subtitle !== undefined ? (
+      {movedText ? (
+        <span className="truncate text-[9px] font-normal text-white/80">{movedText}</span>
+      ) : subtitle !== undefined ? (
         <span className="truncate text-[9px] font-normal text-white/80">
           {subtitle}
           {pid !== undefined ? ` · #${pid}` : ""}
@@ -69,6 +76,7 @@ export function TrayCell({
       ) : pid !== undefined ? (
         <span className="truncate text-[9px] font-normal text-white/80">
           #{pid}
+          {isTransplanted ? " · historical" : ""}
         </span>
       ) : null}
     </button>

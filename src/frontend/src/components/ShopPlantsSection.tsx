@@ -11,13 +11,28 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@tanstack/react-router";
 import { Crown, MapPin, ShoppingCart } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import type { PlantStage } from "../declarations/backend.did";
 import type { PlantStage as BackendPlantStage } from "../backend";
+import { ProductCategory } from "../backend";
 import { StageBadge } from "../components/ui/StageBadge";
+import { ShopListingImage } from "./ShopListingImage";
+import { useProducts } from "../hooks/useBackend";
+import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
 import {
   formatDiscountedPriceDisplay,
+  discountedUnitPriceCents,
 } from "../lib/discount-utils";
+import {
+  CATEGORY_DISPLAY,
+  filterActiveShopProducts,
+  filterLivePlantProducts,
+  getProductImageKeys,
+  productToCartItem,
+  productUnitPrice,
+  type ShopProduct,
+} from "../lib/shop-products";
 import {
   formatCents,
   nftImageUrl,
@@ -29,7 +44,103 @@ import {
   useVarieties,
 } from "../hooks/useNims";
 
-export function ShopPlantsSection() {
+function CatalogLivePlantCard({
+  product,
+  discountPercent,
+  onSelect,
+}: {
+  product: ShopProduct;
+  discountPercent: number;
+  onSelect?: () => void;
+}) {
+  const addItem = useCart((s) => s.addItem);
+  const imageKeys = getProductImageKeys(product);
+  const unitPrice = productUnitPrice(product);
+  const hasDiscount = discountPercent > 0;
+  const displayPriceCents = discountedUnitPriceCents(unitPrice, discountPercent);
+  const displayPrice = Number(displayPriceCents) / 100;
+  const listPrice = Number(unitPrice) / 100;
+  const cfg = CATEGORY_DISPLAY[ProductCategory.LivePlant];
+
+  const handleAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addItem(productToCartItem(product, 1));
+    toast.success(`Added ${product.name} to cart`);
+  };
+
+  return (
+    <div
+      className="rounded-xl border border-border bg-card overflow-hidden flex flex-col cursor-pointer hover:shadow-elevated transition-smooth"
+      onClick={onSelect}
+    >
+      <div className="aspect-[4/3] bg-muted relative">
+        <ShopListingImage
+          path={imageKeys[0]}
+          alt={product.name}
+          className="w-full h-full object-cover"
+          fallback="🪴"
+        />
+        {cfg && (
+          <span
+            className={`absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium ${cfg.color}`}
+          >
+            {cfg.label}
+          </span>
+        )}
+        {product.nft_token_id !== undefined && (
+          <Badge variant="secondary" className="absolute top-2 right-2 text-xs">
+            NFT #{product.nft_token_id.toString()}
+          </Badge>
+        )}
+      </div>
+      <div className="p-4 flex-1 flex flex-col gap-2">
+        <h3 className="font-semibold text-lg">{product.name}</h3>
+        {product.variety && (
+          <p className="text-xs text-muted-foreground">{product.variety}</p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          {hasDiscount ? (
+            <>
+              <span className="text-primary font-medium">
+                Your price: ${displayPrice.toFixed(2)}
+              </span>{" "}
+              <span className="line-through">${listPrice.toFixed(2)}</span>
+            </>
+          ) : (
+            <>${listPrice.toFixed(2)}</>
+          )}
+        </p>
+        <p className="text-xs text-muted-foreground flex-1 line-clamp-3">
+          {product.description}
+        </p>
+        <div className="flex gap-2 pt-2">
+          {onSelect && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect();
+              }}
+            >
+              Details
+            </Button>
+          )}
+          <Button size="sm" className="flex-1" onClick={handleAdd}>
+            <ShoppingCart className="w-3 h-3 mr-1" /> Buy
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ShopPlantsSection({
+  onSelectProduct,
+}: {
+  onSelectProduct?: (product: ShopProduct) => void;
+}) {
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [varietyFilter, setVarietyFilter] = useState<string>("all");
   const stage: PlantStage | undefined = useMemo(() => {
@@ -40,10 +151,35 @@ export function ShopPlantsSection() {
   }, [stageFilter]);
   const varietyId =
     varietyFilter === "all" ? undefined : BigInt(varietyFilter);
-  const { data: plants = [], isLoading } = usePlantsForSale(stage, varietyId);
+  const { data: nimsPlants = [], isLoading: nimsLoading } = usePlantsForSale(
+    stage,
+    varietyId,
+  );
+  const { data: allProducts = [], isLoading: productsLoading } = useProducts();
   const { data: varieties = [] } = useVarieties();
   const { data: phAvailable } = usePepperHeadAvailable();
   const { discountPercent } = useNftDiscount();
+
+  const catalogLivePlants = useMemo(() => {
+    const active = filterActiveShopProducts(allProducts as ShopProduct[]);
+    let live = filterLivePlantProducts(active);
+    if (varietyFilter !== "all") {
+      const varietyName = varieties.find(
+        (v) => v.id.toString() === varietyFilter,
+      )?.name;
+      if (varietyName) {
+        live = live.filter(
+          (p) =>
+            p.variety?.toLowerCase() === varietyName.toLowerCase() ||
+            p.name.toLowerCase().includes(varietyName.toLowerCase()),
+        );
+      }
+    }
+    return live;
+  }, [allProducts, varietyFilter, varieties]);
+
+  const isLoading = nimsLoading || productsLoading;
+  const totalCount = nimsPlants.length + catalogLivePlants.length;
 
   return (
     <section className="space-y-8">
@@ -52,7 +188,8 @@ export function ShopPlantsSection() {
           IC SPICY Nursery — Live Pepper Plants
         </h2>
         <p className="text-muted-foreground max-w-xl mx-auto">
-          Every plant comes with an NFT proving its provenance from germination to your garden.
+          NIMS-tracked plants with full lifecycle provenance, plus catalog live
+          plants added directly to the shop — every purchase includes an NFT.
         </p>
         <Badge variant="outline" className="gap-1">
           <MapPin className="w-3 h-3" /> Port Charlotte, FL — Local Pickup
@@ -88,13 +225,13 @@ export function ShopPlantsSection() {
 
       {isLoading ? (
         <Skeleton className="h-48" />
-      ) : plants.length === 0 ? (
+      ) : totalCount === 0 ? (
         <p className="text-center text-muted-foreground py-12">
           No plants available right now — check back soon!
         </p>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plants.map((lc) => {
+          {nimsPlants.map((lc) => {
             const tokenId = unwrapOpt(lc.nftTokenId);
             const price =
               unwrapOpt(lc.priceCents) ??
@@ -106,7 +243,7 @@ export function ShopPlantsSection() {
             const feedingCount = lc.feedingLog.length;
             return (
               <div
-                key={lc.plant.id.toString()}
+                key={`nims-${lc.plant.id.toString()}`}
                 className="rounded-xl border border-border bg-card overflow-hidden flex flex-col"
               >
                 <div className="aspect-[4/3] bg-muted relative">
@@ -130,7 +267,9 @@ export function ShopPlantsSection() {
                         <span className="text-primary font-medium">
                           Your price: {priceDisplay.yourPrice}
                         </span>{" "}
-                        <span className="line-through">{priceDisplay.listPrice}</span>
+                        <span className="line-through">
+                          {priceDisplay.listPrice}
+                        </span>
                       </>
                     ) : (
                       <> · {formatCents(price)}</>
@@ -170,6 +309,16 @@ export function ShopPlantsSection() {
               </div>
             );
           })}
+          {catalogLivePlants.map((product) => (
+            <CatalogLivePlantCard
+              key={`catalog-${product.id.toString()}`}
+              product={product}
+              discountPercent={discountPercent}
+              onSelect={
+                onSelectProduct ? () => onSelectProduct(product) : undefined
+              }
+            />
+          ))}
         </div>
       )}
 
@@ -177,7 +326,8 @@ export function ShopPlantsSection() {
         <Crown className="w-8 h-8 mx-auto text-amber-400" />
         <h3 className="text-xl font-semibold">Join PepperHead — $25</h3>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          DAO access, 10% shop discount, and premium provenance rights. Digital membership NFT.
+          DAO access, 10% shop discount, and premium provenance rights. Digital
+          membership NFT.
         </p>
         <p className="text-sm font-medium">
           {phAvailable !== undefined

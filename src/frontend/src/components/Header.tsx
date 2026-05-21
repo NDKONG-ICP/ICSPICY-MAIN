@@ -1,24 +1,33 @@
 import { Badge } from "@/components/ui/badge";
-import { ConnectButton } from "@/components/ConnectButton";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ConnectButton } from "@/components/ConnectButton";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Flame, Menu, ShoppingCart, X } from "lucide-react";
+import { ChevronDown, Flame, Menu, ShoppingCart, User, Wallet, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { SiFacebook, SiInstagram, SiTiktok, SiX } from "react-icons/si";
 import { useAuth } from "../hooks/useAuth";
+import { useIsAdmin } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
 import { SOCIAL_LINKS } from "../types/index";
 
-const NAV_LINKS = [
+const PRIMARY_NAV = [
   { label: "Home", to: "/" },
   { label: "Shop", to: "/marketplace" },
-  { label: "Plants", to: "/plants" },
-  { label: "CookBook", to: "/cookbook" },
-  { label: "Schedule Builder", to: "/schedule-builder" },
+  { label: "NIMS", to: "/nims" },
   { label: "Community", to: "/community" },
+  { label: "CookBook", to: "/cookbook" },
+] as const;
+
+const MORE_NAV_ALWAYS = [
+  { label: "Schedule Builder", to: "/schedule-builder" },
   { label: "DAO", to: "/dao" },
-  { label: "Wallet", to: "/wallet" },
 ] as const;
 
 const SOCIAL_ICONS = [
@@ -28,12 +37,41 @@ const SOCIAL_ICONS = [
   { href: SOCIAL_LINKS.tiktok, Icon: SiTiktok, label: "TikTok" },
 ] as const;
 
+function navLinkClasses(active: boolean) {
+  return [
+    "px-3 py-2 rounded-md text-sm font-medium transition-smooth",
+    active
+      ? "text-primary bg-primary/10"
+      : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+  ].join(" ");
+}
+
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated, isInitializing } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
   const itemCount = useCart((s) => s.itemCount());
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
+
+  const mobileLinks = useMemo(() => {
+    const adminEntry =
+      isAdmin === true ? ([{ label: "Admin", to: "/admin" }] as const) : [];
+    const profileEntry =
+      !isInitializing && isAuthenticated
+        ? ([{ label: "Profile", to: "/profile" }] as const)
+        : [];
+    return [
+      ...PRIMARY_NAV,
+      ...MORE_NAV_ALWAYS,
+      ...adminEntry,
+      ...profileEntry,
+      { label: "Wallet", to: "/wallet" },
+    ];
+  }, [isAdmin, isAuthenticated, isInitializing]);
+
+  const moreMenuOpen = MORE_NAV_ALWAYS.some(({ to }) => currentPath === to) ||
+    (isAdmin === true && currentPath === "/admin");
 
   return (
     <header
@@ -61,46 +99,60 @@ export function Header() {
             className="hidden md:flex items-center gap-1"
             data-ocid="header-nav"
           >
-            {NAV_LINKS.map(({ label, to }) => (
+            {PRIMARY_NAV.map(({ label, to }) => (
               <Link
                 key={to}
                 to={to}
-                className={[
-                  "px-3 py-2 rounded-md text-sm font-medium transition-smooth",
-                  currentPath === to
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-                ].join(" ")}
+                className={navLinkClasses(currentPath === to)}
               >
                 {label}
               </Link>
             ))}
-            {/* NIMS link — always visible to everyone */}
-            <Link
-              to="/nims"
-              className={[
-                "px-3 py-2 rounded-md text-sm font-medium transition-smooth",
-                currentPath === "/nims"
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-              ].join(" ")}
-              data-ocid="header-nims-link"
-            >
-              NIMS
-            </Link>
-            {/* Admin link — always visible; access is gated inside the route */}
-            <Link
-              to="/admin"
-              className={[
-                "px-3 py-2 rounded-md text-sm font-medium transition-smooth",
-                currentPath === "/admin"
-                  ? "text-primary bg-primary/10"
-                  : "text-fire hover:text-fire/80 hover:bg-fire/10",
-              ].join(" ")}
-              data-ocid="header-admin-link"
-            >
-              Admin
-            </Link>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  data-ocid="header-more-trigger"
+                  className={[
+                    "inline-flex items-center gap-0.5 px-3 py-2 rounded-md text-sm font-medium transition-smooth outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring",
+                    moreMenuOpen
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                  ].join(" ")}
+                >
+                  More
+                  <ChevronDown className="w-4 h-4 opacity-70" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" data-ocid="header-more-menu">
+                {MORE_NAV_ALWAYS.map(({ label, to }) => (
+                  <DropdownMenuItem key={to} asChild>
+                    <Link
+                      to={to}
+                      data-ocid={`header-more-${to.replace("/", "") || "home"}`}
+                    >
+                      {label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                {isAdmin === true && (
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/admin"
+                      className={
+                        currentPath === "/admin"
+                          ? "bg-primary/10 text-primary focus:bg-primary/15"
+                          : ""
+                      }
+                      data-ocid="header-admin-link"
+                    >
+                      Admin
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           {/* Right cluster */}
@@ -124,6 +176,38 @@ export function Header() {
               ))}
             </div>
 
+            {/* Wallet */}
+            <Link
+              to="/wallet"
+              className={[
+                "p-2 rounded-md transition-smooth",
+                currentPath === "/wallet"
+                  ? "text-primary bg-primary/10"
+                  : "text-muted-foreground hover:text-foreground",
+              ].join(" ")}
+              aria-label="Wallet"
+              data-ocid="header-wallet-link"
+            >
+              <Wallet className="w-5 h-5" />
+            </Link>
+
+            {/* Profile shortcut — xs only (duplicate of bottom nav Cluster) */}
+            {!isInitializing && isAuthenticated && (
+              <Link
+                to="/profile"
+                className={[
+                  "sm:hidden p-2 rounded-md transition-smooth",
+                  currentPath === "/profile"
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground",
+                ].join(" ")}
+                aria-label="Profile"
+                data-ocid="header-profile-icon-mobile"
+              >
+                <User className="w-5 h-5" />
+              </Link>
+            )}
+
             {/* Cart */}
             <Link
               to="/checkout"
@@ -139,14 +223,19 @@ export function Header() {
               )}
             </Link>
 
-            {/* Internet Identity + profile shortcut */}
+            {/* Internet Identity + profile — full row sm+ ; mobile drawer has Connect */}
             <div className="hidden sm:flex items-center gap-2" data-ocid="header-wallet">
               {!isInitializing && isAuthenticated && (
                 <Link to="/profile">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-muted-foreground hover:text-foreground"
+                    className={[
+                      "text-muted-foreground hover:text-foreground",
+                      currentPath === "/profile"
+                        ? "text-primary bg-primary/10"
+                        : "",
+                    ].join(" ")}
                     data-ocid="header-profile"
                   >
                     Profile
@@ -186,49 +275,29 @@ export function Header() {
             data-ocid="header-mobile-nav"
           >
             <div className="px-4 py-4 space-y-1">
-              {NAV_LINKS.map(({ label, to }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className={[
-                    "block px-3 py-2 rounded-md text-sm font-medium transition-smooth",
-                    currentPath === to
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-                  ].join(" ")}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {label}
-                </Link>
-              ))}
-              {/* NIMS mobile link — always visible to everyone */}
-              <Link
-                to="/nims"
-                className={[
-                  "block px-3 py-2 rounded-md text-sm font-medium transition-smooth",
-                  currentPath === "/nims"
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-                ].join(" ")}
-                onClick={() => setMobileOpen(false)}
-                data-ocid="header-nims-link-mobile"
-              >
-                NIMS
-              </Link>
-              {/* Admin mobile link — always visible; access is gated inside the route */}
-              <Link
-                to="/admin"
-                className={[
-                  "block px-3 py-2 rounded-md text-sm font-medium transition-smooth",
-                  currentPath === "/admin"
-                    ? "text-primary bg-primary/10"
-                    : "text-fire hover:text-fire/80 hover:bg-fire/10",
-                ].join(" ")}
-                onClick={() => setMobileOpen(false)}
-                data-ocid="header-admin-link-mobile"
-              >
-                Admin
-              </Link>
+              {mobileLinks.map(({ label, to }) => {
+                const isAdminLink = to === "/admin";
+                return (
+                  <Link
+                    key={`${label}-${to}`}
+                    to={to}
+                    className={[
+                      "block px-3 py-2 rounded-md text-sm font-medium transition-smooth",
+                      currentPath === to
+                        ? "text-primary bg-primary/10"
+                        : isAdminLink
+                          ? "text-fire hover:text-fire/80 hover:bg-fire/10"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                    ].join(" ")}
+                    onClick={() => setMobileOpen(false)}
+                    data-ocid={
+                      isAdminLink ? "header-admin-link-mobile" : undefined
+                    }
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
 
               <div className="pt-3 border-t border-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">

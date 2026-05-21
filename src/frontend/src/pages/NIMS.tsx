@@ -34,6 +34,7 @@ import {
   PlantSeedModal,
   SeedBankPanel,
   TransplantModal,
+  TransplantedCellModal,
   TrayGrid,
   WeatherBar,
 } from "../components/nims";
@@ -64,6 +65,7 @@ import { useWeather } from "../hooks/useWeather";
 import { useTransplantCell } from "../hooks/useBackend";
 import { downloadTextFile, plantTagLinksCsv } from "../lib/plant-nfc-url";
 import type { TransplantInput } from "../backend";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 type NimsTab =
   | "trays"
@@ -102,6 +104,8 @@ function formatMsAgo(ms: bigint | undefined): string {
 }
 
 export default function NIMSPage() {
+  usePageTitle("NIMS");
+
   const navigate = useNavigate();
   const { isAuthenticated, login } = useAuth();
   const { data: isAdmin } = useIsAdmin();
@@ -153,6 +157,7 @@ export default function NIMSPage() {
   const [germOpen, setGermOpen] = useState(false);
   const [deadOpen, setDeadOpen] = useState(false);
   const [transplantOpen, setTransplantOpen] = useState(false);
+  const [transplantedOpen, setTransplantedOpen] = useState(false);
 
   const selectedCellData = useMemo(
     () => trayCells.find((c) => c.position === selectedCell),
@@ -204,6 +209,7 @@ export default function NIMSPage() {
     else if (status === "planted") setGermOpen(true);
     else if (status === "germinated") setTransplantOpen(true);
     else if (status === "dead") toast.info("This cell is marked dead.");
+    else if (status === "transplanted") setTransplantedOpen(true);
     else toast.info("Plant was transplanted to inventory.");
   };
 
@@ -407,8 +413,9 @@ export default function NIMSPage() {
               (tab === "myplants" || !(isAdmin && showAllUsers) ? myPlants : inventoryList).map((lc) => (
                 <Link
                   key={lc.plant.id.toString()}
-                  to="/plants/$plantId"
+                  to="/plant/$plantId"
                   params={{ plantId: lc.plant.id.toString() }}
+                  className="block no-underline"
                 >
                   <PlantLifecycleCard lifecycle={lc} />
                 </Link>
@@ -460,6 +467,13 @@ export default function NIMSPage() {
               return id;
             }}
             onSubmit={async ({ varietyId }) => {
+              const occupied = trayCells.find(
+                (c) => c.position === selectedCell && cellStatusKey(c) !== "empty",
+              );
+              if (occupied) {
+                toast.error(`Cell ${cellPositionLabel(selectedCell)} already has a plant.`);
+                return;
+              }
               try {
                 await plantSeed.mutateAsync({
                   trayId: activeTrayId,
@@ -470,7 +484,12 @@ export default function NIMSPage() {
                 setPrefillVarietyId(null);
                 setSeedOpen(false);
               } catch (e) {
-                toast.error(e instanceof Error ? e.message : "Plant failed");
+                const msg = e instanceof Error ? e.message : "Plant failed";
+                if (msg.toLowerCase().includes("already occupied")) {
+                  toast.error(`Cell ${cellPositionLabel(selectedCell)} already has a plant.`);
+                } else {
+                  toast.error(msg);
+                }
               }
             }}
           />
@@ -557,6 +576,16 @@ export default function NIMSPage() {
                 toast.error(e instanceof Error ? e.message : "Transplant failed");
               }
             }}
+          />
+
+          <TransplantedCellModal
+            open={transplantedOpen}
+            onOpenChange={setTransplantedOpen}
+            slotLabel={selectedCell != null ? cellPositionLabel(selectedCell) : undefined}
+            varietyName={unwrapOpt(selectedCellData?.varietyName ?? [])}
+            nftTokenId={unwrapOpt(selectedCellData?.nftTokenId ?? [])}
+            containerLabel={unwrapOpt(selectedCellData?.containerLabel ?? [])}
+            inventoryPlantId={unwrapOpt(selectedCellData?.inventoryPlantId ?? [])}
           />
         </>
       )}

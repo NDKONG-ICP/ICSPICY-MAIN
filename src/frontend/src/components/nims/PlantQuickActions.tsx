@@ -9,6 +9,7 @@ import {
   Skull,
   Tag,
   Wheat,
+  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,8 @@ export type QuickPlantAction =
   | "harvest_seeds"
   | "nfc_tag"
   | "list_sale"
-  | "mark_dead";
+  | "mark_dead"
+  | "remove_plant";
 
 const ACTIONS: ReadonlyArray<{
   key: QuickPlantAction;
@@ -45,6 +47,12 @@ const ACTIONS: ReadonlyArray<{
       key: "mark_dead",
       label: "Mark Dead",
       icon: Skull,
+      tone: "danger",
+    },
+    {
+      key: "remove_plant",
+      label: "Remove Plant",
+      icon: Trash2,
       tone: "danger",
     },
   ];

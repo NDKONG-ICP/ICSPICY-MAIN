@@ -50,6 +50,20 @@ export const idlFactory = ({ IDL }) => {
     'object_key' : IDL.Text,
     'uploaded_at' : Timestamp,
   });
+  const PostId = IDL.Nat;
+  const CommentId = IDL.Nat;
+  const CommentPublic = IDL.Record({
+    'id' : CommentId,
+    'post_id' : PostId,
+    'content' : IDL.Text,
+    'author_text' : IDL.Text,
+    'like_count' : IDL.Nat,
+    'created_at' : Timestamp,
+    'author' : IDL.Principal,
+    'author_username' : IDL.Opt(IDL.Text),
+    'is_anonymous' : IDL.Bool,
+    'caller_liked' : IDL.Bool,
+  });
   const PlantId = IDL.Nat;
   const AddFeedingInput = IDL.Record({
     'dosage_amount' : IDL.Text,
@@ -141,11 +155,6 @@ export const idlFactory = ({ IDL }) => {
     'humidity' : IDL.Float64,
     'tempLowF' : IDL.Float64,
   });
-  const Subaccount = IDL.Vec(IDL.Nat8);
-  const Account = IDL.Record({
-    'owner' : IDL.Principal,
-    'subaccount' : IDL.Opt(Subaccount),
-  });
   const TransferError = IDL.Variant({
     'GenericError' : IDL.Record({
       'message' : IDL.Text,
@@ -163,6 +172,11 @@ export const idlFactory = ({ IDL }) => {
     'TooOld' : IDL.Null,
   });
   const TransferResult = IDL.Variant({ 'Ok' : IDL.Nat, 'Err' : TransferError });
+  const Subaccount = IDL.Vec(IDL.Nat8);
+  const Account = IDL.Record({
+    'owner' : IDL.Principal,
+    'subaccount' : IDL.Opt(Subaccount),
+  });
   const AdminWithdrawTokensResult = IDL.Record({
     'blockIndex' : IDL.Opt(IDL.Nat),
     'message' : IDL.Text,
@@ -284,6 +298,24 @@ export const idlFactory = ({ IDL }) => {
     'message' : IDL.Text,
     'success' : IDL.Bool,
   });
+  const PlantingEventType = IDL.Variant({
+    'directSow' : IDL.Null,
+    'startIndoors' : IDL.Null,
+    'harvest' : IDL.Null,
+    'transplantOutdoors' : IDL.Null,
+  });
+  const PlantingEvent = IDL.Record({
+    'id' : IDL.Nat,
+    'owner' : IDL.Principal,
+    'name' : IDL.Text,
+    'completed' : IDL.Bool,
+    'created_at' : Timestamp,
+    'emoji' : IDL.Text,
+    'notes' : IDL.Text,
+    'scheduled_at' : Timestamp,
+    'completed_at' : IDL.Opt(Timestamp),
+    'event_type' : PlantingEventType,
+  });
   const ConfirmOrderPaymentDirectResult = IDL.Record({
     'claim_tokens' : IDL.Vec(IDL.Text),
     'message' : IDL.Text,
@@ -306,19 +338,10 @@ export const idlFactory = ({ IDL }) => {
     'claim_token_id' : ClaimTokenId,
     'highest_rarity_pct' : IDL.Nat,
   });
-  const PostId = IDL.Nat;
   const CreateCommentInput = IDL.Record({
     'post_id' : PostId,
     'content' : IDL.Text,
-  });
-  const CommentId = IDL.Nat;
-  const CommentPublic = IDL.Record({
-    'id' : CommentId,
-    'post_id' : PostId,
-    'content' : IDL.Text,
-    'created_at' : Timestamp,
-    'author' : IDL.Principal,
-    'author_username' : IDL.Opt(IDL.Text),
+    'anonymous' : IDL.Bool,
   });
   const ProposalType = IDL.Variant({
     'General' : IDL.Null,
@@ -436,10 +459,20 @@ export const idlFactory = ({ IDL }) => {
     'photos' : IDL.Vec(IDL.Text),
     'latin_name' : IDL.Opt(IDL.Text),
   });
+  const CreatePlantingEventInput = IDL.Record({
+    'name' : IDL.Text,
+    'emoji' : IDL.Text,
+    'notes' : IDL.Text,
+    'scheduled_at' : Timestamp,
+    'event_type' : PlantingEventType,
+  });
   const CreatePostInput = IDL.Record({
     'content' : IDL.Text,
+    'nft_token_id' : IDL.Opt(IDL.Nat),
     'image_key' : IDL.Opt(IDL.Text),
+    'image_keys' : IDL.Vec(IDL.Text),
     'anonymous' : IDL.Bool,
+    'plant_id' : IDL.Opt(IDL.Nat),
   });
   const PostPublic = IDL.Record({
     'id' : PostId,
@@ -447,44 +480,70 @@ export const idlFactory = ({ IDL }) => {
     'content' : IDL.Text,
     'author_text' : IDL.Text,
     'comment_count' : IDL.Nat,
+    'nft_token_id' : IDL.Opt(IDL.Nat),
     'image_key' : IDL.Opt(IDL.Text),
     'like_count' : IDL.Nat,
     'created_at' : Timestamp,
     'author_principal' : IDL.Opt(IDL.Principal),
+    'image_keys' : IDL.Vec(IDL.Text),
+    'tip_count' : IDL.Nat,
     'author_username' : IDL.Opt(IDL.Text),
     'is_anonymous' : IDL.Bool,
     'caller_liked' : IDL.Bool,
+    'plant_id' : IDL.Opt(IDL.Nat),
+  });
+  const Difficulty = IDL.Variant({
+    'Beginner' : IDL.Null,
+    'Advanced' : IDL.Null,
+    'Intermediate' : IDL.Null,
+  });
+  const RecipeStep = IDL.Record({
+    'duration' : IDL.Opt(IDL.Text),
+    'image_key' : IDL.Opt(IDL.Text),
+    'tips' : IDL.Opt(IDL.Text),
+    'step_number' : IDL.Nat,
+    'instruction' : IDL.Text,
+  });
+  const RecipeCategory = IDL.Variant({
+    'KNF' : IDL.Null,
+    'Composting' : IDL.Null,
+    'SoilAmendment' : IDL.Null,
+    'FermentedInputs' : IDL.Null,
+    'PestControl' : IDL.Null,
+    'PlantExtracts' : IDL.Null,
+    'MicrobialCultures' : IDL.Null,
+    'JADAM' : IDL.Null,
+    'Other' : IDL.Null,
+  });
+  const Ingredient = IDL.Record({
+    'name' : IDL.Text,
+    'notes' : IDL.Opt(IDL.Text),
+    'is_optional' : IDL.Bool,
+    'amount' : IDL.Text,
   });
   const CreateRecipeInput = IDL.Record({
-    'photo_key' : IDL.Opt(IDL.Text),
-    'name' : IDL.Text,
+    'title' : IDL.Text,
+    'fermentation_time' : IDL.Opt(IDL.Text),
+    'image_key' : IDL.Opt(IDL.Text),
+    'difficulty' : Difficulty,
+    'slug' : IDL.Text,
     'tags' : IDL.Vec(IDL.Text),
+    'tips' : IDL.Vec(IDL.Text),
+    'best_for' : IDL.Vec(IDL.Text),
     'description' : IDL.Text,
-    'instructions' : IDL.Vec(IDL.Text),
-    'is_featured' : IDL.Bool,
-    'shop_link' : IDL.Opt(IDL.Text),
-    'shop_link_label' : IDL.Opt(IDL.Text),
-    'application_notes' : IDL.Text,
-    'full_name' : IDL.Text,
-    'ingredients' : IDL.Vec(IDL.Text),
+    'safety_notes' : IDL.Vec(IDL.Text),
+    'total_time' : IDL.Opt(IDL.Text),
+    'is_published' : IDL.Bool,
+    'steps' : IDL.Vec(RecipeStep),
+    'application_frequency' : IDL.Opt(IDL.Text),
+    'category' : RecipeCategory,
+    'display_order' : IDL.Nat,
+    'related_recipe_ids' : IDL.Vec(IDL.Nat),
+    'ingredients' : IDL.Vec(Ingredient),
+    'prep_time' : IDL.Opt(IDL.Text),
+    'application_rate' : IDL.Opt(IDL.Text),
   });
   const RecipeId = IDL.Nat;
-  const Recipe = IDL.Record({
-    'id' : RecipeId,
-    'updated_at' : Timestamp,
-    'photo_key' : IDL.Opt(IDL.Text),
-    'name' : IDL.Text,
-    'tags' : IDL.Vec(IDL.Text),
-    'description' : IDL.Text,
-    'created_at' : Timestamp,
-    'instructions' : IDL.Vec(IDL.Text),
-    'is_featured' : IDL.Bool,
-    'shop_link' : IDL.Opt(IDL.Text),
-    'shop_link_label' : IDL.Opt(IDL.Text),
-    'application_notes' : IDL.Text,
-    'full_name' : IDL.Text,
-    'ingredients' : IDL.Vec(IDL.Text),
-  });
   const CreateTrayInput = IDL.Record({
     'name' : IDL.Text,
     'planting_date' : Timestamp,
@@ -567,6 +626,29 @@ export const idlFactory = ({ IDL }) => {
     'weatherSnapshots' : IDL.Vec(WeatherSnapshot),
     'photos' : IDL.Vec(PlantPhotoEntry),
   });
+  const AdminOrderItemPublic = IDL.Record({
+    'product_id' : ProductId,
+    'price_cents' : IDL.Nat,
+    'product_name' : IDL.Text,
+    'quantity' : IDL.Nat,
+    'plant_id' : IDL.Opt(PlantId),
+  });
+  const AdminOrderPublic = IDL.Record({
+    'id' : OrderId,
+    'status' : OrderStatus,
+    'is_paid' : IDL.Bool,
+    'subtotal_cents' : IDL.Nat,
+    'pickup_claim_tokens' : IDL.Vec(IDL.Text),
+    'shipping_address' : IDL.Opt(IDL.Text),
+    'shipping_cents' : IDL.Nat,
+    'shipping' : IDL.Opt(ShippingAddress),
+    'created_at' : Timestamp,
+    'pickup' : IDL.Bool,
+    'line_nft_token_ids' : IDL.Vec(IDL.Nat),
+    'buyer' : IDL.Principal,
+    'items' : IDL.Vec(AdminOrderItemPublic),
+    'total_cents' : IDL.Nat,
+  });
   const UploadSessionStatus = IDL.Record({
     'total_chunks' : IDL.Nat,
     'received' : IDL.Nat,
@@ -606,16 +688,63 @@ export const idlFactory = ({ IDL }) => {
   const UserProfilePublic = IDL.Record({
     'bio' : IDL.Text,
     'username' : IDL.Text,
+    'is_admin' : IDL.Bool,
     'avatar_key' : IDL.Opt(IDL.Text),
     'following_count' : IDL.Nat,
+    'post_count' : IDL.Nat,
     'created_at' : Timestamp,
+    'caller_following' : IDL.Bool,
     'follower_count' : IDL.Nat,
     'principal_id' : IDL.Principal,
+    'location' : IDL.Opt(IDL.Text),
   });
   const CanisterTreasuryBalance = IDL.Record({
     'balance' : IDL.Nat,
     'ledgerCanisterId' : IDL.Text,
     'symbol' : IDL.Text,
+  });
+  const ShopListingFile = IDL.Record({
+    'data' : IDL.Vec(IDL.Nat8),
+    'mime_type' : IDL.Text,
+  });
+  const RecipePublic = IDL.Record({
+    'id' : RecipeId,
+    'title' : IDL.Text,
+    'updated_at' : Timestamp,
+    'fermentation_time' : IDL.Opt(IDL.Text),
+    'image_key' : IDL.Opt(IDL.Text),
+    'difficulty' : Difficulty,
+    'slug' : IDL.Text,
+    'tags' : IDL.Vec(IDL.Text),
+    'tips' : IDL.Vec(IDL.Text),
+    'best_for' : IDL.Vec(IDL.Text),
+    'description' : IDL.Text,
+    'safety_notes' : IDL.Vec(IDL.Text),
+    'created_at' : Timestamp,
+    'author' : IDL.Principal,
+    'total_time' : IDL.Opt(IDL.Text),
+    'is_published' : IDL.Bool,
+    'steps' : IDL.Vec(RecipeStep),
+    'application_frequency' : IDL.Opt(IDL.Text),
+    'category' : RecipeCategory,
+    'display_order' : IDL.Nat,
+    'related_recipe_ids' : IDL.Vec(IDL.Nat),
+    'caller_favorited' : IDL.Bool,
+    'favorite_count' : IDL.Nat,
+    'ingredients' : IDL.Vec(Ingredient),
+    'prep_time' : IDL.Opt(IDL.Text),
+    'application_rate' : IDL.Opt(IDL.Text),
+  });
+  const Icrc7PoolStats = IDL.Record({
+    'total' : IDL.Nat,
+    'pepperhead_total' : IDL.Nat,
+    'assigned_to_plants' : IDL.Nat,
+    'assigned_to_products' : IDL.Nat,
+    'pepperhead_sold' : IDL.Nat,
+    'in_canister_pool' : IDL.Nat,
+    'pepperhead_in_pool' : IDL.Nat,
+    'missing_owner' : IDL.Nat,
+    'sold_to_customers' : IDL.Nat,
   });
   const NftListingPublic = IDL.Record({
     'tokenId' : IDL.Nat,
@@ -688,10 +817,6 @@ export const idlFactory = ({ IDL }) => {
     'germinatedToday' : IDL.Nat,
     'lastWateredMsAgo' : IDL.Opt(IDL.Nat),
     'totalPlants' : IDL.Nat,
-  });
-  const ShopListingFile = IDL.Record({
-    'data' : IDL.Vec(IDL.Nat8),
-    'mime_type' : IDL.Text,
   });
   const PlantCountStats = IDL.Record({
     'total' : IDL.Nat,
@@ -773,6 +898,11 @@ export const idlFactory = ({ IDL }) => {
     'airdropped' : IDL.Nat,
     'ready' : IDL.Nat,
   });
+  const PostWithComments = IDL.Record({
+    'post' : PostPublic,
+    'has_liked' : IDL.Bool,
+    'comments' : IDL.Vec(CommentPublic),
+  });
   const ActivityEntry = IDL.Record({
     'plantName' : IDL.Text,
     'actionType' : IDL.Text,
@@ -808,7 +938,9 @@ export const idlFactory = ({ IDL }) => {
   });
   const TrayCellPublic = IDL.Record({
     'status' : CellStatus,
+    'containerLabel' : IDL.Opt(IDL.Text),
     'plantedAt' : IDL.Opt(Timestamp),
+    'inventoryPlantId' : IDL.Opt(PlantId),
     'varietyName' : IDL.Opt(IDL.Text),
     'nftTokenId' : IDL.Opt(IDL.Nat),
     'plantId' : IDL.Opt(PlantId),
@@ -863,6 +995,21 @@ export const idlFactory = ({ IDL }) => {
     'scovilleMin' : IDL.Nat,
     'species' : IDL.Text,
     'daysToGermination' : IDL.Opt(IDL.Nat),
+  });
+  const ZoneRecommendation = IDL.Record({
+    'name' : IDL.Text,
+    'emoji' : IDL.Text,
+    'notes' : IDL.Text,
+    'event_type' : PlantingEventType,
+  });
+  const ZoneSchedule = IDL.Record({
+    'month' : IDL.Nat,
+    'recommendations' : IDL.Vec(ZoneRecommendation),
+    'zone_label' : IDL.Text,
+  });
+  const ZoneCalendar = IDL.Record({
+    'zone_label' : IDL.Text,
+    'months' : IDL.Vec(ZoneSchedule),
   });
   const ApprovalInfo = IDL.Record({
     'memo' : IDL.Opt(IDL.Vec(IDL.Nat8)),
@@ -976,6 +1123,37 @@ export const idlFactory = ({ IDL }) => {
     'from_subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
     'created_at_time' : IDL.Opt(IDL.Nat64),
   });
+  const AdminOrderStatusFilter = IDL.Variant({
+    'All' : IDL.Null,
+    'Paid' : IDL.Null,
+    'PickedUp' : IDL.Null,
+    'Cancelled' : IDL.Null,
+    'Shipped' : IDL.Null,
+    'Pending' : IDL.Null,
+  });
+  const ClaimTokenAdminPublic = IDL.Record({
+    'token' : IDL.Text,
+    'token_id' : IDL.Nat,
+    'redeemed' : IDL.Bool,
+    'plant_id' : IDL.Opt(PlantId),
+  });
+  const Icrc7TokenFilter = IDL.Variant({
+    'All' : IDL.Null,
+    'Missing' : IDL.Null,
+    'Available' : IDL.Null,
+    'Sold' : IDL.Null,
+    'PepperHead' : IDL.Null,
+    'Assigned' : IDL.Null,
+  });
+  const Icrc7TokenAdminPublic = IDL.Record({
+    'token_id' : IDL.Nat,
+    'product_id' : IDL.Opt(ProductId),
+    'owner' : IDL.Text,
+    'rarity_label' : IDL.Text,
+    'is_canister_pool' : IDL.Bool,
+    'is_pepperhead' : IDL.Bool,
+    'plant_id' : IDL.Opt(PlantId),
+  });
   const LoadStaticMetadataResult = IDL.Record({
     'skipped' : IDL.Nat,
     'errors' : IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Text)),
@@ -1002,10 +1180,17 @@ export const idlFactory = ({ IDL }) => {
     'message' : IDL.Text,
     'success' : IDL.Bool,
   });
+  const RecordTipInput = IDL.Record({
+    'post_id' : PostId,
+    'block_index' : IDL.Nat,
+    'ledger_canister_id' : IDL.Text,
+    'amount' : IDL.Nat,
+  });
   const SaveProfileInput = IDL.Record({
     'bio' : IDL.Text,
     'username' : IDL.Text,
     'avatar_key' : IDL.Opt(IDL.Text),
+    'location' : IDL.Opt(IDL.Text),
   });
   const StoredFile = IDL.Record({
     'data' : IDL.Vec(IDL.Nat8),
@@ -1041,6 +1226,14 @@ export const idlFactory = ({ IDL }) => {
     'photos' : IDL.Opt(IDL.Vec(IDL.Text)),
     'plant_id' : PlantId,
   });
+  const UpdatePlantingEventInput = IDL.Record({
+    'id' : IDL.Nat,
+    'name' : IDL.Text,
+    'emoji' : IDL.Text,
+    'notes' : IDL.Text,
+    'scheduled_at' : Timestamp,
+    'event_type' : PlantingEventType,
+  });
   const UpdateProductInput = IDL.Record({
     'active' : IDL.Opt(IDL.Bool),
     'product_id' : ProductId,
@@ -1052,17 +1245,26 @@ export const idlFactory = ({ IDL }) => {
   });
   const UpdateRecipeInput = IDL.Record({
     'id' : RecipeId,
-    'photo_key' : IDL.Opt(IDL.Text),
-    'name' : IDL.Opt(IDL.Text),
+    'title' : IDL.Opt(IDL.Text),
+    'fermentation_time' : IDL.Opt(IDL.Text),
+    'image_key' : IDL.Opt(IDL.Text),
+    'difficulty' : IDL.Opt(Difficulty),
+    'slug' : IDL.Opt(IDL.Text),
     'tags' : IDL.Opt(IDL.Vec(IDL.Text)),
+    'tips' : IDL.Opt(IDL.Vec(IDL.Text)),
+    'best_for' : IDL.Opt(IDL.Vec(IDL.Text)),
     'description' : IDL.Opt(IDL.Text),
-    'instructions' : IDL.Opt(IDL.Vec(IDL.Text)),
-    'is_featured' : IDL.Opt(IDL.Bool),
-    'shop_link' : IDL.Opt(IDL.Text),
-    'shop_link_label' : IDL.Opt(IDL.Text),
-    'application_notes' : IDL.Opt(IDL.Text),
-    'full_name' : IDL.Opt(IDL.Text),
-    'ingredients' : IDL.Opt(IDL.Vec(IDL.Text)),
+    'safety_notes' : IDL.Opt(IDL.Vec(IDL.Text)),
+    'total_time' : IDL.Opt(IDL.Text),
+    'is_published' : IDL.Opt(IDL.Bool),
+    'steps' : IDL.Opt(IDL.Vec(RecipeStep)),
+    'application_frequency' : IDL.Opt(IDL.Text),
+    'category' : IDL.Opt(RecipeCategory),
+    'display_order' : IDL.Opt(IDL.Nat),
+    'related_recipe_ids' : IDL.Opt(IDL.Vec(IDL.Nat)),
+    'ingredients' : IDL.Opt(IDL.Vec(Ingredient)),
+    'prep_time' : IDL.Opt(IDL.Text),
+    'application_rate' : IDL.Opt(IDL.Text),
   });
   const ICSpicy = IDL.Service({
     '_initializeAccessControl' : IDL.Func([], [], ['query']),
@@ -1073,6 +1275,7 @@ export const idlFactory = ({ IDL }) => {
         [ArtworkLayer],
         [],
       ),
+    'addComment' : IDL.Func([PostId, IDL.Text, IDL.Bool], [CommentPublic], []),
     'addFeedingEntry' : IDL.Func(
         [PlantId, IDL.Text, IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Bool],
@@ -1151,6 +1354,23 @@ export const idlFactory = ({ IDL }) => {
     'addWeatherRecord' : IDL.Func([AddWeatherRecordInput], [WeatherRecord], []),
     'addWeatherSnapshot' : IDL.Func([PlantId, WeatherSnapshot], [IDL.Bool], []),
     'addZonePhoto' : IDL.Func([TrayId, IDL.Text], [], []),
+    'adminBatchAirdrop' : IDL.Func(
+        [IDL.Vec(IDL.Principal), IDL.Bool, IDL.Opt(IDL.Nat)],
+        [
+          IDL.Vec(
+            IDL.Record({
+              'token_id' : IDL.Nat,
+              'recipient' : IDL.Principal,
+              'message' : IDL.Text,
+              'success' : IDL.Bool,
+            })
+          ),
+        ],
+        [],
+      ),
+    'adminDeleteComment' : IDL.Func([CommentId], [IDL.Bool], []),
+    'adminDeletePost' : IDL.Func([PostId], [IDL.Bool], []),
+    'adminReturnToPool' : IDL.Func([IDL.Nat], [TransferResult], []),
     'adminSubmitToDAB' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
@@ -1179,6 +1399,7 @@ export const idlFactory = ({ IDL }) => {
     'airdropNFT' : IDL.Func([IDL.Text, IDL.Principal], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignPoolNFT' : IDL.Func([IDL.Nat, AssignAction], [], []),
+    'banUser' : IDL.Func([IDL.Principal], [], []),
     'batchAirdropFromPool' : IDL.Func(
         [IDL.Vec(AirdropAssignment)],
         [IDL.Record({ 'failed' : IDL.Nat, 'succeeded' : IDL.Nat })],
@@ -1237,6 +1458,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'clearArtworkFiles' : IDL.Func([], [], []),
+    'completeEvent' : IDL.Func([IDL.Nat], [PlantingEvent], []),
     'confirmICPayPayment' : IDL.Func(
         [IDL.Nat, IDL.Text],
         [IDL.Record({ 'message' : IDL.Text, 'success' : IDL.Bool })],
@@ -1266,9 +1488,18 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'createPlant' : IDL.Func([CreatePlantInput], [PlantPublic], []),
+    'createPlantingEvent' : IDL.Func(
+        [CreatePlantingEventInput],
+        [PlantingEvent],
+        [],
+      ),
     'createPost' : IDL.Func([CreatePostInput], [PostPublic], []),
     'createProduct' : IDL.Func([CreateProductInput], [ProductPublic], []),
-    'createRecipe' : IDL.Func([CreateRecipeInput], [Recipe], []),
+    'createRecipe' : IDL.Func(
+        [CreateRecipeInput],
+        [IDL.Record({ 'recipe_id' : RecipeId })],
+        [],
+      ),
     'createTray' : IDL.Func([CreateTrayInput], [TrayPublic], []),
     'dabTransform' : IDL.Func(
         [
@@ -1280,13 +1511,15 @@ export const idlFactory = ({ IDL }) => {
         [http_request_result],
         ['query'],
       ),
-    'deletePost' : IDL.Func([PostId], [], []),
+    'deleteComment' : IDL.Func([CommentId], [IDL.Bool], []),
+    'deletePlantingEvent' : IDL.Func([IDL.Nat], [], []),
+    'deletePost' : IDL.Func([PostId], [IDL.Bool], []),
     'deleteProduct' : IDL.Func([ProductId], [], []),
     'deleteRecipe' : IDL.Func([RecipeId], [IDL.Bool], []),
     'deleteTray' : IDL.Func([TrayId], [], []),
     'delistNft' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'delistPlant' : IDL.Func([PlantId], [IDL.Bool], []),
-    'editPost' : IDL.Func([PostId, IDL.Text], [PostPublic], []),
+    'editPost' : IDL.Func([PostId, IDL.Text], [IDL.Bool], []),
     'ensureAdminProfile' : IDL.Func([], [], []),
     'ensureCallerProfile' : IDL.Func([], [], []),
     'feedEntireTray' : IDL.Func(
@@ -1295,7 +1528,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'finalizeArtworkUpload' : IDL.Func([], [UploadResult], []),
-    'followUser' : IDL.Func([IDL.Principal], [], []),
+    'followUser' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'generateAllPoolNFTs' : IDL.Func([], [IDL.Nat], []),
     'generateClaimToken' : IDL.Func([IDL.Nat], [IDL.Text], []),
     'generateClaimTokens' : IDL.Func(
@@ -1312,6 +1545,11 @@ export const idlFactory = ({ IDL }) => {
     'getAdminInventory' : IDL.Func(
         [IDL.Opt(PlantStage), IDL.Opt(IDL.Nat), IDL.Opt(IDL.Bool)],
         [IDL.Vec(PlantLifecycle)],
+        ['query'],
+      ),
+    'getAdminOrder' : IDL.Func(
+        [OrderId],
+        [IDL.Opt(AdminOrderPublic)],
         ['query'],
       ),
     'getAdmins' : IDL.Func([], [IDL.Vec(IDL.Principal)], ['query']),
@@ -1334,6 +1572,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(MembershipNFTPublic)],
         ['query'],
       ),
+    'getCallerProfile' : IDL.Func([], [IDL.Opt(UserProfilePublic)], ['query']),
     'getCallerUserProfile' : IDL.Func(
         [],
         [IDL.Opt(UserProfilePublic)],
@@ -1363,6 +1602,11 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'getCommunityImageFile' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(ShopListingFile)],
+        ['query'],
+      ),
     'getDAOProposal' : IDL.Func(
         [ProposalId],
         [IDL.Opt(ProposalPublic)],
@@ -1379,9 +1623,35 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'getFeaturedRecipes' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(RecipePublic)],
+        ['query'],
+      ),
+    'getFollowers' : IDL.Func(
+        [IDL.Principal, IDL.Nat, IDL.Nat],
+        [IDL.Vec(UserProfilePublic)],
+        ['query'],
+      ),
     'getFollowersCount' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
+    'getFollowing' : IDL.Func(
+        [IDL.Principal, IDL.Nat, IDL.Nat],
+        [IDL.Vec(UserProfilePublic)],
+        ['query'],
+      ),
     'getFollowingCount' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
+    'getFollowingFeed' : IDL.Func(
+        [IDL.Nat, IDL.Nat],
+        [IDL.Vec(PostPublic)],
+        ['query'],
+      ),
     'getForSalePlants' : IDL.Func([], [IDL.Vec(PlantPublic)], ['query']),
+    'getGlobalFeed' : IDL.Func(
+        [IDL.Nat, IDL.Nat],
+        [IDL.Vec(PostPublic)],
+        ['query'],
+      ),
+    'getIcrc7PoolStatsAdmin' : IDL.Func([], [Icrc7PoolStats], ['query']),
     'getListedNfts' : IDL.Func(
         [IDL.Opt(IDL.Bool)],
         [IDL.Vec(NftListingPublic)],
@@ -1390,12 +1660,22 @@ export const idlFactory = ({ IDL }) => {
     'getLoadedMetadataCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getMembershipPriceInToken' : IDL.Func([OracleToken], [IDL.Nat], ['query']),
     'getMyCrosses' : IDL.Func([], [IDL.Vec(BreedingCrossPublic)], ['query']),
+    'getMyFavorites' : IDL.Func(
+        [IDL.Nat, IDL.Nat],
+        [IDL.Vec(RecipePublic)],
+        ['query'],
+      ),
     'getMyNftListings' : IDL.Func([], [IDL.Vec(NftListingPublic)], ['query']),
     'getMyOffers' : IDL.Func([], [IDL.Vec(Offer)], ['query']),
     'getMyPlantsNims' : IDL.Func([], [IDL.Vec(PlantLifecycle)], []),
     'getMyResaleListings' : IDL.Func(
         [],
         [IDL.Vec(ResaleListingPublic)],
+        ['query'],
+      ),
+    'getMySchedule' : IDL.Func(
+        [Timestamp, Timestamp],
+        [IDL.Vec(PlantingEvent)],
         ['query'],
       ),
     'getMySchedules' : IDL.Func([], [IDL.Vec(SavedSchedule)], []),
@@ -1423,6 +1703,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Text)],
         ['query'],
       ),
+    'getOverdueEvents' : IDL.Func([], [IDL.Vec(PlantingEvent)], ['query']),
     'getPlant' : IDL.Func([PlantId], [IDL.Opt(PlantPublic)], ['query']),
     'getPlantByNft' : IDL.Func([IDL.Nat], [IDL.Opt(PlantLifecycle)], ['query']),
     'getPlantClaimToken' : IDL.Func([PlantId], [IDL.Opt(IDL.Text)], ['query']),
@@ -1436,6 +1717,11 @@ export const idlFactory = ({ IDL }) => {
     'getPlantTimeline' : IDL.Func(
         [PlantId],
         [IDL.Opt(PlantTimeline)],
+        ['query'],
+      ),
+    'getPlantingEvent' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Opt(PlantingEvent)],
         ['query'],
       ),
     'getPlantsByContainer' : IDL.Func(
@@ -1456,7 +1742,17 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getPoolStats' : IDL.Func([], [PoolStats], ['query']),
+    'getPostWithComments' : IDL.Func(
+        [PostId],
+        [IDL.Opt(PostWithComments)],
+        ['query'],
+      ),
     'getProduct' : IDL.Func([ProductId], [IDL.Opt(ProductPublic)], ['query']),
+    'getProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfilePublic)],
+        ['query'],
+      ),
     'getPublicProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfilePublic)],
@@ -1467,7 +1763,22 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(ActivityEntry)],
         ['query'],
       ),
-    'getRecipe' : IDL.Func([RecipeId], [IDL.Opt(Recipe)], ['query']),
+    'getRecipe' : IDL.Func([RecipeId], [IDL.Opt(RecipePublic)], ['query']),
+    'getRecipeBySlug' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(RecipePublic)],
+        ['query'],
+      ),
+    'getRecipeCategories' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(RecipeCategory, IDL.Nat))],
+        ['query'],
+      ),
+    'getRecipes' : IDL.Func(
+        [IDL.Opt(RecipeCategory), IDL.Opt(IDL.Text), IDL.Nat, IDL.Nat],
+        [IDL.Vec(RecipePublic)],
+        ['query'],
+      ),
     'getScheduleByShareToken' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(SavedSchedule)],
@@ -1500,23 +1811,32 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(TreasuryTransaction)],
         ['query'],
       ),
+    'getTrendingPosts' : IDL.Func([IDL.Nat], [IDL.Vec(PostPublic)], ['query']),
+    'getUpcomingEvents' : IDL.Func([], [IDL.Vec(PlantingEvent)], ['query']),
     'getUpgradeHistory' : IDL.Func(
         [PlantId],
         [IDL.Vec(LifecycleUpgradeEvent)],
         ['query'],
       ),
     'getUserPosts' : IDL.Func(
-        [IDL.Principal],
+        [IDL.Principal, IDL.Nat, IDL.Nat],
         [IDL.Vec(PostPublic)],
         ['query'],
       ),
     'getVariety' : IDL.Func([IDL.Nat], [IDL.Opt(VarietyPublic)], ['query']),
+    'getZoneCalendar' : IDL.Func([IDL.Text], [ZoneCalendar], ['query']),
+    'getZoneSchedule' : IDL.Func(
+        [IDL.Text, IDL.Nat],
+        [ZoneSchedule],
+        ['query'],
+      ),
     'harvestSeeds' : IDL.Func(
         [PlantId, IDL.Opt(IDL.Nat), IDL.Opt(IDL.Text)],
         [IDL.Nat],
         [],
       ),
     'hasDAOAccess' : IDL.Func([], [IDL.Bool], ['query']),
+    'hasLikedPost' : IDL.Func([PostId], [IDL.Bool], ['query']),
     'hasMembership' : IDL.Func([], [IDL.Bool], ['query']),
     'icpayTransform' : IDL.Func(
         [
@@ -1639,8 +1959,10 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isFollowing' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'isPepperHead' : IDL.Func([IDL.Nat], [IDL.Bool], ['query']),
     'isPepperHeadAvailable' : IDL.Func([], [IDL.Nat], ['query']),
+    'isUserBanned' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'issueMembership' : IDL.Func(
         [
           IDL.Principal,
@@ -1654,19 +1976,40 @@ export const idlFactory = ({ IDL }) => {
         [MembershipNFTPublic],
         [],
       ),
-    'likePost' : IDL.Func([PostId], [IDL.Nat], []),
+    'likeComment' : IDL.Func([CommentId], [IDL.Bool], []),
+    'likePost' : IDL.Func([PostId], [IDL.Bool], []),
+    'listAllOrdersAdmin' : IDL.Func(
+        [AdminOrderStatusFilter],
+        [IDL.Vec(AdminOrderPublic)],
+        ['query'],
+      ),
+    'listAllPostsAdmin' : IDL.Func(
+        [IDL.Nat, IDL.Nat],
+        [IDL.Vec(PostPublic)],
+        ['query'],
+      ),
     'listArtworkFiles' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
         ['query'],
       ),
     'listArtworkLayers' : IDL.Func([], [IDL.Vec(ArtworkLayer)], []),
+    'listClaimTokensAdmin' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Vec(ClaimTokenAdminPublic)],
+        ['query'],
+      ),
     'listCommentsByPost' : IDL.Func(
         [PostId],
         [IDL.Vec(CommentPublic)],
         ['query'],
       ),
     'listDAOProposals' : IDL.Func([], [IDL.Vec(ProposalPublic)], ['query']),
+    'listIcrc7PoolTokensAdmin' : IDL.Func(
+        [Icrc7TokenFilter, IDL.Nat, IDL.Nat],
+        [IDL.Vec(Icrc7TokenAdminPublic)],
+        ['query'],
+      ),
     'listMyPlants' : IDL.Func([], [IDL.Vec(PlantPublic)], []),
     'listNFTForResale' : IDL.Func(
         [PlantId, IDL.Float64],
@@ -1694,7 +2037,8 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(ProductPublic)],
         ['query'],
       ),
-    'listRecipes' : IDL.Func([], [IDL.Vec(Recipe)], ['query']),
+    'listRecipes' : IDL.Func([], [IDL.Vec(RecipePublic)], ['query']),
+    'listRecipesAdmin' : IDL.Func([], [IDL.Vec(RecipePublic)], ['query']),
     'listTrays' : IDL.Func([], [IDL.Vec(TrayPublic)], ['query']),
     'listVarieties' : IDL.Func([], [IDL.Vec(VarietyPublic)], ['query']),
     'loadStaticMetadata' : IDL.Func(
@@ -1765,6 +2109,7 @@ export const idlFactory = ({ IDL }) => {
         [http_request_result],
         ['query'],
       ),
+    'publishRecipe' : IDL.Func([RecipeId], [IDL.Bool], []),
     'purchasePepperHead' : IDL.Func(
         [IDL.Text],
         [
@@ -1812,6 +2157,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'recordTip' : IDL.Func([RecordTipInput], [IDL.Bool], []),
     'redeemBatchClaim' : IDL.Func(
         [ClaimTokenId],
         [IDL.Variant({ 'ok' : BatchGiftPackPublic, 'err' : IDL.Text })],
@@ -1835,14 +2181,27 @@ export const idlFactory = ({ IDL }) => {
     'removePlantPhoto' : IDL.Func([PlantId, IDL.Text], [], []),
     'removeVariety' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'removeZonePhoto' : IDL.Func([TrayId, IDL.Text], [], []),
+    'reorderRecipes' : IDL.Func([IDL.Vec(RecipeId)], [IDL.Bool], []),
     'resetOrphanPoolNFT' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'resetPoolNFT' : IDL.Func(
         [IDL.Nat],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
-    'saveCallerUserProfile' : IDL.Func([SaveProfileInput], [], []),
+    'revokeClaimTokenAdmin' : IDL.Func([IDL.Text], [IDL.Bool], []),
+    'saveCallerUserProfile' : IDL.Func([SaveProfileInput], [IDL.Bool], []),
+    'saveProfile' : IDL.Func([SaveProfileInput], [IDL.Bool], []),
     'saveSchedule' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [ScheduleId], []),
+    'searchRecipes' : IDL.Func(
+        [IDL.Text, IDL.Nat],
+        [IDL.Vec(RecipePublic)],
+        ['query'],
+      ),
+    'searchUsers' : IDL.Func(
+        [IDL.Text, IDL.Nat],
+        [IDL.Vec(UserProfilePublic)],
+        ['query'],
+      ),
     'searchVarieties' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(VarietyPublic)],
@@ -1857,6 +2216,11 @@ export const idlFactory = ({ IDL }) => {
         [StoredFile],
         [],
       ),
+    'storeCommunityImage' : IDL.Func(
+        [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text],
+        [StoredFile],
+        [],
+      ),
     'storeNimsPhotoFile' : IDL.Func(
         [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text],
         [StoredFile],
@@ -1864,8 +2228,14 @@ export const idlFactory = ({ IDL }) => {
       ),
     'submitOffer' : IDL.Func([SubmitOfferInput], [Offer], []),
     'toggleCooked' : IDL.Func([PlantId], [], []),
-    'toggleRecipeFeatured' : IDL.Func([RecipeId], [IDL.Opt(Recipe)], []),
+    'toggleFavorite' : IDL.Func([RecipeId], [IDL.Bool], []),
+    'toggleRecipeFeatured' : IDL.Func([RecipeId], [IDL.Bool], []),
     'transplantCell' : IDL.Func([TransplantInput], [PlantPublic], []),
+    'transplantPlant' : IDL.Func(
+        [PlantId, ContainerSize, IDL.Opt(IDL.Text)],
+        [IDL.Bool],
+        [],
+      ),
     'treasuryDeposit' : IDL.Func(
         [TreasuryToken, IDL.Nat, IDL.Opt(IDL.Text)],
         [TreasuryTransaction],
@@ -1888,16 +2258,23 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'triggerLifecycleUpgrade' : IDL.Func([PlantId, IDL.Text], [IDL.Text], []),
+    'unbanUser' : IDL.Func([IDL.Principal], [], []),
     'unfollowUser' : IDL.Func([IDL.Principal], [], []),
     'unlikePost' : IDL.Func([PostId], [IDL.Nat], []),
     'updateCellData' : IDL.Func([UpdateCellDataInput], [], []),
     'updateNimsPlantStage' : IDL.Func([PlantId, PlantStage], [IDL.Bool], []),
     'updateOrderStatus' : IDL.Func([OrderId, OrderStatus], [], []),
+    'updateOrderStatusAdmin' : IDL.Func([OrderId, OrderStatus], [], []),
     'updatePlantMetadata' : IDL.Func([UpdatePlantMetadataInput], [], []),
     'updatePlantPrice' : IDL.Func([PlantId, IDL.Nat], [IDL.Bool], []),
     'updatePlantStage' : IDL.Func([PlantId, PlantStage, IDL.Text], [], []),
+    'updatePlantingEvent' : IDL.Func(
+        [UpdatePlantingEventInput],
+        [PlantingEvent],
+        [],
+      ),
     'updateProduct' : IDL.Func([UpdateProductInput], [], []),
-    'updateRecipe' : IDL.Func([UpdateRecipeInput], [IDL.Opt(Recipe)], []),
+    'updateRecipe' : IDL.Func([UpdateRecipeInput], [IDL.Bool], []),
     'updateSeedLot' : IDL.Func(
         [
           IDL.Nat,

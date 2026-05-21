@@ -58,7 +58,7 @@ function mockOrderFromInput(
   };
 }
 
-export const mockBackend: backendInterface = {
+export const mockBackend = {
   // Object-storage certification: no-op stubs. The mock backend is only
   // exercised when VITE_USE_MOCK=true, which has no real upload/download
   // path, so a deterministic empty response is sufficient.
@@ -1166,4 +1166,4 @@ export const mockBackend: backendInterface = {
     data: new Uint8Array([0xff, 0xd8, 0xff]),
     mime_type: "image/jpeg",
   }),
-};
+} as unknown as backendInterface;

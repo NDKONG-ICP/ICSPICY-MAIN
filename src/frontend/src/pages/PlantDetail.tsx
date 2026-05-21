@@ -20,6 +20,7 @@ import {
   NfcTagLinkModal,
   PlantQuickActions,
   PlantTimeline,
+  RemovePlantModal,
   TransplantModal,
   WeatherBar,
   NimsStoredPhoto,
@@ -46,8 +47,11 @@ import {
   useAddPlantNote,
   useListPlantForSale,
   usePlantLifecycle,
+  useRemovePlant,
+  useTransplantPlant,
   useVarieties,
 } from "../hooks/useNims";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 function fmtTs(ts: bigint | undefined): string {
   if (ts === undefined) return "—";
@@ -59,6 +63,8 @@ function fmtTs(ts: bigint | undefined): string {
 }
 
 export default function PlantDetailPage() {
+  usePageTitle("Plant");
+
   const { plantId: plantIdParam } = useParams({ strict: false });
   const id =
     plantIdParam != null && plantIdParam !== ""
@@ -78,6 +84,8 @@ export default function PlantDetailPage() {
   const listForSale = useListPlantForSale();
   const toggleCooked = useToggleCooked();
   const transplantCell = useTransplantCell();
+  const transplantPlant = useTransplantPlant();
+  const removePlant = useRemovePlant();
   const harvestSeeds = useHarvestSeeds();
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [noteText, setNoteText] = useState("");
@@ -96,6 +104,7 @@ export default function PlantDetailPage() {
   const [feedOpen, setFeedOpen] = useState(false);
   const [pestOpen, setPestOpen] = useState(false);
   const [transplantOpen, setTransplantOpen] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
   const [salePrice, setSalePrice] = useState("2500");
 
   if (id === undefined) {
@@ -131,6 +140,7 @@ export default function PlantDetailPage() {
     unwrapOpt(plant.sold_to)?.toText() === callerText;
   const canEdit = isOwner;
   const inTray = !plant.is_transplanted && plant.tray_id !== 0n;
+  const inInventory = (plant.container_size?.length ?? 0) > 0 && !plant.is_transplanted;
 
   const handleQuickAction = (action: QuickPlantAction) => {
     switch (action) {
@@ -150,8 +160,8 @@ export default function PlantDetailPage() {
         photoInputRef.current?.click();
         break;
       case "transplant":
-        if (inTray) setTransplantOpen(true);
-        else toast.info("Plant is already in inventory.");
+        if (inTray || inInventory) setTransplantOpen(true);
+        else toast.info("Plant has no container yet.");
         break;
       case "harvest_seeds":
         setHarvestOpen(true);
@@ -183,6 +193,9 @@ export default function PlantDetailPage() {
             toast.error(e instanceof Error ? e.message : "Failed");
           }
         })();
+        break;
+      case "remove_plant":
+        setRemoveOpen(true);
         break;
     }
   };
@@ -432,7 +445,7 @@ export default function PlantDetailPage() {
             onAction={handleQuickAction}
             hiddenActions={[
               ...(canEdit ? [] : (["harvest_seeds", "nfc_tag"] as const)),
-              ...(isAdmin ? [] : (["list_sale", "mark_dead"] as const)),
+              ...(isAdmin ? [] : (["list_sale", "mark_dead", "remove_plant"] as const)),
             ]}
             disabled={
               plant.is_cooked || uploadPhoto.isPending || addPlantPhoto.isPending
@@ -514,6 +527,45 @@ export default function PlantDetailPage() {
               }}
             />
           )}
+
+          {inInventory && (
+            <TransplantModal
+              open={transplantOpen}
+              onOpenChange={setTransplantOpen}
+              plantLabel={plant.variety}
+              currentContainer={plant.container_size ?? []}
+              inventoryMode
+              onSubmit={async ({ container_size, location_notes }) => {
+                try {
+                  await transplantPlant.mutateAsync({
+                    plantId: id,
+                    container: container_size,
+                    locationNotes: location_notes,
+                  });
+                  toast.success("Container updated");
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Repot failed");
+                }
+              }}
+            />
+          )}
+
+          <RemovePlantModal
+            open={removeOpen}
+            onOpenChange={setRemoveOpen}
+            plantLabel={plant.variety}
+            isPending={removePlant.isPending}
+            onConfirm={async () => {
+              try {
+                await removePlant.mutateAsync(id);
+                toast.success("Plant removed — NFT returned to pool");
+                setRemoveOpen(false);
+                void navigate({ to: "/nims" });
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Remove failed");
+              }
+            }}
+          />
 
           <HarvestSeedsModal
             open={harvestOpen}

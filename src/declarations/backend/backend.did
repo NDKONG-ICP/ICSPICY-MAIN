@@ -9,6 +9,24 @@ type http_header =
    name: text;
    value: text;
  };
+type ZoneSchedule = 
+ record {
+   month: nat;
+   recommendations: vec ZoneRecommendation;
+   zone_label: text;
+ };
+type ZoneRecommendation = 
+ record {
+   emoji: text;
+   event_type: PlantingEventType;
+   name: text;
+   notes: text;
+ };
+type ZoneCalendar = 
+ record {
+   months: vec ZoneSchedule;
+   zone_label: text;
+ };
 type WeatherSnapshot = 
  record {
    date: text;
@@ -77,9 +95,13 @@ type UserProfilePublic =
  record {
    avatar_key: opt text;
    bio: text;
+   caller_following: bool;
    created_at: Timestamp;
    follower_count: nat;
    following_count: nat;
+   is_admin: bool;
+   location: opt text;
+   post_count: nat;
    principal_id: principal;
    username: text;
  };
@@ -98,18 +120,27 @@ type UploadResult =
  };
 type UpdateRecipeInput = 
  record {
-   application_notes: opt text;
+   application_frequency: opt text;
+   application_rate: opt text;
+   best_for: opt vec text;
+   category: opt RecipeCategory;
    description: opt text;
-   full_name: opt text;
+   difficulty: opt Difficulty;
+   display_order: opt nat;
+   fermentation_time: opt text;
    id: RecipeId;
-   ingredients: opt vec text;
-   instructions: opt vec text;
-   is_featured: opt bool;
-   name: opt text;
-   photo_key: opt text;
-   shop_link: opt text;
-   shop_link_label: opt text;
+   image_key: opt text;
+   ingredients: opt vec Ingredient;
+   is_published: opt bool;
+   prep_time: opt text;
+   related_recipe_ids: opt vec nat;
+   safety_notes: opt vec text;
+   slug: opt text;
+   steps: opt vec RecipeStep;
    tags: opt vec text;
+   tips: opt vec text;
+   title: opt text;
+   total_time: opt text;
  };
 type UpdateProductInput = 
  record {
@@ -120,6 +151,15 @@ type UpdateProductInput =
    name: opt text;
    price_cents: opt nat;
    product_id: ProductId;
+ };
+type UpdatePlantingEventInput = 
+ record {
+   emoji: text;
+   event_type: PlantingEventType;
+   id: nat;
+   name: text;
+   notes: text;
+   scheduled_at: Timestamp;
  };
 type UpdatePlantMetadataInput = 
  record {
@@ -187,8 +227,10 @@ type TrayPublic =
 type TrayId = nat;
 type TrayCellPublic = 
  record {
+   containerLabel: opt text;
    daysSincePlanted: opt nat;
    germinatedAt: opt Timestamp;
+   inventoryPlantId: opt PlantId;
    nftTokenId: opt nat;
    plantId: opt PlantId;
    plantedAt: opt Timestamp;
@@ -382,6 +424,7 @@ type SaveProfileInput =
  record {
    avatar_key: opt text;
    bio: text;
+   location: opt text;
    username: text;
  };
 type RevokeTokenApprovalResult = 
@@ -424,23 +467,62 @@ type ResaleListingPublic =
    rarity_tier: RarityTier;
    seller: principal;
  };
-type RecipeId = nat;
-type Recipe = 
+type RecordTipInput = 
  record {
-   application_notes: text;
+   amount: nat;
+   block_index: nat;
+   ledger_canister_id: text;
+   post_id: PostId;
+ };
+type RecipeStep = 
+ record {
+   duration: opt text;
+   image_key: opt text;
+   instruction: text;
+   step_number: nat;
+   tips: opt text;
+ };
+type RecipePublic = 
+ record {
+   application_frequency: opt text;
+   application_rate: opt text;
+   author: principal;
+   best_for: vec text;
+   caller_favorited: bool;
+   category: RecipeCategory;
    created_at: Timestamp;
    description: text;
-   full_name: text;
+   difficulty: Difficulty;
+   display_order: nat;
+   favorite_count: nat;
+   fermentation_time: opt text;
    id: RecipeId;
-   ingredients: vec text;
-   instructions: vec text;
-   is_featured: bool;
-   name: text;
-   photo_key: opt text;
-   shop_link: opt text;
-   shop_link_label: opt text;
+   image_key: opt text;
+   ingredients: vec Ingredient;
+   is_published: bool;
+   prep_time: opt text;
+   related_recipe_ids: vec nat;
+   safety_notes: vec text;
+   slug: text;
+   steps: vec RecipeStep;
    tags: vec text;
+   tips: vec text;
+   title: text;
+   total_time: opt text;
    updated_at: Timestamp;
+ };
+type RecipeId = nat;
+type RecipeCategory = 
+ variant {
+   Composting;
+   FermentedInputs;
+   JADAM;
+   KNF;
+   MicrobialCultures;
+   Other;
+   PestControl;
+   PlantExtracts;
+   SoilAmendment;
  };
 type RarityTier = 
  variant {
@@ -517,6 +599,12 @@ type ProductCategory =
    Seedling;
    Spice;
  };
+type PostWithComments = 
+ record {
+   comments: vec CommentPublic;
+   has_liked: bool;
+   post: PostPublic;
+ };
 type PostPublic = 
  record {
    author_principal: opt principal;
@@ -528,8 +616,12 @@ type PostPublic =
    created_at: Timestamp;
    id: PostId;
    image_key: opt text;
+   image_keys: vec text;
    is_anonymous: bool;
    like_count: nat;
+   nft_token_id: opt nat;
+   plant_id: opt nat;
+   tip_count: nat;
    updated_at: Timestamp;
  };
 type PostId = nat;
@@ -604,6 +696,26 @@ type PoolDashboard =
    listed_on_shop: nat;
    ready: nat;
    total: nat;
+ };
+type PlantingEventType = 
+ variant {
+   directSow;
+   harvest;
+   startIndoors;
+   transplantOutdoors;
+ };
+type PlantingEvent = 
+ record {
+   completed: bool;
+   completed_at: opt Timestamp;
+   created_at: Timestamp;
+   emoji: text;
+   event_type: PlantingEventType;
+   id: nat;
+   name: text;
+   notes: text;
+   owner: principal;
+   scheduled_at: Timestamp;
  };
 type PlantTimeline = 
  record {
@@ -880,6 +992,44 @@ type InventoryCategory =
    OtherSize: text;
    Oz16;
  };
+type Ingredient = 
+ record {
+   amount: text;
+   is_optional: bool;
+   name: text;
+   notes: opt text;
+ };
+type Icrc7TokenFilter = 
+ variant {
+   All;
+   Assigned;
+   Available;
+   Missing;
+   PepperHead;
+   Sold;
+ };
+type Icrc7TokenAdminPublic = 
+ record {
+   is_canister_pool: bool;
+   is_pepperhead: bool;
+   owner: text;
+   plant_id: opt PlantId;
+   product_id: opt ProductId;
+   rarity_label: text;
+   token_id: nat;
+ };
+type Icrc7PoolStats = 
+ record {
+   assigned_to_plants: nat;
+   assigned_to_products: nat;
+   in_canister_pool: nat;
+   missing_owner: nat;
+   pepperhead_in_pool: nat;
+   pepperhead_sold: nat;
+   pepperhead_total: nat;
+   sold_to_customers: nat;
+   total: nat;
+ };
 type ICSpicy = 
  service {
    _initializeAccessControl: () -> () query;
@@ -887,6 +1037,8 @@ type ICSpicy =
    addAdmin: (p: principal) -> ();
    addArtworkLayer: (name: text, object_key: text, layer_number: nat) ->
     (ArtworkLayer);
+   addComment: (post_id: PostId, content: text, is_anonymous: bool) ->
+    (CommentPublic);
    addFeedingEntry: (plantId: PlantId, productName: text, nutrientType: 
     text, dosage: text, notes: opt text) -> (bool);
    addFeedingRecord: (input: AddFeedingInput) -> (FeedingPublic);
@@ -915,6 +1067,18 @@ type ICSpicy =
    addWeatherSnapshot: (plantId: PlantId, snapshot: WeatherSnapshot) ->
     (bool);
    addZonePhoto: (tray_id: TrayId, photo_key: text) -> ();
+   adminBatchAirdrop: (recipients: vec principal, useRandom: bool,
+    startTokenId: opt nat) ->
+    (vec
+      record {
+        message: text;
+        recipient: principal;
+        success: bool;
+        token_id: nat;
+      });
+   adminDeleteComment: (comment_id: CommentId) -> (bool);
+   adminDeletePost: (post_id: PostId) -> (bool);
+   adminReturnToPool: (tokenId: nat) -> (TransferResult);
    adminSubmitToDAB: (collectionName: text, collectionDescription: text,
     standard: text, canisterIdOverride: opt text) ->
     (variant {
@@ -937,6 +1101,7 @@ type ICSpicy =
    airdropNFT: (_token_id: text, _recipient: principal) -> ();
    assignCallerUserRole: (_user: principal, _role: UserRole) -> ();
    assignPoolNFT: (nftId: nat, action: AssignAction) -> ();
+   banUser: (user: principal) -> ();
    batchAirdropFromPool: (assignments: vec AirdropAssignment) ->
     (record {
        failed: nat;
@@ -970,6 +1135,7 @@ type ICSpicy =
                                                  ok;
                                                });
    clearArtworkFiles: () -> ();
+   completeEvent: (event_id: nat) -> (PlantingEvent);
    confirmICPayPayment: (orderId: nat, paymentId: text) ->
     (record {
        message: text;
@@ -989,27 +1155,31 @@ type ICSpicy =
     (TrayId);
    createOrder: (buyer: principal, input: CreateOrderInput) -> (OrderPublic);
    createPlant: (input: CreatePlantInput) -> (PlantPublic);
+   createPlantingEvent: (input: CreatePlantingEventInput) -> (PlantingEvent);
    createPost: (input: CreatePostInput) -> (PostPublic);
    createProduct: (input: CreateProductInput) -> (ProductPublic);
-   createRecipe: (input: CreateRecipeInput) -> (Recipe);
+   createRecipe: (input: CreateRecipeInput) ->
+    (record {recipe_id: RecipeId;});
    createTray: (input: CreateTrayInput) -> (TrayPublic);
    dabTransform: (record {
                     context: blob;
                     response: http_request_result;
                   }) -> (http_request_result) query;
-   deletePost: (post_id: PostId) -> ();
+   deleteComment: (comment_id: CommentId) -> (bool);
+   deletePlantingEvent: (event_id: nat) -> ();
+   deletePost: (post_id: PostId) -> (bool);
    deleteProduct: (product_id: ProductId) -> ();
    deleteRecipe: (id: RecipeId) -> (bool);
    deleteTray: (tray_id: TrayId) -> ();
    delistNft: (tokenId: nat) -> (bool);
    delistPlant: (plantId: PlantId) -> (bool);
-   editPost: (post_id: PostId, new_content: text) -> (PostPublic);
+   editPost: (post_id: PostId, new_content: text) -> (bool);
    ensureAdminProfile: () -> ();
    ensureCallerProfile: () -> ();
    feedEntireTray: (trayId: TrayId, productName: text, nutrientType: 
     text, dosage: text, notes: opt text) -> (nat);
    finalizeArtworkUpload: () -> (UploadResult);
-   followUser: (target: principal) -> ();
+   followUser: (target: principal) -> (bool);
    generateAllPoolNFTs: () -> (nat);
    generateClaimToken: (tokenId: nat) -> (text);
    generateClaimTokens: (tokenIds: vec nat) ->
@@ -1021,6 +1191,7 @@ type ICSpicy =
    getActiveResaleListings: () -> (vec ResaleListingPublic) query;
    getAdminInventory: (stage: opt PlantStage, varietyId: opt nat, forSale:
     opt bool) -> (vec PlantLifecycle) query;
+   getAdminOrder: (order_id: OrderId) -> (opt AdminOrderPublic) query;
    getAdmins: () -> (vec principal) query;
    getArtworkFile: (path: text) -> (opt vec nat8);
    getArtworkUploadResult: () -> (UploadResult) query;
@@ -1030,6 +1201,7 @@ type ICSpicy =
     (opt BatchGiftPackPublic) query;
    getCallerDiscount: () -> (CallerDiscount) query;
    getCallerMembership: () -> (opt MembershipNFTPublic) query;
+   getCallerProfile: () -> (opt UserProfilePublic) query;
    getCallerUserProfile: () -> (opt UserProfilePublic) query;
    getCallerUserRole: () -> (UserRole) query;
    getCanisterId: () -> (text) query;
@@ -1045,6 +1217,7 @@ type ICSpicy =
         tokenId: nat;
         variety: opt text;
       }) query;
+   getCommunityImageFile: (path: text) -> (opt ShopListingFile) query;
    getDAOProposal: (proposal_id: ProposalId) -> (opt ProposalPublic) query;
    getDAOStats: () ->
     (record {
@@ -1052,17 +1225,28 @@ type ICSpicy =
        totalProposals: nat;
        totalVotes: nat;
      }) query;
+   getFeaturedRecipes: (limit: nat) -> (vec RecipePublic) query;
+   getFollowers: (user: principal, offset: nat, limit: nat) ->
+    (vec UserProfilePublic) query;
    getFollowersCount: (user: principal) -> (nat) query;
+   getFollowing: (user: principal, offset: nat, limit: nat) ->
+    (vec UserProfilePublic) query;
    getFollowingCount: (user: principal) -> (nat) query;
+   getFollowingFeed: (offset: nat, limit: nat) -> (vec PostPublic) query;
    getForSalePlants: () -> (vec PlantPublic) query;
+   getGlobalFeed: (offset: nat, limit: nat) -> (vec PostPublic) query;
+   getIcrc7PoolStatsAdmin: () -> (Icrc7PoolStats) query;
    getListedNfts: (pepperHeadOnly: opt bool) -> (vec NftListingPublic) query;
    getLoadedMetadataCount: () -> (nat) query;
    getMembershipPriceInToken: (token: OracleToken) -> (nat) query;
    getMyCrosses: () -> (vec BreedingCrossPublic) query;
+   getMyFavorites: (offset: nat, limit: nat) -> (vec RecipePublic) query;
    getMyNftListings: () -> (vec NftListingPublic) query;
    getMyOffers: () -> (vec Offer) query;
    getMyPlantsNims: () -> (vec PlantLifecycle);
    getMyResaleListings: () -> (vec ResaleListingPublic) query;
+   getMySchedule: (start_date: Timestamp, end_date: Timestamp) ->
+    (vec PlantingEvent) query;
    getMySchedules: () -> (vec SavedSchedule);
    getMySeedBank: () -> (vec SeedLotPublic) query;
    getMyTrays: () -> (vec TrayPublic) query;
@@ -1079,6 +1263,7 @@ type ICSpicy =
    getOffersReceived: () -> (vec Offer) query;
    getOrder: (order_id: OrderId) -> (opt OrderPublic) query;
    getOrderPickupClaimTokens: (order_id: OrderId) -> (vec text) query;
+   getOverdueEvents: () -> (vec PlantingEvent) query;
    getPlant: (plant_id: PlantId) -> (opt PlantPublic) query;
    getPlantByNft: (nftTokenId: nat) -> (opt PlantLifecycle) query;
    getPlantClaimToken: (plantId: PlantId) -> (opt text) query;
@@ -1086,6 +1271,7 @@ type ICSpicy =
    getPlantHealth: (plantId: PlantId) -> (opt PlantHealth) query;
    getPlantLifecycle: (plantId: PlantId) -> (opt PlantLifecycle) query;
    getPlantTimeline: (plant_id: PlantId) -> (opt PlantTimeline) query;
+   getPlantingEvent: (event_id: nat) -> (opt PlantingEvent) query;
    getPlantsByContainer: (container: ContainerSize) ->
     (vec PlantLifecycle) query;
    getPlantsForSale: (stage: opt PlantStage, varietyId: opt nat) ->
@@ -1095,10 +1281,19 @@ type ICSpicy =
    getPoolNFTs: (filter: opt PoolNFTStatus__1, offset: nat, limit: nat) ->
     (vec PoolNFTPublic__1) query;
    getPoolStats: () -> (PoolStats) query;
+   getPostWithComments: (post_id: PostId) -> (opt PostWithComments) query;
    getProduct: (product_id: ProductId) -> (opt ProductPublic) query;
+   getProfile: (user: principal) -> (opt UserProfilePublic) query;
    getPublicProfile: (user: principal) -> (opt UserProfilePublic) query;
    getRecentActivity: (limit: nat) -> (vec ActivityEntry) query;
-   getRecipe: (id: RecipeId) -> (opt Recipe) query;
+   getRecipe: (id: RecipeId) -> (opt RecipePublic) query;
+   getRecipeBySlug: (slug: text) -> (opt RecipePublic) query;
+   getRecipeCategories: () -> (vec record {
+                                     RecipeCategory;
+                                     nat;
+                                   }) query;
+   getRecipes: (category: opt RecipeCategory, search: opt text, offset: 
+    nat, limit: nat) -> (vec RecipePublic) query;
    getScheduleByShareToken: (share_token: text) -> (opt SavedSchedule) query;
    getScheduleData: (stage: text, inputs: vec text) ->
     (vec ScheduleEntry) query;
@@ -1112,13 +1307,19 @@ type ICSpicy =
    getTreasuryBalance: (token: TreasuryToken) -> (nat) query;
    getTreasuryBalances: () -> (vec TreasuryBalance) query;
    getTreasuryLedger: () -> (vec TreasuryTransaction) query;
+   getTrendingPosts: (limit: nat) -> (vec PostPublic) query;
+   getUpcomingEvents: () -> (vec PlantingEvent) query;
    getUpgradeHistory: (plant_id: PlantId) ->
     (vec LifecycleUpgradeEvent) query;
-   getUserPosts: (user: principal) -> (vec PostPublic) query;
+   getUserPosts: (user: principal, offset: nat, limit: nat) ->
+    (vec PostPublic) query;
    getVariety: (id: nat) -> (opt VarietyPublic) query;
+   getZoneCalendar: (zone: text) -> (ZoneCalendar) query;
+   getZoneSchedule: (zone: text, month: nat) -> (ZoneSchedule) query;
    harvestSeeds: (plantId: PlantId, quantity: opt nat, notes: opt text) ->
     (nat);
    hasDAOAccess: () -> (bool) query;
+   hasLikedPost: (post_id: PostId) -> (bool) query;
    hasMembership: () -> (bool) query;
    icpayTransform: (record {
                       context: blob;
@@ -1183,22 +1384,32 @@ type ICSpicy =
                                skipped: nat;
                              });
    isCallerAdmin: () -> (bool) query;
+   isFollowing: (target: principal) -> (bool) query;
    isPepperHead: (tokenId: nat) -> (bool) query;
    isPepperHeadAvailable: () -> (nat) query;
+   isUserBanned: (user: principal) -> (bool) query;
    issueMembership: (owner: principal, tier: MembershipTier, nft_standard:
     variant {
       EXT;
       Hedera;
       ICRC37;
     }) -> (MembershipNFTPublic);
-   likePost: (post_id: PostId) -> (nat);
+   likeComment: (comment_id: CommentId) -> (bool);
+   likePost: (post_id: PostId) -> (bool);
+   listAllOrdersAdmin: (filter: AdminOrderStatusFilter) ->
+    (vec AdminOrderPublic) query;
+   listAllPostsAdmin: (offset: nat, limit: nat) -> (vec PostPublic) query;
    listArtworkFiles: () -> (vec record {
                                   text;
                                   nat;
                                 }) query;
    listArtworkLayers: () -> (vec ArtworkLayer);
+   listClaimTokensAdmin: (search: opt text) ->
+    (vec ClaimTokenAdminPublic) query;
    listCommentsByPost: (post_id: PostId) -> (vec CommentPublic) query;
    listDAOProposals: () -> (vec ProposalPublic) query;
+   listIcrc7PoolTokensAdmin: (filter: Icrc7TokenFilter, offset: nat, limit:
+    nat) -> (vec Icrc7TokenAdminPublic) query;
    listMyPlants: () -> (vec PlantPublic);
    listNFTForResale: (plant_id: PlantId, price_icp: float64) ->
     (variant {
@@ -1216,7 +1427,8 @@ type ICSpicy =
    listProducts: () -> (vec ProductPublic) query;
    listProductsByCategory: (category: ProductCategory) ->
     (vec ProductPublic) query;
-   listRecipes: () -> (vec Recipe) query;
+   listRecipes: () -> (vec RecipePublic) query;
+   listRecipesAdmin: () -> (vec RecipePublic) query;
    listTrays: () -> (vec TrayPublic) query;
    listVarieties: () -> (vec VarietyPublic) query;
    loadStaticMetadata: (entries: vec record {
@@ -1264,6 +1476,7 @@ type ICSpicy =
        context: blob;
        response: http_request_result;
      }) -> (http_request_result) query;
+   publishRecipe: (id: RecipeId) -> (bool);
    purchasePepperHead: (paymentId: text) ->
     (record {
        message: text;
@@ -1284,6 +1497,7 @@ type ICSpicy =
     motherPlantId: opt PlantId, fatherPlantId: opt PlantId, crossDate:
     opt Timestamp, notes: opt text, expectedTraits: opt text, generation:
     opt text) -> (nat);
+   recordTip: (input: RecordTipInput) -> (bool);
    redeemBatchClaim: (token_id: ClaimTokenId) ->
     (variant {
        err: text;
@@ -1302,13 +1516,18 @@ type ICSpicy =
    removePlantPhoto: (plant_id: PlantId, photo_key: text) -> ();
    removeVariety: (id: nat) -> (bool);
    removeZonePhoto: (tray_id: TrayId, photo_key: text) -> ();
+   reorderRecipes: (ids: vec RecipeId) -> (bool);
    resetOrphanPoolNFT: (nftId: nat) -> (bool);
    resetPoolNFT: (nftId: nat) -> (variant {
                                     err: text;
                                     ok: text;
                                   });
-   saveCallerUserProfile: (input: SaveProfileInput) -> ();
+   revokeClaimTokenAdmin: (token: text) -> (bool);
+   saveCallerUserProfile: (input: SaveProfileInput) -> (bool);
+   saveProfile: (input: SaveProfileInput) -> (bool);
    saveSchedule: (stage: text, inputs: vec text) -> (ScheduleId);
+   searchRecipes: (searchText: text, limit: nat) -> (vec RecipePublic) query;
+   searchUsers: (search: text, limit: nat) -> (vec UserProfilePublic) query;
    searchVarieties: (searchQuery: text) -> (vec VarietyPublic) query;
    seedDefaultRecipes: () -> ();
    setForSale: (plant_id: PlantId, for_sale: bool) -> ();
@@ -1316,12 +1535,17 @@ type ICSpicy =
    setPlantNFT: (plant_id: PlantId, nft_id: text) -> ();
    storeArtworkFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
+   storeCommunityImage: (path: text, data: vec nat8, mimeType: text) ->
+    (StoredFile);
    storeNimsPhotoFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
    submitOffer: (input: SubmitOfferInput) -> (Offer);
    toggleCooked: (plant_id: PlantId) -> ();
-   toggleRecipeFeatured: (id: RecipeId) -> (opt Recipe);
+   toggleFavorite: (recipe_id: RecipeId) -> (bool);
+   toggleRecipeFeatured: (id: RecipeId) -> (bool);
    transplantCell: (input: TransplantInput) -> (PlantPublic);
+   transplantPlant: (plantId: PlantId, newContainer: ContainerSize,
+    locationNotes: opt text) -> (bool);
    treasuryDeposit: (token: TreasuryToken, amount: nat, memo: opt text) ->
     (TreasuryTransaction);
    treasuryTransfer: (token: TreasuryToken, amount: nat, from: principal, to:
@@ -1329,17 +1553,20 @@ type ICSpicy =
    treasuryWithdraw: (token: TreasuryToken, amount: nat, to: principal, memo:
     opt text) -> (TreasuryTransaction);
    triggerLifecycleUpgrade: (plant_id: PlantId, new_stage: text) -> (text);
+   unbanUser: (user: principal) -> ();
    unfollowUser: (target: principal) -> ();
    unlikePost: (post_id: PostId) -> (nat);
    updateCellData: (input: UpdateCellDataInput) -> ();
    updateNimsPlantStage: (plantId: PlantId, newStage: PlantStage) -> (bool);
    updateOrderStatus: (order_id: OrderId, status: OrderStatus) -> ();
+   updateOrderStatusAdmin: (order_id: OrderId, status: OrderStatus) -> ();
    updatePlantMetadata: (input: UpdatePlantMetadataInput) -> ();
    updatePlantPrice: (plantId: PlantId, price: nat) -> (bool);
    updatePlantStage: (plant_id: PlantId, new_stage: PlantStage, notes:
     text) -> ();
+   updatePlantingEvent: (input: UpdatePlantingEventInput) -> (PlantingEvent);
    updateProduct: (input: UpdateProductInput) -> ();
-   updateRecipe: (input: UpdateRecipeInput) -> (opt Recipe);
+   updateRecipe: (input: UpdateRecipeInput) -> (bool);
    updateSeedLot: (id: nat, quantity: opt nat, harvestDate: opt Timestamp,
     generation: opt text, germinationRate: opt nat, notes: opt text,
     isActive: opt bool, vendorId: opt nat) -> (bool);
@@ -1384,6 +1611,12 @@ type FeedingPublic =
    product_name: text;
  };
 type FeedingId = nat;
+type Difficulty = 
+ variant {
+   Advanced;
+   Beginner;
+   Intermediate;
+ };
 type DeathCause = 
  variant {
    DampingOff;
@@ -1409,17 +1642,26 @@ type CreateTrayInput =
  };
 type CreateRecipeInput = 
  record {
-   application_notes: text;
+   application_frequency: opt text;
+   application_rate: opt text;
+   best_for: vec text;
+   category: RecipeCategory;
    description: text;
-   full_name: text;
-   ingredients: vec text;
-   instructions: vec text;
-   is_featured: bool;
-   name: text;
-   photo_key: opt text;
-   shop_link: opt text;
-   shop_link_label: opt text;
+   difficulty: Difficulty;
+   display_order: nat;
+   fermentation_time: opt text;
+   image_key: opt text;
+   ingredients: vec Ingredient;
+   is_published: bool;
+   prep_time: opt text;
+   related_recipe_ids: vec nat;
+   safety_notes: vec text;
+   slug: text;
+   steps: vec RecipeStep;
    tags: vec text;
+   tips: vec text;
+   title: text;
+   total_time: opt text;
  };
 type CreateProposalInput = 
  record {
@@ -1452,6 +1694,17 @@ type CreatePostInput =
    anonymous: bool;
    content: text;
    image_key: opt text;
+   image_keys: vec text;
+   nft_token_id: opt nat;
+   plant_id: opt nat;
+ };
+type CreatePlantingEventInput = 
+ record {
+   emoji: text;
+   event_type: PlantingEventType;
+   name: text;
+   notes: text;
+   scheduled_at: Timestamp;
  };
 type CreatePlantInput = 
  record {
@@ -1480,6 +1733,7 @@ type CreateOrderInput =
  };
 type CreateCommentInput = 
  record {
+   anonymous: bool;
    content: text;
    post_id: PostId;
  };
@@ -1520,14 +1774,25 @@ type ConfirmOrderPaymentDirectResult =
 type CommentPublic = 
  record {
    author: principal;
+   author_text: text;
    author_username: opt text;
+   caller_liked: bool;
    content: text;
    created_at: Timestamp;
    id: CommentId;
+   is_anonymous: bool;
+   like_count: nat;
    post_id: PostId;
  };
 type CommentId = nat;
 type ClaimTokenId = text;
+type ClaimTokenAdminPublic = 
+ record {
+   plant_id: opt PlantId;
+   redeemed: bool;
+   token: text;
+   token_id: nat;
+ };
 type CellStatus = 
  variant {
    Dead;
@@ -1654,6 +1919,40 @@ type AdminWithdrawTokensResult =
    blockIndex: opt nat;
    message: text;
    success: bool;
+ };
+type AdminOrderStatusFilter = 
+ variant {
+   All;
+   Cancelled;
+   Paid;
+   Pending;
+   PickedUp;
+   Shipped;
+ };
+type AdminOrderPublic = 
+ record {
+   buyer: principal;
+   created_at: Timestamp;
+   id: OrderId;
+   is_paid: bool;
+   items: vec AdminOrderItemPublic;
+   line_nft_token_ids: vec nat;
+   pickup: bool;
+   pickup_claim_tokens: vec text;
+   shipping: opt ShippingAddress;
+   shipping_address: opt text;
+   shipping_cents: nat;
+   status: OrderStatus;
+   subtotal_cents: nat;
+   total_cents: nat;
+ };
+type AdminOrderItemPublic = 
+ record {
+   plant_id: opt PlantId;
+   price_cents: nat;
+   product_id: ProductId;
+   product_name: text;
+   quantity: nat;
  };
 type AddWeatherRecordInput = 
  record {

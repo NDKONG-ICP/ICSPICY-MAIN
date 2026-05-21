@@ -849,8 +849,7 @@ module {
     };
   };
 
-  // Helper: container size to text
-  func containerSizeText(s : Types.ContainerSize) : Text {
+  public func containerSizeText(s : Types.ContainerSize) : Text {
     switch (s) {
       case (#Oz16) "16oz";
       case (#Gal1) "1 Gallon (legacy)";

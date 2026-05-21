@@ -7,6 +7,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@dfinity/candid": "3.4.3",
     "@dfinity/agent": "3.4.3",
     "@dfinity/assets": "3.4.3",
     "@dfinity/identity": "3.4.3",
