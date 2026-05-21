@@ -1,33 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useActor } from "./useActor";
-import { createActor } from "../backend";
-import { useActorReady } from "./useActorReady";
-import { useAuth } from "./useAuth";
 import type {
   BuyListedNftResult,
   NftListingPublic,
   PaymentToken,
 } from "../declarations/backend.did";
+import { useActor } from "./useActor";
+import { useActorReady } from "./useActorReady";
+import { useAuth } from "./useAuth";
+import type { Backend } from "../backend";
 
-type ResaleActor = {
-  getListedNfts: (pepperHeadOnly: [] | [boolean]) => Promise<NftListingPublic[]>;
-  getMyNftListings: () => Promise<NftListingPublic[]>;
-  listNftForSale: (tokenId: bigint, priceUsdCents: bigint) => Promise<boolean>;
-  delistNft: (tokenId: bigint) => Promise<boolean>;
-  buyListedNft: (
-    tokenId: bigint,
-    token: PaymentToken,
-    amount: bigint,
-  ) => Promise<BuyListedNftResult>;
-};
-
-function useResaleActor() {
-  const { actor } = useActor<import("../backend").Backend>(createActor);
-  return actor as unknown as ResaleActor | null;
+function useBackendActor() {
+  const { actor } = useActor<Backend>();
+  return actor;
 }
 
 export function useListedNfts(pepperHeadOnly?: boolean) {
-  const actor = useResaleActor();
+  const actor = useBackendActor();
   const { actorReady } = useActorReady();
   return useQuery({
     queryKey: ["nftListings", pepperHeadOnly ?? "all", actorReady],
@@ -42,7 +30,7 @@ export function useListedNfts(pepperHeadOnly?: boolean) {
 }
 
 export function useMyNftListings() {
-  const actor = useResaleActor();
+  const actor = useBackendActor();
   const { isAuthenticated } = useAuth();
   const { actorReady } = useActorReady();
   return useQuery({
@@ -56,7 +44,7 @@ export function useMyNftListings() {
 }
 
 export function useListNftForSale() {
-  const actor = useResaleActor();
+  const actor = useBackendActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -77,7 +65,7 @@ export function useListNftForSale() {
 }
 
 export function useDelistNft() {
-  const actor = useResaleActor();
+  const actor = useBackendActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (tokenId: bigint) => {
@@ -92,7 +80,7 @@ export function useDelistNft() {
 }
 
 export function useBuyListedNft() {
-  const actor = useResaleActor();
+  const actor = useBackendActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -103,7 +91,7 @@ export function useBuyListedNft() {
       tokenId: bigint;
       token: PaymentToken;
       amount: bigint;
-    }) => {
+    }): Promise<BuyListedNftResult> => {
       if (!actor) throw new Error("Not connected");
       const result = await actor.buyListedNft(tokenId, token, amount);
       if (!result.success) throw new Error(result.message);

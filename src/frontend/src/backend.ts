@@ -171,6 +171,14 @@ export interface ResaleListingPublic {
     listed_at: Timestamp;
     plant_id: PlantId;
 }
+export interface NftListingPublic {
+    tokenId: bigint;
+    listedAt: Timestamp;
+    seller: Principal;
+    isActive: boolean;
+    plantId: [] | [PlantId];
+    priceUsdCents: bigint;
+}
 export type RecipeId = bigint;
 export interface LifecycleUpgradeEvent {
     new_stage: string;
@@ -939,6 +947,7 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    buyListedNft(tokenId: bigint, token: import("./declarations/backend.did").PaymentToken, amount: bigint): Promise<{ message: string; success: boolean }>;
     cancelOffer(offerId: string): Promise<Offer>;
     cancelResaleListing(listing_id: string): Promise<{
         __kind__: "ok";
@@ -974,6 +983,7 @@ export interface backendInterface {
     deleteProduct(product_id: ProductId): Promise<void>;
     deleteRecipe(id: RecipeId): Promise<boolean>;
     deleteTray(tray_id: TrayId): Promise<void>;
+    delistNft(tokenId: bigint): Promise<boolean>;
     editPost(post_id: PostId, new_content: string): Promise<PostPublic>;
     ensureAdminProfile(): Promise<void>;
     ensureCallerProfile(): Promise<void>;
@@ -1005,9 +1015,11 @@ export interface backendInterface {
     getFollowersCount(user: Principal): Promise<bigint>;
     getFollowingCount(user: Principal): Promise<bigint>;
     getForSalePlants(): Promise<Array<PlantPublic>>;
+    getListedNfts(pepperHeadOnly: [] | [boolean]): Promise<Array<NftListingPublic>>;
     getMembershipPriceInToken(token: OracleToken): Promise<bigint>;
     getMyOffers(): Promise<Array<Offer>>;
     getMyResaleListings(): Promise<Array<ResaleListingPublic>>;
+    getMyNftListings(): Promise<Array<NftListingPublic>>;
     getMySchedules(): Promise<Array<SavedSchedule>>;
     getMyWeatherRecords(limit: bigint): Promise<Array<WeatherRecord>>;
     getOffer(offerId: string): Promise<Offer | null>;
@@ -1054,6 +1066,7 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    listNftForSale(tokenId: bigint, priceUsdCents: bigint): Promise<boolean>;
     listOrdersByBuyer(): Promise<Array<OrderPublic>>;
     listPlants(): Promise<Array<PlantPublic>>;
     listPlantsByStage(stage: PlantStage): Promise<Array<PlantPublic>>;
@@ -1455,6 +1468,11 @@ export class Backend implements backendInterface {
             return from_candid_variant_n59(this._uploadFile, this._downloadFile, result);
         }
     }
+    async buyListedNft(arg0: bigint, arg1: import("./declarations/backend.did").PaymentToken, arg2: bigint): Promise<{ message: string; success: boolean }> {
+        if (this.processError) {
+            try { return await this.actor.buyListedNft(arg0, arg1, arg2); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.buyListedNft(arg0, arg1, arg2); }
+    }
     async cancelOffer(arg0: string): Promise<Offer> {
         if (this.processError) {
             try {
@@ -1718,6 +1736,11 @@ export class Backend implements backendInterface {
             const result = await this.actor.deleteTray(arg0);
             return result;
         }
+    }
+    async delistNft(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.delistNft(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.delistNft(arg0); }
     }
     async editPost(arg0: PostId, arg1: string): Promise<PostPublic> {
         if (this.processError) {
@@ -2081,6 +2104,11 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getListedNfts(arg0: [] | [boolean]): Promise<Array<NftListingPublic>> {
+        if (this.processError) {
+            try { return await this.actor.getListedNfts(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getListedNfts(arg0); }
+    }
     async getForSalePlants(): Promise<Array<PlantPublic>> {
         if (this.processError) {
             try {
@@ -2136,6 +2164,11 @@ export class Backend implements backendInterface {
             const result = await this.actor.getMyResaleListings();
             return from_candid_vec_n120(this._uploadFile, this._downloadFile, result);
         }
+    }
+    async getMyNftListings(): Promise<Array<NftListingPublic>> {
+        if (this.processError) {
+            try { return await this.actor.getMyNftListings(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getMyNftListings(); }
     }
     async getMySchedules(): Promise<Array<SavedSchedule>> {
         if (this.processError) {
@@ -2688,6 +2721,11 @@ export class Backend implements backendInterface {
             const result = await this.actor.listNFTForResale(arg0, arg1);
             return from_candid_variant_n198(this._uploadFile, this._downloadFile, result);
         }
+    }
+    async listNftForSale(arg0: bigint, arg1: bigint): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.listNftForSale(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.listNftForSale(arg0, arg1); }
     }
     async listOrdersByBuyer(): Promise<Array<OrderPublic>> {
         if (this.processError) {

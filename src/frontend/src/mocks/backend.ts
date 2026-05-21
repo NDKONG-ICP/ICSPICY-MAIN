@@ -1070,4 +1070,9 @@ export const mockBackend: backendInterface = {
   }),
   isPepperHeadAvailable: async () => BigInt(0),
   setICPaySecretKey: async () => undefined,
+  getListedNfts: async () => [],
+  getMyNftListings: async () => [],
+  listNftForSale: async () => true,
+  delistNft: async () => true,
+  buyListedNft: async () => ({ success: true, message: "Mock purchased" }),
 };
