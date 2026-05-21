@@ -318,6 +318,47 @@ type ShippingAddress =
    street_line2: opt text;
    zip: text;
  };
+type SeedVendorPublic = 
+ record {
+   createdAt: Timestamp;
+   id: nat;
+   name: text;
+   notes: opt text;
+   owner: principal;
+   website: opt text;
+ };
+type SeedSource = 
+ variant {
+   Cross;
+   Gift;
+   OwnHarvest;
+   Trade;
+   Vendor;
+ };
+type SeedLotPublic = 
+ record {
+   acquiredDate: Timestamp;
+   createdAt: Timestamp;
+   crossId: opt nat;
+   generation: opt text;
+   germinationRate: opt nat;
+   harvestDate: opt Timestamp;
+   id: nat;
+   isActive: bool;
+   notes: opt text;
+   owner: principal;
+   parentPlantId: opt PlantId;
+   quantity: opt nat;
+   source: SeedSource;
+   varietyId: nat;
+   vendorId: opt nat;
+ };
+type SeedBankStats = 
+ record {
+   activeCrosses: nat;
+   totalLots: nat;
+   varietyCount: nat;
+ };
 type ScheduleId = text;
 type ScheduleEntry = 
  record {
@@ -862,9 +903,12 @@ type ICSpicy =
    addPlantPhoto: (plant_id: PlantId, photo_key: text) -> ();
    addPurchasedPlantToNims: (nftTokenId: nat, container: ContainerSize,
     locationNotes: opt text) -> (PlantSeedResult);
+   addSeedLot: (varietyId: nat, source: SeedSource, quantity: opt nat,
+    vendorId: opt nat, notes: opt text) -> (nat);
    addVariety: (name: text, species: text, scovilleMin: nat, scovilleMax:
     nat, description: text, imageUrl: opt text, daysToGerm: opt nat,
     daysToMature: opt nat) -> (nat);
+   addVendor: (name: text, website: opt text, notes: opt text) -> (nat);
    addWateringEntry: (plantId: PlantId, amountMl: nat, phLevel: opt float64,
     notes: opt text) -> (bool);
    addWeatherRecord: (input: AddWeatherRecordInput) -> (WeatherRecord);
@@ -1014,12 +1058,15 @@ type ICSpicy =
    getListedNfts: (pepperHeadOnly: opt bool) -> (vec NftListingPublic) query;
    getLoadedMetadataCount: () -> (nat) query;
    getMembershipPriceInToken: (token: OracleToken) -> (nat) query;
+   getMyCrosses: () -> (vec BreedingCrossPublic) query;
    getMyNftListings: () -> (vec NftListingPublic) query;
    getMyOffers: () -> (vec Offer) query;
    getMyPlantsNims: () -> (vec PlantLifecycle);
    getMyResaleListings: () -> (vec ResaleListingPublic) query;
    getMySchedules: () -> (vec SavedSchedule);
+   getMySeedBank: () -> (vec SeedLotPublic) query;
    getMyTrays: () -> (vec TrayPublic) query;
+   getMyVendors: () -> (vec SeedVendorPublic) query;
    getMyWeatherRecords: (limit: nat) -> (vec WeatherRecord);
    getNftPoolStatus: () -> (record {
                               available: nat;
@@ -1055,6 +1102,8 @@ type ICSpicy =
    getScheduleByShareToken: (share_token: text) -> (opt SavedSchedule) query;
    getScheduleData: (stage: text, inputs: vec text) ->
     (vec ScheduleEntry) query;
+   getSeedBankStats: () -> (SeedBankStats) query;
+   getSeedLotsByVariety: (varietyId: nat) -> (vec SeedLotPublic) query;
    getShopListingFile: (path: text) -> (opt ShopListingFile) query;
    getTokenPriceInIcp: (token: OracleToken) -> (nat) query;
    getTokenPrices: () -> (vec TokenPrice) query;
@@ -1067,6 +1116,8 @@ type ICSpicy =
     (vec LifecycleUpgradeEvent) query;
    getUserPosts: (user: principal) -> (vec PostPublic) query;
    getVariety: (id: nat) -> (opt VarietyPublic) query;
+   harvestSeeds: (plantId: PlantId, quantity: opt nat, notes: opt text) ->
+    (nat);
    hasDAOAccess: () -> (bool) query;
    hasMembership: () -> (bool) query;
    icpayTransform: (record {
@@ -1229,6 +1280,10 @@ type ICSpicy =
     (PurchasePlantResult);
    purchasePlantICPay: (plantId: PlantId, paymentId: text) ->
     (PurchasePlantResult);
+   recordCross: (name: text, motherVarietyId: nat, fatherVarietyId: nat,
+    motherPlantId: opt PlantId, fatherPlantId: opt PlantId, crossDate:
+    opt Timestamp, notes: opt text, expectedTraits: opt text, generation:
+    opt text) -> (nat);
    redeemBatchClaim: (token_id: ClaimTokenId) ->
     (variant {
        err: text;
@@ -1285,6 +1340,9 @@ type ICSpicy =
     text) -> ();
    updateProduct: (input: UpdateProductInput) -> ();
    updateRecipe: (input: UpdateRecipeInput) -> (opt Recipe);
+   updateSeedLot: (id: nat, quantity: opt nat, harvestDate: opt Timestamp,
+    generation: opt text, germinationRate: opt nat, notes: opt text,
+    isActive: opt bool, vendorId: opt nat) -> (bool);
    updateTrayName: (tray_id: TrayId, new_name: text) -> ();
    updateTrayOrder: (tray_id: TrayId, new_order: nat) -> ();
    updateVariety: (id: nat, name: opt text, species: opt text, scovilleMin:
@@ -1499,6 +1557,24 @@ type BulkCreateResult =
  variant {
    err: text;
    ok: ProductPublic;
+ };
+type BreedingCrossPublic = 
+ record {
+   createdAt: Timestamp;
+   crossDate: Timestamp;
+   expectedTraits: opt text;
+   fatherPlantId: opt PlantId;
+   fatherVarietyId: nat;
+   generation: text;
+   id: nat;
+   motherPlantId: opt PlantId;
+   motherVarietyId: nat;
+   name: text;
+   notes: opt text;
+   observedTraits: opt text;
+   owner: principal;
+   photos: vec text;
+   seedLotId: opt nat;
  };
 type BatchGiftPackPublic = 
  record {

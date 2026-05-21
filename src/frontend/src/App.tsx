@@ -394,11 +394,18 @@ const nftDetailRoute = createRoute({
   component: NFTDetailPage,
 });
 
+const plantNfcRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/plant/$plantId",
+  component: PlantDetailPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   marketplaceRoute,
   plantsRoute,
   plantDetailRoute,
+  plantNfcRoute,
   profileRoute,
   daoRoute,
   communityRoute,

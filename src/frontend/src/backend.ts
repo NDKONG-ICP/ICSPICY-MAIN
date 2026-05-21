@@ -1045,6 +1045,16 @@ export interface backendInterface {
     removeVariety(id: bigint): Promise<boolean>;
     addPlant(varietyId: bigint, stage: import("./declarations/backend.did").PlantStage, trayId: TrayId | null, cellPosition: bigint | null, price: bigint | null, container: import("./declarations/backend.did").ContainerSize | null): Promise<import("./declarations/backend.did").AddPlantResult>;
     getMyTrays(): Promise<Array<import("./declarations/backend.did").TrayPublic>>;
+    getMySeedBank(): Promise<Array<import("./declarations/backend.did").SeedLotPublic>>;
+    getMyCrosses(): Promise<Array<import("./declarations/backend.did").BreedingCrossPublic>>;
+    getMyVendors(): Promise<Array<import("./declarations/backend.did").SeedVendorPublic>>;
+    getSeedBankStats(): Promise<import("./declarations/backend.did").SeedBankStats>;
+    getSeedLotsByVariety(varietyId: bigint): Promise<Array<import("./declarations/backend.did").SeedLotPublic>>;
+    addSeedLot(varietyId: bigint, source: import("./declarations/backend.did").SeedSource, quantity: bigint | null, vendorId: bigint | null, notes: string | null): Promise<bigint>;
+    updateSeedLot(id: bigint, quantity: bigint | null, harvestDate: bigint | null, generation: string | null, germinationRate: bigint | null, notes: string | null, isActive: boolean | null, vendorId: bigint | null): Promise<boolean>;
+    recordCross(name: string, motherVarietyId: bigint, fatherVarietyId: bigint, motherPlantId: PlantId | null, fatherPlantId: PlantId | null, crossDate: bigint | null, notes: string | null, expectedTraits: string | null, generation: string | null): Promise<bigint>;
+    addVendor(name: string, website: string | null, notes: string | null): Promise<bigint>;
+    harvestSeeds(plantId: PlantId, quantity: bigint | null, notes: string | null): Promise<bigint>;
     addPlantNote(plantId: PlantId, text: string): Promise<boolean>;
     addWateringEntry(plantId: PlantId, amountMl: bigint, phLevel: number | null, notes: string | null): Promise<boolean>;
     addPestEntry(plantId: PlantId, pestName: string, severity: string, treatment: string | null, notes: string | null): Promise<boolean>;
@@ -2477,6 +2487,56 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try { return await this.actor.getMyTrays(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.getMyTrays(); }
+    }
+    async getMySeedBank(): Promise<Array<import("./declarations/backend.did").SeedLotPublic>> {
+        if (this.processError) {
+            try { return await this.actor.getMySeedBank(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getMySeedBank(); }
+    }
+    async getMyCrosses(): Promise<Array<import("./declarations/backend.did").BreedingCrossPublic>> {
+        if (this.processError) {
+            try { return await this.actor.getMyCrosses(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getMyCrosses(); }
+    }
+    async getMyVendors(): Promise<Array<import("./declarations/backend.did").SeedVendorPublic>> {
+        if (this.processError) {
+            try { return await this.actor.getMyVendors(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getMyVendors(); }
+    }
+    async getSeedBankStats(): Promise<import("./declarations/backend.did").SeedBankStats> {
+        if (this.processError) {
+            try { return await this.actor.getSeedBankStats(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getSeedBankStats(); }
+    }
+    async getSeedLotsByVariety(arg0: bigint): Promise<Array<import("./declarations/backend.did").SeedLotPublic>> {
+        if (this.processError) {
+            try { return await this.actor.getSeedLotsByVariety(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getSeedLotsByVariety(arg0); }
+    }
+    async addSeedLot(arg0: bigint, arg1: import("./declarations/backend.did").SeedSource, arg2: bigint | null, arg3: bigint | null, arg4: string | null): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.addSeedLot(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.addSeedLot(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); }
+    }
+    async updateSeedLot(arg0: bigint, arg1: bigint | null, arg2: bigint | null, arg3: string | null, arg4: bigint | null, arg5: string | null, arg6: boolean | null, arg7: bigint | null): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.updateSeedLot(arg0, arg1 != null ? [arg1] : [], arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : [], arg5 != null ? [arg5] : [], arg6 != null ? [arg6] : [], arg7 != null ? [arg7] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.updateSeedLot(arg0, arg1 != null ? [arg1] : [], arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : [], arg5 != null ? [arg5] : [], arg6 != null ? [arg6] : [], arg7 != null ? [arg7] : []); }
+    }
+    async recordCross(arg0: string, arg1: bigint, arg2: bigint, arg3: PlantId | null, arg4: PlantId | null, arg5: bigint | null, arg6: string | null, arg7: string | null, arg8: string | null): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.recordCross(arg0, arg1, arg2, arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : [], arg5 != null ? [arg5] : [], arg6 != null ? [arg6] : [], arg7 != null ? [arg7] : [], arg8 != null ? [arg8] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.recordCross(arg0, arg1, arg2, arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : [], arg5 != null ? [arg5] : [], arg6 != null ? [arg6] : [], arg7 != null ? [arg7] : [], arg8 != null ? [arg8] : []); }
+    }
+    async addVendor(arg0: string, arg1: string | null, arg2: string | null): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.addVendor(arg0, arg1 != null ? [arg1] : [], arg2 != null ? [arg2] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.addVendor(arg0, arg1 != null ? [arg1] : [], arg2 != null ? [arg2] : []); }
+    }
+    async harvestSeeds(arg0: PlantId, arg1: bigint | null, arg2: string | null): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.harvestSeeds(arg0, arg1 != null ? [arg1] : [], arg2 != null ? [arg2] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.harvestSeeds(arg0, arg1 != null ? [arg1] : [], arg2 != null ? [arg2] : []); }
     }
     async addPlantNote(arg0: PlantId, arg1: string): Promise<boolean> {
         if (this.processError) {

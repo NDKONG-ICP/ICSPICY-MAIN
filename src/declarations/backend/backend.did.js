@@ -101,6 +101,13 @@ export const idlFactory = ({ IDL }) => {
     'plantId' : PlantId,
   });
   const PlantSeedResult = IDL.Record({ 'plantId' : PlantId });
+  const SeedSource = IDL.Variant({
+    'Gift' : IDL.Null,
+    'OwnHarvest' : IDL.Null,
+    'Trade' : IDL.Null,
+    'Vendor' : IDL.Null,
+    'Cross' : IDL.Null,
+  });
   const AddWeatherRecordInput = IDL.Record({
     'latitude' : IDL.Float64,
     'temperature_max' : IDL.Float64,
@@ -625,6 +632,23 @@ export const idlFactory = ({ IDL }) => {
     'ckUSDC' : IDL.Null,
     'ckUSDT' : IDL.Null,
   });
+  const BreedingCrossPublic = IDL.Record({
+    'id' : IDL.Nat,
+    'motherVarietyId' : IDL.Nat,
+    'owner' : IDL.Principal,
+    'fatherPlantId' : IDL.Opt(PlantId),
+    'name' : IDL.Text,
+    'createdAt' : Timestamp,
+    'generation' : IDL.Text,
+    'expectedTraits' : IDL.Opt(IDL.Text),
+    'fatherVarietyId' : IDL.Nat,
+    'crossDate' : Timestamp,
+    'notes' : IDL.Opt(IDL.Text),
+    'observedTraits' : IDL.Opt(IDL.Text),
+    'motherPlantId' : IDL.Opt(PlantId),
+    'seedLotId' : IDL.Opt(IDL.Nat),
+    'photos' : IDL.Vec(IDL.Text),
+  });
   const ScheduleId = IDL.Text;
   const SavedSchedule = IDL.Record({
     'id' : ScheduleId,
@@ -633,6 +657,31 @@ export const idlFactory = ({ IDL }) => {
     'stage' : IDL.Text,
     'inputs' : IDL.Vec(IDL.Text),
     'share_token' : IDL.Text,
+  });
+  const SeedLotPublic = IDL.Record({
+    'id' : IDL.Nat,
+    'germinationRate' : IDL.Opt(IDL.Nat),
+    'acquiredDate' : Timestamp,
+    'source' : SeedSource,
+    'owner' : IDL.Principal,
+    'createdAt' : Timestamp,
+    'generation' : IDL.Opt(IDL.Text),
+    'isActive' : IDL.Bool,
+    'parentPlantId' : IDL.Opt(PlantId),
+    'vendorId' : IDL.Opt(IDL.Nat),
+    'notes' : IDL.Opt(IDL.Text),
+    'quantity' : IDL.Opt(IDL.Nat),
+    'varietyId' : IDL.Nat,
+    'harvestDate' : IDL.Opt(Timestamp),
+    'crossId' : IDL.Opt(IDL.Nat),
+  });
+  const SeedVendorPublic = IDL.Record({
+    'id' : IDL.Nat,
+    'owner' : IDL.Principal,
+    'name' : IDL.Text,
+    'createdAt' : Timestamp,
+    'website' : IDL.Opt(IDL.Text),
+    'notes' : IDL.Opt(IDL.Text),
   });
   const DashboardStats = IDL.Record({
     'needsAttention' : IDL.Nat,
@@ -739,6 +788,11 @@ export const idlFactory = ({ IDL }) => {
     'notes' : IDL.Text,
     'frequency' : IDL.Text,
     'input_name' : IDL.Text,
+  });
+  const SeedBankStats = IDL.Record({
+    'totalLots' : IDL.Nat,
+    'activeCrosses' : IDL.Nat,
+    'varietyCount' : IDL.Nat,
   });
   const TokenPrice = IDL.Record({
     'token' : OracleToken,
@@ -1059,6 +1113,17 @@ export const idlFactory = ({ IDL }) => {
         [PlantSeedResult],
         [],
       ),
+    'addSeedLot' : IDL.Func(
+        [
+          IDL.Nat,
+          SeedSource,
+          IDL.Opt(IDL.Nat),
+          IDL.Opt(IDL.Nat),
+          IDL.Opt(IDL.Text),
+        ],
+        [IDL.Nat],
+        [],
+      ),
     'addVariety' : IDL.Func(
         [
           IDL.Text,
@@ -1070,6 +1135,11 @@ export const idlFactory = ({ IDL }) => {
           IDL.Opt(IDL.Nat),
           IDL.Opt(IDL.Nat),
         ],
+        [IDL.Nat],
+        [],
+      ),
+    'addVendor' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
         [IDL.Nat],
         [],
       ),
@@ -1319,6 +1389,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getLoadedMetadataCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getMembershipPriceInToken' : IDL.Func([OracleToken], [IDL.Nat], ['query']),
+    'getMyCrosses' : IDL.Func([], [IDL.Vec(BreedingCrossPublic)], ['query']),
     'getMyNftListings' : IDL.Func([], [IDL.Vec(NftListingPublic)], ['query']),
     'getMyOffers' : IDL.Func([], [IDL.Vec(Offer)], ['query']),
     'getMyPlantsNims' : IDL.Func([], [IDL.Vec(PlantLifecycle)], []),
@@ -1328,7 +1399,9 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getMySchedules' : IDL.Func([], [IDL.Vec(SavedSchedule)], []),
+    'getMySeedBank' : IDL.Func([], [IDL.Vec(SeedLotPublic)], ['query']),
     'getMyTrays' : IDL.Func([], [IDL.Vec(TrayPublic)], ['query']),
+    'getMyVendors' : IDL.Func([], [IDL.Vec(SeedVendorPublic)], ['query']),
     'getMyWeatherRecords' : IDL.Func([IDL.Nat], [IDL.Vec(WeatherRecord)], []),
     'getNftPoolStatus' : IDL.Func(
         [],
@@ -1405,6 +1478,12 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(ScheduleEntry)],
         ['query'],
       ),
+    'getSeedBankStats' : IDL.Func([], [SeedBankStats], ['query']),
+    'getSeedLotsByVariety' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(SeedLotPublic)],
+        ['query'],
+      ),
     'getShopListingFile' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(ShopListingFile)],
@@ -1432,6 +1511,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getVariety' : IDL.Func([IDL.Nat], [IDL.Opt(VarietyPublic)], ['query']),
+    'harvestSeeds' : IDL.Func(
+        [PlantId, IDL.Opt(IDL.Nat), IDL.Opt(IDL.Text)],
+        [IDL.Nat],
+        [],
+      ),
     'hasDAOAccess' : IDL.Func([], [IDL.Bool], ['query']),
     'hasMembership' : IDL.Func([], [IDL.Bool], ['query']),
     'icpayTransform' : IDL.Func(
@@ -1713,6 +1797,21 @@ export const idlFactory = ({ IDL }) => {
         [PurchasePlantResult],
         [],
       ),
+    'recordCross' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Nat,
+          IDL.Nat,
+          IDL.Opt(PlantId),
+          IDL.Opt(PlantId),
+          IDL.Opt(Timestamp),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Text),
+        ],
+        [IDL.Nat],
+        [],
+      ),
     'redeemBatchClaim' : IDL.Func(
         [ClaimTokenId],
         [IDL.Variant({ 'ok' : BatchGiftPackPublic, 'err' : IDL.Text })],
@@ -1799,6 +1898,20 @@ export const idlFactory = ({ IDL }) => {
     'updatePlantStage' : IDL.Func([PlantId, PlantStage, IDL.Text], [], []),
     'updateProduct' : IDL.Func([UpdateProductInput], [], []),
     'updateRecipe' : IDL.Func([UpdateRecipeInput], [IDL.Opt(Recipe)], []),
+    'updateSeedLot' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Opt(IDL.Nat),
+          IDL.Opt(Timestamp),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Nat),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Bool),
+          IDL.Opt(IDL.Nat),
+        ],
+        [IDL.Bool],
+        [],
+      ),
     'updateTrayName' : IDL.Func([TrayId, IDL.Text], [], []),
     'updateTrayOrder' : IDL.Func([TrayId, IDL.Nat], [], []),
     'updateVariety' : IDL.Func(

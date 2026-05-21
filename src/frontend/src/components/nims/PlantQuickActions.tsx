@@ -7,6 +7,8 @@ import {
   NotepadText,
   ShoppingBag,
   Skull,
+  Tag,
+  Wheat,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,8 @@ export type QuickPlantAction =
   | "photo"
   | "note"
   | "transplant"
+  | "harvest_seeds"
+  | "nfc_tag"
   | "list_sale"
   | "mark_dead";
 
@@ -34,6 +38,8 @@ const ACTIONS: ReadonlyArray<{
     { key: "photo", label: "Photo", icon: Camera },
     { key: "note", label: "Note", icon: NotepadText },
     { key: "transplant", label: "Transplant", icon: Move },
+    { key: "harvest_seeds", label: "Harvest Seeds", icon: Wheat },
+    { key: "nfc_tag", label: "NFC Tag Link", icon: Tag },
     { key: "list_sale", label: "List for Sale", icon: ShoppingBag },
     {
       key: "mark_dead",

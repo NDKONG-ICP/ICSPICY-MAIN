@@ -59,6 +59,9 @@ export type { AdoptPlantPromptProps, AdoptPlantSubmit } from "./AdoptPlantPrompt
 export { NimsLocationPrompt } from "./NimsLocationPrompt";
 export { NewTrayModal } from "./NewTrayModal";
 export { AddPlantModal } from "./AddPlantModal";
+export { SeedBankPanel } from "./SeedBankPanel";
+export { HarvestSeedsModal } from "./HarvestSeedsModal";
+export { NfcTagLinkModal } from "./NfcTagLinkModal";
 
 export { PlantTimeline } from "./PlantTimeline";
 

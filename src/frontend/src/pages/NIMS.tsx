@@ -12,6 +12,7 @@ import {
   Plus,
   Sprout,
   Users,
+  Wheat,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -31,6 +32,7 @@ import {
   NimsLocationPrompt,
   PlantLifecycleCard,
   PlantSeedModal,
+  SeedBankPanel,
   TransplantModal,
   TrayGrid,
   WeatherBar,
@@ -56,17 +58,25 @@ import {
   useAdminInventory,
   useVarieties,
   useAddPlant,
+  useAddVariety,
 } from "../hooks/useNims";
 import { useWeather } from "../hooks/useWeather";
 import { useTransplantCell } from "../hooks/useBackend";
+import { downloadTextFile, plantTagLinksCsv } from "../lib/plant-nfc-url";
 import type { TransplantInput } from "../backend";
 
-type NimsTab = "trays" | "inventory" | "activity" | "analytics" | "myplants";
+type NimsTab =
+  | "trays"
+  | "inventory"
+  | "seedbank"
+  | "activity"
+  | "analytics"
+  | "myplants";
 
 function cellPositionLabel(pos: bigint): string {
   const n = Number(pos);
-  const row = Math.ceil(n / 6);
-  const col = String.fromCharCode(64 + ((n - 1) % 6) + 1);
+  const row = Math.ceil(n / 12);
+  const col = String.fromCharCode(65 + ((n - 1) % 12));
   return `${col}${row}`;
 }
 
@@ -116,9 +126,11 @@ export default function NIMSPage() {
   const adoptPlant = useAdoptPurchasedPlant();
   const createTray = useCreateNimsTray();
   const addPlant = useAddPlant();
+  const addVariety = useAddVariety();
   const [adoptOpen, setAdoptOpen] = useState(false);
   const [newTrayOpen, setNewTrayOpen] = useState(false);
   const [addPlantOpen, setAddPlantOpen] = useState(false);
+  const [prefillVarietyId, setPrefillVarietyId] = useState<bigint | null>(null);
   const adoptPromptedRef = useRef<string | null>(null);
 
   const defaultTab: NimsTab = "trays";
@@ -197,6 +209,7 @@ export default function NIMSPage() {
 
   const tabs: { id: NimsTab; label: string; icon: typeof Leaf }[] = [
     { id: "trays", label: "Trays", icon: Sprout },
+    { id: "seedbank", label: "Seed Bank", icon: Wheat },
     { id: "inventory", label: "Inventory", icon: Package },
     { id: "activity", label: "Activity", icon: Activity },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
@@ -360,6 +373,29 @@ export default function NIMSPage() {
         )}
 
         {(tab === "inventory" || tab === "myplants") && (
+          <div className="space-y-3">
+            {isAdmin && showAllUsers && tab === "inventory" && inventoryList.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  const csv = plantTagLinksCsv(
+                    inventoryList.map((lc) => ({
+                      plantId: lc.plant.id,
+                      variety: lc.plant.variety,
+                    })),
+                  );
+                  downloadTextFile(
+                    `icspicy-plant-tags-${new Date().toISOString().slice(0, 10)}.csv`,
+                    csv,
+                  );
+                  toast.success("Tag links CSV downloaded");
+                }}
+              >
+                Generate tag links (CSV)
+              </Button>
+            )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {(tab === "myplants" || !(isAdmin && showAllUsers) ? myPlants : inventoryList).length === 0 ? (
               <p className="text-sm text-muted-foreground col-span-2 text-center py-8">
@@ -379,6 +415,18 @@ export default function NIMSPage() {
               ))
             )}
           </div>
+          </div>
+        )}
+
+        {tab === "seedbank" && (
+          <SeedBankPanel
+            varieties={varieties}
+            onPlantFromLot={(varietyId) => {
+              setPrefillVarietyId(varietyId);
+              setTab("trays");
+              toast.info("Select an empty tray cell to plant from this lot");
+            }}
+          />
         )}
 
         {tab === "activity" && <ActivityFeed entries={activity} />}
@@ -397,21 +445,29 @@ export default function NIMSPage() {
             open={seedOpen}
             onOpenChange={setSeedOpen}
             slotLabel={cellPositionLabel(selectedCell)}
-            onSubmit={async ({ varietyName }) => {
-              const variety = varieties.find(
-                (v) => v.name.toLowerCase() === varietyName.toLowerCase(),
-              );
-              if (!variety) {
-                toast.error("Variety not found — pick from catalog");
-                return;
-              }
+            varieties={varieties}
+            initialVarietyId={prefillVarietyId ?? undefined}
+            isCreatingVariety={addVariety.isPending}
+            onCreateVariety={async (name, species) => {
+              const id = await addVariety.mutateAsync({
+                name,
+                species,
+                scovilleMin: 0,
+                scovilleMax: 0,
+                description: "",
+              });
+              toast.success(`Variety "${name}" added`);
+              return id;
+            }}
+            onSubmit={async ({ varietyId }) => {
               try {
                 await plantSeed.mutateAsync({
                   trayId: activeTrayId,
                   cellPosition: selectedCell,
-                  varietyId: variety.id,
+                  varietyId,
                 });
                 toast.success(`Seed planted in ${cellPositionLabel(selectedCell)}`);
+                setPrefillVarietyId(null);
                 setSeedOpen(false);
               } catch (e) {
                 toast.error(e instanceof Error ? e.message : "Plant failed");

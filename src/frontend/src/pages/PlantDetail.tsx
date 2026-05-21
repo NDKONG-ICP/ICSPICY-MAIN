@@ -16,6 +16,8 @@ import {
   LogFeedingModal,
   LogPestModal,
   LogWateringModal,
+  HarvestSeedsModal,
+  NfcTagLinkModal,
   PlantQuickActions,
   PlantTimeline,
   TransplantModal,
@@ -35,6 +37,7 @@ import {
 import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import { useWeather } from "../hooks/useWeather";
 import { useNimsLocation } from "../hooks/useNimsLocation";
+import { useHarvestSeeds } from "../hooks/useSeedBank";
 import {
   formatCents,
   nftImageUrl,
@@ -56,8 +59,11 @@ function fmtTs(ts: bigint | undefined): string {
 }
 
 export default function PlantDetailPage() {
-  const { plantId } = useParams({ from: "/plants/$plantId" });
-  const id = BigInt(plantId);
+  const { plantId: plantIdParam } = useParams({ strict: false });
+  const id =
+    plantIdParam != null && plantIdParam !== ""
+      ? BigInt(plantIdParam)
+      : undefined;
   const navigate = useNavigate();
   const { data: lc, isLoading } = usePlantLifecycle(id);
   const { data: varieties = [] } = useVarieties();
@@ -72,22 +78,36 @@ export default function PlantDetailPage() {
   const listForSale = useListPlantForSale();
   const toggleCooked = useToggleCooked();
   const transplantCell = useTransplantCell();
+  const harvestSeeds = useHarvestSeeds();
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [noteText, setNoteText] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [weatherExpanded, setWeatherExpanded] = useState(false);
+  const [harvestOpen, setHarvestOpen] = useState(false);
+  const [nfcOpen, setNfcOpen] = useState(false);
   const nimsLocation = useNimsLocation();
   const { data: weather, isLoading: weatherLoading } = useWeather(
     nimsLocation.coordinates.lat,
     nimsLocation.coordinates.lng,
   );
-  const { data: health } = usePlantHealth(id);
+  const { data: health } = usePlantHealth(id ?? null);
 
   const [waterOpen, setWaterOpen] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
   const [pestOpen, setPestOpen] = useState(false);
   const [transplantOpen, setTransplantOpen] = useState(false);
   const [salePrice, setSalePrice] = useState("2500");
+
+  if (id === undefined) {
+    return (
+      <div className="container py-16 text-center">
+        <p>Plant not found.</p>
+        <Link to="/nims" className="text-primary underline">
+          Back to NIMS
+        </Link>
+      </div>
+    );
+  }
 
   if (isLoading) return <Skeleton className="h-96 m-8" />;
   if (!lc) {
@@ -132,6 +152,12 @@ export default function PlantDetailPage() {
       case "transplant":
         if (inTray) setTransplantOpen(true);
         else toast.info("Plant is already in inventory.");
+        break;
+      case "harvest_seeds":
+        setHarvestOpen(true);
+        break;
+      case "nfc_tag":
+        setNfcOpen(true);
         break;
       case "list_sale":
         if (plant.for_sale) {
@@ -404,9 +430,10 @@ export default function PlantDetailPage() {
 
           <PlantQuickActions
             onAction={handleQuickAction}
-            hiddenActions={
-              isAdmin ? [] : ["list_sale", "mark_dead"]
-            }
+            hiddenActions={[
+              ...(canEdit ? [] : (["harvest_seeds", "nfc_tag"] as const)),
+              ...(isAdmin ? [] : (["list_sale", "mark_dead"] as const)),
+            ]}
             disabled={
               plant.is_cooked || uploadPhoto.isPending || addPlantPhoto.isPending
             }
@@ -487,6 +514,29 @@ export default function PlantDetailPage() {
               }}
             />
           )}
+
+          <HarvestSeedsModal
+            open={harvestOpen}
+            onOpenChange={setHarvestOpen}
+            plantLabel={plant.variety}
+            isPending={harvestSeeds.isPending}
+            onSubmit={async ({ quantity, notes }) => {
+              try {
+                await harvestSeeds.mutateAsync({ plantId: id, quantity, notes });
+                setHarvestOpen(false);
+                toast.success("Seeds saved to your Seed Bank");
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Harvest failed");
+              }
+            }}
+          />
+
+          <NfcTagLinkModal
+            open={nfcOpen}
+            onOpenChange={setNfcOpen}
+            plantId={id}
+            plantLabel={plant.variety}
+          />
         </>
       )}
     </div>

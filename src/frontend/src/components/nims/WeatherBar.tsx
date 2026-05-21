@@ -9,6 +9,10 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { WeatherData } from "../../hooks/useWeather";
 import {
+  getPlantingRecommendations,
+  PLANTING_ZONE_LABEL,
+} from "../../lib/planting-almanac";
+import {
   uvIndexClass,
   weatherIcon,
   weatherToContext,
@@ -144,6 +148,8 @@ function ExpandedWeatherPanel({
   const ctx = weatherToContext(data);
   const uv = Math.round(data.current.uvIndex);
   const uvClass = uvIndexClass(uv);
+  const planting = getPlantingRecommendations();
+  const monthName = new Date().toLocaleString(undefined, { month: "long" });
 
   return (
     <div
@@ -242,6 +248,35 @@ function ExpandedWeatherPanel({
           minute: "2-digit",
         })}
       </p>
+
+      {planting.length > 0 && (
+        <div className="mt-2 border-t border-white/10 pt-3">
+          <p className="mb-2 font-semibold text-foreground">
+            🌱 What to Plant This Month
+          </p>
+          <p className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground/80">
+            {monthName} · {PLANTING_ZONE_LABEL}
+          </p>
+          <ul className="space-y-1.5">
+            {planting.map((rec) => (
+              <li
+                key={rec.name}
+                className="flex items-start gap-2 rounded-md bg-white/5 px-2 py-1.5"
+              >
+                <span aria-hidden>{rec.emoji}</span>
+                <span>
+                  <strong className="text-foreground">{rec.name}</strong>
+                  {" — "}
+                  <span className="text-primary/90">{rec.action}</span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    {rec.notes}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

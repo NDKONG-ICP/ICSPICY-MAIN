@@ -49,7 +49,9 @@ import ProductShipping "lib/product-shipping";
 import PaymentAPI "mixins/payment-api";
 import VarietyAPI "mixins/variety-api";
 import VarietyTypes "types/variety";
+import SeedBankTypes "types/seed-bank";
 import NimsAPI "mixins/nims-api";
+import SeedBankAPI "mixins/seed-bank-api";
 import NftResaleAPI "mixins/nft-resale-api";
 import ResaleTypes "types/nft-resale";
 
@@ -200,6 +202,14 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let plantPestLog              = Map.empty<Common.PlantId, List.List<PlantTypes.PestEntry>>();
   let plantPhotoLog             = Map.empty<Common.PlantId, List.List<PlantTypes.PlantPhotoEntry>>();
   let plantWeatherSnapshots     = Map.empty<Common.PlantId, List.List<PlantTypes.WeatherSnapshot>>();
+
+  // Seed Bank — per-user seed lots, breeding crosses, vendors
+  let seedLots          = Map.empty<Nat, SeedBankTypes.SeedLot>();
+  let breedingCrosses   = Map.empty<Nat, SeedBankTypes.BreedingCross>();
+  let seedVendors       = Map.empty<Nat, SeedBankTypes.SeedVendor>();
+  let nextSeedLotId     = { var value : Nat = 1 };
+  let nextBreedingCrossId = { var value : Nat = 1 };
+  let nextSeedVendorId  = { var value : Nat = 1 };
 
   // ── ICRC-7 NFT collection state (8888 tokens) ──────────────────────────────
   //
@@ -479,6 +489,19 @@ shared(msg) persistent actor class ICSpicy() = Self {
     nextPlantId,
     nextTrayId,
     nextFeedingId,
+  );
+  include SeedBankAPI(
+    accessControlState,
+    plants,
+    plantOwners,
+    plantVarietyIds,
+    varieties,
+    seedLots,
+    breedingCrosses,
+    seedVendors,
+    nextSeedLotId,
+    nextBreedingCrossId,
+    nextSeedVendorId,
   );
   include MarketplaceAPI(
     accessControlState,

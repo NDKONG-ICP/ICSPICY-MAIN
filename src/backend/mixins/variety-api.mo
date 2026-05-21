@@ -29,7 +29,7 @@ mixin (
     daysToGerm : ?Nat,
     daysToMature : ?Nat,
   ) : async Nat {
-    requireAdmin(caller);
+    AccessControl.requireAuthenticated(caller);
     let id = nextVarietyId.value;
     ignore VarietyLib.addVariety(
       varieties,

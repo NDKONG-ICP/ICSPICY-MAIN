@@ -93,6 +93,23 @@ export interface BatchGiftPackPublic {
   'claim_token_id' : ClaimTokenId,
   'highest_rarity_pct' : bigint,
 }
+export interface BreedingCrossPublic {
+  'id' : bigint,
+  'motherVarietyId' : bigint,
+  'owner' : Principal,
+  'fatherPlantId' : [] | [PlantId],
+  'name' : string,
+  'createdAt' : Timestamp,
+  'generation' : string,
+  'expectedTraits' : [] | [string],
+  'fatherVarietyId' : bigint,
+  'crossDate' : Timestamp,
+  'notes' : [] | [string],
+  'observedTraits' : [] | [string],
+  'motherPlantId' : [] | [PlantId],
+  'seedLotId' : [] | [bigint],
+  'photos' : Array<string>,
+}
 export type BulkCreateResult = { 'ok' : ProductPublic } |
   { 'err' : string };
 export interface BuyListedNftResult { 'message' : string, 'success' : boolean }
@@ -293,6 +310,10 @@ export interface ICSpicy {
     [bigint, ContainerSize, [] | [string]],
     PlantSeedResult
   >,
+  'addSeedLot' : ActorMethod<
+    [bigint, SeedSource, [] | [bigint], [] | [bigint], [] | [string]],
+    bigint
+  >,
   'addVariety' : ActorMethod<
     [
       string,
@@ -306,6 +327,7 @@ export interface ICSpicy {
     ],
     bigint
   >,
+  'addVendor' : ActorMethod<[string, [] | [string], [] | [string]], bigint>,
   'addWateringEntry' : ActorMethod<
     [PlantId, bigint, [] | [number], [] | [string]],
     boolean
@@ -475,12 +497,15 @@ export interface ICSpicy {
   'getListedNfts' : ActorMethod<[[] | [boolean]], Array<NftListingPublic>>,
   'getLoadedMetadataCount' : ActorMethod<[], bigint>,
   'getMembershipPriceInToken' : ActorMethod<[OracleToken], bigint>,
+  'getMyCrosses' : ActorMethod<[], Array<BreedingCrossPublic>>,
   'getMyNftListings' : ActorMethod<[], Array<NftListingPublic>>,
   'getMyOffers' : ActorMethod<[], Array<Offer>>,
   'getMyPlantsNims' : ActorMethod<[], Array<PlantLifecycle>>,
   'getMyResaleListings' : ActorMethod<[], Array<ResaleListingPublic>>,
   'getMySchedules' : ActorMethod<[], Array<SavedSchedule>>,
+  'getMySeedBank' : ActorMethod<[], Array<SeedLotPublic>>,
   'getMyTrays' : ActorMethod<[], Array<TrayPublic>>,
+  'getMyVendors' : ActorMethod<[], Array<SeedVendorPublic>>,
   'getMyWeatherRecords' : ActorMethod<[bigint], Array<WeatherRecord>>,
   'getNftPoolStatus' : ActorMethod<
     [],
@@ -521,6 +546,8 @@ export interface ICSpicy {
     [string, Array<string>],
     Array<ScheduleEntry>
   >,
+  'getSeedBankStats' : ActorMethod<[], SeedBankStats>,
+  'getSeedLotsByVariety' : ActorMethod<[bigint], Array<SeedLotPublic>>,
   'getShopListingFile' : ActorMethod<[string], [] | [ShopListingFile]>,
   'getTokenPriceInIcp' : ActorMethod<[OracleToken], bigint>,
   'getTokenPrices' : ActorMethod<[], Array<TokenPrice>>,
@@ -532,6 +559,7 @@ export interface ICSpicy {
   'getUpgradeHistory' : ActorMethod<[PlantId], Array<LifecycleUpgradeEvent>>,
   'getUserPosts' : ActorMethod<[Principal], Array<PostPublic>>,
   'getVariety' : ActorMethod<[bigint], [] | [VarietyPublic]>,
+  'harvestSeeds' : ActorMethod<[PlantId, [] | [bigint], [] | [string]], bigint>,
   'hasDAOAccess' : ActorMethod<[], boolean>,
   'hasMembership' : ActorMethod<[], boolean>,
   'icpayTransform' : ActorMethod<
@@ -719,6 +747,20 @@ export interface ICSpicy {
     PurchasePlantResult
   >,
   'purchasePlantICPay' : ActorMethod<[PlantId, string], PurchasePlantResult>,
+  'recordCross' : ActorMethod<
+    [
+      string,
+      bigint,
+      bigint,
+      [] | [PlantId],
+      [] | [PlantId],
+      [] | [Timestamp],
+      [] | [string],
+      [] | [string],
+      [] | [string],
+    ],
+    bigint
+  >,
   'redeemBatchClaim' : ActorMethod<
     [ClaimTokenId],
     { 'ok' : BatchGiftPackPublic } |
@@ -783,6 +825,19 @@ export interface ICSpicy {
   'updatePlantStage' : ActorMethod<[PlantId, PlantStage, string], undefined>,
   'updateProduct' : ActorMethod<[UpdateProductInput], undefined>,
   'updateRecipe' : ActorMethod<[UpdateRecipeInput], [] | [Recipe]>,
+  'updateSeedLot' : ActorMethod<
+    [
+      bigint,
+      [] | [bigint],
+      [] | [Timestamp],
+      [] | [string],
+      [] | [bigint],
+      [] | [string],
+      [] | [boolean],
+      [] | [bigint],
+    ],
+    boolean
+  >,
   'updateTrayName' : ActorMethod<[TrayId, string], undefined>,
   'updateTrayOrder' : ActorMethod<[TrayId, bigint], undefined>,
   'updateVariety' : ActorMethod<
@@ -1225,6 +1280,41 @@ export interface ScheduleEntry {
   'input_name' : string,
 }
 export type ScheduleId = string;
+export interface SeedBankStats {
+  'totalLots' : bigint,
+  'activeCrosses' : bigint,
+  'varietyCount' : bigint,
+}
+export interface SeedLotPublic {
+  'id' : bigint,
+  'germinationRate' : [] | [bigint],
+  'acquiredDate' : Timestamp,
+  'source' : SeedSource,
+  'owner' : Principal,
+  'createdAt' : Timestamp,
+  'generation' : [] | [string],
+  'isActive' : boolean,
+  'parentPlantId' : [] | [PlantId],
+  'vendorId' : [] | [bigint],
+  'notes' : [] | [string],
+  'quantity' : [] | [bigint],
+  'varietyId' : bigint,
+  'harvestDate' : [] | [Timestamp],
+  'crossId' : [] | [bigint],
+}
+export type SeedSource = { 'Gift' : null } |
+  { 'OwnHarvest' : null } |
+  { 'Trade' : null } |
+  { 'Vendor' : null } |
+  { 'Cross' : null };
+export interface SeedVendorPublic {
+  'id' : bigint,
+  'owner' : Principal,
+  'name' : string,
+  'createdAt' : Timestamp,
+  'website' : [] | [string],
+  'notes' : [] | [string],
+}
 export interface ShippingAddress {
   'zip' : string,
   'city' : string,

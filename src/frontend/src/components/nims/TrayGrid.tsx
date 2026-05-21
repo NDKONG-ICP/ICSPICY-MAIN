@@ -1,7 +1,8 @@
 import type { TrayCellPublic } from "../../declarations/backend.did";
 import { TrayCell } from "./TrayCell";
 
-const GRID_SLOTS = 6 * 12;
+const GRID_COLS = 12;
+const GRID_SLOTS = GRID_COLS * 6;
 
 function unwrap<T>(opt: [] | [T]): T | undefined {
   return opt.length > 0 ? opt[0] : undefined;
@@ -26,8 +27,7 @@ export type TrayGridProps = {
 };
 
 /**
- * Builds a dense 72-cell view (positions 0..71).
- * Incoming cells override by `position`; missing slots render empty.
+ * 72-cell nursery tray — landscape layout: 12 columns × 6 rows (positions 1..72).
  */
 export function TrayGrid({ cells, onCellClick }: TrayGridProps) {
   const byPosition = new Map<bigint, TrayCellPublic>();
@@ -36,13 +36,10 @@ export function TrayGrid({ cells, onCellClick }: TrayGridProps) {
   }
 
   return (
-    <div data-ocid="nims-tray-grid" className="w-full">
+    <div data-ocid="nims-tray-grid" className="w-full overflow-x-auto">
       <div
-        className="grid w-full gap-1.5"
-        style={{
-          gridTemplateColumns: `repeat(6, minmax(0, 1fr))`,
-          gridAutoRows: "minmax(0, auto)",
-        }}
+        className="grid min-w-[min(100%,36rem)] w-full grid-cols-12 gap-0.5 sm:min-w-0"
+        style={{ gridAutoRows: "minmax(0, auto)" }}
       >
         {Array.from({ length: GRID_SLOTS }, (_, idx) => {
           const position = BigInt(idx + 1);
