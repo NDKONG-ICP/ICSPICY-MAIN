@@ -151,6 +151,7 @@ export function useAddPlant() {
       trayId?: bigint;
       cellPosition?: bigint;
       priceCents?: bigint;
+      container?: import("../declarations/backend.did").ContainerSize;
     }) => {
       if (!actor) throw new Error("Not connected");
       return actor.addPlant(
@@ -159,10 +160,12 @@ export function useAddPlant() {
         input.trayId ?? null,
         input.cellPosition ?? null,
         input.priceCents ?? null,
+        input.container ?? null,
       );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["adminInventory"] });
+      qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
       qc.invalidateQueries({ queryKey: ["plantCount"] });
     },
   });

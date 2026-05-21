@@ -34,6 +34,7 @@ import {
 } from "../hooks/useNimsDashboard";
 import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import { useWeather } from "../hooks/useWeather";
+import { useNimsLocation } from "../hooks/useNimsLocation";
 import {
   formatCents,
   nftImageUrl,
@@ -75,7 +76,11 @@ export default function PlantDetailPage() {
   const [noteText, setNoteText] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [weatherExpanded, setWeatherExpanded] = useState(false);
-  const { data: weather, isLoading: weatherLoading } = useWeather();
+  const nimsLocation = useNimsLocation();
+  const { data: weather, isLoading: weatherLoading } = useWeather(
+    nimsLocation.coordinates.lat,
+    nimsLocation.coordinates.lng,
+  );
   const { data: health } = usePlantHealth(id);
 
   const [waterOpen, setWaterOpen] = useState(false);
@@ -162,6 +167,7 @@ export default function PlantDetailPage() {
         <WeatherBar
           data={weather}
           isLoading={weatherLoading}
+          locationLabel={nimsLocation.coordinates.label}
           expanded={weatherExpanded}
           onExpandedChange={setWeatherExpanded}
         />
@@ -398,6 +404,9 @@ export default function PlantDetailPage() {
 
           <PlantQuickActions
             onAction={handleQuickAction}
+            hiddenActions={
+              isAdmin ? [] : ["list_sale", "mark_dead"]
+            }
             disabled={
               plant.is_cooked || uploadPhoto.isPending || addPlantPhoto.isPending
             }

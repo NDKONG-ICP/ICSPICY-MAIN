@@ -46,12 +46,16 @@ const ACTIONS: ReadonlyArray<{
 export type PlantQuickActionsProps = {
   onAction: (type: QuickPlantAction) => void;
   disabled?: boolean;
+  /** Actions omitted from the toolbar (e.g. admin-only). */
+  hiddenActions?: QuickPlantAction[];
 };
 
 export function PlantQuickActions({
   onAction,
   disabled = false,
+  hiddenActions = [],
 }: PlantQuickActionsProps) {
+  const visible = ACTIONS.filter((a) => !hiddenActions.includes(a.key));
   return (
     <div
       role="toolbar"
@@ -64,7 +68,7 @@ export function PlantQuickActions({
       )}
     >
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {ACTIONS.map((a) => {
+        {visible.map((a) => {
           const Icon = a.icon;
           return (
             <Button

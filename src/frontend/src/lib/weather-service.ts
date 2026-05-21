@@ -207,3 +207,24 @@ export function weatherToContext(data: WeatherData): WeatherContext {
     airQuality: data.airQuality.aqi,
   };
 }
+
+export function weatherIcon(code: number): string {
+  if (code === 0) return "☀️";
+  if (code <= 3) return "⛅";
+  if (code <= 48) return "🌫️";
+  if (code <= 55) return "🌦️";
+  if (code <= 65) return "🌧️";
+  if (code <= 77) return "🌨️";
+  if (code <= 82) return "⛈️";
+  if (code <= 86) return "❄️";
+  if (code >= 95) return "⛈️";
+  return "🌤️";
+}
+
+export function uvIndexClass(uv: number): string {
+  if (uv <= 2) return "text-green-400";
+  if (uv <= 5) return "text-yellow-400";
+  if (uv <= 7) return "text-orange-400";
+  if (uv <= 10) return "text-red-400";
+  return "text-purple-400";
+}

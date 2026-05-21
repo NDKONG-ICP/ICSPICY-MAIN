@@ -182,6 +182,7 @@ module {
     sort_order : Nat;
     zone_notes : Text;
     zone_photo_keys : [Text];
+    creator : Principal;
   };
 
   public type CreateTrayInput = {

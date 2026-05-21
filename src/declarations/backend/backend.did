@@ -175,6 +175,7 @@ type TrayPublic =
  record {
    cell_count: nat;
    cells: vec opt PlantId;
+   creator: principal;
    id: TrayId;
    name: text;
    nft_standard: NFTStandard;
@@ -853,7 +854,8 @@ type ICSpicy =
    addPestEntry: (plantId: PlantId, pestName: text, severity: text,
     treatment: opt text, notes: opt text) -> (bool);
    addPlant: (varietyId: nat, stage: PlantStage, trayId: opt TrayId,
-    cellPosition: opt nat, price: opt nat) -> (AddPlantResult);
+    cellPosition: opt nat, price: opt nat, container: opt ContainerSize) ->
+    (AddPlantResult);
    addPlantBatch: (varietyId: nat, stage: PlantStage, count: nat, trayId:
     opt TrayId) -> (vec AddPlantResult);
    addPlantNote: (plantId: PlantId, "text": text) -> (bool);
@@ -1017,6 +1019,7 @@ type ICSpicy =
    getMyPlantsNims: () -> (vec PlantLifecycle);
    getMyResaleListings: () -> (vec ResaleListingPublic) query;
    getMySchedules: () -> (vec SavedSchedule);
+   getMyTrays: () -> (vec TrayPublic) query;
    getMyWeatherRecords: (limit: nat) -> (vec WeatherRecord);
    getNftPoolStatus: () -> (record {
                               available: nat;

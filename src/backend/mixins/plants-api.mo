@@ -40,7 +40,7 @@ mixin (
     let tray = PlantsLib.createTray(trays, currentId, input);
     trayOwners.add(currentId, caller);
     nextTrayId.value += 1;
-    PlantsLib.trayToPublic(tray);
+    PlantsLib.trayToPublic(tray, caller);
   };
 
   // Any authenticated user: rename a tray
@@ -255,12 +255,12 @@ mixin (
 
   // Public: fetch a single tray
   public query func getTray(tray_id : Common.TrayId) : async ?PlantTypes.TrayPublic {
-    PlantsLib.getTray(trays, tray_id);
+    PlantsLib.getTray(trays, trayOwners, tray_id);
   };
 
   // Public: list all trays
   public query func listTrays() : async [PlantTypes.TrayPublic] {
-    PlantsLib.listTrays(trays);
+    PlantsLib.listTrays(trays, trayOwners);
   };
 
   // Public: get full timeline for a plant (stages + feedings)

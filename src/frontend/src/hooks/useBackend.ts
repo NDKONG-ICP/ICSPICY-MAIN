@@ -503,7 +503,16 @@ export function useTrays() {
 }
 
 export function useMyTrays() {
-  return useTrays();
+  const { actor } = useBackendActor();
+  const { actorReady } = useActorReady();
+  return useQuery({
+    queryKey: ["myTrays", actorReady],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getMyTrays();
+    },
+    enabled: !!actor && actorReady,
+  });
 }
 
 export function useTray(trayId: TrayId | undefined) {

@@ -9,9 +9,11 @@ import {
   Leaf,
   Loader2,
   Package,
+  Plus,
   Sprout,
+  Users,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import type {
@@ -22,8 +24,11 @@ import type {
 import {
   ActivityFeed,
   AdoptPlantPrompt,
+  AddPlantModal,
   GerminationModal,
   MarkDeadModal,
+  NewTrayModal,
+  NimsLocationPrompt,
   PlantLifecycleCard,
   PlantSeedModal,
   TransplantModal,
@@ -31,10 +36,11 @@ import {
   WeatherBar,
 } from "../components/nims";
 import { useAuth } from "../hooks/useAuth";
-import { useIsAdmin, useTrays } from "../hooks/useBackend";
+import { useIsAdmin, useMyTrays, useTrays } from "../hooks/useBackend";
 import {
   useActivityFeed,
   useAdoptPurchasedPlant,
+  useCreateNimsTray,
   useMarkCellDead,
   useMarkCellGerminated,
   useNimsDashboardStats,
@@ -44,10 +50,12 @@ import {
 } from "../hooks/useNimsDashboard";
 import { useUnadoptedNftTokenIds } from "../hooks/useUnadoptedNfts";
 import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
+import { useNimsLocation } from "../hooks/useNimsLocation";
 import {
   useMyPlantsNims,
   useAdminInventory,
   useVarieties,
+  useAddPlant,
 } from "../hooks/useNims";
 import { useWeather } from "../hooks/useWeather";
 import { useTransplantCell } from "../hooks/useBackend";
@@ -87,22 +95,33 @@ export default function NIMSPage() {
   const navigate = useNavigate();
   const { isAuthenticated, login } = useAuth();
   const { data: isAdmin } = useIsAdmin();
-  const { data: weather, isLoading: weatherLoading } = useWeather();
+  const nimsLocation = useNimsLocation();
+  const { data: weather, isLoading: weatherLoading } = useWeather(
+    nimsLocation.coordinates.lat,
+    nimsLocation.coordinates.lng,
+  );
   const [weatherExpanded, setWeatherExpanded] = useState(false);
+  const [showAllUsers, setShowAllUsers] = useState(false);
   const { data: stats, isLoading: statsLoading } = useNimsDashboardStats();
-  const { data: trays = [], isLoading: traysLoading } = useTrays();
+  const { data: myTrays = [], isLoading: myTraysLoading } = useMyTrays();
+  const { data: allTrays = [], isLoading: allTraysLoading } = useTrays();
+  const trays = isAdmin && showAllUsers ? allTrays : myTrays;
+  const traysLoading = isAdmin && showAllUsers ? allTraysLoading : myTraysLoading;
   const { data: varieties = [] } = useVarieties();
   const { data: myPlants = [] } = useMyPlantsNims();
   const { data: adminInventory = [] } = useAdminInventory(undefined, undefined, undefined);
   const { data: activity = [] } = useActivityFeed(40);
-  const { data: unadoptedIds = [] } = useUnadoptedNftTokenIds();
+  const { data: unadoptedIds = [], dismissUnadoptedNft } =
+    useUnadoptedNftTokenIds();
   const adoptPlant = useAdoptPurchasedPlant();
+  const createTray = useCreateNimsTray();
+  const addPlant = useAddPlant();
   const [adoptOpen, setAdoptOpen] = useState(false);
-  const [dismissedAdoptToken, setDismissedAdoptToken] = useState<string | null>(
-    null,
-  );
+  const [newTrayOpen, setNewTrayOpen] = useState(false);
+  const [addPlantOpen, setAddPlantOpen] = useState(false);
+  const adoptPromptedRef = useRef<string | null>(null);
 
-  const defaultTab: NimsTab = isAdmin ? "trays" : "myplants";
+  const defaultTab: NimsTab = "trays";
   const [tab, setTab] = useState<NimsTab>(defaultTab);
   const [selectedTrayId, setSelectedTrayId] = useState<bigint | null>(null);
 
@@ -128,14 +147,20 @@ export default function NIMSPage() {
     [trayCells, selectedCell],
   );
 
-  const inventoryList = isAdmin ? adminInventory : myPlants;
+  const inventoryList =
+    isAdmin && showAllUsers ? adminInventory : myPlants;
 
-  const adoptTokenId = useMemo(() => {
-    return unadoptedIds.find((id) => id.toString() !== dismissedAdoptToken) ?? null;
-  }, [unadoptedIds, dismissedAdoptToken]);
+  const adoptTokenId = unadoptedIds[0] ?? null;
 
   useEffect(() => {
-    if (adoptTokenId != null && isAuthenticated) {
+    if (!isAuthenticated || adoptTokenId == null) {
+      setAdoptOpen(false);
+      adoptPromptedRef.current = null;
+      return;
+    }
+    const id = adoptTokenId.toString();
+    if (adoptPromptedRef.current !== id) {
+      adoptPromptedRef.current = id;
       setAdoptOpen(true);
     }
   }, [adoptTokenId, isAuthenticated]);
@@ -170,16 +195,15 @@ export default function NIMSPage() {
     else toast.info("Plant was transplanted to inventory.");
   };
 
-  const tabs: { id: NimsTab; label: string; icon: typeof Leaf; admin?: boolean }[] =
-    [
-      { id: "trays", label: "Trays", icon: Sprout, admin: true },
-      { id: "inventory", label: "Inventory", icon: Package },
-      { id: "activity", label: "Activity", icon: Activity },
-      { id: "analytics", label: "Analytics", icon: BarChart3 },
-      { id: "myplants", label: "My Plants", icon: Leaf },
-    ];
+  const tabs: { id: NimsTab; label: string; icon: typeof Leaf }[] = [
+    { id: "trays", label: "Trays", icon: Sprout },
+    { id: "inventory", label: "Inventory", icon: Package },
+    { id: "activity", label: "Activity", icon: Activity },
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
+    { id: "myplants", label: "My Plants", icon: Leaf },
+  ];
 
-  const visibleTabs = tabs.filter((t) => !t.admin || isAdmin);
+  const visibleTabs = tabs;
 
   return (
     <div className="min-h-screen pb-24" data-ocid="nims-dashboard">
@@ -187,17 +211,40 @@ export default function NIMSPage() {
         <WeatherBar
           data={weather}
           isLoading={weatherLoading}
+          locationLabel={nimsLocation.coordinates.label}
           expanded={weatherExpanded}
           onExpandedChange={setWeatherExpanded}
         />
       </div>
 
       <div className="container max-w-2xl px-3 py-4 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <h1 className="text-xl font-display font-bold">NIMS</h1>
-          <Badge variant="outline" className="text-xs">
-            Zone 10a · Port Charlotte
-          </Badge>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button
+                size="sm"
+                variant={showAllUsers ? "default" : "outline"}
+                className="text-xs"
+                onClick={() => setShowAllUsers((v) => !v)}
+              >
+                <Users className="h-3.5 w-3.5 mr-1" />
+                {showAllUsers ? "All users" : "Mine only"}
+              </Button>
+            )}
+            <Badge variant="outline" className="text-xs shrink-0">
+              {nimsLocation.coordinates.label}
+            </Badge>
+          </div>
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          <Button size="sm" variant="secondary" onClick={() => setNewTrayOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> New tray
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setAddPlantOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Add plant
+          </Button>
         </div>
 
         {statsLoading ? (
@@ -247,13 +294,14 @@ export default function NIMSPage() {
           ))}
         </div>
 
-        {tab === "trays" && isAdmin && (
+        {tab === "trays" && (
           <div className="space-y-3">
             {traysLoading ? (
               <Skeleton className="h-10 w-full" />
             ) : trays.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
-                No trays yet. Create one from Admin → NIMS.
+                No trays yet. Tap <strong>New tray</strong> to start a 72-cell
+                germination grid.
               </p>
             ) : (
               <>
@@ -313,14 +361,14 @@ export default function NIMSPage() {
 
         {(tab === "inventory" || tab === "myplants") && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {(tab === "myplants" ? myPlants : inventoryList).length === 0 ? (
+            {(tab === "myplants" || !(isAdmin && showAllUsers) ? myPlants : inventoryList).length === 0 ? (
               <p className="text-sm text-muted-foreground col-span-2 text-center py-8">
-                {tab === "myplants"
-                  ? "No plants in your garden yet. Adopt a purchased NFT to start tracking."
+                {tab === "myplants" || !(isAdmin && showAllUsers)
+                  ? "No plants in your garden yet. Add a plant or adopt a purchased NFT."
                   : "No inventory plants yet."}
               </p>
             ) : (
-              (tab === "myplants" ? myPlants : inventoryList).map((lc) => (
+              (tab === "myplants" || !(isAdmin && showAllUsers) ? myPlants : inventoryList).map((lc) => (
                 <Link
                   key={lc.plant.id.toString()}
                   to="/plants/$plantId"
@@ -383,9 +431,13 @@ export default function NIMSPage() {
                   trayId: activeTrayId,
                   cellPosition: selectedCell,
                 });
-                toast.success(
-                  `🌱 Germinated! NFT #${result.nftTokenId.toString()} assigned`,
-                );
+                if (result.nftTokenId > 0n) {
+                  toast.success(
+                    `🌱 Germinated! NFT #${result.nftTokenId.toString()} assigned`,
+                  );
+                } else {
+                  toast.success("🌱 Germinated — tracking in NIMS (no NFT)");
+                }
                 setGermOpen(false);
               } catch (e) {
                 toast.error(e instanceof Error ? e.message : "Germination failed");
@@ -453,12 +505,67 @@ export default function NIMSPage() {
         </>
       )}
 
+      <NimsLocationPrompt
+        open={nimsLocation.needsPrompt}
+        onAllow={nimsLocation.chooseGps}
+        onUseDefault={nimsLocation.chooseDefault}
+      />
+
+      <NewTrayModal
+        open={newTrayOpen}
+        onOpenChange={setNewTrayOpen}
+        isPending={createTray.isPending}
+        onSubmit={async (name) => {
+          try {
+            const id = await createTray.mutateAsync({ name });
+            setSelectedTrayId(id);
+            setTab("trays");
+            setNewTrayOpen(false);
+            toast.success(`Tray "${name}" created`);
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Failed to create tray");
+          }
+        }}
+      />
+
+      <AddPlantModal
+        open={addPlantOpen}
+        onOpenChange={setAddPlantOpen}
+        varieties={varieties}
+        isPending={addPlant.isPending}
+        onSubmit={async ({ varietyId, stage, container }) => {
+          try {
+            const result = await addPlant.mutateAsync({
+              varietyId,
+              stage,
+              container,
+            });
+            setAddPlantOpen(false);
+            toast.success(`Plant #${result.plantId.toString()} added`);
+            void navigate({
+              to: "/plants/$plantId",
+              params: { plantId: result.plantId.toString() },
+            });
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Failed to add plant");
+          }
+        }}
+      />
+
       {adoptTokenId != null && (
         <AdoptPlantPrompt
           open={adoptOpen}
           onOpenChange={(open) => {
-            setAdoptOpen(open);
-            if (!open) setDismissedAdoptToken(adoptTokenId.toString());
+            if (!open) {
+              dismissUnadoptedNft(adoptTokenId);
+              setAdoptOpen(false);
+              return;
+            }
+            setAdoptOpen(true);
+          }}
+          onDismiss={() => {
+            dismissUnadoptedNft(adoptTokenId);
+            setAdoptOpen(false);
           }}
           tokenId={adoptTokenId}
           isPending={adoptPlant.isPending}

@@ -333,6 +333,58 @@ module {
     #ok({ plantId = nextPlantId; nftTokenId = tokenId; claimToken });
   };
 
+  /// User-owned plant without NFT assignment (home garden / standalone inventory).
+  public func addPlantWithoutNftInternal(
+    plants : Map.Map<Common.PlantId, Types.Plant>,
+    trays : Map.Map<Common.TrayId, Types.Tray>,
+    stageHistory : Map.Map<Common.PlantId, List.List<Types.StageHistory>>,
+    varieties : Map.Map<Nat, VarietyTypes.Variety>,
+    side : SideMaps,
+    owner : Principal,
+    nextPlantId : Nat,
+    varietyId : Nat,
+    stage : Types.PlantStage,
+    trayId : ?Common.TrayId,
+    cellPosition : ?Nat,
+    container : ?Types.ContainerSize,
+  ) : Result.Result<Common.PlantId, Text> {
+    switch (varieties.get(varietyId)) {
+      case null return #err("Variety not found");
+      case (?_) {};
+    };
+    if (trayId != null or cellPosition != null) {
+      validateTrayCell(trays, trayId, cellPosition);
+    };
+    let tid = switch trayId { case (?t) t; case null 0 };
+    let pos = switch cellPosition { case (?p) p; case null 0 };
+    let input : Types.CreatePlantInput = {
+      variety = switch (varieties.get(varietyId)) { case (?v) v.name; case null "" };
+      genetics = "";
+      tray_id = tid;
+      cell_position = pos;
+      planting_date = Time.now();
+      date_purchased = null;
+      nft_standard = #ICRC37;
+      notes = "";
+      common_name = null;
+      latin_name = ?(switch (varieties.get(varietyId)) { case (?v) v.species; case null "" });
+      origin = null;
+      watering_schedule = null;
+      pest_notes = null;
+      additional_notes = null;
+      container_size = container;
+      source_plant_id = null;
+    };
+    let plant = PlantsLib.createPlant(plants, trays, stageHistory, nextPlantId, input, owner);
+    plant.stage := stage;
+    if (container != null) {
+      plant.is_transplanted := true;
+    };
+    side.plantVarietyIds.add(nextPlantId, varietyId);
+    side.plantOwners.add(nextPlantId, owner);
+    #ok(nextPlantId);
+  };
+
   /// Mark plant sold when customer redeems in-person QR claim.
   public func markPlantClaimedViaQr(
     plants : Map.Map<Common.PlantId, Types.Plant>,
@@ -837,6 +889,7 @@ module {
     cellPosition : Nat,
     germDate : Common.Timestamp,
     entropy : Nat,
+    assignNft : Bool,
   ) : Result.Result<Types.AddPlantResult, Text> {
     let tray = switch (trays.get(trayId)) {
       case null return #err("Tray not found");
@@ -857,6 +910,11 @@ module {
       case (?_) return #err("Plant already has an NFT assigned");
       case null {};
     };
+    plant.germination_date := ?germDate;
+    plant.stage := #Seedling;
+    if (not assignNft) {
+      return #ok({ plantId; nftTokenId = 0; claimToken = "" });
+    };
     let tokenId = switch (NftPool.pickRandomAvailableNft(icrc7Owners, canister, entropy, [])) {
       case null return #err("No NFTs available in plant pool");
       case (?t) t;
@@ -868,8 +926,6 @@ module {
       case (#ok) {};
     };
     setNftTokenId(plant, tokenId);
-    plant.germination_date := ?germDate;
-    plant.stage := #Seedling;
     let claimToken = NftClaim.registerClaimToken(
       nftClaimTokens,
       nftClaimPlantIds,

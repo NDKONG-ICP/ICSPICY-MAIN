@@ -1043,7 +1043,8 @@ export interface backendInterface {
     searchVarieties(query: string): Promise<Array<import("./declarations/backend.did").VarietyPublic>>;
     addVariety(name: string, species: string, scovilleMin: bigint, scovilleMax: bigint, description: string, imageUrl: string | null, daysToGerm: bigint | null, daysToMature: bigint | null): Promise<bigint>;
     removeVariety(id: bigint): Promise<boolean>;
-    addPlant(varietyId: bigint, stage: import("./declarations/backend.did").PlantStage, trayId: TrayId | null, cellPosition: bigint | null, price: bigint | null): Promise<import("./declarations/backend.did").AddPlantResult>;
+    addPlant(varietyId: bigint, stage: import("./declarations/backend.did").PlantStage, trayId: TrayId | null, cellPosition: bigint | null, price: bigint | null, container: import("./declarations/backend.did").ContainerSize | null): Promise<import("./declarations/backend.did").AddPlantResult>;
+    getMyTrays(): Promise<Array<import("./declarations/backend.did").TrayPublic>>;
     addPlantNote(plantId: PlantId, text: string): Promise<boolean>;
     addWateringEntry(plantId: PlantId, amountMl: bigint, phLevel: number | null, notes: string | null): Promise<boolean>;
     addPestEntry(plantId: PlantId, pestName: string, severity: string, treatment: string | null, notes: string | null): Promise<boolean>;
@@ -2467,10 +2468,15 @@ export class Backend implements backendInterface {
             try { return await this.actor.removeVariety(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.removeVariety(arg0); }
     }
-    async addPlant(arg0: bigint, arg1: import("./declarations/backend.did").PlantStage, arg2: TrayId | null, arg3: bigint | null, arg4: bigint | null): Promise<import("./declarations/backend.did").AddPlantResult> {
+    async addPlant(arg0: bigint, arg1: import("./declarations/backend.did").PlantStage, arg2: TrayId | null, arg3: bigint | null, arg4: bigint | null, arg5: import("./declarations/backend.did").ContainerSize | null): Promise<import("./declarations/backend.did").AddPlantResult> {
         if (this.processError) {
-            try { return await this.actor.addPlant(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
-        } else { return this.actor.addPlant(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); }
+            try { return await this.actor.addPlant(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : [], arg5 != null ? [arg5] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.addPlant(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : [], arg5 != null ? [arg5] : []); }
+    }
+    async getMyTrays(): Promise<Array<import("./declarations/backend.did").TrayPublic>> {
+        if (this.processError) {
+            try { return await this.actor.getMyTrays(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getMyTrays(); }
     }
     async addPlantNote(arg0: PlantId, arg1: string): Promise<boolean> {
         if (this.processError) {

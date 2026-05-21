@@ -711,18 +711,26 @@ module {
 
   public func getTray(
     trays : Map.Map<Common.TrayId, Types.Tray>,
+    trayOwners : Map.Map<Common.TrayId, Principal>,
     tray_id : Common.TrayId,
   ) : ?Types.TrayPublic {
     switch (trays.get(tray_id)) {
-      case (?tray) { ?trayToPublic(tray) };
+      case (?tray) {
+        let creator = switch (trayOwners.get(tray_id)) {
+          case (?o) o;
+          case null Principal.fromText("aaaaa-aa");
+        };
+        ?trayToPublic(tray, creator);
+      };
       case null { null };
     };
   };
 
   public func listTrays(
     trays : Map.Map<Common.TrayId, Types.Tray>,
+    trayOwners : Map.Map<Common.TrayId, Principal>,
   ) : [Types.TrayPublic] {
-    trays.values().map(trayToPublic).toArray();
+    listTraysWithOwners(trays, trayOwners);
   };
 
   public func getPlantTimeline(
@@ -784,7 +792,7 @@ module {
     };
   };
 
-  public func trayToPublic(tray : Types.Tray) : Types.TrayPublic {
+  public func trayToPublic(tray : Types.Tray, creator : Principal) : Types.TrayPublic {
     {
       id = tray.id;
       name = tray.name;
@@ -795,7 +803,38 @@ module {
       sort_order = tray.sort_order;
       zone_notes = tray.zone_notes;
       zone_photo_keys = tray.zone_photo_keys;
+      creator = creator;
     };
+  };
+
+  public func listTraysWithOwners(
+    trays : Map.Map<Common.TrayId, Types.Tray>,
+    trayOwners : Map.Map<Common.TrayId, Principal>,
+  ) : [Types.TrayPublic] {
+    trays.entries().map<(Common.TrayId, Types.Tray), Types.TrayPublic>(func((id, tray)) {
+      let creator = switch (trayOwners.get(id)) {
+        case (?o) o;
+        case null Principal.fromText("aaaaa-aa");
+      };
+      trayToPublic(tray, creator);
+    }).toArray();
+  };
+
+  public func listTraysForOwner(
+    trays : Map.Map<Common.TrayId, Types.Tray>,
+    trayOwners : Map.Map<Common.TrayId, Principal>,
+    owner : Principal,
+  ) : [Types.TrayPublic] {
+    var out : [Types.TrayPublic] = [];
+    for ((id, trayOwner) in trayOwners.entries()) {
+      if (trayOwner == owner) {
+        switch (trays.get(id)) {
+          case (?tray) { out := Array.concat(out, [trayToPublic(tray, trayOwner)]) };
+          case null {};
+        };
+      };
+    };
+    out;
   };
 
   public func feedingToPublic(feeding : Types.Feeding) : Types.FeedingPublic {

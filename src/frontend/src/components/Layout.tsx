@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import type { ReactNode } from "react";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
+import { SpicyAiWidget } from "./SpicyAiWidget";
 
 interface LayoutProps {
   children: ReactNode;
@@ -31,6 +32,7 @@ export function Layout({
         {children}
       </main>
       {!noFooter && <Footer />}
+      <SpicyAiWidget />
       <Toaster richColors position="bottom-right" />
     </div>
   );

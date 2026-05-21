@@ -1116,6 +1116,7 @@ export const mockBackend: backendInterface = {
   addVariety: async () => 1n,
   removeVariety: async () => true,
   addPlant: async () => ({ plantId: 1n, nftTokenId: 1n, claimToken: "mock" }),
+  getMyTrays: async () => [],
   addPlantNote: async () => true,
   addWateringEntry: async () => true,
   addPestEntry: async () => true,

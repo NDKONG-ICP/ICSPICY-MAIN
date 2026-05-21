@@ -92,6 +92,21 @@ mixin (
     });
   };
 
+  func isTrayOwner(caller : Principal, trayId : Common.TrayId) : Bool {
+    switch (trayOwners.get(trayId)) {
+      case (?owner) owner == caller;
+      case null false;
+    };
+  };
+
+  func requireTrayOwnerOrAdmin(caller : Principal, trayId : Common.TrayId) {
+    AccessControl.requireAuthenticated(caller);
+    if (nimsIsAdmin(caller) or isTrayOwner(caller, trayId)) {
+    } else {
+      Runtime.trap("Unauthorized: tray owner or admin only");
+    };
+  };
+
   // ── Admin plant inventory ───────────────────────────────────────────────────
 
   public shared ({ caller }) func addPlant(
@@ -100,23 +115,43 @@ mixin (
     trayId : ?Common.TrayId,
     cellPosition : ?Nat,
     price : ?Nat,
+    container : ?PlantTypes.ContainerSize,
   ) : async PlantTypes.AddPlantResult {
-    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
-    let entropy = Int.abs(Time.now()) + nextPlantId.value + plants.size();
-    switch (
-      NimsLib.addPlantInternal(
-        plants, trays, stageHistory, varieties, sideMaps(),
-        icrc7Owners, icrc7Balances,
-        nftClaimTokens, nftClaimPlantIds, plantClaimTokens, nftTokenPlantIds,
-        selfPrincipal(), caller,
-        nextPlantId.value, varietyId, stage, trayId, cellPosition, price, entropy,
-      )
-    ) {
-      case (#err(e)) Runtime.trap(e);
-      case (#ok(result)) {
-        nextPlantId.value += 1;
-        logAdmin(caller, "add_plant", "plantId=" # Nat.toText(result.plantId) # " nft=" # Nat.toText(result.nftTokenId));
-        result;
+    AccessControl.requireAuthenticated(caller);
+    switch (trayId) {
+      case (?tid) { requireTrayOwnerOrAdmin(caller, tid) };
+      case null {};
+    };
+    if (nimsIsAdmin(caller)) {
+      let entropy = Int.abs(Time.now()) + nextPlantId.value + plants.size();
+      switch (
+        NimsLib.addPlantInternal(
+          plants, trays, stageHistory, varieties, sideMaps(),
+          icrc7Owners, icrc7Balances,
+          nftClaimTokens, nftClaimPlantIds, plantClaimTokens, nftTokenPlantIds,
+          selfPrincipal(), caller,
+          nextPlantId.value, varietyId, stage, trayId, cellPosition, price, entropy,
+        )
+      ) {
+        case (#err(e)) Runtime.trap(e);
+        case (#ok(result)) {
+          nextPlantId.value += 1;
+          logAdmin(caller, "add_plant", "plantId=" # Nat.toText(result.plantId) # " nft=" # Nat.toText(result.nftTokenId));
+          result;
+        };
+      };
+    } else {
+      switch (
+        NimsLib.addPlantWithoutNftInternal(
+          plants, trays, stageHistory, varieties, sideMaps(),
+          caller, nextPlantId.value, varietyId, stage, trayId, cellPosition, container,
+        )
+      ) {
+        case (#err(e)) Runtime.trap(e);
+        case (#ok(plantId)) {
+          nextPlantId.value += 1;
+          { plantId; nftTokenId = 0; claimToken = "" };
+        };
       };
     };
   };
@@ -216,7 +251,7 @@ mixin (
     date : Common.Timestamp,
     varietyId : ?Nat,
   ) : async Common.TrayId {
-    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    AccessControl.requireAuthenticated(caller);
     let tid = nextTrayId.value;
     ignore PlantsLib.createTray(trays, tid, {
       name;
@@ -234,21 +269,24 @@ mixin (
     cellPosition : Nat,
     date : ?Common.Timestamp,
   ) : async PlantTypes.AddPlantResult {
-    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    requireTrayOwnerOrAdmin(caller, trayId);
     let germDate = switch date { case (?d) d; case null Time.now() };
     let entropy = Int.abs(Time.now()) + cellPosition + trayId;
+    let assignNft = nimsIsAdmin(caller);
     switch (
       NimsLib.germinateCellInternal(
         plants, trays, varieties, sideMaps(),
         icrc7Owners, icrc7Balances,
         nftClaimTokens, nftClaimPlantIds, plantClaimTokens, nftTokenPlantIds,
         selfPrincipal(), caller,
-        trayId, cellPosition, germDate, entropy,
+        trayId, cellPosition, germDate, entropy, assignNft,
       )
     ) {
       case (#err(e)) Runtime.trap(e);
       case (#ok(result)) {
-        logAdmin(caller, "mark_cell_germinated", "tray=" # Nat.toText(trayId) # " cell=" # Nat.toText(cellPosition) # " nft=" # Nat.toText(result.nftTokenId));
+        if (assignNft) {
+          logAdmin(caller, "mark_cell_germinated", "tray=" # Nat.toText(trayId) # " cell=" # Nat.toText(cellPosition) # " nft=" # Nat.toText(result.nftTokenId));
+        };
         result;
       };
     };
@@ -260,7 +298,7 @@ mixin (
     varietyId : Nat,
     datePlanted : ?Common.Timestamp,
   ) : async DashTypes.PlantSeedResult {
-    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    requireTrayOwnerOrAdmin(caller, trayId);
     switch (
       NimsLib.plantSeedInternal(
         plants, trays, stageHistory, varieties, sideMaps(),
@@ -270,7 +308,9 @@ mixin (
       case (#err(e)) Runtime.trap(e);
       case (#ok(result)) {
         nextPlantId.value += 1;
-        logAdmin(caller, "plant_seed", "tray=" # Nat.toText(trayId) # " cell=" # Nat.toText(cellPosition));
+        if (nimsIsAdmin(caller)) {
+          logAdmin(caller, "plant_seed", "tray=" # Nat.toText(trayId) # " cell=" # Nat.toText(cellPosition));
+        };
         result;
       };
     };
@@ -283,7 +323,7 @@ mixin (
     notes : ?Text,
     _photoUrl : ?Text,
   ) : async Bool {
-    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    requireTrayOwnerOrAdmin(caller, trayId);
     switch (
       NimsLib.markCellDeadInternal(
         plants, trays, sideMaps(),
@@ -309,7 +349,7 @@ mixin (
     phLevel : ?Float,
     notes : ?Text,
   ) : async Nat {
-    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    requireTrayOwnerOrAdmin(caller, trayId);
     var count : Nat = 0;
     for (pid in NimsLib.plantIdsInTray(trays, trayId).vals()) {
       if (
@@ -329,7 +369,7 @@ mixin (
     dosage : Text,
     notes : ?Text,
   ) : async Nat {
-    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    requireTrayOwnerOrAdmin(caller, trayId);
     var count : Nat = 0;
     for (pid in NimsLib.plantIdsInTray(trays, trayId).vals()) {
       switch (plants.get(pid)) {
@@ -543,6 +583,11 @@ mixin (
   };
 
   // ── Queries ─────────────────────────────────────────────────────────────────
+
+  public query ({ caller }) func getMyTrays() : async [PlantTypes.TrayPublic] {
+    AccessControl.requireAuthenticated(caller);
+    PlantsLib.listTraysForOwner(trays, trayOwners, caller);
+  };
 
   public query func getPlantLifecycle(plantId : Common.PlantId) : async ?PlantTypes.PlantLifecycle {
     NimsLib.buildLifecycle(plants, feedings, sideMaps(), plantId);

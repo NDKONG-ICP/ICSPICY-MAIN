@@ -273,7 +273,14 @@ export interface ICSpicy {
     boolean
   >,
   'addPlant' : ActorMethod<
-    [bigint, PlantStage, [] | [TrayId], [] | [bigint], [] | [bigint]],
+    [
+      bigint,
+      PlantStage,
+      [] | [TrayId],
+      [] | [bigint],
+      [] | [bigint],
+      [] | [ContainerSize],
+    ],
     AddPlantResult
   >,
   'addPlantBatch' : ActorMethod<
@@ -473,6 +480,7 @@ export interface ICSpicy {
   'getMyPlantsNims' : ActorMethod<[], Array<PlantLifecycle>>,
   'getMyResaleListings' : ActorMethod<[], Array<ResaleListingPublic>>,
   'getMySchedules' : ActorMethod<[], Array<SavedSchedule>>,
+  'getMyTrays' : ActorMethod<[], Array<TrayPublic>>,
   'getMyWeatherRecords' : ActorMethod<[bigint], Array<WeatherRecord>>,
   'getNftPoolStatus' : ActorMethod<
     [],
@@ -1318,6 +1326,7 @@ export interface TrayCellPublic {
 export type TrayId = bigint;
 export interface TrayPublic {
   'id' : TrayId,
+  'creator' : Principal,
   'cells' : Array<[] | [PlantId]>,
   'name' : string,
   'sort_order' : bigint,

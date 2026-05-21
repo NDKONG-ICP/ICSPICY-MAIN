@@ -35,6 +35,8 @@ export type AdoptPlantSubmit = {
 export type AdoptPlantPromptProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Called when user taps "Maybe later" — persists session dismissal. */
+  onDismiss?: () => void;
   tokenId: bigint;
   varietyName?: string;
   isPending?: boolean;
@@ -44,6 +46,7 @@ export type AdoptPlantPromptProps = {
 export function AdoptPlantPrompt({
   open,
   onOpenChange,
+  onDismiss,
   tokenId,
   varietyName,
   isPending = false,
@@ -122,7 +125,10 @@ export function AdoptPlantPrompt({
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => {
+              if (onDismiss) onDismiss();
+              else onOpenChange(false);
+            }}
             data-ocid="nims-adopt-dismiss"
           >
             Maybe later

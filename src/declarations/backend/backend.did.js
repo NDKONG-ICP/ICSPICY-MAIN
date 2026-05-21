@@ -75,11 +75,6 @@ export const idlFactory = ({ IDL }) => {
     'Mature' : IDL.Null,
   });
   const TrayId = IDL.Nat;
-  const AddPlantResult = IDL.Record({
-    'claimToken' : IDL.Text,
-    'nftTokenId' : IDL.Nat,
-    'plantId' : PlantId,
-  });
   const ContainerSize = IDL.Variant({
     'Gal5Bucket' : IDL.Null,
     'Gal1' : IDL.Null,
@@ -99,6 +94,11 @@ export const idlFactory = ({ IDL }) => {
     'Gal15GrowBag' : IDL.Null,
     'Gal5GrowBag' : IDL.Null,
     'Other' : IDL.Text,
+  });
+  const AddPlantResult = IDL.Record({
+    'claimToken' : IDL.Text,
+    'nftTokenId' : IDL.Nat,
+    'plantId' : PlantId,
   });
   const PlantSeedResult = IDL.Record({ 'plantId' : PlantId });
   const AddWeatherRecordInput = IDL.Record({
@@ -485,6 +485,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const TrayPublic = IDL.Record({
     'id' : TrayId,
+    'creator' : IDL.Principal,
     'cells' : IDL.Vec(IDL.Opt(PlantId)),
     'name' : IDL.Text,
     'sort_order' : IDL.Nat,
@@ -1041,6 +1042,7 @@ export const idlFactory = ({ IDL }) => {
           IDL.Opt(TrayId),
           IDL.Opt(IDL.Nat),
           IDL.Opt(IDL.Nat),
+          IDL.Opt(ContainerSize),
         ],
         [AddPlantResult],
         [],
@@ -1326,6 +1328,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getMySchedules' : IDL.Func([], [IDL.Vec(SavedSchedule)], []),
+    'getMyTrays' : IDL.Func([], [IDL.Vec(TrayPublic)], ['query']),
     'getMyWeatherRecords' : IDL.Func([IDL.Nat], [IDL.Vec(WeatherRecord)], []),
     'getNftPoolStatus' : IDL.Func(
         [],

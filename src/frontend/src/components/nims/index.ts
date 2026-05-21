@@ -56,6 +56,10 @@ export type { MarkDeadModalProps, MarkDeadSubmit } from "./MarkDeadModal";
 export { AdoptPlantPrompt } from "./AdoptPlantPrompt";
 export type { AdoptPlantPromptProps, AdoptPlantSubmit } from "./AdoptPlantPrompt";
 
+export { NimsLocationPrompt } from "./NimsLocationPrompt";
+export { NewTrayModal } from "./NewTrayModal";
+export { AddPlantModal } from "./AddPlantModal";
+
 export { PlantTimeline } from "./PlantTimeline";
 
 export { NimsStoredPhoto } from "./NimsStoredPhoto";

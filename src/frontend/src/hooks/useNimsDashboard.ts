@@ -288,6 +288,22 @@ export function useAddNimsPlantPhoto() {
   });
 }
 
+export function useCreateNimsTray() {
+  const actor = useNimsOpsActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { name: string; date?: bigint }) => {
+      if (!actor) throw new Error("Not connected");
+      const ts = args.date ?? BigInt(Date.now()) * 1_000_000n;
+      return actor.createNimsTray(args.name, ts, null);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["myTrays"] });
+      qc.invalidateQueries({ queryKey: ["trays"] });
+    },
+  });
+}
+
 export function useAdoptPurchasedPlant() {
   const actor = useNimsOpsActor();
   const qc = useQueryClient();
