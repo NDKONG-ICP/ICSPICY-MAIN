@@ -1063,6 +1063,11 @@ export const mockBackend: backendInterface = {
   }),
   getAuditLog: async () => [],
   purchasePepperHead: async () => ({ tokenId: null, message: "Mock purchased", success: true }),
+  purchasePepperHeadDirect: async () => ({
+    tokenId: 7839n,
+    message: "Mock purchased",
+    success: true,
+  }),
   isPepperHeadAvailable: async () => BigInt(0),
   setICPaySecretKey: async () => undefined,
 };

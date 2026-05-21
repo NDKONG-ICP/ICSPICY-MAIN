@@ -32,6 +32,8 @@ import PlantTypes "../types/plants";
 import ClaimTypes "../types/claim";
 import ICRC7 "../types/icrc7";
 import IcrcPayment "../lib/icrc-payment";
+import PriceOracleLib "../lib/price-oracle";
+import PriceOracleTypes "../types/price-oracle";
 import Result "mo:core/Result";
 import Map "mo:core/Map";
 import List "mo:core/List";
@@ -86,6 +88,7 @@ mixin (
   plantPestLog            : Map.Map<Common.PlantId, List.List<PlantTypes.PestEntry>>,
   plantPhotoLog           : Map.Map<Common.PlantId, List.List<PlantTypes.PlantPhotoEntry>>,
   plantWeatherSnapshots   : Map.Map<Common.PlantId, List.List<PlantTypes.WeatherSnapshot>>,
+  priceOracleState        : PriceOracleTypes.PriceOracleState,
 ) {
 
   // ── Admin key provisioning ─────────────────────────────────────────────────
@@ -457,9 +460,22 @@ mixin (
   };
 
   func tokenFromLedgerId(id : Text) : ?IcrcPayment.PaymentToken {
-    if (id == IcrcPayment.ledgerCanisterId(#ckUSDC)) { ?#ckUSDC }
+    if (id == IcrcPayment.ledgerCanisterId(#ICP)) { ?#ICP }
+    else if (id == IcrcPayment.ledgerCanisterId(#ckBTC)) { ?#ckBTC }
+    else if (id == IcrcPayment.ledgerCanisterId(#ckETH)) { ?#ckETH }
+    else if (id == IcrcPayment.ledgerCanisterId(#ckUSDC)) { ?#ckUSDC }
     else if (id == IcrcPayment.ledgerCanisterId(#ckUSDT)) { ?#ckUSDT }
     else null;
+  };
+
+  func oracleTokenFromPayment(token : IcrcPayment.PaymentToken) : PriceOracleTypes.OracleToken {
+    switch (token) {
+      case (#ICP) #ICP;
+      case (#ckBTC) #ckBTC;
+      case (#ckETH) #ckETH;
+      case (#ckUSDC) #ckUSDC;
+      case (#ckUSDT) #ckUSDT;
+    };
   };
 
   func doConfirmOrderPaymentDirect(
@@ -485,18 +501,31 @@ mixin (
       case null {
         return {
           success = false;
-          message = "Unsupported ledger — use ckUSDC or ckUSDT";
+          message = "Unsupported ledger";
           claim_tokens = [];
           nft_token_ids = [];
         };
       };
       case (?t) t;
     };
-    let expected = NimsLib.centsToStablecoinBase(order.total_cents);
-    if (amount != expected) {
+    let oracleToken = oracleTokenFromPayment(token);
+    if (
+      not PriceOracleLib.isPaymentAmountSufficient(
+        priceOracleState, oracleToken, order.total_cents, amount,
+      )
+    ) {
+      let expected = PriceOracleLib.usdCentsToTokenBase(
+        priceOracleState, oracleToken, order.total_cents,
+      );
+      let msg = if (IcrcPayment.isStableLedgerId(ledgerCanisterId)) {
+        "Payment amount mismatch: expected exactly " # Nat.toText(expected);
+      } else {
+        "Payment amount insufficient: expected at least " #
+        Nat.toText((expected * 95) / 100);
+      };
       return {
         success = false;
-        message = "Payment amount mismatch: expected " # Nat.toText(expected);
+        message = msg;
         claim_tokens = [];
         nft_token_ids = [];
       };
@@ -682,7 +711,56 @@ mixin (
   //   → tokenId = poolId+1 → 7839 ≤ tokenId ≤ 8726. ✓
   let PH_START       : Nat = 7839; // inclusive, 1-indexed token IDs
   let PH_END         : Nat = 8727; // exclusive upper sentinel — last valid PepperHead is token 8726
-  let PH_PRICE_CENTS : Nat = 2500; // $25.00 USD; enforced by ICPay at charge time
+  let PH_PRICE_CENTS : Nat = 2500; // $25.00 USD
+
+  func transferNextPepperHeadToBuyer(
+    caller : Principal,
+    auditRef : Text,
+  ) : { success : Bool; tokenId : ?Nat; message : Text } {
+    let canister = selfPrincipal();
+    var nextTokenId : ?Nat = null;
+    var scanId = PH_START;
+    label search while (scanId < PH_END) {
+      switch (icrc7Owners.get(scanId)) {
+        case (?(acc)) {
+          if (Principal.equal(acc.owner, canister) and acc.subaccount == null) {
+            nextTokenId := ?scanId;
+            break search;
+          };
+        };
+        case null {};
+      };
+      scanId += 1;
+    };
+    let tokenId = switch nextTokenId {
+      case null return { success = false; tokenId = null; message = "No PepperHead NFTs available" };
+      case (?t) t;
+    };
+    let canisterAccount : ICRC7.Account = { owner = canister; subaccount = null };
+    let reservedAccount : ICRC7.Account = { owner = canister; subaccount = ?Blob.fromArray([0x00]) };
+    let buyerAccount : ICRC7.Account = { owner = caller; subaccount = null };
+    switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?canisterAccount, reservedAccount)) {
+      case (#err(e)) return { success = false; tokenId = null; message = "Reserve failed: " # e };
+      case (#ok) {};
+    };
+    switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, buyerAccount)) {
+      case (#err(e)) {
+        ignore ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, canisterAccount);
+        return { success = false; tokenId = null; message = "Transfer failed: " # e };
+      };
+      case (#ok) {};
+    };
+    ignore ICRC37Lib.removeAllApprovals(icrc37Approvals, tokenId);
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts     = Time.now();
+      admin  = caller;
+      action = "pepperhead_purchased";
+      detail = "tokenId=" # Nat.toText(tokenId) #
+               " buyer=" # Principal.toText(caller) #
+               " ref=" # auditRef;
+    });
+    { success = true; tokenId = ?tokenId; message = "PepperHead #" # Nat.toText(tokenId) # " is yours" };
+  };
 
   /// Authenticated: purchase a PepperHead NFT via ICPay.
   ///
@@ -691,12 +769,7 @@ mixin (
   ///   2. Pre-await: idempotency check.
   ///   3. await: verifyICPayPayment(paymentId) — HTTPS outcall.
   ///   4. Post-await: idempotency double-check (concurrent caller guard).
-  ///   5. Find next available PepperHead (owned by canister, no subaccount).
-  ///   6. Reserve: assignOwnership(open → subaccount[0x00]).
-  ///   7. Consume paymentId atomically.
-  ///   8. Transfer: assignOwnership(reserved → buyer).
-  ///   9. On failure: compensate (reserved → open), un-consume; return error.
-  ///  10. Clear approvals, audit log, return success.
+  ///   5. Mint next available PepperHead to buyer.
   public shared ({ caller }) func purchasePepperHead(
     paymentId : Text,
   ) : async { success : Bool; tokenId : ?Nat; message : Text } {
@@ -715,27 +788,89 @@ mixin (
     };
   };
 
+  /// Authenticated: purchase PepperHead via ICRC-2 direct transfer (Internet Identity).
+  public shared ({ caller }) func purchasePepperHeadDirect(
+    ledgerCanisterId : Text,
+    amount : Nat,
+  ) : async { success : Bool; tokenId : ?Nat; message : Text } {
+    AccessControl.requireAuthenticated(caller);
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok) {};
+    };
+    try {
+      let result = await doPurchasePepperHeadDirect(caller, ledgerCanisterId, amount);
+      CallerGuard.release(callerGuards, caller);
+      result;
+    } catch (e) {
+      CallerGuard.release(callerGuards, caller);
+      { success = false; tokenId = null; message = "Unexpected error during PepperHead purchase" };
+    };
+  };
+
+  func doPurchasePepperHeadDirect(
+    caller : Principal,
+    ledgerCanisterId : Text,
+    amount : Nat,
+  ) : async { success : Bool; tokenId : ?Nat; message : Text } {
+    let token = switch (tokenFromLedgerId(ledgerCanisterId)) {
+      case null return { success = false; tokenId = null; message = "Unsupported ledger" };
+      case (?t) t;
+    };
+    let oracleToken = oracleTokenFromPayment(token);
+    if (
+      not PriceOracleLib.isPaymentAmountSufficient(
+        priceOracleState, oracleToken, PH_PRICE_CENTS, amount,
+      )
+    ) {
+      let expected = PriceOracleLib.usdCentsToTokenBase(
+        priceOracleState, oracleToken, PH_PRICE_CENTS,
+      );
+      let msg = if (IcrcPayment.isStableLedgerId(ledgerCanisterId)) {
+        "Payment amount mismatch: expected exactly " # Nat.toText(expected);
+      } else {
+        "Payment amount insufficient: expected at least " #
+        Nat.toText((expected * 95) / 100);
+      };
+      return {
+        success = false;
+        tokenId = null;
+        message = msg;
+      };
+    };
+    let canister = selfPrincipal();
+    switch (
+      await IcrcPayment.transferFrom(
+        token,
+        caller,
+        canister,
+        amount,
+        ?Nat64.fromNat(Int.abs(Time.now())),
+        ?("pepperhead").encodeUtf8(),
+      )
+    ) {
+      case (#err(e)) return { success = false; tokenId = null; message = e };
+      case (#ok(_block)) {};
+    };
+    transferNextPepperHeadToBuyer(caller, "icrc2:" # ledgerCanisterId);
+  };
+
   func doPurchasePepperHead(
     caller    : Principal,
     paymentId : Text,
   ) : async { success : Bool; tokenId : ?Nat; message : Text } {
-    // Idempotency pre-check
     switch (icpaySessionsConsumed.get(paymentId)) {
       case (?_) return { success = false; tokenId = null; message = "ICPay payment already used" };
       case null {};
     };
-    // Verify payment via ICPay Protected API (HTTPS outcall)
     switch (await verifyICPayPayment(paymentId)) {
       case (#err(e)) return { success = false; tokenId = null; message = e };
       case (#ok) {};
     };
-    // Post-await idempotency double-check: a concurrent call from a different
-    // principal could have consumed this paymentId during our await window.
     switch (icpaySessionsConsumed.get(paymentId)) {
       case (?_) return { success = false; tokenId = null; message = "ICPay payment already used" };
       case null {};
     };
-    // Find next available PepperHead owned by canister (open pool)
     let canister = selfPrincipal();
     var nextTokenId : ?Nat = null;
     var scanId = PH_START;
@@ -758,18 +893,13 @@ mixin (
     let canisterAccount : ICRC7.Account = { owner = canister; subaccount = null };
     let reservedAccount : ICRC7.Account = { owner = canister; subaccount = ?Blob.fromArray([0x00]) };
     let buyerAccount    : ICRC7.Account = { owner = caller;   subaccount = null };
-    // Reserve: open pool → reservation subaccount [0x00]
     switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?canisterAccount, reservedAccount)) {
       case (#err(e)) return { success = false; tokenId = null; message = "Reserve failed: " # e };
       case (#ok) {};
     };
-    // Mark paymentId consumed atomically with the reservation — before the
-    // synchronous transfer so any subsequent path sees it consumed.
     icpaySessionsConsumed.add(paymentId, tokenId);
-    // Transfer: reserved → buyer
     switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, buyerAccount)) {
       case (#err(e)) {
-        // Compensate: return to open pool and un-consume so the buyer can retry.
         ignore ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, canisterAccount);
         ignore icpaySessionsConsumed.delete(paymentId);
         return { success = false; tokenId = null; message = "Transfer failed: " # e };

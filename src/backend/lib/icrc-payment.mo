@@ -116,6 +116,10 @@ module {
     false;
   };
 
+  public func isStableLedgerId(id : Text) : Bool {
+    id == ledgerCanisterId(#ckUSDC) or id == ledgerCanisterId(#ckUSDT);
+  };
+
   public func balanceOf(ledgerCanisterId : Text, owner : Principal) : async Nat {
     let ledger = getIcrc1Ledger(ledgerCanisterId);
     await ledger.icrc1_balance_of({ owner = owner; subaccount = null });

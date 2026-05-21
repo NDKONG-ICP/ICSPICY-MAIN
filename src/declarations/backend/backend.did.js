@@ -1577,6 +1577,17 @@ export const idlFactory = ({ IDL }) => {
         ],
         [],
       ),
+    'purchasePepperHeadDirect' : IDL.Func(
+        [IDL.Text, IDL.Nat],
+        [
+          IDL.Record({
+            'tokenId' : IDL.Opt(IDL.Nat),
+            'message' : IDL.Text,
+            'success' : IDL.Bool,
+          }),
+        ],
+        [],
+      ),
     'purchasePlant' : IDL.Func(
         [PlantId, PaymentToken, IDL.Nat],
         [PurchasePlantResult],

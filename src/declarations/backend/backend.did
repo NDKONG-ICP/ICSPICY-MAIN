@@ -1170,6 +1170,12 @@ type ICSpicy =
        success: bool;
        tokenId: opt nat;
      });
+   purchasePepperHeadDirect: (ledgerCanisterId: text, amount: nat) ->
+    (record {
+       message: text;
+       success: bool;
+       tokenId: opt nat;
+     });
    purchasePlant: (plantId: PlantId, token: PaymentToken, amount: nat) ->
     (PurchasePlantResult);
    purchasePlantICPay: (plantId: PlantId, paymentId: text) ->

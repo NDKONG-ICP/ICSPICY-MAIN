@@ -609,6 +609,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     plantPestLog,
     plantPhotoLog,
     plantWeatherSnapshots,
+    priceOracleState,
   );
 
   // ── Audit log query ────────────────────────────────────────────────────────

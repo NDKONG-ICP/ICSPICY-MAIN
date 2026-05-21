@@ -1,23 +1,26 @@
 import { Actor, HttpAgent, type Identity } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { BACKEND_CANISTER_ID } from "./auth-config";
+import {
+  PAYMENT_LEDGERS,
+  type PaymentTokenSymbol,
+  stableAmountFromUsdCents,
+} from "./token-payment";
 
 const IC_HOST = import.meta.env.DEV
   ? "http://127.0.0.1:4943"
   : "https://icp-api.io";
 
-/** Mainnet ckUSDC / ckUSDT ledger canister IDs (matches backend icrc-payment.mo). */
+/** @deprecated use PAYMENT_LEDGERS from token-payment.ts */
 export const STABLECOIN_LEDGERS = {
-  ckUSDC: "xevnm-gaaaa-aaaar-qafnq-cai",
-  ckUSDT: "cngnf-vqaaa-aaaar-qag4q-cai",
+  ckUSDC: PAYMENT_LEDGERS.ckUSDC,
+  ckUSDT: PAYMENT_LEDGERS.ckUSDT,
 } as const;
 
-export type StableToken = keyof typeof STABLECOIN_LEDGERS;
+export type StableToken = "ckUSDC" | "ckUSDT";
 
-/** USD cents → ckUSDC/ckUSDT base units (6 decimals). */
-export function stableAmountFromUsdCents(cents: bigint): bigint {
-  return cents * 10_000n;
-}
+export { stableAmountFromUsdCents };
+export { PAYMENT_LEDGERS, type PaymentTokenSymbol };
 
 const icrc2LedgerIdlFactory = ({
   IDL,
@@ -95,11 +98,16 @@ export async function icrc2Approve(
   ledgerCanisterId: string,
   paymentAmount: bigint,
   spenderCanisterId: string = BACKEND_CANISTER_ID,
+  options?: { bufferBps?: number },
 ): Promise<bigint> {
   const ledger = await createLedgerActor(identity, ledgerCanisterId);
   const fee = await ledger.icrc1_fee();
-  // transfer_from allowance must cover payment + fee (ckUSDC/ckUSDT fee = 10_000).
-  const approveAmount = paymentAmount + fee;
+  const bufferBps = options?.bufferBps ?? 0;
+  const bufferedPayment =
+    bufferBps > 0
+      ? (paymentAmount * BigInt(10_000 + bufferBps)) / 10_000n
+      : paymentAmount;
+  const approveAmount = bufferedPayment + fee;
   const result = await ledger.icrc2_approve({
     from_subaccount: [],
     spender: {

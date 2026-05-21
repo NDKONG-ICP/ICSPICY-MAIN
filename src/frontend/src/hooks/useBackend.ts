@@ -1542,9 +1542,9 @@ export function useBatchMintFoundersCollection() {
   });
 }
 
-// ─── Token Prices (ICPSwap Oracle) ───────────────────────────────────────────
+// ─── Token Prices (ICPSwap Oracle — backend cache) ───────────────────────────
 
-export function useTokenPrices() {
+export function useBackendTokenPrices() {
   const { actor } = useBackendActor();
   const { actorReady } = useActorReady();
   return useQuery({
@@ -2293,6 +2293,32 @@ export function useConfirmOrderPaymentDirect() {
       return result;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["orders"] }),
+  });
+}
+
+export function usePurchasePepperHeadDirect() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      ledgerCanisterId,
+      amount,
+    }: {
+      ledgerCanisterId: string;
+      amount: bigint;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      const result = await actor.purchasePepperHeadDirect(
+        ledgerCanisterId,
+        amount,
+      );
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["icrc7Owner"] });
+      qc.invalidateQueries({ queryKey: ["isPepperHeadAvailable"] });
+    },
   });
 }
 

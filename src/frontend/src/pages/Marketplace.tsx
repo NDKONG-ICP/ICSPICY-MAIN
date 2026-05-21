@@ -41,8 +41,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { Offer, ResaleListingPublic } from "../backend";
 import {
-  MembershipTier,
-  NFTStandard,
   OfferStatus,
   ProductCategory,
   RarityTier,
@@ -56,13 +54,16 @@ import {
   useGetActiveResaleListings,
   useGetMyOffers,
   useGetOffersReceived,
-  useIssueMembership,
-  useMembershipPrices,
   useProducts,
+  usePurchasePepperHeadDirect,
   useRejectOffer,
   useSubmitOffer,
-  useTokenPrices,
 } from "../hooks/useBackend";
+import { useTokenPrices } from "../hooks/useTokenPrices";
+import {
+  TokenPaymentPanel,
+  useTokenPaymentState,
+} from "../components/TokenPaymentPanel";
 import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
 import { ShopPlantsSection } from "../components/ShopPlantsSection";
@@ -1371,51 +1372,37 @@ function CartFloat({ discountPercent }: { discountPercent: number }) {
   );
 }
 
-// ─── Membership Card (multi-token pricing) ────────────────────────────────────
+// ─── PepperHead shop card ($25 USD, all tokens) ───────────────────────────────
 
-function MembershipPricingCard({
-  membershipPrices,
-  priceUpdated,
-}: {
-  membershipPrices: Record<string, bigint | null>;
-  priceUpdated: string | null;
-}) {
-  const [selectedToken, setSelectedToken] = useState<OfferTokenSymbol>("ICP");
-  const { isAuthenticated, login, principal } = useAuth();
-  const issueMembership = useIssueMembership();
+const PEPPERHEAD_PRICE_CENTS = 2500n;
 
-  function formatMembershipPrice(symbol: OfferTokenSymbol): string {
-    const raw = membershipPrices[symbol];
-    if (!raw) return "—";
-    const dec = TOKEN_DECIMALS[symbol];
-    const divisor = BigInt(10 ** Math.min(dec, 8));
-    const whole = raw / divisor;
-    const frac = (raw % divisor)
-      .toString()
-      .padStart(Math.min(dec, 8), "0")
-      .slice(0, 4);
-    return `${whole}.${frac} ${symbol}`;
+function PepperHeadShopCard() {
+  const { isAuthenticated, login } = useAuth();
+  const purchaseDirect = usePurchasePepperHeadDirect();
+  const [payingToken, setPayingToken] = useTokenPaymentState();
+  const { dataUpdatedAt } = useTokenPrices();
+  const [purchasedId, setPurchasedId] = useState<bigint | null>(null);
+
+  const priceUpdated = dataUpdatedAt
+    ? new Date(dataUpdatedAt).toLocaleTimeString()
+    : null;
+
+  if (purchasedId != null) {
+    return (
+      <div
+        className="p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-center space-y-2"
+        data-ocid="pepperhead-shop-success"
+      >
+        <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-400" />
+        <p className="font-display font-bold text-foreground">
+          You now own IC SPICY #{purchasedId.toString()}!
+        </p>
+        <p className="text-xs text-muted-foreground">
+          PepperHead membership benefits are now active on this token.
+        </p>
+      </div>
+    );
   }
-
-  const handlePurchase = async () => {
-    if (!isAuthenticated || !principal) {
-      login();
-      return;
-    }
-    try {
-      await issueMembership.mutateAsync({
-        owner: principal,
-        tier: MembershipTier.Standard,
-        standard: NFTStandard.ICRC37,
-      });
-      toast.success(
-        "🎉 Membership NFT purchased! Your lifetime discount is now active.",
-      );
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Purchase failed";
-      toast.error(`Could not purchase membership: ${msg}`);
-    }
-  };
 
   return (
     <div
@@ -1425,78 +1412,48 @@ function MembershipPricingCard({
       <div className="flex items-center gap-2">
         <Crown className="w-5 h-5 text-amber-400" />
         <h3 className="font-display font-bold text-foreground">
-          Membership NFT
+          Buy PepperHead
         </h3>
         <Badge className="ml-auto bg-amber-900/50 text-amber-300 border-amber-700/50 border text-xs">
-          Lifetime Discount
+          $25.00 USD
         </Badge>
       </div>
       <p className="text-sm text-muted-foreground">
-        25 ICP base price — or pay with any supported token using live ICPSwap
-        rates.
+        PepperHead NFTs grant exclusive member benefits — lifetime discounts,
+        early access, and provenance rights. Pay with any supported token via
+        Internet Identity.
       </p>
 
-      {/* Token price grid */}
-      <div className="grid grid-cols-5 gap-1.5">
-        {OFFER_TOKENS.map((t) => {
-          const cfg = TOKEN_DISPLAY[t];
-          const isSelected = selectedToken === t;
-          return (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setSelectedToken(t)}
-              className={`p-2 rounded-lg border text-center transition-smooth ${
-                isSelected
-                  ? `${cfg.bgClass} ${cfg.borderClass} border`
-                  : "bg-muted/20 border-border hover:border-primary/30"
-              }`}
-              data-ocid={`membership-token-${t}`}
-            >
-              <p className={`text-sm font-bold ${cfg.colorClass}`}>
-                {cfg.symbol}
-              </p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{t}</p>
-              <p
-                className={`text-[10px] font-medium mt-1 ${isSelected ? cfg.colorClass : "text-muted-foreground"}`}
-              >
-                {formatMembershipPrice(t)}
-              </p>
-            </button>
-          );
-        })}
-      </div>
+      {!isAuthenticated ? (
+        <Button className="w-full" onClick={login} data-ocid="pepperhead-shop-login">
+          <Crown className="w-4 h-4" />
+          Sign in to Purchase
+        </Button>
+      ) : (
+        <TokenPaymentPanel
+          usdCents={PEPPERHEAD_PRICE_CENTS}
+          payingToken={payingToken}
+          setPayingToken={setPayingToken}
+          onPay={async ({ ledgerCanisterId, amount }) => {
+            const result = await purchaseDirect.mutateAsync({
+              ledgerCanisterId,
+              amount,
+            });
+            if (result.tokenId != null) {
+              setPurchasedId(BigInt(result.tokenId));
+            }
+            toast.success("PepperHead purchased!");
+          }}
+          dataOcid="pepperhead-shop-payment"
+        />
+      )}
 
       {priceUpdated && (
         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
           <RefreshCw className="w-2.5 h-2.5" />
-          Prices from ICPSwap · updated {priceUpdated}
+          Token prices from CoinGecko · updated {priceUpdated}
         </p>
       )}
-
-      <Button
-        className="w-full bg-primary"
-        onClick={handlePurchase}
-        disabled={issueMembership.isPending}
-        data-ocid="membership-buy-btn"
-      >
-        {issueMembership.isPending ? (
-          <>
-            <RefreshCw className="w-4 h-4 animate-spin" />
-            Processing…
-          </>
-        ) : !isAuthenticated ? (
-          <>
-            <Crown className="w-4 h-4" />
-            Sign in to Purchase
-          </>
-        ) : (
-          <>
-            <Crown className="w-4 h-4" />
-            Purchase with {selectedToken}
-          </>
-        )}
-      </Button>
     </div>
   );
 }
@@ -2003,12 +1960,6 @@ export default function MarketplacePage() {
 
   const { data: allProducts, isLoading: allLoading } = useProducts();
   const { discountPercent, rarity } = useNftDiscount();
-  const { dataUpdatedAt } = useTokenPrices();
-  const { data: membershipPrices = {} } = useMembershipPrices();
-
-  const priceUpdated = dataUpdatedAt
-    ? new Date(dataUpdatedAt).toLocaleTimeString()
-    : null;
 
   const catalogProducts =
     allProducts
@@ -2088,12 +2039,7 @@ export default function MarketplacePage() {
 
       {isPlantsTab && <ShopPlantsSection />}
 
-      {isPepperHeadTab && (
-        <MembershipPricingCard
-          membershipPrices={membershipPrices}
-          priceUpdated={priceUpdated}
-        />
-      )}
+      {isPepperHeadTab && <PepperHeadShopCard />}
 
       {isProductsTab && (
         <ProductsCatalogSection

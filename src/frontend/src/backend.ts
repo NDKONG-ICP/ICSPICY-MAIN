@@ -1070,6 +1070,7 @@ export interface backendInterface {
     mintRWAProvenance(input: MintRWAProvenanceInput): Promise<string>;
     placeOrder(input: CreateOrderInput): Promise<OrderPublic>;
     purchasePepperHead(paymentId: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }>;
+    purchasePepperHeadDirect(ledgerCanisterId: string, amount: bigint): Promise<{ tokenId: bigint | null; message: string; success: boolean }>;
     preGenerateNFTPool(layerCount: bigint, layerFileCounts: Array<bigint>): Promise<{
         ok: boolean;
         total: bigint;
@@ -3519,6 +3520,17 @@ export class Backend implements backendInterface {
             } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else {
             const r = await this.actor.purchasePepperHead(arg0);
+            return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
+        }
+    }
+    async purchasePepperHeadDirect(arg0: string, arg1: bigint): Promise<{ tokenId: bigint | null; message: string; success: boolean }> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.purchasePepperHeadDirect(arg0, arg1);
+                return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.purchasePepperHeadDirect(arg0, arg1);
             return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
         }
     }

@@ -7,7 +7,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
   CheckCircle2,
-  CreditCard,
   Flame,
   Gem,
   Loader2,
@@ -31,12 +30,9 @@ import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
 import { PlantCheckoutPanel } from "../components/PlantCheckoutPanel";
 import {
-  icrc2Approve,
-  STABLECOIN_LEDGERS,
-  stableAmountFromUsdCents,
-  type StableToken,
-} from "../lib/icrc2-payment";
-import { TOKEN_DISPLAY, type OfferTokenSymbol } from "../types";
+  TokenPaymentPanel,
+  useTokenPaymentState,
+} from "../components/TokenPaymentPanel";
 import {
   formatLinePrice,
   PICKUP_ADDRESS,
@@ -252,68 +248,55 @@ function EmptyCart() {
 
 // ─── Payment step ─────────────────────────────────────────────────────────────
 
-const STABLE_TOKENS: StableToken[] = ["ckUSDC", "ckUSDT"];
-const COMING_SOON_VOLATILE: OfferTokenSymbol[] = ["ICP", "ckBTC", "ckETH"];
-
 function PaymentStep({
   orderId,
   finalTotal,
   isPickup,
   orderItems,
-  onComplete,
 }: {
   orderId: bigint;
   finalTotal: bigint;
   isPickup: boolean;
   orderItems: CartItem[];
-  onComplete: () => void;
 }) {
-  const { isAuthenticated, login, identity, principal } = useAuth();
+  const { isAuthenticated, login, principal } = useAuth();
+  const clearCart = useCart((s) => s.clearCart);
   const confirmDirect = useConfirmOrderPaymentDirect();
   const navigate = useNavigate();
+  const [payingToken, setPayingToken] = useTokenPaymentState();
 
-  const [payingToken, setPayingToken] = useState<StableToken | null>(null);
+  const [purchasedItems] = useState(() => [...orderItems]);
   const [claimTokens, setClaimTokens] = useState<string[]>([]);
   const [nftTokenIds, setNftTokenIds] = useState<bigint[]>([]);
   const [paid, setPaid] = useState(false);
 
   const usdAmount = Number(finalTotal) / 100;
-  const stableAmount = stableAmountFromUsdCents(finalTotal);
 
-  const handlePayStable = async (token: StableToken) => {
-    if (!identity) {
-      login();
-      return;
-    }
-    setPayingToken(token);
-    try {
-      const ledgerId = STABLECOIN_LEDGERS[token];
-      await icrc2Approve(identity, ledgerId, stableAmount);
-      const result = await confirmDirect.mutateAsync({
-        orderId,
-        ledgerCanisterId: ledgerId,
-        amount: stableAmount,
-      });
-      setClaimTokens(result.claim_tokens);
-      setNftTokenIds(result.nft_token_ids);
-      setPaid(true);
-      toast.success("Purchase complete!");
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Payment failed. Try again.",
-      );
-    } finally {
-      setPayingToken(null);
-    }
+  const handlePay = async ({
+    ledgerCanisterId,
+    amount,
+  }: {
+    token: import("../lib/token-payment").PaymentTokenSymbol;
+    ledgerCanisterId: string;
+    amount: bigint;
+  }) => {
+    const result = await confirmDirect.mutateAsync({
+      orderId,
+      ledgerCanisterId,
+      amount,
+    });
+    setClaimTokens(result.claim_tokens);
+    setNftTokenIds(result.nft_token_ids);
+    clearCart();
+    setPaid(true);
+    toast.success("Purchase complete!");
   };
 
   const handleContinueShopping = () => {
-    onComplete();
     navigate({ to: "/marketplace" });
   };
 
   const handleViewOrders = () => {
-    onComplete();
     navigate({ to: "/orders" });
   };
 
@@ -357,7 +340,7 @@ function PaymentStep({
 
         <div className="rounded-xl border border-border bg-card p-4 space-y-3 text-left">
           <p className="text-sm font-semibold text-foreground">Your items</p>
-          {orderItems.map((item, index) => {
+          {purchasedItems.map((item, index) => {
             const nftId = nftTokenIds[index];
             const linePrice = formatLinePrice(
               item.unit_price_cents,
@@ -506,95 +489,15 @@ function PaymentStep({
       </div>
 
       <div
-        className="rounded-xl border border-border bg-card p-5 space-y-4"
+        className="rounded-xl border border-border bg-card p-5"
         data-ocid="checkout-payment-options"
       >
-        <div>
-          <p className="text-sm font-medium text-foreground mb-2">
-            Stablecoins
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {STABLE_TOKENS.map((token) => {
-              const display = TOKEN_DISPLAY[token];
-              const isPaying = payingToken === token;
-              return (
-                <Button
-                  key={token}
-                  className="w-full justify-between h-auto py-3"
-                  disabled={payingToken !== null}
-                  onClick={() => handlePayStable(token)}
-                  data-ocid={`pay-${token.toLowerCase()}-btn`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${display.bgClass} ${display.colorClass}`}
-                    >
-                      {display.symbol}
-                    </span>
-                    <span className="font-semibold">{token}</span>
-                  </span>
-                  {isPaying ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <span className="text-xs text-muted-foreground">
-                      {(Number(stableAmount) / 1_000_000).toFixed(2)}
-                    </span>
-                  )}
-                </Button>
-              );
-            })}
-          </div>
-          <p className="text-[10px] text-muted-foreground mt-2">
-            ICRC-2 approve + backend settlement via your Internet Identity
-          </p>
-        </div>
-
-        <Separator />
-
-        <div>
-          <p className="text-sm font-medium text-muted-foreground mb-2">
-            Volatile tokens — coming soon
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            {COMING_SOON_VOLATILE.map((token) => {
-              const display = TOKEN_DISPLAY[token];
-              return (
-                <Button
-                  key={token}
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  className="opacity-50"
-                  data-ocid={`pay-${token.toLowerCase()}-disabled`}
-                >
-                  <span
-                    className={`mr-1 ${display.colorClass}`}
-                  >
-                    {display.symbol}
-                  </span>
-                  {token}
-                </Button>
-              );
-            })}
-          </div>
-        </div>
-
-        <Separator />
-
-        <div>
-          <p className="text-sm font-medium text-muted-foreground mb-2">
-            Card payments — coming soon
-          </p>
-          <Button
-            variant="outline"
-            className="w-full opacity-50"
-            disabled
-            data-ocid="pay-icpay-disabled"
-          >
-            <CreditCard className="w-4 h-4 mr-2" />
-            ICPay (card) — coming soon
-          </Button>
-        </div>
+        <TokenPaymentPanel
+          usdCents={finalTotal}
+          onPay={handlePay}
+          payingToken={payingToken}
+          setPayingToken={setPayingToken}
+        />
       </div>
     </motion.div>
   );
@@ -618,8 +521,7 @@ export default function CheckoutPage() {
   }
 
   const { isAuthenticated, login } = useAuth();
-  const { items, removeItem, updateQuantity, subtotalCents, clearCart } =
-    useCart();
+  const { items, removeItem, updateQuantity, subtotalCents } = useCart();
   const { discountPercent, rarity } = useNftDiscount();
   const placeOrder = usePlaceOrder();
 
@@ -734,7 +636,6 @@ export default function CheckoutPage() {
           finalTotal={finalTotalForPayment}
           isPickup={fulfillment === "pickup"}
           orderItems={items}
-          onComplete={clearCart}
         />
       </div>
     );

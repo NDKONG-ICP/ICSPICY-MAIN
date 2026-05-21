@@ -20,14 +20,17 @@ import { toast } from "sonner";
 import type { Value } from "../declarations/backend.did";
 import { useAuth } from "../hooks/useAuth";
 import {
+  TokenPaymentPanel,
+  useTokenPaymentState,
+} from "../components/TokenPaymentPanel";
+import {
   useIsPepperHead,
   useIsPepperHeadAvailable,
-  usePurchasePepperHead,
+  usePurchasePepperHeadDirect,
   useTokenCertified,
   useTokenMetadata,
   useTokenOwner,
 } from "../hooks/useBackend";
-import { useICPay } from "../hooks/useICPay";
 import { getNftImageUrl, isValidTokenId } from "../lib/nft-config";
 
 // ── Metadata helpers ────────────────────────────────────────────────────────
@@ -502,8 +505,9 @@ function LinksCard({
 // ── PepperHead purchase card ────────────────────────────────────────────────
 //
 // Shown when the token is a PepperHead AND is still owned by the canister
-// (i.e. still in the open pool). Uses ICPay for payment — no wallet
-// approval required; ICPay handles crypto/card conversion internally.
+// (i.e. still in the open pool). Pay $25 USD with any supported ICRC token.
+
+const PEPPERHEAD_USD_CENTS = 2500n;
 
 const BACKEND_CANISTER_ID: string =
   (import.meta.env.VITE_CANISTER_ID_BACKEND as string | undefined) ??
@@ -518,36 +522,13 @@ function PepperHeadPurchaseCard({
 }) {
   const { data: availableCount, isLoading: loadingAvail } =
     useIsPepperHeadAvailable();
-  const purchase = usePurchasePepperHead();
-  const { isAuthenticated } = useAuth();
+  const purchaseDirect = usePurchasePepperHeadDirect();
+  const { isAuthenticated, login } = useAuth();
   const [succeeded, setSucceeded] = useState<bigint | null>(null);
+  const [payingToken, setPayingToken] = useTokenPaymentState();
 
   const available = availableCount ?? 0n;
-  // Only offer purchase while this specific token is still in the open pool.
   const isInPool = ownerPrincipal === BACKEND_CANISTER_ID;
-
-  const icpay = useICPay({
-    onSuccess: async (paymentId) => {
-      try {
-        const result = await purchase.mutateAsync({ paymentId });
-        const mintedId = result.tokenId != null ? BigInt(result.tokenId) : null;
-        setSucceeded(mintedId ?? tokenId);
-        toast.success(
-          mintedId != null
-            ? `You now own IC SPICY #${mintedId}!`
-            : "PepperHead purchased!",
-        );
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Purchase failed");
-      }
-    },
-    onError: (msg) => toast.error(msg),
-  });
-
-  const isPending =
-    icpay.status === "paying" ||
-    icpay.status === "confirming" ||
-    purchase.isPending;
 
   if (succeeded != null) {
     return (
@@ -576,7 +557,7 @@ function PepperHeadPurchaseCard({
       <CardHeader className="pb-3">
         <CardTitle className="font-display text-base font-bold flex items-center gap-2">
           <Flame className="w-4 h-4 text-red-500" />
-          Buy PepperHead — $25
+          Buy PepperHead — $25.00
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -593,64 +574,49 @@ function PepperHeadPurchaseCard({
 
         <p className="text-xs text-muted-foreground leading-relaxed">
           PepperHead NFTs grant exclusive member benefits — lifetime discounts,
-          early access, and provenance rights. Pay with any crypto wallet or
-          card via ICPay.
+          early access, and provenance rights. Pay $25.00 with any supported
+          token via Internet Identity.
         </p>
 
         <Separator />
 
-        {icpay.status === "error" && (
-          <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
-            {icpay.error}
-          </div>
-        )}
-
         {!isAuthenticated ? (
-          <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2.5 text-sm text-muted-foreground">
-            <Wallet className="h-4 w-4 shrink-0" />
-            <span>Log in with Internet Identity to purchase.</span>
-          </div>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={login}
+            data-ocid="pepperhead-login-btn"
+          >
+            <Wallet className="h-4 w-4 mr-2" />
+            Log in with Internet Identity to purchase
+          </Button>
         ) : !isInPool ? (
           <div className="text-xs text-muted-foreground text-center py-1">
             This PepperHead has already been claimed.
           </div>
-        ) : (
-          <Button
-            className="w-full bg-red-600 hover:bg-red-700 text-white"
-            disabled={available === 0n || loadingAvail || isPending}
-            onClick={() =>
-              icpay.payUsd(
-                25,
-                { action: "pepperhead", tokenId: tokenId.toString() },
-                "ic_icp",
-              )
-            }
-            data-ocid="pepperhead-buy-btn"
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                {icpay.status === "confirming" || purchase.isPending
-                  ? "Confirming on-chain…"
-                  : "Awaiting payment…"}
-              </>
-            ) : available === 0n ? (
-              <>
-                <Flame className="w-4 h-4" />
-                Sold Out
-              </>
-            ) : (
-              <>
-                <Flame className="w-4 h-4" />
-                Buy PepperHead — $25
-              </>
-            )}
+        ) : available === 0n ? (
+          <Button className="w-full" disabled data-ocid="pepperhead-buy-btn">
+            <Flame className="w-4 h-4 mr-2" />
+            Sold Out
           </Button>
+        ) : (
+          <TokenPaymentPanel
+            usdCents={PEPPERHEAD_USD_CENTS}
+            payingToken={payingToken}
+            setPayingToken={setPayingToken}
+            onPay={async ({ ledgerCanisterId, amount }) => {
+              const result = await purchaseDirect.mutateAsync({
+                ledgerCanisterId,
+                amount,
+              });
+              const mintedId =
+                result.tokenId != null ? BigInt(result.tokenId) : tokenId;
+              setSucceeded(mintedId);
+              toast.success(`You now own IC SPICY #${mintedId.toString()}!`);
+            }}
+            dataOcid="pepperhead-payment"
+          />
         )}
-
-        <p className="text-[11px] text-center text-muted-foreground">
-          Powered by ICPay · crypto wallet &amp; card accepted
-        </p>
       </CardContent>
     </Card>
   );

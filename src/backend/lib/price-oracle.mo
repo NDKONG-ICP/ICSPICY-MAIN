@@ -1,6 +1,7 @@
 import PriceOracleTypes "../types/price-oracle";
 import Common "../types/common";
 import Array "mo:core/Array";
+import Nat "mo:core/Nat";
 
 module {
   /// Return the cached ICP-equivalent price for a given token (in e8s).
@@ -34,26 +35,49 @@ module {
     (amount * pricePerUnit) / 100_000_000;
   };
 
-  /// Convert 25 ICP base price to the equivalent amount in the given token.
+  /// Convert USD cents to token base units using cached ICP cross-rates (via ckUSDC).
+  public func usdCentsToTokenBase(
+    state : PriceOracleTypes.PriceOracleState,
+    token : PriceOracleTypes.OracleToken,
+    cents : Nat,
+  ) : Nat {
+    switch (token) {
+      case (#ckUSDC or #ckUSDT) {
+        cents * 10_000;
+      };
+      case (_) {
+        let icpPerUsdcBase = getPriceInIcp(state, #ckUSDC);
+        if (icpPerUsdcBase == 0 or cents == 0) return 0;
+        let icpE8sNeeded = cents * icpPerUsdcBase * 10_000;
+        let tokenPricePerBase = getPriceInIcp(state, token);
+        if (tokenPricePerBase == 0) return 0;
+        (icpE8sNeeded * 100_000_000) / tokenPricePerBase;
+      };
+    };
+  };
+
+  /// Stablecoins: exact match. Volatile: amount >= expected * 95%.
+  public func isPaymentAmountSufficient(
+    state : PriceOracleTypes.PriceOracleState,
+    token : PriceOracleTypes.OracleToken,
+    cents : Nat,
+    amount : Nat,
+  ) : Bool {
+    let expected = usdCentsToTokenBase(state, token, cents);
+    switch (token) {
+      case (#ckUSDC or #ckUSDT) amount == expected;
+      case (_) {
+        if (expected == 0) false else amount * 100 >= expected * 95;
+      };
+    };
+  };
+
+  /// Convert $25 USD (membership / PepperHead) to token base units.
   public func membershipPriceInToken(
     state : PriceOracleTypes.PriceOracleState,
     token : PriceOracleTypes.OracleToken,
   ) : Nat {
-    switch (token) {
-      case (#ICP) { PriceOracleTypes.MEMBERSHIP_BASE_PRICE_E8S };
-      case _ {
-        let pricePerUnit = getPriceInIcp(state, token);
-        if (pricePerUnit == 0) {
-          // Avoid division by zero — return base price as fallback
-          PriceOracleTypes.MEMBERSHIP_BASE_PRICE_E8S
-        } else {
-          // How many base units of `token` equal 25 ICP?
-          // pricePerUnit = ICP_e8s per 1 token_unit
-          // answer = 25 ICP_e8s / pricePerUnit * 1e8 (to stay in base units)
-          (PriceOracleTypes.MEMBERSHIP_BASE_PRICE_E8S * 100_000_000) / pricePerUnit
-        };
-      };
-    };
+    usdCentsToTokenBase(state, token, 2500);
   };
 
   /// Update the cached price for a single token (called after HTTP outcall).

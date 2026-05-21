@@ -634,6 +634,10 @@ export interface ICSpicy {
     [string],
     { 'tokenId' : [] | [bigint], 'message' : string, 'success' : boolean }
   >,
+  'purchasePepperHeadDirect' : ActorMethod<
+    [string, bigint],
+    { 'tokenId' : [] | [bigint], 'message' : string, 'success' : boolean }
+  >,
   'purchasePlant' : ActorMethod<
     [PlantId, PaymentToken, bigint],
     PurchasePlantResult
