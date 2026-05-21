@@ -1,487 +1,473 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@tanstack/react-router";
 import {
+  Activity,
+  BarChart3,
+  Droplets,
   Leaf,
   Loader2,
-  Plus,
-  ShoppingBag,
+  Package,
   Sprout,
-  Tag,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import type { PlantStage } from "../declarations/backend.did";
-import type { PlantStage as BackendPlantStage } from "../backend";
-import { StageBadge } from "../components/ui/StageBadge";
-import { useAuth } from "../hooks/useAuth";
-import { useIsAdmin } from "../hooks/useBackend";
+import type {
+  ContainerSize,
+  DeathCause,
+  TrayCellPublic,
+} from "../declarations/backend.did";
 import {
-  formatCents,
-  nftImageUrl,
-  stageDefaultPrice,
-  stageLabel,
-  unwrapOpt,
-  useAddPlant,
-  useAddVariety,
-  useAdminInventory,
-  useDelistPlant,
-  useListPlantForSale,
+  ActivityFeed,
+  AdoptPlantPrompt,
+  GerminationModal,
+  MarkDeadModal,
+  PlantLifecycleCard,
+  PlantSeedModal,
+  TransplantModal,
+  TrayGrid,
+  WeatherBar,
+} from "../components/nims";
+import { useAuth } from "../hooks/useAuth";
+import { useIsAdmin, useTrays } from "../hooks/useBackend";
+import {
+  useActivityFeed,
+  useAdoptPurchasedPlant,
+  useMarkCellDead,
+  useMarkCellGerminated,
+  useNimsDashboardStats,
+  usePlantSeed,
+  useTrayGrid,
+  useWaterEntireTray,
+} from "../hooks/useNimsDashboard";
+import { useUnadoptedNftTokenIds } from "../hooks/useUnadoptedNfts";
+import {
   useMyPlantsNims,
-  usePlantCount,
-  useUpdateNimsPlantStage,
+  useAdminInventory,
   useVarieties,
 } from "../hooks/useNims";
+import { useWeather } from "../hooks/useWeather";
+import { useTransplantCell } from "../hooks/useBackend";
+import type { TransplantInput } from "../backend";
 
-function StatsBar() {
-  const { data: stats, isLoading } = usePlantCount();
-  if (isLoading) return <Skeleton className="h-20 w-full" />;
-  if (!stats) return null;
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {[
-        { label: "Total Plants", value: stats.total.toString() },
-        { label: "For Sale", value: stats.forSale.toString() },
-        { label: "Sold", value: stats.sold.toString() },
-        {
-          label: "Germinated",
-          value: stats.byStage.find(([s]) => "Seed" in s)?.[1]?.toString() ?? "0",
-        },
-      ].map((s) => (
-        <div
-          key={s.label}
-          className="rounded-lg border border-border bg-card/60 p-4 text-center"
-        >
-          <p className="text-2xl font-bold text-primary">{s.value}</p>
-          <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-        </div>
-      ))}
-    </div>
-  );
+type NimsTab = "trays" | "inventory" | "activity" | "analytics" | "myplants";
+
+function cellPositionLabel(pos: bigint): string {
+  const n = Number(pos);
+  const row = Math.ceil(n / 6);
+  const col = String.fromCharCode(64 + ((n - 1) % 6) + 1);
+  return `${col}${row}`;
 }
 
-function PlantCard({
-  lifecycle,
-  admin,
-  onRefresh,
-}: {
-  lifecycle: import("../hooks/useNims").PlantLifecycle;
-  admin?: boolean;
-  onRefresh: () => void;
-}) {
-  const listForSale = useListPlantForSale();
-  const delist = useDelistPlant();
-  const updateStage = useUpdateNimsPlantStage();
-  const plant = lifecycle.plant;
-  const tokenId = unwrapOpt(lifecycle.nftTokenId);
-  const price = unwrapOpt(lifecycle.priceCents);
-
-  return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="aspect-video bg-muted relative">
-        <img
-          src={nftImageUrl(tokenId)}
-          alt={plant.variety}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = "/placeholder-plant.png";
-          }}
-        />
-        {plant.for_sale && (
-          <Badge className="absolute top-2 right-2 bg-primary">
-            {formatCents(price ?? BigInt(stageDefaultPrice(plant.stage) * 100))}
-          </Badge>
-        )}
-      </div>
-      <div className="p-4 space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold">{plant.variety}</h3>
-          <StageBadge stage={plant.stage as unknown as BackendPlantStage} />
-        </div>
-        {tokenId !== undefined && (
-          <p className="text-xs text-muted-foreground">
-            IC SPICY #{tokenId.toString()}
-          </p>
-        )}
-        <Link
-          to="/plants/$plantId"
-          params={{ plantId: plant.id.toString() }}
-          className="text-sm text-primary hover:underline"
-        >
-          View lifecycle →
-        </Link>
-        {admin && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {!plant.for_sale && !plant.sold && (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={listForSale.isPending}
-                onClick={async () => {
-                  try {
-                    await listForSale.mutateAsync({ plantId: plant.id });
-                    toast.success("Listed for sale");
-                    onRefresh();
-                  } catch (e) {
-                    toast.error(e instanceof Error ? e.message : "Failed");
-                  }
-                }}
-              >
-                <Tag className="w-3 h-3 mr-1" /> List
-              </Button>
-            )}
-            {plant.for_sale && (
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={delist.isPending}
-                onClick={async () => {
-                  await delist.mutateAsync(plant.id);
-                  toast.success("Delisted");
-                  onRefresh();
-                }}
-              >
-                Delist
-              </Button>
-            )}
-            {"Seed" in plant.stage && (
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={updateStage.isPending}
-                onClick={async () => {
-                  await updateStage.mutateAsync({
-                    plantId: plant.id,
-                    stage: { Seedling: null },
-                  });
-                  toast.success("Updated to Seedling");
-                  onRefresh();
-                }}
-              >
-                → Seedling
-              </Button>
-            )}
-            {"Seedling" in plant.stage && (
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={updateStage.isPending}
-                onClick={async () => {
-                  await updateStage.mutateAsync({
-                    plantId: plant.id,
-                    stage: { Mature: null },
-                  });
-                  toast.success("Updated to Mature");
-                  onRefresh();
-                }}
-              >
-                → Mature
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+function unwrapOpt<T>(opt: [] | [T]): T | undefined {
+  return opt.length > 0 ? opt[0] : undefined;
 }
 
-function AdminDashboard() {
+function cellStatusKey(cell: TrayCellPublic): string {
+  const s = cell.status;
+  if ("Empty" in s) return "empty";
+  if ("Planted" in s) return "planted";
+  if ("Germinated" in s) return "germinated";
+  if ("Dead" in s) return "dead";
+  return "transplanted";
+}
+
+function formatMsAgo(ms: bigint | undefined): string {
+  if (ms == null) return "—";
+  const sec = Number(ms) / 1000;
+  if (sec < 3600) return `${Math.round(sec / 60)}m ago`;
+  if (sec < 86400) return `${Math.round(sec / 3600)}h ago`;
+  return `${Math.round(sec / 86400)}d ago`;
+}
+
+export default function NIMSPage() {
+  const navigate = useNavigate();
+  const { isAuthenticated, login } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
+  const { data: weather, isLoading: weatherLoading } = useWeather();
+  const [weatherExpanded, setWeatherExpanded] = useState(false);
+  const { data: stats, isLoading: statsLoading } = useNimsDashboardStats();
+  const { data: trays = [], isLoading: traysLoading } = useTrays();
   const { data: varieties = [] } = useVarieties();
-  const [stageFilter, setStageFilter] = useState<string>("all");
-  const stage: PlantStage | undefined =
-    stageFilter === "Seed"
-      ? { Seed: null }
-      : stageFilter === "Seedling"
-        ? { Seedling: null }
-        : stageFilter === "Mature"
-          ? { Mature: null }
-          : undefined;
-  const { data: inventory = [], refetch, isLoading } = useAdminInventory(stage);
-  const addPlant = useAddPlant();
-  const addVariety = useAddVariety();
-  const [showAddPlant, setShowAddPlant] = useState(false);
-  const [showAddVariety, setShowAddVariety] = useState(false);
-  const [form, setForm] = useState({
-    varietyId: "",
-    stage: "Seed" as "Seed" | "Seedling" | "Mature",
-  });
-  const [varietyForm, setVarietyForm] = useState({
-    name: "",
-    species: "Capsicum chinense",
-    scovilleMin: "100000",
-    scovilleMax: "500000",
-    description: "",
-  });
-
-  return (
-    <div className="space-y-8">
-      <StatsBar />
-      <div className="flex flex-wrap gap-2">
-        <Button onClick={() => setShowAddPlant(true)}>
-          <Plus className="w-4 h-4 mr-1" /> Add Plant
-        </Button>
-        <Button variant="outline" onClick={() => setShowAddVariety(true)}>
-          <Sprout className="w-4 h-4 mr-1" /> Add Variety
-        </Button>
-        <Link to="/marketplace">
-          <Button variant="secondary">
-            <ShoppingBag className="w-4 h-4 mr-1" /> Shop
-          </Button>
-        </Link>
-      </div>
-
-      <div className="flex gap-2 items-center">
-        <Label>Filter stage</Label>
-        <Select value={stageFilter} onValueChange={setStageFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="Seed">Germinated</SelectItem>
-            <SelectItem value="Seedling">Seedling</SelectItem>
-            <SelectItem value="Mature">Mature</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {isLoading ? (
-        <Skeleton className="h-40" />
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {inventory.map((lc) => (
-            <PlantCard
-              key={lc.plant.id.toString()}
-              lifecycle={lc}
-              admin
-              onRefresh={() => refetch()}
-            />
-          ))}
-        </div>
-      )}
-
-      <Dialog open={showAddPlant} onOpenChange={setShowAddPlant}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Plant</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Variety</Label>
-              <Select
-                value={form.varietyId}
-                onValueChange={(v) => setForm((f) => ({ ...f, varietyId: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select variety" />
-                </SelectTrigger>
-                <SelectContent>
-                  {varieties.map((v) => (
-                    <SelectItem key={v.id.toString()} value={v.id.toString()}>
-                      {v.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Stage</Label>
-              <Select
-                value={form.stage}
-                onValueChange={(v) =>
-                  setForm((f) => ({
-                    ...f,
-                    stage: v as "Seed" | "Seedling" | "Mature",
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Seed">Germinated ($5)</SelectItem>
-                  <SelectItem value="Seedling">Seedling ($25)</SelectItem>
-                  <SelectItem value="Mature">Mature ($45)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              className="w-full"
-              disabled={!form.varietyId || addPlant.isPending}
-              onClick={async () => {
-                try {
-                  const stageMap: Record<string, PlantStage> = {
-                    Seed: { Seed: null },
-                    Seedling: { Seedling: null },
-                    Mature: { Mature: null },
-                  };
-                  const result = await addPlant.mutateAsync({
-                    varietyId: BigInt(form.varietyId),
-                    stage: stageMap[form.stage],
-                  });
-                  toast.success(
-                    `Plant #${result.plantId} created — NFT #${result.nftTokenId}. Claim URL: /claim/${result.claimToken}`,
-                  );
-                  setShowAddPlant(false);
-                  refetch();
-                } catch (e) {
-                  toast.error(e instanceof Error ? e.message : "Failed");
-                }
-              }}
-            >
-              {addPlant.isPending && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
-              Create Plant + Assign NFT
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showAddVariety} onOpenChange={setShowAddVariety}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Variety</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <Input
-              placeholder="Name (e.g. Carolina Reaper)"
-              value={varietyForm.name}
-              onChange={(e) =>
-                setVarietyForm((f) => ({ ...f, name: e.target.value }))
-              }
-            />
-            <Input
-              placeholder="Species"
-              value={varietyForm.species}
-              onChange={(e) =>
-                setVarietyForm((f) => ({ ...f, species: e.target.value }))
-              }
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                placeholder="Scoville min"
-                value={varietyForm.scovilleMin}
-                onChange={(e) =>
-                  setVarietyForm((f) => ({ ...f, scovilleMin: e.target.value }))
-                }
-              />
-              <Input
-                placeholder="Scoville max"
-                value={varietyForm.scovilleMax}
-                onChange={(e) =>
-                  setVarietyForm((f) => ({ ...f, scovilleMax: e.target.value }))
-                }
-              />
-            </div>
-            <Textarea
-              placeholder="Description"
-              value={varietyForm.description}
-              onChange={(e) =>
-                setVarietyForm((f) => ({ ...f, description: e.target.value }))
-              }
-            />
-            <Button
-              className="w-full"
-              disabled={!varietyForm.name || addVariety.isPending}
-              onClick={async () => {
-                await addVariety.mutateAsync({
-                  name: varietyForm.name,
-                  species: varietyForm.species,
-                  scovilleMin: Number(varietyForm.scovilleMin),
-                  scovilleMax: Number(varietyForm.scovilleMax),
-                  description: varietyForm.description,
-                });
-                toast.success("Variety added");
-                setShowAddVariety(false);
-              }}
-            >
-              Save Variety
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+  const { data: myPlants = [] } = useMyPlantsNims();
+  const { data: adminInventory = [] } = useAdminInventory(undefined, undefined, undefined);
+  const { data: activity = [] } = useActivityFeed(40);
+  const { data: unadoptedIds = [] } = useUnadoptedNftTokenIds();
+  const adoptPlant = useAdoptPurchasedPlant();
+  const [adoptOpen, setAdoptOpen] = useState(false);
+  const [dismissedAdoptToken, setDismissedAdoptToken] = useState<string | null>(
+    null,
   );
-}
 
-function CustomerPlants() {
-  const { data: plants = [], isLoading } = useMyPlantsNims();
-  if (isLoading) return <Skeleton className="h-40" />;
-  if (plants.length === 0) {
+  const defaultTab: NimsTab = isAdmin ? "trays" : "myplants";
+  const [tab, setTab] = useState<NimsTab>(defaultTab);
+  const [selectedTrayId, setSelectedTrayId] = useState<bigint | null>(null);
+
+  const activeTrayId = selectedTrayId ?? trays[0]?.id ?? null;
+  const { data: trayCells = [], isLoading: gridLoading } =
+    useTrayGrid(activeTrayId);
+
+  const plantSeed = usePlantSeed();
+  const markGerminated = useMarkCellGerminated();
+  const markDead = useMarkCellDead();
+  const waterTray = useWaterEntireTray();
+  const transplantCell = useTransplantCell();
+
+  const [selectedCell, setSelectedCell] = useState<bigint | null>(null);
+  const [seedOpen, setSeedOpen] = useState(false);
+  const [germOpen, setGermOpen] = useState(false);
+  const [deadOpen, setDeadOpen] = useState(false);
+  const [transplantOpen, setTransplantOpen] = useState(false);
+
+  const selectedCellData = useMemo(
+    () => trayCells.find((c) => c.position === selectedCell),
+    [trayCells, selectedCell],
+  );
+
+  const inventoryList = isAdmin ? adminInventory : myPlants;
+
+  const adoptTokenId = useMemo(() => {
+    return unadoptedIds.find((id) => id.toString() !== dismissedAdoptToken) ?? null;
+  }, [unadoptedIds, dismissedAdoptToken]);
+
+  useEffect(() => {
+    if (adoptTokenId != null && isAuthenticated) {
+      setAdoptOpen(true);
+    }
+  }, [adoptTokenId, isAuthenticated]);
+
+  const openMarkDead = () => {
+    setGermOpen(false);
+    setTransplantOpen(false);
+    setDeadOpen(true);
+  };
+
+  if (!isAuthenticated) {
     return (
-      <div className="text-center py-16 space-y-4">
-        <Leaf className="w-12 h-12 mx-auto text-muted-foreground" />
-        <p className="text-muted-foreground">
-          No plants yet — visit the Shop to get your first pepper plant!
+      <div className="container max-w-lg py-12 px-4 text-center space-y-4">
+        <Sprout className="mx-auto h-12 w-12 text-primary" />
+        <h1 className="text-2xl font-display font-bold">NIMS</h1>
+        <p className="text-muted-foreground text-sm">
+          Nursery Inventory Management — free for all authenticated growers.
         </p>
-        <Link to="/marketplace">
-          <Button>Browse Shop</Button>
-        </Link>
+        <Button onClick={login}>Log in with Internet Identity</Button>
       </div>
     );
   }
-  return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {plants.map((lc) => (
-        <PlantCard key={lc.plant.id.toString()} lifecycle={lc} onRefresh={() => {}} />
-      ))}
-    </div>
-  );
-}
 
-function PublicGate() {
-  return (
-    <div className="max-w-lg mx-auto text-center py-20 space-y-4">
-      <Sprout className="w-16 h-16 mx-auto text-primary" />
-      <h2 className="text-2xl font-display font-bold">NIMS — Nursery Inventory</h2>
-      <p className="text-muted-foreground">
-        Track your IC SPICY pepper plants from germination through harvest. Every plant
-        ships with an on-chain NFT proving its provenance.
-      </p>
-      <p className="text-sm text-muted-foreground">Sign in to track your plants.</p>
-    </div>
-  );
-}
+  const handleCellClick = (position: bigint) => {
+    setSelectedCell(position);
+    const cell = trayCells.find((c) => c.position === position);
+    const status = cell ? cellStatusKey(cell) : "empty";
+    if (status === "empty") setSeedOpen(true);
+    else if (status === "planted") setGermOpen(true);
+    else if (status === "germinated") setTransplantOpen(true);
+    else if (status === "dead") toast.info("This cell is marked dead.");
+    else toast.info("Plant was transplanted to inventory.");
+  };
 
-export default function NIMS() {
-  const { isAuthenticated } = useAuth();
-  const { data: isAdmin } = useIsAdmin();
+  const tabs: { id: NimsTab; label: string; icon: typeof Leaf; admin?: boolean }[] =
+    [
+      { id: "trays", label: "Trays", icon: Sprout, admin: true },
+      { id: "inventory", label: "Inventory", icon: Package },
+      { id: "activity", label: "Activity", icon: Activity },
+      { id: "analytics", label: "Analytics", icon: BarChart3 },
+      { id: "myplants", label: "My Plants", icon: Leaf },
+    ];
+
+  const visibleTabs = tabs.filter((t) => !t.admin || isAdmin);
 
   return (
-    <div className="container max-w-6xl py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-display font-bold flex items-center gap-2">
-          <Leaf className="text-primary" /> NIMS Dashboard
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Nursery Inventory Management — Port Charlotte, FL
-        </p>
+    <div className="min-h-screen pb-24" data-ocid="nims-dashboard">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border">
+        <WeatherBar
+          data={weather}
+          isLoading={weatherLoading}
+          expanded={weatherExpanded}
+          onExpandedChange={setWeatherExpanded}
+        />
       </div>
-      {!isAuthenticated ? (
-        <PublicGate />
-      ) : isAdmin ? (
-        <AdminDashboard />
-      ) : (
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold">My Plants</h2>
-          <CustomerPlants />
+
+      <div className="container max-w-2xl px-3 py-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-display font-bold">NIMS</h1>
+          <Badge variant="outline" className="text-xs">
+            Zone 10a · Port Charlotte
+          </Badge>
         </div>
+
+        {statsLoading ? (
+          <Skeleton className="h-16 w-full" />
+        ) : stats ? (
+          <div className="grid grid-cols-2 gap-2 text-center">
+            <div className="rounded-lg border border-border bg-card/60 p-3">
+              <p className="text-lg font-bold text-primary">
+                {stats.totalPlants.toString()}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Total plants</p>
+            </div>
+            <div className="rounded-lg border border-border bg-card/60 p-3">
+              <p className="text-lg font-bold text-emerald-400">
+                {stats.germinatedToday.toString()}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Germinated today</p>
+            </div>
+            <div className="rounded-lg border border-border bg-card/60 p-3">
+              <p className="text-lg font-bold text-amber-400">
+                {stats.needsAttention.toString()}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Needs attention</p>
+            </div>
+            <div className="rounded-lg border border-border bg-card/60 p-3">
+              <p className="text-lg font-bold text-cyan-400">
+                {formatMsAgo(stats.lastWateredMsAgo[0])}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Last watered</p>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="flex gap-1 overflow-x-auto pb-1">
+          {visibleTabs.map(({ id, label, icon: Icon }) => (
+            <Button
+              key={id}
+              size="sm"
+              variant={tab === id ? "default" : "outline"}
+              className="shrink-0 text-xs"
+              onClick={() => setTab(id)}
+              data-ocid={`nims-tab-${id}`}
+            >
+              <Icon className="h-3.5 w-3.5 mr-1" />
+              {label}
+            </Button>
+          ))}
+        </div>
+
+        {tab === "trays" && isAdmin && (
+          <div className="space-y-3">
+            {traysLoading ? (
+              <Skeleton className="h-10 w-full" />
+            ) : trays.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No trays yet. Create one from Admin → NIMS.
+              </p>
+            ) : (
+              <>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {trays.map((tray) => (
+                    <Button
+                      key={tray.id.toString()}
+                      size="sm"
+                      variant={
+                        activeTrayId === tray.id ? "default" : "secondary"
+                      }
+                      onClick={() => setSelectedTrayId(tray.id)}
+                    >
+                      {tray.name}
+                    </Button>
+                  ))}
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!activeTrayId || waterTray.isPending}
+                    onClick={async () => {
+                      if (!activeTrayId) return;
+                      try {
+                        const n = await waterTray.mutateAsync({
+                          trayId: activeTrayId,
+                          amountMl: 8n,
+                        });
+                        toast.success(`Watered ${n.toString()} plants`);
+                      } catch (e) {
+                        toast.error(
+                          e instanceof Error ? e.message : "Water failed",
+                        );
+                      }
+                    }}
+                  >
+                    {waterTray.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Droplets className="h-4 w-4 mr-1" />
+                    )}
+                    Water tray
+                  </Button>
+                </div>
+
+                {gridLoading ? (
+                  <Skeleton className="aspect-[6/12] w-full" />
+                ) : (
+                  <TrayGrid cells={trayCells} onCellClick={handleCellClick} />
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {(tab === "inventory" || tab === "myplants") && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {(tab === "myplants" ? myPlants : inventoryList).length === 0 ? (
+              <p className="text-sm text-muted-foreground col-span-2 text-center py-8">
+                {tab === "myplants"
+                  ? "No plants in your garden yet. Adopt a purchased NFT to start tracking."
+                  : "No inventory plants yet."}
+              </p>
+            ) : (
+              (tab === "myplants" ? myPlants : inventoryList).map((lc) => (
+                <Link
+                  key={lc.plant.id.toString()}
+                  to="/plants/$plantId"
+                  params={{ plantId: lc.plant.id.toString() }}
+                >
+                  <PlantLifecycleCard lifecycle={lc} />
+                </Link>
+              ))
+            )}
+          </div>
+        )}
+
+        {tab === "activity" && <ActivityFeed entries={activity} />}
+
+        {tab === "analytics" && (
+          <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+            Analytics coming in Phase 2 — germination rates, weather correlation,
+            and feeding efficiency charts.
+          </div>
+        )}
+      </div>
+
+      {activeTrayId != null && selectedCell != null && (
+        <>
+          <PlantSeedModal
+            open={seedOpen}
+            onOpenChange={setSeedOpen}
+            slotLabel={cellPositionLabel(selectedCell)}
+            onSubmit={async ({ varietyName }) => {
+              const variety = varieties.find(
+                (v) => v.name.toLowerCase() === varietyName.toLowerCase(),
+              );
+              if (!variety) {
+                toast.error("Variety not found — pick from catalog");
+                return;
+              }
+              try {
+                await plantSeed.mutateAsync({
+                  trayId: activeTrayId,
+                  cellPosition: selectedCell,
+                  varietyId: variety.id,
+                });
+                toast.success(`Seed planted in ${cellPositionLabel(selectedCell)}`);
+                setSeedOpen(false);
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Plant failed");
+              }
+            }}
+          />
+
+          <GerminationModal
+            open={germOpen}
+            onOpenChange={setGermOpen}
+            slotLabel={cellPositionLabel(selectedCell)}
+            plantName={unwrapOpt(selectedCellData?.varietyName ?? [])}
+            onMarkDead={openMarkDead}
+            onSubmit={async () => {
+              try {
+                const result = await markGerminated.mutateAsync({
+                  trayId: activeTrayId,
+                  cellPosition: selectedCell,
+                });
+                toast.success(
+                  `🌱 Germinated! NFT #${result.nftTokenId.toString()} assigned`,
+                );
+                setGermOpen(false);
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Germination failed");
+              }
+            }}
+          />
+
+          <MarkDeadModal
+            open={deadOpen}
+            onOpenChange={setDeadOpen}
+            plantLabel={unwrapOpt(selectedCellData?.varietyName ?? [])}
+            onConfirm={async ({ reason }) => {
+              const cause: DeathCause = { Unknown: null };
+              try {
+                await markDead.mutateAsync({
+                  trayId: activeTrayId,
+                  cellPosition: selectedCell,
+                  cause,
+                  notes: reason,
+                });
+                toast.success("Plant marked dead");
+                setDeadOpen(false);
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed");
+              }
+            }}
+          />
+
+          <TransplantModal
+            open={transplantOpen}
+            onOpenChange={setTransplantOpen}
+            plantLabel={
+              unwrapOpt(selectedCellData?.varietyName ?? []) ??
+              `Cell ${cellPositionLabel(selectedCell)}`
+            }
+            onMarkDead={openMarkDead}
+            onSubmit={async ({ container_size }) => {
+              const plantId = unwrapOpt(selectedCellData?.plantId ?? []);
+              if (plantId == null) {
+                toast.error("No plant in cell");
+                return;
+              }
+              try {
+                await transplantCell.mutateAsync({
+                  plant_id: plantId,
+                  container_size: container_size as TransplantInput["container_size"],
+                });
+                toast.success("🪴 Transplanted to inventory");
+                setTransplantOpen(false);
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Transplant failed");
+              }
+            }}
+          />
+        </>
+      )}
+
+      {adoptTokenId != null && (
+        <AdoptPlantPrompt
+          open={adoptOpen}
+          onOpenChange={(open) => {
+            setAdoptOpen(open);
+            if (!open) setDismissedAdoptToken(adoptTokenId.toString());
+          }}
+          tokenId={adoptTokenId}
+          isPending={adoptPlant.isPending}
+          onAdopt={async ({ container, locationNotes }) => {
+            try {
+              const result = await adoptPlant.mutateAsync({
+                nftTokenId: adoptTokenId,
+                container,
+                locationNotes,
+              });
+              toast.success("Plant adopted into NIMS");
+              setAdoptOpen(false);
+              void navigate({
+                to: "/plants/$plantId",
+                params: { plantId: result.plantId.toString() },
+              });
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : "Adoption failed");
+            }
+          }}
+        />
       )}
     </div>
   );

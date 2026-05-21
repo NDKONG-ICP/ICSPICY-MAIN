@@ -26,6 +26,7 @@ import PlantTypes "../types/plants";
 import VarietyTypes "../types/variety";
 import ClaimTypes "../types/claim";
 import ICRC7 "../types/icrc7";
+import DashTypes "../types/nims-dashboard";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
@@ -234,30 +235,228 @@ mixin (
     date : ?Common.Timestamp,
   ) : async PlantTypes.AddPlantResult {
     if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
-    let varietyIds = Iter.toArray(varieties.keys());
-    if (varietyIds.size() == 0) {
-      Runtime.trap("No varieties defined — add a variety first");
-    };
-    let varietyId = varietyIds[0];
     let germDate = switch date { case (?d) d; case null Time.now() };
+    let entropy = Int.abs(Time.now()) + cellPosition + trayId;
     switch (
-      NimsLib.addPlantInternal(
-        plants, trays, stageHistory, varieties, sideMaps(),
+      NimsLib.germinateCellInternal(
+        plants, trays, varieties, sideMaps(),
         icrc7Owners, icrc7Balances,
         nftClaimTokens, nftClaimPlantIds, plantClaimTokens, nftTokenPlantIds,
         selfPrincipal(), caller,
-        nextPlantId.value, varietyId, #Seed, ?trayId, ?cellPosition, null,
-        Int.abs(Time.now()) + cellPosition,
+        trayId, cellPosition, germDate, entropy,
+      )
+    ) {
+      case (#err(e)) Runtime.trap(e);
+      case (#ok(result)) {
+        logAdmin(caller, "mark_cell_germinated", "tray=" # Nat.toText(trayId) # " cell=" # Nat.toText(cellPosition) # " nft=" # Nat.toText(result.nftTokenId));
+        result;
+      };
+    };
+  };
+
+  public shared ({ caller }) func plantSeed(
+    trayId : Common.TrayId,
+    cellPosition : Nat,
+    varietyId : Nat,
+    datePlanted : ?Common.Timestamp,
+  ) : async DashTypes.PlantSeedResult {
+    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    switch (
+      NimsLib.plantSeedInternal(
+        plants, trays, stageHistory, varieties, sideMaps(),
+        caller, nextPlantId.value, trayId, cellPosition, varietyId, datePlanted,
       )
     ) {
       case (#err(e)) Runtime.trap(e);
       case (#ok(result)) {
         nextPlantId.value += 1;
-        PlantsLib.markPlantGerminated(plants, result.plantId, germDate);
-        logAdmin(caller, "mark_cell_germinated", "tray=" # Nat.toText(trayId) # " cell=" # Nat.toText(cellPosition));
+        logAdmin(caller, "plant_seed", "tray=" # Nat.toText(trayId) # " cell=" # Nat.toText(cellPosition));
         result;
       };
     };
+  };
+
+  public shared ({ caller }) func markCellDead(
+    trayId : Common.TrayId,
+    cellPosition : Nat,
+    cause : DashTypes.DeathCause,
+    notes : ?Text,
+    _photoUrl : ?Text,
+  ) : async Bool {
+    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    switch (
+      NimsLib.markCellDeadInternal(
+        plants, trays, sideMaps(),
+        icrc7Owners, icrc7Balances, icrc37Approvals,
+        selfPrincipal(), trayId, cellPosition, cause, notes,
+      )
+    ) {
+      case (#err(e)) Runtime.trap(e);
+      case (#ok(ok)) {
+        logAdmin(caller, "mark_cell_dead", "tray=" # Nat.toText(trayId) # " cell=" # Nat.toText(cellPosition));
+        ok;
+      };
+    };
+  };
+
+  public query func getTrayGrid(trayId : Common.TrayId) : async [DashTypes.TrayCellPublic] {
+    NimsLib.getTrayGrid(plants, trays, sideMaps(), trayId);
+  };
+
+  public shared ({ caller }) func waterEntireTray(
+    trayId : Common.TrayId,
+    amountMl : Nat,
+    phLevel : ?Float,
+    notes : ?Text,
+  ) : async Nat {
+    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    var count : Nat = 0;
+    for (pid in NimsLib.plantIdsInTray(trays, trayId).vals()) {
+      if (
+        NimsLib.addWateringEntry(
+          plants, sideMaps(), caller, nimsIsAdmin, pid,
+          { timestamp = Time.now(); author = caller; amountMl; phLevel; notes },
+        )
+      ) count += 1;
+    };
+    count;
+  };
+
+  public shared ({ caller }) func feedEntireTray(
+    trayId : Common.TrayId,
+    productName : Text,
+    nutrientType : Text,
+    dosage : Text,
+    notes : ?Text,
+  ) : async Nat {
+    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    var count : Nat = 0;
+    for (pid in NimsLib.plantIdsInTray(trays, trayId).vals()) {
+      switch (plants.get(pid)) {
+        case null {};
+        case (?_) {
+          ignore PlantsLib.addFeedingRecord(
+            feedings,
+            nextFeedingId.value,
+            {
+              plant_id = pid;
+              date = Time.now();
+              product_name = productName;
+              nutrient_type = nutrientType;
+              dosage_amount = dosage;
+              notes;
+            },
+          );
+          nextFeedingId.value += 1;
+          count += 1;
+        };
+      };
+    };
+    count;
+  };
+
+  public shared ({ caller }) func batchWater(
+    plantIds : [Common.PlantId],
+    amountMl : Nat,
+    phLevel : ?Float,
+    notes : ?Text,
+  ) : async Nat {
+    AccessControl.requireAuthenticated(caller);
+    var count : Nat = 0;
+    for (pid in plantIds.vals()) {
+      if (
+        NimsLib.addWateringEntry(
+          plants, sideMaps(), caller, nimsIsAdmin, pid,
+          { timestamp = Time.now(); author = caller; amountMl; phLevel; notes },
+        )
+      ) count += 1;
+    };
+    count;
+  };
+
+  public shared ({ caller }) func batchFeed(
+    plantIds : [Common.PlantId],
+    productName : Text,
+    nutrientType : Text,
+    dosage : Text,
+    notes : ?Text,
+  ) : async Nat {
+    AccessControl.requireAuthenticated(caller);
+    var count : Nat = 0;
+    for (pid in plantIds.vals()) {
+      switch (plants.get(pid)) {
+        case null {};
+        case (?plant) {
+          if (NimsLib.ownerOrAdmin(plant, pid, sideMaps(), caller, nimsIsAdmin)) {
+            ignore PlantsLib.addFeedingRecord(
+              feedings,
+              nextFeedingId.value,
+              {
+                plant_id = pid;
+                date = Time.now();
+                product_name = productName;
+                nutrient_type = nutrientType;
+                dosage_amount = dosage;
+                notes;
+              },
+            );
+            nextFeedingId.value += 1;
+            count += 1;
+          };
+        };
+      };
+    };
+    count;
+  };
+
+  public shared ({ caller }) func addPurchasedPlantToNims(
+    nftTokenId : Nat,
+    container : PlantTypes.ContainerSize,
+    locationNotes : ?Text,
+  ) : async DashTypes.PlantSeedResult {
+    AccessControl.requireAuthenticated(caller);
+    switch (
+      NimsLib.addPurchasedPlantToNimsInternal(
+        plants, stageHistory, sideMaps(), nftTokenPlantIds, icrc7Owners,
+        caller, nftTokenId, container, locationNotes, nextPlantId.value,
+      )
+    ) {
+      case (#err(e)) Runtime.trap(e);
+      case (#ok(result)) {
+        nextPlantId.value += 1;
+        result;
+      };
+    };
+  };
+
+  // Aliases matching NIMS API naming
+  public shared ({ caller }) func logWatering(
+    plantId : Common.PlantId,
+    amountMl : Nat,
+    phLevel : ?Float,
+    notes : ?Text,
+  ) : async Bool {
+    await addWateringEntry(plantId, amountMl, phLevel, notes);
+  };
+
+  public shared ({ caller }) func logFeeding(
+    plantId : Common.PlantId,
+    productName : Text,
+    nutrientType : Text,
+    dosage : Text,
+    notes : ?Text,
+  ) : async Bool {
+    await addFeedingEntry(plantId, productName, nutrientType, dosage, notes);
+  };
+
+  public shared ({ caller }) func logPest(
+    plantId : Common.PlantId,
+    pestName : Text,
+    severity : Text,
+    treatment : ?Text,
+    notes : ?Text,
+  ) : async Bool {
+    await addPestEntry(plantId, pestName, severity, treatment, notes);
   };
 
   // ── Lifecycle entries (owner or admin) ──────────────────────────────────────
@@ -380,6 +579,24 @@ mixin (
 
   public query func getPlantCount() : async PlantTypes.PlantCountStats {
     NimsLib.getPlantCount(plants);
+  };
+
+  public query func getNimsDashboardStats() : async DashTypes.DashboardStats {
+    NimsLib.getDashboardStats(plants, feedings, sideMaps());
+  };
+
+  public query func getRecentActivity(limit : Nat) : async [DashTypes.ActivityEntry] {
+    NimsLib.getRecentActivity(plants, feedings, sideMaps(), limit);
+  };
+
+  public query func getPlantHealth(plantId : Common.PlantId) : async ?DashTypes.PlantHealth {
+    NimsLib.getPlantHealth(plants, feedings, sideMaps(), plantId);
+  };
+
+  public query func getPlantsByContainer(
+    container : PlantTypes.ContainerSize,
+  ) : async [PlantTypes.PlantLifecycle] {
+    NimsLib.getPlantsByContainer(plants, sideMaps(), feedings, container);
   };
 
   public query func getNftPoolStatus() : async { available : Nat; total : Nat } {

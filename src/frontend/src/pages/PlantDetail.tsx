@@ -6,20 +6,38 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Droplets, FlaskConical, Leaf, ShieldCheck } from "lucide-react";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { PlantStage as BackendPlantStage } from "../backend";
+import type { PlantStage as BackendPlantStage, TransplantInput } from "../backend";
 import { StageBadge } from "../components/ui/StageBadge";
+import {
+  LogFeedingModal,
+  LogPestModal,
+  LogWateringModal,
+  PlantQuickActions,
+  PlantTimeline,
+  TransplantModal,
+  WeatherBar,
+  type QuickPlantAction,
+} from "../components/nims";
 import { useAuth } from "../hooks/useAuth";
-import { useIsAdmin } from "../hooks/useBackend";
+import { useIsAdmin, useToggleCooked, useTransplantCell } from "../hooks/useBackend";
+import {
+  useLogFeeding,
+  useLogPest,
+  useLogWatering,
+  usePlantHealth,
+} from "../hooks/useNimsDashboard";
+import { useWeather } from "../hooks/useWeather";
 import {
   formatCents,
   nftImageUrl,
   stageLabel,
   unwrapOpt,
   useAddPlantNote,
+  useListPlantForSale,
   usePlantLifecycle,
   useVarieties,
 } from "../hooks/useNims";
@@ -36,12 +54,29 @@ function fmtTs(ts: bigint | undefined): string {
 export default function PlantDetailPage() {
   const { plantId } = useParams({ from: "/plants/$plantId" });
   const id = BigInt(plantId);
+  const navigate = useNavigate();
   const { data: lc, isLoading } = usePlantLifecycle(id);
   const { data: varieties = [] } = useVarieties();
   const { identity } = useAuth();
   const { data: isAdmin } = useIsAdmin();
   const addNote = useAddPlantNote();
+  const logWater = useLogWatering();
+  const logFeed = useLogFeeding();
+  const logPest = useLogPest();
+  const listForSale = useListPlantForSale();
+  const toggleCooked = useToggleCooked();
+  const transplantCell = useTransplantCell();
   const [noteText, setNoteText] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
+  const [weatherExpanded, setWeatherExpanded] = useState(false);
+  const { data: weather, isLoading: weatherLoading } = useWeather();
+  const { data: health } = usePlantHealth(id);
+
+  const [waterOpen, setWaterOpen] = useState(false);
+  const [feedOpen, setFeedOpen] = useState(false);
+  const [pestOpen, setPestOpen] = useState(false);
+  const [transplantOpen, setTransplantOpen] = useState(false);
+  const [salePrice, setSalePrice] = useState("2500");
 
   if (isLoading) return <Skeleton className="h-96 m-8" />;
   if (!lc) {
@@ -64,10 +99,71 @@ export default function PlantDetailPage() {
     plant.created_by.toText() === callerText ||
     unwrapOpt(plant.sold_to)?.toText() === callerText;
   const canEdit = isOwner;
+  const inTray = !plant.is_transplanted && plant.tray_id !== 0n;
+
+  const handleQuickAction = (action: QuickPlantAction) => {
+    switch (action) {
+      case "water":
+        setWaterOpen(true);
+        break;
+      case "feed":
+        setFeedOpen(true);
+        break;
+      case "pest":
+        setPestOpen(true);
+        break;
+      case "note":
+        setActiveTab("notes");
+        break;
+      case "photo":
+        toast.info("Photo upload coming soon.");
+        break;
+      case "transplant":
+        if (inTray) setTransplantOpen(true);
+        else toast.info("Plant is already in inventory.");
+        break;
+      case "list_sale":
+        if (plant.for_sale) {
+          toast.info("Already listed for sale.");
+          break;
+        }
+        void (async () => {
+          try {
+            const cents = BigInt(salePrice.replace(/\D/g, "") || "0");
+            await listForSale.mutateAsync({ plantId: id, priceCents: cents });
+            toast.success("Listed for sale");
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : "List failed");
+          }
+        })();
+        break;
+      case "mark_dead":
+        void (async () => {
+          try {
+            await toggleCooked.mutateAsync(id);
+            toast.success("Plant marked dead");
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Failed");
+          }
+        })();
+        break;
+    }
+  };
 
   return (
-    <div className="container max-w-5xl py-8 px-4">
-      <Link to="/nims" className="inline-flex items-center text-sm text-muted-foreground mb-6 hover:text-primary">
+    <div className="container max-w-5xl py-8 px-4 pb-32">
+      <div className="mb-4">
+        <WeatherBar
+          data={weather}
+          isLoading={weatherLoading}
+          expanded={weatherExpanded}
+          onExpandedChange={setWeatherExpanded}
+        />
+      </div>
+      <Link
+        to="/nims"
+        className="inline-flex items-center text-sm text-muted-foreground mb-6 hover:text-primary"
+      >
         <ArrowLeft className="w-4 h-4 mr-1" /> NIMS
       </Link>
 
@@ -94,6 +190,15 @@ export default function PlantDetailPage() {
               </Badge>
             )}
             {plant.sold && <Badge>Sold</Badge>}
+            {plant.is_cooked && <Badge variant="destructive">Dead</Badge>}
+            {health?.needsAttention && (
+              <Badge variant="destructive">Needs attention</Badge>
+            )}
+            {health && !health.needsAttention && !plant.is_cooked && (
+              <Badge className="bg-emerald-600">
+                Health {health.healthScore.toString()}%
+              </Badge>
+            )}
           </div>
           {tokenId !== undefined && (
             <Link
@@ -112,11 +217,8 @@ export default function PlantDetailPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Lifecycle Timeline</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm space-y-1">
-              <p>Planted: {fmtTs(plant.planting_date)}</p>
-              <p>Germinated: {fmtTs(unwrapOpt(plant.germination_date))}</p>
-              <p>Transplanted: {fmtTs(unwrapOpt(plant.transplant_date))}</p>
-              <p>Sold: {fmtTs(unwrapOpt(lc.soldAt))}</p>
+            <CardContent>
+              <PlantTimeline lifecycle={lc} />
             </CardContent>
           </Card>
 
@@ -132,7 +234,7 @@ export default function PlantDetailPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="overview">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="feeding">Feeding ({lc.feedingLog.length})</TabsTrigger>
@@ -144,6 +246,9 @@ export default function PlantDetailPage() {
 
         <TabsContent value="overview" className="mt-4 space-y-2 text-sm">
           <p>Stage: {stageLabel(plant.stage)}</p>
+          <p>Planted: {fmtTs(plant.planting_date)}</p>
+          <p>Germinated: {fmtTs(unwrapOpt(plant.germination_date))}</p>
+          <p>Transplanted: {fmtTs(unwrapOpt(plant.transplant_date))}</p>
           {variety && (
             <>
               <p>
@@ -151,6 +256,19 @@ export default function PlantDetailPage() {
               </p>
               <p>{variety.description}</p>
             </>
+          )}
+          {canEdit && !plant.for_sale && (
+            <div className="flex items-end gap-2 pt-2">
+              <div className="space-y-1">
+                <Label htmlFor="sale-price">List price (¢)</Label>
+                <Input
+                  id="sale-price"
+                  value={salePrice}
+                  onChange={(e) => setSalePrice(e.target.value)}
+                  className="w-32"
+                />
+              </div>
+            </div>
           )}
         </TabsContent>
 
@@ -238,17 +356,80 @@ export default function PlantDetailPage() {
       </Tabs>
 
       {canEdit && (
-        <div className="mt-8 flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" disabled>
-            <FlaskConical className="w-4 h-4 mr-1" /> Log Feeding (use NIMS admin)
-          </Button>
-          <Button variant="outline" size="sm" disabled>
-            <Droplets className="w-4 h-4 mr-1" /> Log Watering
-          </Button>
-          <Button variant="outline" size="sm" disabled>
-            <Leaf className="w-4 h-4 mr-1" /> Log Pest
-          </Button>
-        </div>
+        <>
+          <PlantQuickActions
+            onAction={handleQuickAction}
+            disabled={plant.is_cooked}
+          />
+
+          <LogWateringModal
+            open={waterOpen}
+            onOpenChange={setWaterOpen}
+            plantLabel={plant.variety}
+            onSubmit={async ({ amountMl, notes }) => {
+              try {
+                await logWater.mutateAsync({ plantId: id, amountMl, notes });
+                toast.success("Watering logged");
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed");
+              }
+            }}
+          />
+
+          <LogFeedingModal
+            open={feedOpen}
+            onOpenChange={setFeedOpen}
+            plantLabel={plant.variety}
+            onSubmit={async ({ productName, nutrientType, dosageAmount, notes }) => {
+              try {
+                await logFeed.mutateAsync({
+                  plantId: id,
+                  productName,
+                  nutrientType,
+                  dosage: dosageAmount,
+                  notes,
+                });
+                toast.success("Feeding logged");
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed");
+              }
+            }}
+          />
+
+          <LogPestModal
+            open={pestOpen}
+            onOpenChange={setPestOpen}
+            plantLabel={plant.variety}
+            onSubmit={async ({ pestName, severity, notes }) => {
+              try {
+                await logPest.mutateAsync({ plantId: id, pestName, severity, notes });
+                toast.success("Pest issue logged");
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed");
+              }
+            }}
+          />
+
+          {inTray && (
+            <TransplantModal
+              open={transplantOpen}
+              onOpenChange={setTransplantOpen}
+              plantLabel={plant.variety}
+              onSubmit={async ({ container_size }) => {
+                try {
+                  await transplantCell.mutateAsync({
+                    plant_id: id,
+                    container_size: container_size as unknown as TransplantInput["container_size"],
+                  });
+                  toast.success("Transplanted to inventory");
+                  void navigate({ to: "/nims" });
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Transplant failed");
+                }
+              }}
+            />
+          )}
+        </>
       )}
     </div>
   );

@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Principal } from "@icp-sdk/core/principal";
 import { useActor } from "./useActor";
-import { createActor } from "../backend";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
 import type {
@@ -16,89 +15,11 @@ import type {
   VarietyPublic,
 } from "../declarations/backend.did";
 
-type NimsActor = {
-  listVarieties: () => Promise<VarietyPublic[]>;
-  searchVarieties: (q: string) => Promise<VarietyPublic[]>;
-  addVariety: (
-    name: string,
-    species: string,
-    scovilleMin: bigint,
-    scovilleMax: bigint,
-    description: string,
-    imageUrl: [] | [string],
-    daysToGerm: [] | [bigint],
-    daysToMature: [] | [bigint],
-  ) => Promise<bigint>;
-  removeVariety: (id: bigint) => Promise<boolean>;
-  getPlantCount: () => Promise<PlantCountStats>;
-  getPlantsForSale: (
-    stage: [] | [PlantStage],
-    varietyId: [] | [bigint],
-  ) => Promise<PlantLifecycle[]>;
-  getPlantLifecycle: (id: PlantId) => Promise<[] | [PlantLifecycle]>;
-  getMyPlantsNims: () => Promise<PlantLifecycle[]>;
-  getAdminInventory: (
-    stage: [] | [PlantStage],
-    varietyId: [] | [bigint],
-    forSale: [] | [boolean],
-  ) => Promise<PlantLifecycle[]>;
-  addPlant: (
-    varietyId: bigint,
-    stage: PlantStage,
-    trayId: [] | [TrayId],
-    cellPosition: [] | [bigint],
-    price: [] | [bigint],
-  ) => Promise<AddPlantResult>;
-  listPlantForSale: (plantId: PlantId, price: [] | [bigint]) => Promise<boolean>;
-  delistPlant: (plantId: PlantId) => Promise<boolean>;
-  updateNimsPlantStage: (plantId: PlantId, stage: PlantStage) => Promise<boolean>;
-  createNimsTray: (
-    name: string,
-    date: bigint,
-    varietyId: [] | [bigint],
-  ) => Promise<TrayId>;
-  addPlantNote: (plantId: PlantId, text: string) => Promise<boolean>;
-  addWateringEntry: (
-    plantId: PlantId,
-    amountMl: bigint,
-    phLevel: [] | [number],
-    notes: [] | [string],
-  ) => Promise<boolean>;
-  addPestEntry: (
-    plantId: PlantId,
-    pestName: string,
-    severity: string,
-    treatment: [] | [string],
-    notes: [] | [string],
-  ) => Promise<boolean>;
-  addFeedingEntry: (
-    plantId: PlantId,
-    productName: string,
-    nutrientType: string,
-    dosage: string,
-    notes: [] | [string],
-  ) => Promise<boolean>;
-  addNimsPlantPhoto: (
-    plantId: PlantId,
-    url: string,
-    caption: [] | [string],
-  ) => Promise<boolean>;
-  purchasePlant: (
-    plantId: PlantId,
-    token: PaymentToken,
-    amount: bigint,
-  ) => Promise<PurchasePlantResult>;
-  purchasePlantICPay: (
-    plantId: PlantId,
-    paymentId: string,
-  ) => Promise<PurchasePlantResult>;
-  getNftPoolStatus: () => Promise<{ available: bigint; total: bigint }>;
-  isPepperHeadAvailable: () => Promise<bigint>;
-};
+import type { Backend } from "../backend";
 
 function useNimsActor() {
-  const { actor } = useActor<import("../backend").Backend>(createActor);
-  return actor as unknown as NimsActor | null;
+  const { actor } = useActor<Backend>();
+  return actor;
 }
 
 export function useVarieties() {
@@ -134,10 +55,7 @@ export function usePlantsForSale(stage?: PlantStage, varietyId?: bigint) {
     queryKey: ["plantsForSale", stage, varietyId?.toString(), actorReady],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getPlantsForSale(
-        stage ? [stage] : [],
-        varietyId !== undefined ? [varietyId] : [],
-      );
+      return actor.getPlantsForSale(stage ?? null, varietyId ?? null);
     },
     enabled: actorReady,
   });
@@ -150,8 +68,7 @@ export function usePlantLifecycle(plantId: PlantId | undefined) {
     queryKey: ["plantLifecycle", plantId?.toString(), actorReady],
     queryFn: async () => {
       if (!actor || plantId === undefined) return null;
-      const result = await actor.getPlantLifecycle(plantId);
-      return result.length > 0 ? result[0] : null;
+      return actor.getPlantLifecycle(plantId);
     },
     enabled: actorReady && plantId !== undefined,
   });
@@ -183,9 +100,9 @@ export function useAdminInventory(
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAdminInventory(
-        stage ? [stage] : [],
-        varietyId !== undefined ? [varietyId] : [],
-        forSale !== undefined ? [forSale] : [],
+        stage ?? null,
+        varietyId ?? null,
+        forSale ?? null,
       );
     },
     enabled: actorReady,
@@ -213,9 +130,9 @@ export function useAddVariety() {
         BigInt(input.scovilleMin),
         BigInt(input.scovilleMax),
         input.description,
-        input.imageUrl ? [input.imageUrl] : [],
-        input.daysToGerm !== undefined ? [BigInt(input.daysToGerm)] : [],
-        input.daysToMature !== undefined ? [BigInt(input.daysToMature)] : [],
+        input.imageUrl ?? null,
+        input.daysToGerm !== undefined ? BigInt(input.daysToGerm) : null,
+        input.daysToMature !== undefined ? BigInt(input.daysToMature) : null,
       );
     },
     onSuccess: () => {
@@ -239,9 +156,9 @@ export function useAddPlant() {
       return actor.addPlant(
         input.varietyId,
         input.stage,
-        input.trayId !== undefined ? [input.trayId] : [],
-        input.cellPosition !== undefined ? [input.cellPosition] : [],
-        input.priceCents !== undefined ? [input.priceCents] : [],
+        input.trayId ?? null,
+        input.cellPosition ?? null,
+        input.priceCents ?? null,
       );
     },
     onSuccess: () => {
@@ -263,10 +180,7 @@ export function useListPlantForSale() {
       priceCents?: bigint;
     }) => {
       if (!actor) throw new Error("Not connected");
-      return actor.listPlantForSale(
-        plantId,
-        priceCents !== undefined ? [priceCents] : [],
-      );
+      return actor.listPlantForSale(plantId, priceCents ?? null);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["adminInventory"] });

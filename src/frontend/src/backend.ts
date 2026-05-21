@@ -1020,6 +1020,11 @@ export interface backendInterface {
     getMyOffers(): Promise<Array<Offer>>;
     getMyResaleListings(): Promise<Array<ResaleListingPublic>>;
     getMyNftListings(): Promise<Array<NftListingPublic>>;
+    getNimsDashboardStats(): Promise<import("./declarations/backend.did").DashboardStats>;
+    getRecentActivity(limit: bigint): Promise<Array<import("./declarations/backend.did").ActivityEntry>>;
+    getTrayGrid(trayId: TrayId): Promise<Array<import("./declarations/backend.did").TrayCellPublic>>;
+    getPlantHealth(plantId: PlantId): Promise<import("./declarations/backend.did").PlantHealth | null>;
+    getPlantsByContainer(container: import("./declarations/backend.did").ContainerSize): Promise<Array<import("./declarations/backend.did").PlantLifecycle>>;
     getMySchedules(): Promise<Array<SavedSchedule>>;
     getMyWeatherRecords(limit: bigint): Promise<Array<WeatherRecord>>;
     getOffer(offerId: string): Promise<Offer | null>;
@@ -1027,6 +1032,29 @@ export interface backendInterface {
     getOffersReceived(): Promise<Array<Offer>>;
     getOrder(order_id: OrderId): Promise<OrderPublic | null>;
     getPlant(plant_id: PlantId): Promise<PlantPublic | null>;
+    getPlantLifecycle(plant_id: PlantId): Promise<import("./declarations/backend.did").PlantLifecycle | null>;
+    getPlantByNft(nftTokenId: bigint): Promise<import("./declarations/backend.did").PlantLifecycle | null>;
+    getMyPlantsNims(): Promise<Array<import("./declarations/backend.did").PlantLifecycle>>;
+    getAdminInventory(stage: import("./declarations/backend.did").PlantStage | null, varietyId: bigint | null, forSale: boolean | null): Promise<Array<import("./declarations/backend.did").PlantLifecycle>>;
+    getPlantsForSale(stage: import("./declarations/backend.did").PlantStage | null, varietyId: bigint | null): Promise<Array<import("./declarations/backend.did").PlantLifecycle>>;
+    getPlantCount(): Promise<import("./declarations/backend.did").PlantCountStats>;
+    listVarieties(): Promise<Array<import("./declarations/backend.did").VarietyPublic>>;
+    searchVarieties(query: string): Promise<Array<import("./declarations/backend.did").VarietyPublic>>;
+    addVariety(name: string, species: string, scovilleMin: bigint, scovilleMax: bigint, description: string, imageUrl: string | null, daysToGerm: bigint | null, daysToMature: bigint | null): Promise<bigint>;
+    removeVariety(id: bigint): Promise<boolean>;
+    addPlant(varietyId: bigint, stage: import("./declarations/backend.did").PlantStage, trayId: TrayId | null, cellPosition: bigint | null, price: bigint | null): Promise<import("./declarations/backend.did").AddPlantResult>;
+    addPlantNote(plantId: PlantId, text: string): Promise<boolean>;
+    addWateringEntry(plantId: PlantId, amountMl: bigint, phLevel: number | null, notes: string | null): Promise<boolean>;
+    addPestEntry(plantId: PlantId, pestName: string, severity: string, treatment: string | null, notes: string | null): Promise<boolean>;
+    addFeedingEntry(plantId: PlantId, productName: string, nutrientType: string, dosage: string, notes: string | null): Promise<boolean>;
+    addNimsPlantPhoto(plantId: PlantId, url: string, caption: string | null): Promise<boolean>;
+    listPlantForSale(plantId: PlantId, price: bigint | null): Promise<boolean>;
+    delistPlant(plantId: PlantId): Promise<boolean>;
+    updateNimsPlantStage(plantId: PlantId, stage: import("./declarations/backend.did").PlantStage): Promise<boolean>;
+    createNimsTray(name: string, date: bigint, varietyId: bigint | null): Promise<TrayId>;
+    purchasePlant(plantId: PlantId, token: import("./declarations/backend.did").PaymentToken, amount: bigint): Promise<import("./declarations/backend.did").PurchasePlantResult>;
+    purchasePlantICPay(plantId: PlantId, paymentId: string): Promise<import("./declarations/backend.did").PurchasePlantResult>;
+    getNftPoolStatus(): Promise<{ available: bigint; total: bigint }>;
     getPlantTimeline(plant_id: PlantId): Promise<PlantTimeline | null>;
     getPoolDashboard(): Promise<PoolDashboard>;
     getPoolNFT(nftId: bigint): Promise<PoolNFTPublic | null>;
@@ -1067,6 +1095,17 @@ export interface backendInterface {
         err: string;
     }>;
     listNftForSale(tokenId: bigint, priceUsdCents: bigint): Promise<boolean>;
+    logWatering(plantId: PlantId, amountMl: bigint, phLevel: number | null, notes: string | null): Promise<boolean>;
+    logFeeding(plantId: PlantId, productName: string, nutrientType: string, dosage: string, notes: string | null): Promise<boolean>;
+    logPest(plantId: PlantId, pestName: string, severity: string, treatment: string | null, notes: string | null): Promise<boolean>;
+    markCellDead(trayId: TrayId, cellPosition: bigint, cause: import("./declarations/backend.did").DeathCause, notes: string | null, photoUrl: string | null): Promise<boolean>;
+    markCellGerminated(trayId: TrayId, cellPosition: bigint, date: bigint | null): Promise<{ plantId: bigint; nftTokenId: bigint; claimToken: string }>;
+    plantSeed(trayId: TrayId, cellPosition: bigint, varietyId: bigint, datePlanted: bigint | null): Promise<{ plantId: bigint }>;
+    addPurchasedPlantToNims(nftTokenId: bigint, container: import("./declarations/backend.did").ContainerSize, locationNotes: string | null): Promise<{ plantId: bigint }>;
+    waterEntireTray(trayId: TrayId, amountMl: bigint, phLevel: number | null, notes: string | null): Promise<bigint>;
+    feedEntireTray(trayId: TrayId, productName: string, nutrientType: string, dosage: string, notes: string | null): Promise<bigint>;
+    batchWater(plantIds: Array<PlantId>, amountMl: bigint, phLevel: number | null, notes: string | null): Promise<bigint>;
+    batchFeed(plantIds: Array<PlantId>, productName: string, nutrientType: string, dosage: string, notes: string | null): Promise<bigint>;
     listOrdersByBuyer(): Promise<Array<OrderPublic>>;
     listPlants(): Promise<Array<PlantPublic>>;
     listPlantsByStage(stage: PlantStage): Promise<Array<PlantPublic>>;
@@ -2170,6 +2209,92 @@ export class Backend implements backendInterface {
             try { return await this.actor.getMyNftListings(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.getMyNftListings(); }
     }
+    async getNimsDashboardStats(): Promise<import("./declarations/backend.did").DashboardStats> {
+        if (this.processError) {
+            try { return await this.actor.getNimsDashboardStats(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getNimsDashboardStats(); }
+    }
+    async getRecentActivity(arg0: bigint): Promise<Array<import("./declarations/backend.did").ActivityEntry>> {
+        if (this.processError) {
+            try { return await this.actor.getRecentActivity(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getRecentActivity(arg0); }
+    }
+    async getTrayGrid(arg0: TrayId): Promise<Array<import("./declarations/backend.did").TrayCellPublic>> {
+        if (this.processError) {
+            try { return await this.actor.getTrayGrid(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getTrayGrid(arg0); }
+    }
+    async getPlantHealth(arg0: PlantId): Promise<import("./declarations/backend.did").PlantHealth | null> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.getPlantHealth(arg0);
+                return r.length > 0 ? r[0] : null;
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.getPlantHealth(arg0);
+            return r.length > 0 ? r[0] : null;
+        }
+    }
+    async getPlantsByContainer(arg0: import("./declarations/backend.did").ContainerSize): Promise<Array<import("./declarations/backend.did").PlantLifecycle>> {
+        if (this.processError) {
+            try { return await this.actor.getPlantsByContainer(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getPlantsByContainer(arg0); }
+    }
+    async logWatering(arg0: PlantId, arg1: bigint, arg2: number | null, arg3: string | null): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.logWatering(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.logWatering(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : []); }
+    }
+    async logFeeding(arg0: PlantId, arg1: string, arg2: string, arg3: string, arg4: string | null): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.logFeeding(arg0, arg1, arg2, arg3, arg4 != null ? [arg4] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.logFeeding(arg0, arg1, arg2, arg3, arg4 != null ? [arg4] : []); }
+    }
+    async logPest(arg0: PlantId, arg1: string, arg2: string, arg3: string | null, arg4: string | null): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.logPest(arg0, arg1, arg2, arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.logPest(arg0, arg1, arg2, arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); }
+    }
+    async markCellDead(arg0: TrayId, arg1: bigint, arg2: import("./declarations/backend.did").DeathCause, arg3: string | null, arg4: string | null): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.markCellDead(arg0, arg1, arg2, arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.markCellDead(arg0, arg1, arg2, arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); }
+    }
+    async markCellGerminated(arg0: TrayId, arg1: bigint, arg2: bigint | null): Promise<{ plantId: bigint; nftTokenId: bigint; claimToken: string }> {
+        if (this.processError) {
+            try { return await this.actor.markCellGerminated(arg0, arg1, arg2 != null ? [arg2] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.markCellGerminated(arg0, arg1, arg2 != null ? [arg2] : []); }
+    }
+    async plantSeed(arg0: TrayId, arg1: bigint, arg2: bigint, arg3: bigint | null): Promise<{ plantId: bigint }> {
+        if (this.processError) {
+            try { return await this.actor.plantSeed(arg0, arg1, arg2, arg3 != null ? [arg3] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.plantSeed(arg0, arg1, arg2, arg3 != null ? [arg3] : []); }
+    }
+    async addPurchasedPlantToNims(arg0: bigint, arg1: import("./declarations/backend.did").ContainerSize, arg2: string | null): Promise<{ plantId: bigint }> {
+        if (this.processError) {
+            try { return await this.actor.addPurchasedPlantToNims(arg0, arg1, arg2 != null ? [arg2] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.addPurchasedPlantToNims(arg0, arg1, arg2 != null ? [arg2] : []); }
+    }
+    async waterEntireTray(arg0: TrayId, arg1: bigint, arg2: number | null, arg3: string | null): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.waterEntireTray(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.waterEntireTray(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : []); }
+    }
+    async feedEntireTray(arg0: TrayId, arg1: string, arg2: string, arg3: string, arg4: string | null): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.feedEntireTray(arg0, arg1, arg2, arg3, arg4 != null ? [arg4] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.feedEntireTray(arg0, arg1, arg2, arg3, arg4 != null ? [arg4] : []); }
+    }
+    async batchWater(arg0: Array<PlantId>, arg1: bigint, arg2: number | null, arg3: string | null): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.batchWater(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.batchWater(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : []); }
+    }
+    async batchFeed(arg0: Array<PlantId>, arg1: string, arg2: string, arg3: string, arg4: string | null): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.batchFeed(arg0, arg1, arg2, arg3, arg4 != null ? [arg4] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.batchFeed(arg0, arg1, arg2, arg3, arg4 != null ? [arg4] : []); }
+    }
     async getMySchedules(): Promise<Array<SavedSchedule>> {
         if (this.processError) {
             try {
@@ -2267,6 +2392,145 @@ export class Backend implements backendInterface {
             const result = await this.actor.getPlant(arg0);
             return from_candid_opt_n143(this._uploadFile, this._downloadFile, result);
         }
+    }
+    async getPlantLifecycle(arg0: PlantId): Promise<import("./declarations/backend.did").PlantLifecycle | null> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.getPlantLifecycle(arg0);
+                return r.length > 0 ? r[0] : null;
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.getPlantLifecycle(arg0);
+            return r.length > 0 ? r[0] : null;
+        }
+    }
+    async getPlantByNft(arg0: bigint): Promise<import("./declarations/backend.did").PlantLifecycle | null> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.getPlantByNft(arg0);
+                return r.length > 0 ? r[0] : null;
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.getPlantByNft(arg0);
+            return r.length > 0 ? r[0] : null;
+        }
+    }
+    async getMyPlantsNims(): Promise<Array<import("./declarations/backend.did").PlantLifecycle>> {
+        if (this.processError) {
+            try { return await this.actor.getMyPlantsNims(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getMyPlantsNims(); }
+    }
+    async getAdminInventory(arg0: import("./declarations/backend.did").PlantStage | null, arg1: bigint | null, arg2: boolean | null): Promise<Array<import("./declarations/backend.did").PlantLifecycle>> {
+        if (this.processError) {
+            try { return await this.actor.getAdminInventory(arg0 != null ? [arg0] : [], arg1 != null ? [arg1] : [], arg2 != null ? [arg2] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getAdminInventory(arg0 != null ? [arg0] : [], arg1 != null ? [arg1] : [], arg2 != null ? [arg2] : []); }
+    }
+    async getPlantsForSale(arg0: import("./declarations/backend.did").PlantStage | null, arg1: bigint | null): Promise<Array<import("./declarations/backend.did").PlantLifecycle>> {
+        if (this.processError) {
+            try { return await this.actor.getPlantsForSale(arg0 != null ? [arg0] : [], arg1 != null ? [arg1] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getPlantsForSale(arg0 != null ? [arg0] : [], arg1 != null ? [arg1] : []); }
+    }
+    async getPlantCount(): Promise<import("./declarations/backend.did").PlantCountStats> {
+        if (this.processError) {
+            try { return await this.actor.getPlantCount(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getPlantCount(); }
+    }
+    async listVarieties(): Promise<Array<import("./declarations/backend.did").VarietyPublic>> {
+        if (this.processError) {
+            try { return await this.actor.listVarieties(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.listVarieties(); }
+    }
+    async searchVarieties(arg0: string): Promise<Array<import("./declarations/backend.did").VarietyPublic>> {
+        if (this.processError) {
+            try { return await this.actor.searchVarieties(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.searchVarieties(arg0); }
+    }
+    async addVariety(arg0: string, arg1: string, arg2: bigint, arg3: bigint, arg4: string, arg5: string | null, arg6: bigint | null, arg7: bigint | null): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.addVariety(arg0, arg1, arg2, arg3, arg4, arg5 != null ? [arg5] : [], arg6 != null ? [arg6] : [], arg7 != null ? [arg7] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.addVariety(arg0, arg1, arg2, arg3, arg4, arg5 != null ? [arg5] : [], arg6 != null ? [arg6] : [], arg7 != null ? [arg7] : []); }
+    }
+    async removeVariety(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.removeVariety(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.removeVariety(arg0); }
+    }
+    async addPlant(arg0: bigint, arg1: import("./declarations/backend.did").PlantStage, arg2: TrayId | null, arg3: bigint | null, arg4: bigint | null): Promise<import("./declarations/backend.did").AddPlantResult> {
+        if (this.processError) {
+            try { return await this.actor.addPlant(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.addPlant(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); }
+    }
+    async addPlantNote(arg0: PlantId, arg1: string): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.addPlantNote(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.addPlantNote(arg0, arg1); }
+    }
+    async addWateringEntry(arg0: PlantId, arg1: bigint, arg2: number | null, arg3: string | null): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.addWateringEntry(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.addWateringEntry(arg0, arg1, arg2 != null ? [arg2] : [], arg3 != null ? [arg3] : []); }
+    }
+    async addPestEntry(arg0: PlantId, arg1: string, arg2: string, arg3: string | null, arg4: string | null): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.addPestEntry(arg0, arg1, arg2, arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.addPestEntry(arg0, arg1, arg2, arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : []); }
+    }
+    async addFeedingEntry(arg0: PlantId, arg1: string, arg2: string, arg3: string, arg4: string | null): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.addFeedingEntry(arg0, arg1, arg2, arg3, arg4 != null ? [arg4] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.addFeedingEntry(arg0, arg1, arg2, arg3, arg4 != null ? [arg4] : []); }
+    }
+    async addNimsPlantPhoto(arg0: PlantId, arg1: string, arg2: string | null): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.addNimsPlantPhoto(arg0, arg1, arg2 != null ? [arg2] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.addNimsPlantPhoto(arg0, arg1, arg2 != null ? [arg2] : []); }
+    }
+    async listPlantForSale(arg0: PlantId, arg1: bigint | null): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.listPlantForSale(arg0, arg1 != null ? [arg1] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.listPlantForSale(arg0, arg1 != null ? [arg1] : []); }
+    }
+    async delistPlant(arg0: PlantId): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.delistPlant(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.delistPlant(arg0); }
+    }
+    async updateNimsPlantStage(arg0: PlantId, arg1: import("./declarations/backend.did").PlantStage): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.updateNimsPlantStage(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.updateNimsPlantStage(arg0, arg1); }
+    }
+    async createNimsTray(arg0: string, arg1: bigint, arg2: bigint | null): Promise<TrayId> {
+        if (this.processError) {
+            try { return await this.actor.createNimsTray(arg0, arg1, arg2 != null ? [arg2] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.createNimsTray(arg0, arg1, arg2 != null ? [arg2] : []); }
+    }
+    async purchasePlant(arg0: PlantId, arg1: import("./declarations/backend.did").PaymentToken, arg2: bigint): Promise<import("./declarations/backend.did").PurchasePlantResult> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.purchasePlant(arg0, arg1, arg2);
+                return { ...r, nftTokenId: r.nftTokenId.length > 0 ? r.nftTokenId[0] : null, claimToken: r.claimToken.length > 0 ? r.claimToken[0] : null };
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.purchasePlant(arg0, arg1, arg2);
+            return { ...r, nftTokenId: r.nftTokenId.length > 0 ? r.nftTokenId[0] : null, claimToken: r.claimToken.length > 0 ? r.claimToken[0] : null };
+        }
+    }
+    async purchasePlantICPay(arg0: PlantId, arg1: string): Promise<import("./declarations/backend.did").PurchasePlantResult> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.purchasePlantICPay(arg0, arg1);
+                return { ...r, nftTokenId: r.nftTokenId.length > 0 ? r.nftTokenId[0] : null, claimToken: r.claimToken.length > 0 ? r.claimToken[0] : null };
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.purchasePlantICPay(arg0, arg1);
+            return { ...r, nftTokenId: r.nftTokenId.length > 0 ? r.nftTokenId[0] : null, claimToken: r.claimToken.length > 0 ? r.claimToken[0] : null };
+        }
+    }
+    async getNftPoolStatus(): Promise<{ available: bigint; total: bigint }> {
+        if (this.processError) {
+            try { return await this.actor.getNftPoolStatus(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getNftPoolStatus(); }
     }
     async getPlantTimeline(arg0: PlantId): Promise<PlantTimeline | null> {
         if (this.processError) {

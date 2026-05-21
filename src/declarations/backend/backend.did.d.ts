@@ -6,6 +6,14 @@ export interface Account {
   'owner' : Principal,
   'subaccount' : [] | [Subaccount],
 }
+export interface ActivityEntry {
+  'plantName' : string,
+  'actionType' : string,
+  'detail' : string,
+  'author' : Principal,
+  'plantId' : PlantId,
+  'timestamp' : Timestamp,
+}
 export interface AddFeedingInput {
   'dosage_amount' : string,
   'date' : Timestamp,
@@ -98,6 +106,11 @@ export interface CanisterTreasuryBalance {
   'ledgerCanisterId' : string,
   'symbol' : string,
 }
+export type CellStatus = { 'Empty' : null } |
+  { 'Dead' : null } |
+  { 'Germinated' : null } |
+  { 'Planted' : null } |
+  { 'Transplanted' : null };
 export type ClaimTokenId = string;
 export type CommentId = bigint;
 export interface CommentPublic {
@@ -208,6 +221,19 @@ export interface CreateTrayInput {
   'planting_date' : Timestamp,
   'nft_standard' : NFTStandard,
 }
+export interface DashboardStats {
+  'needsAttention' : bigint,
+  'germinatedToday' : bigint,
+  'lastWateredMsAgo' : [] | [bigint],
+  'totalPlants' : bigint,
+}
+export type DeathCause = { 'DampingOff' : null } |
+  { 'PestDamage' : null } |
+  { 'Disease' : null } |
+  { 'Overwatering' : null } |
+  { 'Unknown' : null } |
+  { 'Other' : null } |
+  { 'Drought' : null };
 export type FeedingId = bigint;
 export interface FeedingPublic {
   'id' : FeedingId,
@@ -256,6 +282,10 @@ export interface ICSpicy {
   >,
   'addPlantNote' : ActorMethod<[PlantId, string], boolean>,
   'addPlantPhoto' : ActorMethod<[PlantId, string], undefined>,
+  'addPurchasedPlantToNims' : ActorMethod<
+    [bigint, ContainerSize, [] | [string]],
+    PlantSeedResult
+  >,
   'addVariety' : ActorMethod<
     [
       string,
@@ -303,6 +333,10 @@ export interface ICSpicy {
   >,
   'batchAssignPoolNFTs' : ActorMethod<[Array<bigint>, AssignAction], bigint>,
   'batchAssignToQR' : ActorMethod<[Array<bigint>], Array<QRAssignmentResult>>,
+  'batchFeed' : ActorMethod<
+    [Array<PlantId>, string, string, string, [] | [string]],
+    bigint
+  >,
   'batchListOnShop' : ActorMethod<
     [Array<ShopAssignment>],
     { 'failed' : bigint, 'succeeded' : bigint }
@@ -310,6 +344,10 @@ export interface ICSpicy {
   'batchMintFoundersCollection' : ActorMethod<
     [Array<FoundersMintInput>],
     Array<FoundersMintResult>
+  >,
+  'batchWater' : ActorMethod<
+    [Array<PlantId>, bigint, [] | [number], [] | [string]],
+    bigint
   >,
   'beginArtworkUpload' : ActorMethod<[bigint], undefined>,
   'bulkCreateProducts' : ActorMethod<
@@ -368,6 +406,10 @@ export interface ICSpicy {
   'editPost' : ActorMethod<[PostId, string], PostPublic>,
   'ensureAdminProfile' : ActorMethod<[], undefined>,
   'ensureCallerProfile' : ActorMethod<[], undefined>,
+  'feedEntireTray' : ActorMethod<
+    [TrayId, string, string, string, [] | [string]],
+    bigint
+  >,
   'finalizeArtworkUpload' : ActorMethod<[], UploadResult>,
   'followUser' : ActorMethod<[Principal], undefined>,
   'generateAllPoolNFTs' : ActorMethod<[], bigint>,
@@ -436,6 +478,7 @@ export interface ICSpicy {
     [],
     { 'total' : bigint, 'available' : bigint }
   >,
+  'getNimsDashboardStats' : ActorMethod<[], DashboardStats>,
   'getOffer' : ActorMethod<[string], [] | [Offer]>,
   'getOffersForNft' : ActorMethod<[string], Array<Offer>>,
   'getOffersReceived' : ActorMethod<[], Array<Offer>>,
@@ -445,8 +488,10 @@ export interface ICSpicy {
   'getPlantByNft' : ActorMethod<[bigint], [] | [PlantLifecycle]>,
   'getPlantClaimToken' : ActorMethod<[PlantId], [] | [string]>,
   'getPlantCount' : ActorMethod<[], PlantCountStats>,
+  'getPlantHealth' : ActorMethod<[PlantId], [] | [PlantHealth]>,
   'getPlantLifecycle' : ActorMethod<[PlantId], [] | [PlantLifecycle]>,
   'getPlantTimeline' : ActorMethod<[PlantId], [] | [PlantTimeline]>,
+  'getPlantsByContainer' : ActorMethod<[ContainerSize], Array<PlantLifecycle>>,
   'getPlantsForSale' : ActorMethod<
     [[] | [PlantStage], [] | [bigint]],
     Array<PlantLifecycle>
@@ -460,6 +505,7 @@ export interface ICSpicy {
   'getPoolStats' : ActorMethod<[], PoolStats>,
   'getProduct' : ActorMethod<[ProductId], [] | [ProductPublic]>,
   'getPublicProfile' : ActorMethod<[Principal], [] | [UserProfilePublic]>,
+  'getRecentActivity' : ActorMethod<[bigint], Array<ActivityEntry>>,
   'getRecipe' : ActorMethod<[RecipeId], [] | [Recipe]>,
   'getScheduleByShareToken' : ActorMethod<[string], [] | [SavedSchedule]>,
   'getScheduleData' : ActorMethod<
@@ -470,6 +516,7 @@ export interface ICSpicy {
   'getTokenPriceInIcp' : ActorMethod<[OracleToken], bigint>,
   'getTokenPrices' : ActorMethod<[], Array<TokenPrice>>,
   'getTray' : ActorMethod<[TrayId], [] | [TrayPublic]>,
+  'getTrayGrid' : ActorMethod<[TrayId], Array<TrayCellPublic>>,
   'getTreasuryBalance' : ActorMethod<[TreasuryToken], bigint>,
   'getTreasuryBalances' : ActorMethod<[], Array<TreasuryBalance>>,
   'getTreasuryLedger' : ActorMethod<[], Array<TreasuryTransaction>>,
@@ -606,6 +653,22 @@ export interface ICSpicy {
     [Array<[bigint, Uint8Array | number[]]>],
     LoadStaticMetadataResult
   >,
+  'logFeeding' : ActorMethod<
+    [PlantId, string, string, string, [] | [string]],
+    boolean
+  >,
+  'logPest' : ActorMethod<
+    [PlantId, string, string, [] | [string], [] | [string]],
+    boolean
+  >,
+  'logWatering' : ActorMethod<
+    [PlantId, bigint, [] | [number], [] | [string]],
+    boolean
+  >,
+  'markCellDead' : ActorMethod<
+    [TrayId, bigint, DeathCause, [] | [string], [] | [string]],
+    boolean
+  >,
   'markCellGerminated' : ActorMethod<
     [TrayId, bigint, [] | [Timestamp]],
     AddPlantResult
@@ -622,6 +685,10 @@ export interface ICSpicy {
   >,
   'mintRWAProvenance' : ActorMethod<[MintRWAProvenanceInput], string>,
   'placeOrder' : ActorMethod<[CreateOrderInput], OrderPublic>,
+  'plantSeed' : ActorMethod<
+    [TrayId, bigint, bigint, [] | [Timestamp]],
+    PlantSeedResult
+  >,
   'preGenerateNFTPool' : ActorMethod<
     [bigint, Array<bigint>],
     { 'ok' : boolean, 'total' : bigint }
@@ -726,6 +793,10 @@ export interface ICSpicy {
       { 'err' : string }
   >,
   'voteOnProposal' : ActorMethod<[ProposalId, bigint], undefined>,
+  'waterEntireTray' : ActorMethod<
+    [TrayId, bigint, [] | [number], [] | [string]],
+    bigint
+  >,
 }
 export type InventoryCategory = { 'OtherSize' : string } |
   { 'Gal1' : null } |
@@ -872,6 +943,14 @@ export interface PlantCountStats {
   'byStage' : Array<[PlantStage, bigint]>,
   'forSale' : bigint,
 }
+export interface PlantHealth {
+  'daysSinceFeed' : [] | [bigint],
+  'needsAttention' : boolean,
+  'daysSinceWater' : [] | [bigint],
+  'healthScore' : bigint,
+  'lastFed' : [] | [Timestamp],
+  'lastWatered' : [] | [Timestamp],
+}
 export type PlantId = bigint;
 export interface PlantLifecycle {
   'wateringLog' : Array<WateringEntry>,
@@ -928,6 +1007,7 @@ export interface PlantPublic {
   'photos' : Array<string>,
   'latin_name' : [] | [string],
 }
+export interface PlantSeedResult { 'plantId' : PlantId }
 export type PlantStage = { 'Seedling' : null } |
   { 'Seed' : null } |
   { 'Mature' : null };
@@ -1219,6 +1299,16 @@ export type TransferResult = { 'Ok' : bigint } |
 export interface TransplantInput {
   'container_size' : ContainerSize,
   'plant_id' : PlantId,
+}
+export interface TrayCellPublic {
+  'status' : CellStatus,
+  'plantedAt' : [] | [Timestamp],
+  'varietyName' : [] | [string],
+  'nftTokenId' : [] | [bigint],
+  'plantId' : [] | [PlantId],
+  'position' : bigint,
+  'daysSincePlanted' : [] | [bigint],
+  'germinatedAt' : [] | [Timestamp],
 }
 export type TrayId = bigint;
 export interface TrayPublic {

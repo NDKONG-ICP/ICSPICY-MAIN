@@ -184,6 +184,17 @@ type TrayPublic =
    zone_photo_keys: vec text;
  };
 type TrayId = nat;
+type TrayCellPublic = 
+ record {
+   daysSincePlanted: opt nat;
+   germinatedAt: opt Timestamp;
+   nftTokenId: opt nat;
+   plantId: opt PlantId;
+   plantedAt: opt Timestamp;
+   position: nat;
+   status: CellStatus;
+   varietyName: opt text;
+ };
 type TransplantInput = 
  record {
    container_size: ContainerSize;
@@ -564,6 +575,7 @@ type PlantStage =
    Seed;
    Seedling;
  };
+type PlantSeedResult = record {plantId: PlantId;};
 type PlantPublic = 
  record {
    additional_notes: opt text;
@@ -624,6 +636,15 @@ type PlantLifecycle =
    weatherSnapshots: vec WeatherSnapshot;
  };
 type PlantId = nat;
+type PlantHealth = 
+ record {
+   daysSinceFeed: opt nat;
+   daysSinceWater: opt nat;
+   healthScore: nat;
+   lastFed: opt Timestamp;
+   lastWatered: opt Timestamp;
+   needsAttention: bool;
+ };
 type PlantCountStats = 
  record {
    byStage: vec record {
@@ -837,6 +858,8 @@ type ICSpicy =
     opt TrayId) -> (vec AddPlantResult);
    addPlantNote: (plantId: PlantId, "text": text) -> (bool);
    addPlantPhoto: (plant_id: PlantId, photo_key: text) -> ();
+   addPurchasedPlantToNims: (nftTokenId: nat, container: ContainerSize,
+    locationNotes: opt text) -> (PlantSeedResult);
    addVariety: (name: text, species: text, scovilleMin: nat, scovilleMax:
     nat, description: text, imageUrl: opt text, daysToGerm: opt nat,
     daysToMature: opt nat) -> (nat);
@@ -875,6 +898,8 @@ type ICSpicy =
      });
    batchAssignPoolNFTs: (nftIds: vec nat, action: AssignAction) -> (nat);
    batchAssignToQR: (nftIds: vec nat) -> (vec QRAssignmentResult);
+   batchFeed: (plantIds: vec PlantId, productName: text, nutrientType: 
+    text, dosage: text, notes: opt text) -> (nat);
    batchListOnShop: (assignments: vec ShopAssignment) ->
     (record {
        failed: nat;
@@ -882,6 +907,8 @@ type ICSpicy =
      });
    batchMintFoundersCollection: (_entries: vec FoundersMintInput) ->
     (vec FoundersMintResult);
+   batchWater: (plantIds: vec PlantId, amountMl: nat, phLevel: opt float64,
+    notes: opt text) -> (nat);
    beginArtworkUpload: (totalChunks: nat) -> ();
    bulkCreateProducts: (inputs: vec CreateProductInput) ->
     (vec BulkCreateResult);
@@ -933,6 +960,8 @@ type ICSpicy =
    editPost: (post_id: PostId, new_content: text) -> (PostPublic);
    ensureAdminProfile: () -> ();
    ensureCallerProfile: () -> ();
+   feedEntireTray: (trayId: TrayId, productName: text, nutrientType: 
+    text, dosage: text, notes: opt text) -> (nat);
    finalizeArtworkUpload: () -> (UploadResult);
    followUser: (target: principal) -> ();
    generateAllPoolNFTs: () -> (nat);
@@ -993,6 +1022,7 @@ type ICSpicy =
                               available: nat;
                               total: nat;
                             }) query;
+   getNimsDashboardStats: () -> (DashboardStats) query;
    getOffer: (offerId: text) -> (opt Offer) query;
    getOffersForNft: (nftId: text) -> (vec Offer) query;
    getOffersReceived: () -> (vec Offer) query;
@@ -1002,8 +1032,11 @@ type ICSpicy =
    getPlantByNft: (nftTokenId: nat) -> (opt PlantLifecycle) query;
    getPlantClaimToken: (plantId: PlantId) -> (opt text) query;
    getPlantCount: () -> (PlantCountStats) query;
+   getPlantHealth: (plantId: PlantId) -> (opt PlantHealth) query;
    getPlantLifecycle: (plantId: PlantId) -> (opt PlantLifecycle) query;
    getPlantTimeline: (plant_id: PlantId) -> (opt PlantTimeline) query;
+   getPlantsByContainer: (container: ContainerSize) ->
+    (vec PlantLifecycle) query;
    getPlantsForSale: (stage: opt PlantStage, varietyId: opt nat) ->
     (vec PlantLifecycle) query;
    getPoolDashboard: () -> (PoolDashboard);
@@ -1013,6 +1046,7 @@ type ICSpicy =
    getPoolStats: () -> (PoolStats) query;
    getProduct: (product_id: ProductId) -> (opt ProductPublic) query;
    getPublicProfile: (user: principal) -> (opt UserProfilePublic) query;
+   getRecentActivity: (limit: nat) -> (vec ActivityEntry) query;
    getRecipe: (id: RecipeId) -> (opt Recipe) query;
    getScheduleByShareToken: (share_token: text) -> (opt SavedSchedule) query;
    getScheduleData: (stage: text, inputs: vec text) ->
@@ -1021,6 +1055,7 @@ type ICSpicy =
    getTokenPriceInIcp: (token: OracleToken) -> (nat) query;
    getTokenPrices: () -> (vec TokenPrice) query;
    getTray: (tray_id: TrayId) -> (opt TrayPublic) query;
+   getTrayGrid: (trayId: TrayId) -> (vec TrayCellPublic) query;
    getTreasuryBalance: (token: TreasuryToken) -> (nat) query;
    getTreasuryBalances: () -> (vec TreasuryBalance) query;
    getTreasuryLedger: () -> (vec TreasuryTransaction) query;
@@ -1133,6 +1168,14 @@ type ICSpicy =
                                        nat;
                                        blob;
                                      }) -> (LoadStaticMetadataResult);
+   logFeeding: (plantId: PlantId, productName: text, nutrientType: text,
+    dosage: text, notes: opt text) -> (bool);
+   logPest: (plantId: PlantId, pestName: text, severity: text, treatment:
+    opt text, notes: opt text) -> (bool);
+   logWatering: (plantId: PlantId, amountMl: nat, phLevel: opt float64,
+    notes: opt text) -> (bool);
+   markCellDead: (trayId: TrayId, cellPosition: nat, cause: DeathCause,
+    notes: opt text, _photoUrl: opt text) -> (bool);
    markCellGerminated: (trayId: TrayId, cellPosition: nat, date:
     opt Timestamp) -> (AddPlantResult);
    markPlantGerminated: (plant_id: PlantId, germination_date: Timestamp) ->
@@ -1154,6 +1197,8 @@ type ICSpicy =
         }) -> (text);
    mintRWAProvenance: (input: MintRWAProvenanceInput) -> (text);
    placeOrder: (input: CreateOrderInput) -> (OrderPublic);
+   plantSeed: (trayId: TrayId, cellPosition: nat, varietyId: nat,
+    datePlanted: opt Timestamp) -> (PlantSeedResult);
    preGenerateNFTPool: (layerCount: nat, layerFileCounts: vec nat) ->
     (record {
        ok: bool;
@@ -1246,6 +1291,8 @@ type ICSpicy =
        ok;
      });
    voteOnProposal: (proposal_id: ProposalId, option_index: nat) -> ();
+   waterEntireTray: (trayId: TrayId, amountMl: nat, phLevel: opt float64,
+    notes: opt text) -> (nat);
  };
 type FoundersMintResult = 
  record {
@@ -1273,6 +1320,23 @@ type FeedingPublic =
    product_name: text;
  };
 type FeedingId = nat;
+type DeathCause = 
+ variant {
+   DampingOff;
+   Disease;
+   Drought;
+   Other;
+   Overwatering;
+   PestDamage;
+   Unknown;
+ };
+type DashboardStats = 
+ record {
+   germinatedToday: nat;
+   lastWateredMsAgo: opt nat;
+   needsAttention: nat;
+   totalPlants: nat;
+ };
 type CreateTrayInput = 
  record {
    name: text;
@@ -1400,6 +1464,14 @@ type CommentPublic =
  };
 type CommentId = nat;
 type ClaimTokenId = text;
+type CellStatus = 
+ variant {
+   Dead;
+   Empty;
+   Germinated;
+   Planted;
+   Transplanted;
+ };
 type CanisterTreasuryBalance = 
  record {
    balance: nat;
@@ -1526,6 +1598,15 @@ type AddFeedingInput =
    nutrient_type: text;
    plant_id: PlantId;
    product_name: text;
+ };
+type ActivityEntry = 
+ record {
+   actionType: text;
+   author: principal;
+   detail: text;
+   plantId: PlantId;
+   plantName: text;
+   timestamp: Timestamp;
  };
 type Account = 
  record {
