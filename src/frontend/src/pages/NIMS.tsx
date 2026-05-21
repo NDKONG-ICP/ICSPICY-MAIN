@@ -43,6 +43,7 @@ import {
   useWaterEntireTray,
 } from "../hooks/useNimsDashboard";
 import { useUnadoptedNftTokenIds } from "../hooks/useUnadoptedNfts";
+import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import {
   useMyPlantsNims,
   useAdminInventory,
@@ -114,6 +115,7 @@ export default function NIMSPage() {
   const markDead = useMarkCellDead();
   const waterTray = useWaterEntireTray();
   const transplantCell = useTransplantCell();
+  const uploadPhoto = useUploadNimsPhoto();
 
   const [selectedCell, setSelectedCell] = useState<bigint | null>(null);
   const [seedOpen, setSeedOpen] = useState(false);
@@ -395,7 +397,16 @@ export default function NIMSPage() {
             open={deadOpen}
             onOpenChange={setDeadOpen}
             plantLabel={unwrapOpt(selectedCellData?.varietyName ?? [])}
-            onConfirm={async ({ reason }) => {
+            onUploadPhoto={
+              unwrapOpt(selectedCellData?.plantId ?? []) != null
+                ? (file) =>
+                    uploadPhoto.mutateAsync({
+                      plantId: unwrapOpt(selectedCellData?.plantId ?? [])!,
+                      file,
+                    })
+                : undefined
+            }
+            onConfirm={async ({ reason, photoPath }) => {
               const cause: DeathCause = { Unknown: null };
               try {
                 await markDead.mutateAsync({
@@ -403,6 +414,7 @@ export default function NIMSPage() {
                   cellPosition: selectedCell,
                   cause,
                   notes: reason,
+                  photoUrl: photoPath,
                 });
                 toast.success("Plant marked dead");
                 setDeadOpen(false);

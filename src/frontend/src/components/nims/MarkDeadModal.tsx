@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PhotoUploadField } from "./PhotoUploadField";
 
 export type MarkDeadSubmit = {
   reason?: string;
+  photoPath?: string;
 };
 
 export type MarkDeadModalProps = {
@@ -23,6 +25,7 @@ export type MarkDeadModalProps = {
   onOpenChange: (open: boolean) => void;
   plantLabel?: string;
   onConfirm: (payload: MarkDeadSubmit) => void;
+  onUploadPhoto?: (file: File) => Promise<string>;
 };
 
 export function MarkDeadModal({
@@ -30,9 +33,11 @@ export function MarkDeadModal({
   onOpenChange,
   plantLabel,
   onConfirm,
+  onUploadPhoto,
 }: MarkDeadModalProps) {
   const [reason, setReason] = useState("");
   const [ack, setAck] = useState(false);
+  const [photoPath, setPhotoPath] = useState<string | null>(null);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,6 +75,14 @@ export function MarkDeadModal({
             rows={4}
           />
         </div>
+        {onUploadPhoto && (
+          <PhotoUploadField
+            label="Death record photo (optional)"
+            path={photoPath}
+            onPathChange={setPhotoPath}
+            onUpload={onUploadPhoto}
+          />
+        )}
         <DialogFooter className="gap-2">
           <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
             Cancel
@@ -82,7 +95,9 @@ export function MarkDeadModal({
             onClick={() => {
               onConfirm({
                 reason: reason.trim() === "" ? undefined : reason.trim(),
+                photoPath: photoPath ?? undefined,
               });
+              setPhotoPath(null);
               onOpenChange(false);
             }}
           >

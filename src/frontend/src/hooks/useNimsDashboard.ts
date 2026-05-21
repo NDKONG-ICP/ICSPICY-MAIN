@@ -142,6 +142,7 @@ export function useMarkCellDead() {
       cellPosition: bigint;
       cause: DeathCause;
       notes?: string;
+      photoUrl?: string;
     }) => {
       if (!actor) throw new Error("Not connected");
       return actor.markCellDead(
@@ -149,7 +150,7 @@ export function useMarkCellDead() {
         args.cellPosition,
         args.cause,
         args.notes ?? null,
-        null,
+        args.photoUrl ?? null,
       );
     },
     onSuccess: (_, vars) => {
@@ -259,6 +260,30 @@ export function useLogPest() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["nimsActivity"] });
       qc.invalidateQueries({ queryKey: ["plantLifecycle", vars.plantId.toString()] });
+    },
+  });
+}
+
+export function useAddNimsPlantPhoto() {
+  const actor = useNimsOpsActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      plantId: PlantId;
+      path: string;
+      caption?: string;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.addNimsPlantPhoto(
+        args.plantId,
+        args.path,
+        args.caption ?? null,
+      );
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["plantLifecycle", vars.plantId.toString()] });
+      qc.invalidateQueries({ queryKey: ["nimsActivity"] });
+      qc.invalidateQueries({ queryKey: ["nimsPhoto"] });
     },
   });
 }

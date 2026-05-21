@@ -11,4 +11,5 @@ export {
   useLogPest,
   usePlantHealth,
   useAdoptPurchasedPlant,
+  useAddNimsPlantPhoto,
 } from "./useNimsDashboard";

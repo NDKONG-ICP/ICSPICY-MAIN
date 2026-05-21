@@ -57,3 +57,7 @@ export { AdoptPlantPrompt } from "./AdoptPlantPrompt";
 export type { AdoptPlantPromptProps, AdoptPlantSubmit } from "./AdoptPlantPrompt";
 
 export { PlantTimeline } from "./PlantTimeline";
+
+export { NimsStoredPhoto } from "./NimsStoredPhoto";
+export { PhotoUploadField } from "./PhotoUploadField";
+export type { PhotoUploadFieldProps } from "./PhotoUploadField";

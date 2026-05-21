@@ -1023,6 +1023,7 @@ type ICSpicy =
                               total: nat;
                             }) query;
    getNimsDashboardStats: () -> (DashboardStats) query;
+   getNimsPhotoFile: (path: text) -> (opt ShopListingFile) query;
    getOffer: (offerId: text) -> (opt Offer) query;
    getOffersForNft: (nftId: text) -> (vec Offer) query;
    getOffersReceived: () -> (vec Offer) query;
@@ -1256,6 +1257,8 @@ type ICSpicy =
    setICPaySecretKey: (key: text) -> ();
    setPlantNFT: (plant_id: PlantId, nft_id: text) -> ();
    storeArtworkFile: (path: text, data: vec nat8, mimeType: text) ->
+    (StoredFile);
+   storeNimsPhotoFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
    submitOffer: (input: SubmitOfferInput) -> (Offer);
    toggleCooked: (plant_id: PlantId) -> ();

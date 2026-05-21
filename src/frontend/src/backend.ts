@@ -997,6 +997,7 @@ export interface backendInterface {
     getAdminPrincipals(): Promise<Array<string>>;
     getArtworkFile(path: string): Promise<Uint8Array | null>;
     getShopListingFile(path: string): Promise<ShopListingFile | null>;
+    getNimsPhotoFile(path: string): Promise<ShopListingFile | null>;
     getArtworkUploadResult(): Promise<UploadResult>;
     getArtworkUploadStatus(): Promise<UploadSessionStatus>;
     getBatchGiftPack(claim_token_id: ClaimTokenId): Promise<BatchGiftPackPublic | null>;
@@ -1163,6 +1164,7 @@ export interface backendInterface {
     setICPaySecretKey(key: string): Promise<void>;
     setPlantNFT(plant_id: PlantId, nft_id: string): Promise<void>;
     storeArtworkFile(path: string, data: Uint8Array, mimeType: string): Promise<StoredFile>;
+    storeNimsPhotoFile(path: string, data: Uint8Array, mimeType: string): Promise<StoredFile>;
     submitOffer(input: SubmitOfferInput): Promise<Offer>;
     toggleCooked(plant_id: PlantId): Promise<void>;
     toggleRecipeFeatured(id: RecipeId): Promise<Recipe | null>;
@@ -1951,6 +1953,16 @@ export class Backend implements backendInterface {
     }
     async getShopListingFile(path: string): Promise<ShopListingFile | null> {
         const result = await this.actor.getShopListingFile(path);
+        if (result === undefined || result === null) return null;
+        if (Array.isArray(result) && result.length === 0) return null;
+        const file = Array.isArray(result) ? result[0] : result;
+        return {
+            data: new Uint8Array(file.data),
+            mime_type: file.mime_type,
+        };
+    }
+    async getNimsPhotoFile(path: string): Promise<ShopListingFile | null> {
+        const result = await this.actor.getNimsPhotoFile(path);
         if (result === undefined || result === null) return null;
         if (Array.isArray(result) && result.length === 0) return null;
         const file = Array.isArray(result) ? result[0] : result;
@@ -3465,6 +3477,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.storeArtworkFile(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async storeNimsPhotoFile(arg0: string, arg1: Uint8Array, arg2: string): Promise<StoredFile> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.storeNimsPhotoFile(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.storeNimsPhotoFile(arg0, arg1, arg2);
             return result;
         }
     }

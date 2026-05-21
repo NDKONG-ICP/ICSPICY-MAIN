@@ -479,6 +479,7 @@ export interface ICSpicy {
     { 'total' : bigint, 'available' : bigint }
   >,
   'getNimsDashboardStats' : ActorMethod<[], DashboardStats>,
+  'getNimsPhotoFile' : ActorMethod<[string], [] | [ShopListingFile]>,
   'getOffer' : ActorMethod<[string], [] | [Offer]>,
   'getOffersForNft' : ActorMethod<[string], Array<Offer>>,
   'getOffersReceived' : ActorMethod<[], Array<Offer>>,
@@ -740,6 +741,10 @@ export interface ICSpicy {
   'setICPaySecretKey' : ActorMethod<[string], undefined>,
   'setPlantNFT' : ActorMethod<[PlantId, string], undefined>,
   'storeArtworkFile' : ActorMethod<
+    [string, Uint8Array | number[], string],
+    StoredFile
+  >,
+  'storeNimsPhotoFile' : ActorMethod<
     [string, Uint8Array | number[], string],
     StoredFile
   >,

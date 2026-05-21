@@ -288,7 +288,7 @@ mixin (
       NimsLib.markCellDeadInternal(
         plants, trays, sideMaps(),
         icrc7Owners, icrc7Balances, icrc37Approvals,
-        selfPrincipal(), trayId, cellPosition, cause, notes,
+        selfPrincipal(), caller, trayId, cellPosition, cause, notes, _photoUrl,
       )
     ) {
       case (#err(e)) Runtime.trap(e);

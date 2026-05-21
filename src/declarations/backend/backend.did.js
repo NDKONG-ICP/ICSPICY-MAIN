@@ -639,6 +639,10 @@ export const idlFactory = ({ IDL }) => {
     'lastWateredMsAgo' : IDL.Opt(IDL.Nat),
     'totalPlants' : IDL.Nat,
   });
+  const ShopListingFile = IDL.Record({
+    'data' : IDL.Vec(IDL.Nat8),
+    'mime_type' : IDL.Text,
+  });
   const PlantCountStats = IDL.Record({
     'total' : IDL.Nat,
     'sold' : IDL.Nat,
@@ -734,10 +738,6 @@ export const idlFactory = ({ IDL }) => {
     'notes' : IDL.Text,
     'frequency' : IDL.Text,
     'input_name' : IDL.Text,
-  });
-  const ShopListingFile = IDL.Record({
-    'data' : IDL.Vec(IDL.Nat8),
-    'mime_type' : IDL.Text,
   });
   const TokenPrice = IDL.Record({
     'token' : OracleToken,
@@ -1333,6 +1333,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getNimsDashboardStats' : IDL.Func([], [DashboardStats], ['query']),
+    'getNimsPhotoFile' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(ShopListingFile)],
+        ['query'],
+      ),
     'getOffer' : IDL.Func([IDL.Text], [IDL.Opt(Offer)], ['query']),
     'getOffersForNft' : IDL.Func([IDL.Text], [IDL.Vec(Offer)], ['query']),
     'getOffersReceived' : IDL.Func([], [IDL.Vec(Offer)], ['query']),
@@ -1746,6 +1751,11 @@ export const idlFactory = ({ IDL }) => {
     'setICPaySecretKey' : IDL.Func([IDL.Text], [], []),
     'setPlantNFT' : IDL.Func([PlantId, IDL.Text], [], []),
     'storeArtworkFile' : IDL.Func(
+        [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text],
+        [StoredFile],
+        [],
+      ),
+    'storeNimsPhotoFile' : IDL.Func(
         [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text],
         [StoredFile],
         [],

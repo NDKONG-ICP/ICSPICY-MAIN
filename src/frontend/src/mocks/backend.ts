@@ -1138,4 +1138,17 @@ export const mockBackend: backendInterface = {
     nftTokenId: [],
   }),
   getNftPoolStatus: async () => ({ available: 0n, total: 0n }),
+  storeNimsPhotoFile: async (path, data, mimeType) => ({
+    path,
+    layer: "nims-photos",
+    filename: path.split("/").pop() ?? "photo.jpg",
+    mime_type: mimeType,
+    data,
+    size: BigInt(data.byteLength),
+    uploaded_at: NOW,
+  }),
+  getNimsPhotoFile: async () => ({
+    data: new Uint8Array([0xff, 0xd8, 0xff]),
+    mime_type: "image/jpeg",
+  }),
 };

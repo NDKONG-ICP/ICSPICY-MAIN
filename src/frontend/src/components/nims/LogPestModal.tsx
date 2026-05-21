@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { PhotoUploadField } from "./PhotoUploadField";
 
 const KNOWN_PESTS = [
   "Aphids",
@@ -36,6 +37,7 @@ export type LogPestSubmit = {
   pestName: string;
   severity: string;
   notes?: string;
+  photoPath?: string;
 };
 
 export type LogPestModalProps = {
@@ -43,6 +45,7 @@ export type LogPestModalProps = {
   onOpenChange: (open: boolean) => void;
   plantLabel?: string;
   onSubmit: (payload: LogPestSubmit) => void;
+  onUploadPhoto?: (file: File) => Promise<string>;
 };
 
 export function LogPestModal({
@@ -50,10 +53,12 @@ export function LogPestModal({
   onOpenChange,
   plantLabel,
   onSubmit,
+  onUploadPhoto,
 }: LogPestModalProps) {
   const [pest, setPest] = useState<string>(KNOWN_PESTS[0]!);
   const [severity, setSeverity] = useState<(typeof SEVERITIES)[number]>("Low");
   const [notes, setNotes] = useState("");
+  const [photoPath, setPhotoPath] = useState<string | null>(null);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -112,6 +117,14 @@ export function LogPestModal({
               rows={3}
             />
           </div>
+          {onUploadPhoto && (
+            <PhotoUploadField
+              label="Photo evidence (optional)"
+              path={photoPath}
+              onPathChange={setPhotoPath}
+              onUpload={onUploadPhoto}
+            />
+          )}
         </div>
         <DialogFooter>
           <Button
@@ -129,7 +142,9 @@ export function LogPestModal({
                 pestName: pest,
                 severity,
                 notes: notes.trim() === "" ? undefined : notes.trim(),
+                photoPath: photoPath ?? undefined,
               });
+              setPhotoPath(null);
               onOpenChange(false);
             }}
           >

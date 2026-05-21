@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { PlantStage as BackendPlantStage, TransplantInput } from "../backend";
 import { StageBadge } from "../components/ui/StageBadge";
@@ -20,16 +20,19 @@ import {
   PlantTimeline,
   TransplantModal,
   WeatherBar,
+  NimsStoredPhoto,
   type QuickPlantAction,
 } from "../components/nims";
 import { useAuth } from "../hooks/useAuth";
 import { useIsAdmin, useToggleCooked, useTransplantCell } from "../hooks/useBackend";
 import {
+  useAddNimsPlantPhoto,
   useLogFeeding,
   useLogPest,
   useLogWatering,
   usePlantHealth,
 } from "../hooks/useNimsDashboard";
+import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import { useWeather } from "../hooks/useWeather";
 import {
   formatCents,
@@ -63,9 +66,12 @@ export default function PlantDetailPage() {
   const logWater = useLogWatering();
   const logFeed = useLogFeeding();
   const logPest = useLogPest();
+  const uploadPhoto = useUploadNimsPhoto();
+  const addPlantPhoto = useAddNimsPlantPhoto();
   const listForSale = useListPlantForSale();
   const toggleCooked = useToggleCooked();
   const transplantCell = useTransplantCell();
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [noteText, setNoteText] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [weatherExpanded, setWeatherExpanded] = useState(false);
@@ -116,7 +122,7 @@ export default function PlantDetailPage() {
         setActiveTab("notes");
         break;
       case "photo":
-        toast.info("Photo upload coming soon.");
+        photoInputRef.current?.click();
         break;
       case "transplant":
         if (inTray) setTransplantOpen(true);
@@ -320,9 +326,13 @@ export default function PlantDetailPage() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {lc.photos.map((p, i) => (
-                <a key={i} href={p.url} target="_blank" rel="noreferrer">
-                  <img src={p.url} alt="" className="rounded-lg aspect-square object-cover" />
-                </a>
+                <div key={i} className="rounded-lg overflow-hidden aspect-square border border-border">
+                  <NimsStoredPhoto
+                    path={p.url}
+                    alt={unwrapOpt(p.caption) ?? "Plant photo"}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               ))}
             </div>
           )}
@@ -357,9 +367,40 @@ export default function PlantDetailPage() {
 
       {canEdit && (
         <>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            data-ocid="nims-plant-photo-input"
+            disabled={uploadPhoto.isPending || addPlantPhoto.isPending || plant.is_cooked}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              void (async () => {
+                try {
+                  const path = await uploadPhoto.mutateAsync({ plantId: id, file });
+                  await addPlantPhoto.mutateAsync({
+                    plantId: id,
+                    path,
+                    caption: "Progress photo",
+                  });
+                  toast.success("Photo uploaded");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Upload failed");
+                } finally {
+                  if (photoInputRef.current) photoInputRef.current.value = "";
+                }
+              })();
+            }}
+          />
+
           <PlantQuickActions
             onAction={handleQuickAction}
-            disabled={plant.is_cooked}
+            disabled={
+              plant.is_cooked || uploadPhoto.isPending || addPlantPhoto.isPending
+            }
           />
 
           <LogWateringModal
@@ -400,9 +441,17 @@ export default function PlantDetailPage() {
             open={pestOpen}
             onOpenChange={setPestOpen}
             plantLabel={plant.variety}
-            onSubmit={async ({ pestName, severity, notes }) => {
+            onUploadPhoto={(file) => uploadPhoto.mutateAsync({ plantId: id, file })}
+            onSubmit={async ({ pestName, severity, notes, photoPath }) => {
               try {
                 await logPest.mutateAsync({ plantId: id, pestName, severity, notes });
+                if (photoPath) {
+                  await addPlantPhoto.mutateAsync({
+                    plantId: id,
+                    path: photoPath,
+                    caption: `Pest: ${pestName} (${severity})`,
+                  });
+                }
                 toast.success("Pest issue logged");
               } catch (e) {
                 toast.error(e instanceof Error ? e.message : "Failed");

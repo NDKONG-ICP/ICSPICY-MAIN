@@ -889,10 +889,12 @@ module {
     icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
     icrc37Approvals : ICRC37Lib.ApprovalsMap,
     canister : Principal,
+    caller : Principal,
     trayId : Common.TrayId,
     cellPosition : Nat,
     cause : DashTypes.DeathCause,
     notes : ?Text,
+    photoUrl : ?Text,
   ) : Result.Result<Bool, Text> {
     let tray = switch (trays.get(trayId)) {
       case null return #err("Tray not found");
@@ -936,6 +938,16 @@ module {
     let noteSuffix = switch notes { case (?n) " — " # n; case null "" };
     let detail = "Marked dead: " # causeText # noteSuffix;
     appendNote(side, plantId, { timestamp = Time.now(); author = plant.created_by; text = detail });
+    switch (photoUrl) {
+      case (?url) {
+        ignore addPlantPhotoEntry(
+          plants, side, caller,
+          func (_) { true },
+          plantId, url, ?"Death record",
+        );
+      };
+      case null {};
+    };
     #ok(true);
   };
 

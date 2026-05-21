@@ -122,9 +122,48 @@ mixin (
     true;
   };
 
+  func isNimsPhotoPath(path : Text) : Bool {
+    let prefix = "nims-photos/";
+    if (path.size() < prefix.size()) return false;
+    var pathIter = path.chars();
+    for (pc in prefix.chars()) {
+      switch (pathIter.next()) {
+        case null return false;
+        case (?c) { if (c != pc) return false };
+      };
+    };
+    true;
+  };
+
+  /// Authenticated users: NIMS plant photos (progress, pest evidence, death records).
+  /// Path must start with `nims-photos/`.
+  public shared ({ caller }) func storeNimsPhotoFile(
+    path     : Text,
+    data     : [Nat8],
+    mimeType : Text,
+  ) : async Types.StoredFile {
+    AccessControl.requireAuthenticated(caller);
+    if (not isNimsPhotoPath(path)) {
+      Runtime.trap("Invalid path: must start with nims-photos/");
+    };
+    if (data.size() > 5_000_000) {
+      Runtime.trap("File too large (max 5 MB)");
+    };
+    ArtworkLib.storeFile(storedFiles, path, data, mimeType, Time.now());
+  };
+
   /// Public: shop listing photos stored via storeArtworkFile (shop-listings/* only).
   public query func getShopListingFile(path : Text) : async ?Types.ShopListingFile {
     if (not isShopListingPath(path)) return null;
+    switch (storedFiles.get(path)) {
+      case (?file) ?{ data = file.data; mime_type = file.mime_type };
+      case null null;
+    };
+  };
+
+  /// Public: NIMS photos stored via storeNimsPhotoFile (nims-photos/* only).
+  public query func getNimsPhotoFile(path : Text) : async ?Types.ShopListingFile {
+    if (not isNimsPhotoPath(path)) return null;
     switch (storedFiles.get(path)) {
       case (?file) ?{ data = file.data; mime_type = file.mime_type };
       case null null;
