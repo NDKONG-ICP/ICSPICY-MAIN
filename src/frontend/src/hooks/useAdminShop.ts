@@ -35,9 +35,10 @@ export type {
   Icrc7TokenFilter,
 } from "../declarations/backend.did";
 
+/** Raw `@dfinity` actor behind the `Backend` envelope (methods absent from bindgen wrapper). */
 function rawService(actor: Backend | null): ActorSubclass<_SERVICE> | null {
   if (!actor) return null;
-  return actor as unknown as ActorSubclass<_SERVICE>;
+  return (actor as unknown as { actor: ActorSubclass<_SERVICE> }).actor;
 }
 
 function assertTransferOk(result: unknown): { blockIndex: bigint } {

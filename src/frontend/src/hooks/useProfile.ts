@@ -14,9 +14,10 @@ import type {
 import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
 
+/** Raw `@dfinity` actor — full Candid types (e.g. `SaveProfileInput` with `location`). */
 function rawService(actor: Backend | null): ActorSubclass<_SERVICE> | null {
   if (!actor) return null;
-  return actor as unknown as ActorSubclass<_SERVICE>;
+  return (actor as unknown as { actor: ActorSubclass<_SERVICE> }).actor;
 }
 
 function useCommunityBackendActor() {

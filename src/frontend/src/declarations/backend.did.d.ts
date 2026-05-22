@@ -147,6 +147,10 @@ export interface CallerDiscount {
   'discountPercent' : bigint,
   'rarity' : string,
 }
+export interface CallerVoteInfo {
+  'nft_token_id' : bigint,
+  'option_id' : bigint,
+}
 export interface CanisterTreasuryBalance {
   'balance' : bigint,
   'ledgerCanisterId' : string,
@@ -268,10 +272,12 @@ export interface CreateProductInput {
 }
 export interface CreateProposalInput {
   'title' : string,
-  'ends_at' : Timestamp,
+  'publish_now' : boolean,
   'description' : string,
-  'options' : Array<string>,
-  'proposal_type' : ProposalType,
+  'voting_ends_at' : Timestamp,
+  'category' : ProposalCategory,
+  'voting_starts_at' : Timestamp,
+  'options' : Array<ProposalOptionInput>,
 }
 export interface CreateRecipeInput {
   'title' : string,
@@ -474,12 +480,15 @@ export interface ICSpicy {
       { 'err' : string }
   >,
   'cancelOffer' : ActorMethod<[string], Offer>,
+  'cancelProposal' : ActorMethod<[ProposalId], boolean>,
   'cancelResaleListing' : ActorMethod<
     [string],
     { 'ok' : null } |
       { 'err' : string }
   >,
+  'castVote' : ActorMethod<[ProposalId, bigint], boolean>,
   'clearArtworkFiles' : ActorMethod<[], undefined>,
+  'closeProposal' : ActorMethod<[ProposalId], boolean>,
   'completeEvent' : ActorMethod<[bigint], PlantingEvent>,
   'confirmICPayPayment' : ActorMethod<
     [bigint, string],
@@ -506,6 +515,10 @@ export interface ICSpicy {
   >,
   'createPost' : ActorMethod<[CreatePostInput], PostPublic>,
   'createProduct' : ActorMethod<[CreateProductInput], ProductPublic>,
+  'createProposal' : ActorMethod<
+    [CreateProposalInput],
+    { 'proposalId' : bigint }
+  >,
   'createRecipe' : ActorMethod<[CreateRecipeInput], { 'recipe_id' : RecipeId }>,
   'createTray' : ActorMethod<[CreateTrayInput], TrayPublic>,
   'dabTransform' : ActorMethod<
@@ -547,6 +560,7 @@ export interface ICSpicy {
   'getArtworkUploadResult' : ActorMethod<[], UploadResult>,
   'getArtworkUploadStatus' : ActorMethod<[], UploadSessionStatus>,
   'getAuditLog' : ActorMethod<[bigint, bigint], Array<AuditEntry>>,
+  'getAvatarFile' : ActorMethod<[string], [] | [Uint8Array | number[]]>,
   'getBatchGiftPack' : ActorMethod<[ClaimTokenId], [] | [BatchGiftPackPublic]>,
   'getCallerDiscount' : ActorMethod<[], CallerDiscount>,
   'getCallerMembership' : ActorMethod<[], [] | [MembershipNFTPublic]>,
@@ -578,7 +592,8 @@ export interface ICSpicy {
     [],
     {
       'totalVotes' : bigint,
-      'totalProposals' : bigint,
+      'uniqueVoters' : bigint,
+      'callerVotes' : bigint,
       'activeProposals' : bigint,
     }
   >,
@@ -647,6 +662,12 @@ export interface ICSpicy {
   'getPostWithComments' : ActorMethod<[PostId], [] | [PostWithComments]>,
   'getProduct' : ActorMethod<[ProductId], [] | [ProductPublic]>,
   'getProfile' : ActorMethod<[Principal], [] | [UserProfilePublic]>,
+  'getProposal' : ActorMethod<[ProposalId], [] | [ProposalPublic]>,
+  'getProposalResults' : ActorMethod<[ProposalId], [] | [ProposalResults]>,
+  'getProposals' : ActorMethod<
+    [[] | [ProposalStatus], [] | [ProposalCategory], bigint, bigint],
+    Array<ProposalPublic>
+  >,
   'getPublicProfile' : ActorMethod<[Principal], [] | [UserProfilePublic]>,
   'getRecentActivity' : ActorMethod<[bigint], Array<ActivityEntry>>,
   'getRecipe' : ActorMethod<[RecipeId], [] | [RecipePublic]>,
@@ -682,14 +703,21 @@ export interface ICSpicy {
   'hasDAOAccess' : ActorMethod<[], boolean>,
   'hasLikedPost' : ActorMethod<[PostId], boolean>,
   'hasMembership' : ActorMethod<[], boolean>,
+  'hasVoted' : ActorMethod<[ProposalId], [] | [CallerVoteInfo]>,
   'icpayTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
   >,
+  /**
+   * / ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
+   */
   'icrc10_supported_standards' : ActorMethod<
     [],
     Array<{ 'url' : string, 'name' : string }>
   >,
+  /**
+   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   */
   'icrc28_trusted_origins' : ActorMethod<
     [],
     { 'trusted_origins' : Array<string> }
@@ -865,6 +893,7 @@ export interface ICSpicy {
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
   >,
+  'publishProposal' : ActorMethod<[ProposalId], boolean>,
   'publishRecipe' : ActorMethod<[RecipeId], boolean>,
   'purchasePepperHead' : ActorMethod<
     [string],
@@ -932,6 +961,7 @@ export interface ICSpicy {
     [string, Uint8Array | number[], string],
     StoredFile
   >,
+  'storeAvatarFile' : ActorMethod<[Uint8Array | number[]], string>,
   'storeCommunityImage' : ActorMethod<
     [string, Uint8Array | number[], string],
     StoredFile
@@ -977,6 +1007,7 @@ export interface ICSpicy {
     PlantingEvent
   >,
   'updateProduct' : ActorMethod<[UpdateProductInput], undefined>,
+  'updateProposal' : ActorMethod<[ProposalId, UpdateProposalInput], boolean>,
   'updateRecipe' : ActorMethod<[UpdateRecipeInput], boolean>,
   'updateSeedLot' : ActorMethod<
     [
@@ -1392,23 +1423,51 @@ export interface ProductPublic {
   'price_per_unit_cents' : bigint,
   'plant_id' : [] | [PlantId],
 }
+export type ProposalCategory = { 'VarietyVote' : null } |
+  { 'ProductVote' : null } |
+  { 'FeatureRequest' : null } |
+  { 'CommunityDecision' : null } |
+  { 'TreasurySpend' : null };
 export type ProposalId = bigint;
+export interface ProposalOptionInput {
+  'description' : [] | [string],
+  'option_label' : string,
+}
+export interface ProposalOptionPublic {
+  'id' : bigint,
+  'description' : [] | [string],
+  'option_label' : string,
+  'vote_count' : bigint,
+}
 export interface ProposalPublic {
   'id' : ProposalId,
+  'status' : ProposalStatus,
   'title' : string,
-  'vote_counts' : Array<bigint>,
-  'ends_at' : Timestamp,
+  'updated_at' : Timestamp,
+  'creator' : Principal,
   'description' : string,
   'created_at' : Timestamp,
-  'created_by' : Principal,
-  'voter_count' : bigint,
+  'voting_ends_at' : Timestamp,
+  'category' : ProposalCategory,
+  'total_votes' : bigint,
+  'voting_starts_at' : Timestamp,
   'caller_vote' : [] | [bigint],
-  'options' : Array<string>,
-  'proposal_type' : ProposalType,
+  'options' : Array<ProposalOptionPublic>,
 }
-export type ProposalType = { 'General' : null } |
-  { 'Seasoning' : null } |
-  { 'PlantVariety' : null };
+export interface ProposalResultOption {
+  'option_label' : string,
+  'vote_count' : bigint,
+  'percentage' : bigint,
+}
+export interface ProposalResults {
+  'winner' : [] | [string],
+  'total_votes' : bigint,
+  'options' : Array<ProposalResultOption>,
+}
+export type ProposalStatus = { 'Closed' : null } |
+  { 'Active' : null } |
+  { 'Draft' : null } |
+  { 'Cancelled' : null };
 export interface PurchasePlantResult {
   'claimToken' : [] | [ClaimTokenId],
   'nftTokenId' : [] | [bigint],
@@ -1729,6 +1788,14 @@ export interface UpdateProductInput {
   'price_cents' : [] | [bigint],
   'description' : [] | [string],
   'image_keys' : [] | [Array<string>],
+}
+export interface UpdateProposalInput {
+  'title' : [] | [string],
+  'description' : [] | [string],
+  'voting_ends_at' : [] | [Timestamp],
+  'category' : [] | [ProposalCategory],
+  'voting_starts_at' : [] | [Timestamp],
+  'options' : [] | [Array<ProposalOptionInput>],
 }
 export interface UpdateRecipeInput {
   'id' : RecipeId,

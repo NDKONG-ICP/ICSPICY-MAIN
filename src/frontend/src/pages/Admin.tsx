@@ -76,6 +76,10 @@ import { AdminBatchGiftsTab } from "../components/admin/AdminBatchGiftsTab";
 import { AdminCommunityTab } from "../components/admin/AdminCommunityTab";
 import { AdminNFTPoolTab } from "../components/admin/AdminNFTPoolTab";
 import { AdminOrdersTab } from "../components/admin/AdminOrdersTab";
+import {
+  useCreateProposal,
+  useProposals,
+} from "../hooks/useDAO";
 import { AdminQRLabelsTab } from "../components/admin/AdminQRLabelsTab";
 import { useAuth } from "../hooks/useAuth";
 import {
@@ -90,7 +94,6 @@ import {
   useBulkCreateProducts,
   useCreatePlant,
   useCreateProduct,
-  useCreateProposal,
   useCreateTray,
   useDeleteProduct,
   useFinalizeArtworkUpload,
@@ -107,7 +110,6 @@ import {
   useMyOrders,
   usePlants,
   useProducts,
-  useProposals,
   useResetPoolNFT,
   useStorePhotoFile,
   useTrays,
@@ -2582,13 +2584,30 @@ function AdminDAOTab() {
     }
     try {
       const daysMs = Number.parseInt(endDays || "7") * 24 * 60 * 60 * 1000;
+      const startsAt = BigInt(Date.now()) * 1_000_000n;
       const endsAt = BigInt((Date.now() + daysMs) * 1_000_000);
+      const categoryMap = {
+        PlantVariety: { VarietyVote: null },
+        Seasoning: { ProductVote: null },
+        General: { CommunityDecision: null },
+      } as const;
+      const cat =
+        type === ProposalType.PlantVariety
+          ? categoryMap.PlantVariety
+          : type === ProposalType.Seasoning
+            ? categoryMap.Seasoning
+            : categoryMap.General;
       await createProposal.mutateAsync({
         title,
         description,
-        proposal_type: type,
-        options: validOptions,
-        ends_at: endsAt,
+        category: cat,
+        options: validOptions.map((label) => ({
+          option_label: label,
+          description: [],
+        })),
+        voting_starts_at: startsAt,
+        voting_ends_at: endsAt,
+        publish_now: true,
       });
       toast.success("Proposal created!");
       setTitle("");
@@ -2733,7 +2752,9 @@ function AdminDAOTab() {
         ) : proposals && proposals.length > 0 ? (
           <div className="space-y-2" data-ocid="admin-proposal-list">
             {proposals.map((p) => {
-              const isExpired = Date.now() > Number(p.ends_at) / 1_000_000;
+              const isExpired =
+                "Closed" in p.status ||
+                Date.now() > Number(p.voting_ends_at) / 1_000_000;
               return (
                 <div
                   key={p.id.toString()}
@@ -2744,8 +2765,8 @@ function AdminDAOTab() {
                       {p.title}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {TYPE_LABELS[p.proposal_type]} ·{" "}
-                      {p.voter_count.toString()} votes
+                      {Object.keys(p.category)[0] ?? "Proposal"} ·{" "}
+                      {p.total_votes.toString()} votes
                     </p>
                   </div>
                   <Badge

@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CommunityAvatar } from "./CommunityAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -123,17 +123,23 @@ export function PostCard({
     >
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-start gap-3 min-w-0">
-          <Avatar className="w-11 h-11 shrink-0 ring-2 ring-border">
-            <AvatarFallback
-              className={`text-base font-semibold ${
-                post.is_anonymous
-                  ? "bg-muted text-muted-foreground"
-                  : "bg-primary/15 text-primary"
-              }`}
-            >
-              {getPostAuthorInitial(post)}
-            </AvatarFallback>
-          </Avatar>
+          {authorPidText && !post.is_anonymous ? (
+            <CommunityAvatar
+              principalText={authorPidText}
+              username={
+                post.author_username.length === 1
+                  ? post.author_username[0]
+                  : undefined
+              }
+              size="md"
+            />
+          ) : (
+            <CommunityAvatar
+              principalText="anonymous"
+              username="?"
+              size="md"
+            />
+          )}
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               {authorPidText && !post.is_anonymous ? (

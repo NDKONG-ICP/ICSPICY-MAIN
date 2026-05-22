@@ -30,6 +30,7 @@ import {
   MarkDeadModal,
   NewTrayModal,
   NimsLocationPrompt,
+  NimsAnalyticsPanel,
   PlantLifecycleCard,
   PlantSeedModal,
   SeedBankPanel,
@@ -38,6 +39,7 @@ import {
   TrayGrid,
   WeatherBar,
 } from "../components/nims";
+import { exportPlantInventoryCsv } from "../lib/nims-export-mappers";
 import { useAuth } from "../hooks/useAuth";
 import { useIsAdmin, useMyTrays, useTrays } from "../hooks/useBackend";
 import {
@@ -380,6 +382,21 @@ export default function NIMSPage() {
 
         {(tab === "inventory" || tab === "myplants") && (
           <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const list =
+                    tab === "myplants" || !(isAdmin && showAllUsers)
+                      ? myPlants
+                      : inventoryList;
+                  exportPlantInventoryCsv(list, isAdmin && showAllUsers);
+                  toast.success("Inventory CSV downloaded");
+                }}
+              >
+                📥 Export CSV
+              </Button>
             {isAdmin && showAllUsers && tab === "inventory" && inventoryList.length > 0 && (
               <Button
                 size="sm"
@@ -402,6 +419,7 @@ export default function NIMSPage() {
                 Generate tag links (CSV)
               </Button>
             )}
+            </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {(tab === "myplants" || !(isAdmin && showAllUsers) ? myPlants : inventoryList).length === 0 ? (
               <p className="text-sm text-muted-foreground col-span-2 text-center py-8">
@@ -439,10 +457,11 @@ export default function NIMSPage() {
         {tab === "activity" && <ActivityFeed entries={activity} />}
 
         {tab === "analytics" && (
-          <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            Analytics coming in Phase 2 — germination rates, weather correlation,
-            and feeding efficiency charts.
-          </div>
+          <NimsAnalyticsPanel
+            plants={
+              isAdmin && showAllUsers ? inventoryList : myPlants
+            }
+          />
         )}
       </div>
 

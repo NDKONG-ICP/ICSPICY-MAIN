@@ -2,6 +2,8 @@ import Map "mo:core/Map";
 import Time "mo:core/Time";
 import Text "mo:core/Text";
 import Nat "mo:core/Nat";
+import Int "mo:core/Int";
+import Principal "mo:core/Principal";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import AccessControl "../lib/access-control";
@@ -146,6 +148,43 @@ mixin (
       };
     };
     true;
+  };
+
+  func isAvatarPath(path : Text) : Bool {
+    let prefix = "avatars/";
+    if (path.size() < prefix.size()) return false;
+    var pathIter = path.chars();
+    for (pc in prefix.chars()) {
+      switch (pathIter.next()) {
+        case null return false;
+        case (?c) { if (c != pc) return false };
+      };
+    };
+    true;
+  };
+
+  func isPublicImagePath(path : Text) : Bool {
+    isCommunityImagePath(path) or isAvatarPath(path);
+  };
+
+  /// Authenticated users: profile avatar (avatars/*).
+  public shared ({ caller }) func storeAvatarFile(data : [Nat8]) : async Text {
+    AccessControl.requireAuthenticated(caller);
+    if (data.size() > 1_000_000) {
+      Runtime.trap("File too large (max 1 MB)");
+    };
+    let key = "avatars/" # Principal.toText(caller) # "-" # Nat.toText(Int.abs(Time.now())) # ".jpg";
+    ignore ArtworkLib.storeFile(storedFiles, key, data, "image/jpeg", Time.now());
+    key;
+  };
+
+  /// Public: avatar bytes stored via storeAvatarFile (avatars/* only).
+  public query func getAvatarFile(key : Text) : async ?[Nat8] {
+    if (not isAvatarPath(key)) return null;
+    switch (storedFiles.get(key)) {
+      case (?file) ?file.data;
+      case null null;
+    };
   };
 
   /// Authenticated users: community post images (community-images/*).

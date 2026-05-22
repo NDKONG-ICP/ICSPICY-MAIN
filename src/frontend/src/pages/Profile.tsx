@@ -13,6 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@tanstack/react-router";
 import { ConnectButton } from "../components/ConnectButton";
+import { AvatarUpload } from "@/components/community/AvatarUpload";
+import { CommunityAvatar } from "@/components/community/CommunityAvatar";
 import {
   Copy,
   Flame,
@@ -47,12 +49,16 @@ export default function ProfilePage() {
 
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
+  const [avatarKey, setAvatarKey] = useState<string | undefined>();
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     if (profile && !dirty) {
       setUsername(profile.username ?? "");
       setBio(profile.bio ?? "");
+      setAvatarKey(
+        profile.avatar_key?.length === 1 ? profile.avatar_key[0] : undefined,
+      );
     }
   }, [profile, dirty]);
 
@@ -74,11 +80,7 @@ export default function ProfilePage() {
       await saveProfile.mutateAsync({
         username: username.trim() || "anonymous",
         bio: bio.trim(),
-        // bindgen SaveProfileInput uses optional string (not []|[string])
-        avatar_key:
-          profile?.avatar_key?.length === 1
-            ? profile.avatar_key[0]
-            : undefined,
+        avatar_key: avatarKey,
       });
       setDirty(false);
       toast.success("Profile saved");
@@ -110,9 +112,22 @@ export default function ProfilePage() {
       data-ocid="profile-page"
     >
       <div className="flex flex-col sm:flex-row sm:items-start gap-6">
-        <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-primary/15 border border-border">
-          <User className="h-12 w-12 text-primary" />
-        </div>
+        {pidText ? (
+          <AvatarUpload
+            principalText={pidText}
+            username={username}
+            avatarKey={avatarKey}
+            onAvatarKey={(key) => {
+              setAvatarKey(key);
+              setDirty(true);
+            }}
+            size="lg"
+          />
+        ) : (
+          <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-primary/15 border border-border">
+            <User className="h-12 w-12 text-primary" />
+          </div>
+        )}
         <div className="flex-1 space-y-2">
           <h1 className="font-display text-3xl font-bold text-foreground">
             {displayName}

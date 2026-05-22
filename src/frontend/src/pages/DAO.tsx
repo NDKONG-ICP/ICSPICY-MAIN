@@ -35,9 +35,13 @@ import {
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ProposalType } from "../backend";
 import { useAuth } from "../hooks/useAuth";
 import { useIsAdmin } from "../hooks/useBackend";
+import type {
+  CreateProposalInput,
+  ProposalCategory,
+  ProposalPublic,
+} from "../declarations/backend.did";
 import {
   useCreateProposal,
   useDAOStats,
@@ -45,34 +49,45 @@ import {
   useProposals,
   useVoteOnProposal,
 } from "../hooks/useDAO";
-import type { CreateProposalInput, Proposal, ProposalId } from "../types/index";
 import { usePageTitle } from "../hooks/usePageTitle";
 
-// ─── Type configs ─────────────────────────────────────────────────────────────
+type FilterType = "all" | string;
 
-type FilterType = "all" | ProposalType;
+const CATEGORY_CONFIG: Record<
+  string,
+  { label: string; className: string }
+> = {
+  VarietyVote: {
+    label: "🌶️ Variety Vote",
+    className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+  },
+  ProductVote: {
+    label: "🧂 Product Vote",
+    className: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+  },
+  CommunityDecision: {
+    label: "📋 Community",
+    className: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+  },
+  TreasurySpend: {
+    label: "💰 Treasury",
+    className: "bg-purple-500/10 text-purple-400 border-purple-500/30",
+  },
+  FeatureRequest: {
+    label: "✨ Feature",
+    className: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
+  },
+};
 
-const TYPE_CONFIG: Record<ProposalType, { label: string; className: string }> =
-  {
-    [ProposalType.PlantVariety]: {
-      label: "🌶️ Plant Variety",
-      className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-    },
-    [ProposalType.Seasoning]: {
-      label: "🧂 Seasoning",
-      className: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-    },
-    [ProposalType.General]: {
-      label: "📋 General",
-      className: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-    },
-  };
+function categoryKey(c: ProposalCategory): string {
+  return Object.keys(c)[0] ?? "CommunityDecision";
+}
 
 const FILTER_TABS: Array<{ key: FilterType; label: string }> = [
   { key: "all", label: "All" },
-  { key: ProposalType.PlantVariety, label: "🌶️ Plant Variety" },
-  { key: ProposalType.Seasoning, label: "🧂 Seasoning" },
-  { key: ProposalType.General, label: "📋 General" },
+  { key: "VarietyVote", label: "🌶️ Variety" },
+  { key: "ProductVote", label: "🧂 Product" },
+  { key: "CommunityDecision", label: "📋 General" },
 ];
 
 function getTimeRemaining(endsAt: bigint): string {
@@ -86,13 +101,15 @@ function getTimeRemaining(endsAt: bigint): string {
   return `${hours}h ${minutes}m left`;
 }
 
-function getWinningOption(proposal: Proposal): number | null {
-  if (proposal.vote_counts.length === 0) return null;
+function getWinningOption(proposal: ProposalPublic): number | null {
+  if (proposal.options.length === 0) return null;
   let maxIdx = 0;
-  for (let i = 1; i < proposal.vote_counts.length; i++) {
-    if (proposal.vote_counts[i] > proposal.vote_counts[maxIdx]) maxIdx = i;
+  for (let i = 1; i < proposal.options.length; i++) {
+    if (proposal.options[i]!.vote_count > proposal.options[maxIdx]!.vote_count) {
+      maxIdx = i;
+    }
   }
-  return proposal.vote_counts[maxIdx] > BigInt(0) ? maxIdx : null;
+  return proposal.options[maxIdx]!.vote_count > 0n ? maxIdx : null;
 }
 
 // ─── Proposal Card ────────────────────────────────────────────────────────────
@@ -100,31 +117,35 @@ function getWinningOption(proposal: Proposal): number | null {
 function ProposalCard({
   proposal,
   canVote,
-}: { proposal: Proposal; canVote: boolean }) {
+}: { proposal: ProposalPublic; canVote: boolean }) {
   const vote = useVoteOnProposal();
   const { isAuthenticated } = useAuth();
 
-  const totalVotes = proposal.vote_counts.reduce((a, b) => a + b, BigInt(0));
-  const isExpired = Date.now() > Number(proposal.ends_at) / 1_000_000;
-  const hasVoted =
-    proposal.caller_vote !== undefined && proposal.caller_vote !== null;
+  const totalVotes = proposal.total_votes;
+  const isExpired =
+    "Closed" in proposal.status ||
+    "Cancelled" in proposal.status ||
+    Date.now() > Number(proposal.voting_ends_at) / 1_000_000;
+  const hasVoted = proposal.caller_vote.length === 1;
   const winningIdx = isExpired ? getWinningOption(proposal) : null;
-  const typeConfig = TYPE_CONFIG[proposal.proposal_type];
-  const timeRemaining = getTimeRemaining(proposal.ends_at);
+  const catKey = categoryKey(proposal.category);
+  const typeConfig =
+    CATEGORY_CONFIG[catKey] ?? CATEGORY_CONFIG.CommunityDecision!;
+  const timeRemaining = getTimeRemaining(proposal.voting_ends_at);
 
-  const handleVote = async (index: number) => {
+  const handleVote = async (optionId: bigint) => {
     if (!isAuthenticated) {
       toast.error("Sign in to vote.");
       return;
     }
     if (!canVote) {
-      toast.error("You need a plant NFT or membership NFT to vote.");
+      toast.error("You need an IC SPICY NFT to vote.");
       return;
     }
     try {
       await vote.mutateAsync({
-        proposalId: proposal.id as ProposalId,
-        optionIndex: BigInt(index),
+        proposalId: proposal.id,
+        optionIndex: optionId,
       });
       toast.success("Vote cast! 🗳️");
     } catch {
@@ -175,8 +196,8 @@ function ProposalCard({
       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
         <span className="flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5" />
-          {proposal.voter_count.toString()} voter
-          {proposal.voter_count !== BigInt(1) ? "s" : ""}
+          {proposal.total_votes.toString()} vote
+          {proposal.total_votes !== 1n ? "s" : ""}
         </span>
         <span className="flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5" />
@@ -193,17 +214,16 @@ function ProposalCard({
       {/* Options + vote bars */}
       <div className="space-y-3">
         {proposal.options.map((opt, i) => {
-          const votes = proposal.vote_counts[i] ?? BigInt(0);
+          const votes = opt.vote_count;
           const pct =
-            totalVotes > BigInt(0)
-              ? Number((votes * BigInt(100)) / totalVotes)
-              : 0;
-          const isMyVote = hasVoted && Number(proposal.caller_vote) === i;
+            totalVotes > 0n ? Number((votes * 100n) / totalVotes) : 0;
+          const isMyVote =
+            hasVoted && proposal.caller_vote[0] === opt.id;
           const isWinner = winningIdx === i;
           const showVoteBtn = !isExpired && !hasVoted && canVote;
 
           return (
-            <div key={`${proposal.id}-${i}`} className="space-y-1.5">
+            <div key={`${proposal.id}-${opt.id}`} className="space-y-1.5">
               <div className="flex items-center justify-between text-sm gap-2">
                 <span
                   className={`flex items-center gap-1.5 font-medium min-w-0 ${
@@ -220,7 +240,7 @@ function ProposalCard({
                   {isMyVote && (
                     <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
                   )}
-                  <span className="truncate">{opt}</span>
+                  <span className="truncate">{opt.option_label}</span>
                 </span>
                 <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
                   {votes.toString()} ({pct}%)
@@ -240,7 +260,7 @@ function ProposalCard({
                 {showVoteBtn && (
                   <button
                     type="button"
-                    onClick={() => handleVote(i)}
+                    onClick={() => handleVote(opt.id)}
                     disabled={vote.isPending}
                     className="text-xs px-2.5 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 hover:border-primary/40 transition-all duration-200 flex-shrink-0 font-medium disabled:opacity-50"
                     data-ocid="vote-btn"
@@ -264,9 +284,9 @@ function ProposalCard({
           <p className="text-xs text-muted-foreground">
             Final result:{" "}
             <span className="font-semibold text-foreground">
-              {proposal.options[winningIdx]}
+              {proposal.options[winningIdx]?.option_label}
             </span>{" "}
-            won with {proposal.vote_counts[winningIdx]?.toString() ?? "0"} votes
+            won with {proposal.options[winningIdx]?.vote_count.toString() ?? "0"} votes
           </p>
         </div>
       )}
@@ -283,8 +303,8 @@ function CreateProposalModal({
   const createProposal = useCreateProposal();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [proposalType, setProposalType] = useState<ProposalType>(
-    ProposalType.General,
+  const [categoryKeyState, setCategoryKeyState] = useState<string>(
+    "CommunityDecision",
   );
   const [options, setOptions] = useState<Array<{ id: string; value: string }>>([
     { id: "opt-0", value: "" },
@@ -318,12 +338,25 @@ function CreateProposalModal({
       return;
     }
 
+    const categoryMap: Record<string, ProposalCategory> = {
+      VarietyVote: { VarietyVote: null },
+      ProductVote: { ProductVote: null },
+      CommunityDecision: { CommunityDecision: null },
+      TreasurySpend: { TreasurySpend: null },
+      FeatureRequest: { FeatureRequest: null },
+    };
+    const startsAt = BigInt(Date.now()) * 1_000_000n;
     const input: CreateProposalInput = {
       title: title.trim(),
       description: description.trim(),
-      proposal_type: proposalType,
-      options: validOptions,
-      ends_at: BigInt(endsAtMs) * BigInt(1_000_000),
+      category: categoryMap[categoryKeyState] ?? { CommunityDecision: null },
+      options: validOptions.map((label) => ({
+        option_label: label,
+        description: [],
+      })),
+      voting_starts_at: startsAt,
+      voting_ends_at: BigInt(endsAtMs) * 1_000_000n,
+      publish_now: true,
     };
 
     try {
@@ -332,7 +365,7 @@ function CreateProposalModal({
       onClose();
       setTitle("");
       setDescription("");
-      setProposalType(ProposalType.General);
+      setCategoryKeyState("CommunityDecision");
       setOptions([
         { id: "opt-0", value: "" },
         { id: "opt-1", value: "" },
@@ -401,8 +434,8 @@ function CreateProposalModal({
               Proposal Type <span className="text-primary">*</span>
             </Label>
             <Select
-              value={proposalType}
-              onValueChange={(v) => setProposalType(v as ProposalType)}
+              value={categoryKeyState}
+              onValueChange={setCategoryKeyState}
             >
               <SelectTrigger
                 className="bg-background border-input text-foreground"
@@ -411,13 +444,11 @@ function CreateProposalModal({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-card border-border">
-                <SelectItem value={ProposalType.PlantVariety}>
-                  🌶️ Plant Variety
-                </SelectItem>
-                <SelectItem value={ProposalType.Seasoning}>
-                  🧂 Seasoning
-                </SelectItem>
-                <SelectItem value={ProposalType.General}>📋 General</SelectItem>
+                <SelectItem value="VarietyVote">🌶️ Variety Vote</SelectItem>
+                <SelectItem value="ProductVote">🧂 Product Vote</SelectItem>
+                <SelectItem value="CommunityDecision">📋 General</SelectItem>
+                <SelectItem value="FeatureRequest">✨ Feature Request</SelectItem>
+                <SelectItem value="TreasurySpend">💰 Treasury Spend</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -518,8 +549,8 @@ function DAOStatsBar() {
 
   const items = [
     {
-      label: "Total Proposals",
-      value: stats?.totalProposals ?? BigInt(0),
+      label: "Your Votes",
+      value: stats?.callerVotes ?? 0n,
       icon: <Vote className="w-4 h-4" />,
     },
     {
@@ -647,14 +678,19 @@ export default function DAOPage() {
 
   const filtered =
     proposals?.filter((p) =>
-      filter === "all" ? true : p.proposal_type === filter,
+      filter === "all" ? true : categoryKey(p.category) === filter,
     ) ?? [];
 
   const activeProposals = filtered.filter(
-    (p) => Date.now() <= Number(p.ends_at) / 1_000_000,
+    (p) =>
+      "Active" in p.status &&
+      Date.now() <= Number(p.voting_ends_at) / 1_000_000,
   );
   const closedProposals = filtered.filter(
-    (p) => Date.now() > Number(p.ends_at) / 1_000_000,
+    (p) =>
+      "Closed" in p.status ||
+      "Cancelled" in p.status ||
+      Date.now() > Number(p.voting_ends_at) / 1_000_000,
   );
   const isLoading = proposalsLoading || accessLoading;
 

@@ -1,98 +1,276 @@
-import { useActor } from "./useActor";
+import type { ActorSubclass } from "@dfinity/agent";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Backend } from "../backend";
 import { createActor } from "../backend";
-import type { CreateProposalInput, ProposalId } from "../backend";
+import type {
+  CreateProposalInput,
+  ProposalCategory,
+  ProposalPublic,
+  ProposalResults,
+  ProposalStatus,
+  UpdateProposalInput,
+  _SERVICE,
+} from "../declarations/backend.did";
+import { useActor } from "./useActor";
+import { useActorReady } from "./useActorReady";
 
-function useBackendActor() {
-  return useActor(createActor);
+function rawService(actor: Backend | null): ActorSubclass<_SERVICE> | null {
+  if (!actor) return null;
+  return (actor as unknown as { actor: ActorSubclass<_SERVICE> }).actor;
 }
 
-// ─── DAO Query Hooks ──────────────────────────────────────────────────────────
+function useDaoActor() {
+  return useActor<Backend>(createActor);
+}
 
-export function useProposals() {
-  const { actor, isFetching } = useBackendActor();
+export type { ProposalPublic, CreateProposalInput, ProposalCategory, ProposalStatus };
+
+export function useProposals(
+  status?: ProposalStatus,
+  category?: ProposalCategory,
+) {
+  const { actor, isFetching } = useDaoActor();
+  const { actorReady } = useActorReady();
+  const svc = rawService(actor);
   return useQuery({
-    queryKey: ["proposals"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.listDAOProposals();
+    queryKey: [
+      "proposals",
+      status ? Object.keys(status)[0] : "all",
+      category ? Object.keys(category)[0] : "all",
+    ],
+    queryFn: async (): Promise<ProposalPublic[]> => {
+      if (!svc) return [];
+      if (typeof svc.getProposals === "function") {
+        return svc.getProposals(
+          status ? [status] : [],
+          category ? [category] : [],
+          0n,
+          100n,
+        );
+      }
+      return svc.listDAOProposals();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!svc && !isFetching && actorReady,
   });
 }
 
-export function useProposal(id: ProposalId | undefined) {
-  const { actor, isFetching } = useBackendActor();
+export function useProposal(id: bigint | undefined) {
+  const { actor, isFetching } = useDaoActor();
+  const { actorReady } = useActorReady();
+  const svc = rawService(actor);
   return useQuery({
     queryKey: ["proposal", id?.toString()],
-    queryFn: async () => {
-      if (!actor || id === undefined) return null;
-      return actor.getDAOProposal(id);
+    queryFn: async (): Promise<ProposalPublic | null> => {
+      if (!svc || id === undefined) return null;
+      const r =
+        typeof svc.getProposal === "function"
+          ? await svc.getProposal(id)
+          : await svc.getDAOProposal(id);
+      return r.length === 1 ? r[0]! : null;
     },
-    enabled: !!actor && !isFetching && id !== undefined,
+    enabled: !!svc && !isFetching && actorReady && id !== undefined,
+  });
+}
+
+export function useProposalResults(id: bigint | undefined) {
+  const { actor, isFetching } = useDaoActor();
+  const svc = rawService(actor);
+  return useQuery({
+    queryKey: ["proposalResults", id?.toString()],
+    queryFn: async (): Promise<ProposalResults | null> => {
+      if (!svc || id === undefined) return null;
+      if (typeof svc.getProposalResults !== "function") return null;
+      const r = await svc.getProposalResults(id);
+      return r.length === 1 ? r[0]! : null;
+    },
+    enabled: !!svc && !isFetching && id !== undefined,
   });
 }
 
 export function useHasDAOAccess() {
-  const { actor, isFetching } = useBackendActor();
+  const { actor, isFetching } = useDaoActor();
+  const { actorReady } = useActorReady();
+  const svc = rawService(actor);
   return useQuery({
     queryKey: ["hasDAOAccess"],
     queryFn: async () => {
-      if (!actor) return false;
-      return actor.hasDAOAccess();
+      if (!svc) return false;
+      return svc.hasDAOAccess();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!svc && !isFetching && actorReady,
   });
 }
 
 export function useDAOStats() {
-  const { actor, isFetching } = useBackendActor();
+  const { actor, isFetching } = useDaoActor();
+  const { actorReady } = useActorReady();
+  const svc = rawService(actor);
   return useQuery({
     queryKey: ["daoStats"],
     queryFn: async () => {
-      if (!actor)
+      if (!svc) {
         return {
-          totalProposals: BigInt(0),
-          activeProposals: BigInt(0),
-          totalVotes: BigInt(0),
+          activeProposals: 0n,
+          totalVotes: 0n,
+          callerVotes: 0n,
+          uniqueVoters: 0n,
         };
-      return actor.getDAOStats();
+      }
+      const stats = await svc.getDAOStats();
+      return {
+        activeProposals: BigInt(
+          "activeProposals" in stats ? stats.activeProposals : 0,
+        ),
+        totalVotes: BigInt(stats.totalVotes),
+        callerVotes: BigInt(
+          "callerVotes" in stats ? (stats as { callerVotes: bigint }).callerVotes : 0,
+        ),
+        uniqueVoters: BigInt(
+          "uniqueVoters" in stats ? (stats as { uniqueVoters: bigint }).uniqueVoters : 0,
+        ),
+      };
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!svc && !isFetching && actorReady,
   });
 }
 
-// ─── DAO Mutation Hooks ───────────────────────────────────────────────────────
+export function useHasVoted(proposalId: bigint | undefined) {
+  const { actor, isFetching } = useDaoActor();
+  const svc = rawService(actor);
+  return useQuery({
+    queryKey: ["hasVoted", proposalId?.toString()],
+    queryFn: async () => {
+      if (!svc || proposalId === undefined) return null;
+      if (typeof svc.hasVoted !== "function") return null;
+      const r = await svc.hasVoted(proposalId);
+      return r.length === 1 ? r[0]! : null;
+    },
+    enabled: !!svc && !isFetching && proposalId !== undefined,
+  });
+}
 
-export function useCreateProposal() {
-  const { actor } = useBackendActor();
+export function useCastVote() {
+  const { actor } = useDaoActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreateProposalInput) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.createDAOProposal(input);
+    mutationFn: async ({
+      proposalId,
+      optionId,
+    }: {
+      proposalId: bigint;
+      optionId: bigint;
+    }) => {
+      const svc = rawService(actor);
+      if (!svc) throw new Error("Not connected");
+      if (typeof svc.castVote === "function") {
+        return svc.castVote(proposalId, optionId);
+      }
+      await svc.voteOnProposal(proposalId, optionId);
+      return true;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["proposals"] });
-      qc.invalidateQueries({ queryKey: ["daoStats"] });
+      void qc.invalidateQueries({ queryKey: ["proposals"] });
+      void qc.invalidateQueries({ queryKey: ["daoStats"] });
     },
   });
 }
 
 export function useVoteOnProposal() {
-  const { actor } = useBackendActor();
-  const qc = useQueryClient();
+  const cast = useCastVote();
   return useMutation({
     mutationFn: async ({
       proposalId,
       optionIndex,
-    }: { proposalId: ProposalId; optionIndex: bigint }) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.voteOnProposal(proposalId, optionIndex);
+    }: {
+      proposalId: bigint;
+      optionIndex: bigint;
+    }) => cast.mutateAsync({ proposalId, optionId: optionIndex }),
+  });
+}
+
+export function useCreateProposal() {
+  const { actor } = useDaoActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateProposalInput) => {
+      const svc = rawService(actor);
+      if (!svc) throw new Error("Not connected");
+      if (typeof svc.createProposal === "function") {
+        const r = await svc.createProposal(input);
+        return r.proposalId;
+      }
+      await svc.createDAOProposal(input);
+      return 0n;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["proposals"] });
-      qc.invalidateQueries({ queryKey: ["daoStats"] });
+      void qc.invalidateQueries({ queryKey: ["proposals"] });
+      void qc.invalidateQueries({ queryKey: ["daoStats"] });
+    },
+  });
+}
+
+export function useUpdateProposal() {
+  const { actor } = useDaoActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      input,
+    }: {
+      id: bigint;
+      input: UpdateProposalInput;
+    }) => {
+      const svc = rawService(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.updateProposal(id, input);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["proposals"] });
+    },
+  });
+}
+
+export function usePublishProposal() {
+  const { actor } = useDaoActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      const svc = rawService(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.publishProposal(id);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["proposals"] });
+    },
+  });
+}
+
+export function useCancelProposal() {
+  const { actor } = useDaoActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      const svc = rawService(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.cancelProposal(id);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["proposals"] });
+    },
+  });
+}
+
+export function useCloseProposal() {
+  const { actor } = useDaoActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      const svc = rawService(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.closeProposal(id);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["proposals"] });
     },
   });
 }

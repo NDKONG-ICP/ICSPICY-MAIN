@@ -11,7 +11,8 @@ import {
 } from "@/hooks/useAdminShop";
 import { OrderStatus } from "@/backend";
 import { formatCents } from "@/hooks/useNims";
-import { Package } from "lucide-react";
+import { exportAdminOrdersCsv } from "@/lib/nims-export-mappers";
+import { Download, Package } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -90,7 +91,8 @@ export function AdminOrdersTab() {
 
   return (
     <div className="space-y-4" data-ocid="admin-orders-tab">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
         {FILTER_TABS.map((tab) => {
           const selected = adminFilterKey(filter) === adminFilterKey(tab.filter);
           return (
@@ -113,6 +115,20 @@ export function AdminOrdersTab() {
             </Button>
           );
         })}
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 text-xs gap-1.5"
+          onClick={() => {
+            exportAdminOrdersCsv(orders);
+            toast.success("Orders CSV downloaded");
+          }}
+          disabled={orders.length === 0}
+        >
+          <Download className="w-3.5 h-3.5" />
+          Export CSV
+        </Button>
       </div>
 
       {loading ? (

@@ -8,6 +8,45 @@ const COMPRESSION_QUALITY = 0.82;
 const MAX_DIMENSION = 2048;
 
 /**
+ * Avatar-sized compression: max 500×500, target under 500 KB.
+ */
+export async function compressAvatarImage(file: File): Promise<Blob> {
+  const MAX_AVATAR_DIM = 500;
+  const AVATAR_QUALITY = 0.85;
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let { width, height } = img;
+      const ratio = Math.min(MAX_AVATAR_DIM / width, MAX_AVATAR_DIM / height, 1);
+      width = Math.round(width * ratio);
+      height = Math.round(height * ratio);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return resolve(file);
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else resolve(file);
+        },
+        "image/jpeg",
+        AVATAR_QUALITY,
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Failed to load image for compression"));
+    };
+    img.src = objectUrl;
+  });
+}
+
+/**
  * Compress a File using the Canvas API.
  * Returns the original File unchanged if it is already under the threshold.
  */

@@ -142,6 +142,15 @@ type UpdateRecipeInput =
    title: opt text;
    total_time: opt text;
  };
+type UpdateProposalInput = 
+ record {
+   category: opt ProposalCategory;
+   description: opt text;
+   options: opt vec ProposalOptionInput;
+   title: opt text;
+   voting_ends_at: opt Timestamp;
+   voting_starts_at: opt Timestamp;
+ };
 type UpdateProductInput = 
  record {
    active: opt bool;
@@ -543,27 +552,62 @@ type PurchasePlantResult =
    nftTokenId: opt nat;
    success: bool;
  };
-type ProposalType = 
+type ProposalStatus = 
  variant {
-   General;
-   PlantVariety;
-   Seasoning;
+   Active;
+   Cancelled;
+   Closed;
+   Draft;
+ };
+type ProposalResults = 
+ record {
+   options: vec ProposalResultOption;
+   total_votes: nat;
+   winner: opt text;
+ };
+type ProposalResultOption = 
+ record {
+   option_label: text;
+   percentage: nat;
+   vote_count: nat;
  };
 type ProposalPublic = 
  record {
    caller_vote: opt nat;
+   category: ProposalCategory;
    created_at: Timestamp;
-   created_by: principal;
+   creator: principal;
    description: text;
-   ends_at: Timestamp;
    id: ProposalId;
-   options: vec text;
-   proposal_type: ProposalType;
+   options: vec ProposalOptionPublic;
+   status: ProposalStatus;
    title: text;
-   vote_counts: vec nat;
-   voter_count: nat;
+   total_votes: nat;
+   updated_at: Timestamp;
+   voting_ends_at: Timestamp;
+   voting_starts_at: Timestamp;
+ };
+type ProposalOptionPublic = 
+ record {
+   description: opt text;
+   id: nat;
+   option_label: text;
+   vote_count: nat;
+ };
+type ProposalOptionInput = 
+ record {
+   description: opt text;
+   option_label: text;
  };
 type ProposalId = nat;
+type ProposalCategory = 
+ variant {
+   CommunityDecision;
+   FeatureRequest;
+   ProductVote;
+   TreasurySpend;
+   VarietyVote;
+ };
 type ProductPublic = 
  record {
    active: bool;
@@ -1130,11 +1174,14 @@ type ICSpicy =
                                               ok;
                                             });
    cancelOffer: (offerId: text) -> (Offer);
+   cancelProposal: (id: ProposalId) -> (bool);
    cancelResaleListing: (listing_id: text) -> (variant {
                                                  err: text;
                                                  ok;
                                                });
+   castVote: (proposalId: ProposalId, optionId: nat) -> (bool);
    clearArtworkFiles: () -> ();
+   closeProposal: (id: ProposalId) -> (bool);
    completeEvent: (event_id: nat) -> (PlantingEvent);
    confirmICPayPayment: (orderId: nat, paymentId: text) ->
     (record {
@@ -1158,6 +1205,8 @@ type ICSpicy =
    createPlantingEvent: (input: CreatePlantingEventInput) -> (PlantingEvent);
    createPost: (input: CreatePostInput) -> (PostPublic);
    createProduct: (input: CreateProductInput) -> (ProductPublic);
+   createProposal: (input: CreateProposalInput) ->
+    (record {proposalId: nat;});
    createRecipe: (input: CreateRecipeInput) ->
     (record {recipe_id: RecipeId;});
    createTray: (input: CreateTrayInput) -> (TrayPublic);
@@ -1197,6 +1246,7 @@ type ICSpicy =
    getArtworkUploadResult: () -> (UploadResult) query;
    getArtworkUploadStatus: () -> (UploadSessionStatus) query;
    getAuditLog: (offset: nat, limit: nat) -> (vec AuditEntry) query;
+   getAvatarFile: (key: text) -> (opt vec nat8) query;
    getBatchGiftPack: (claim_token_id: ClaimTokenId) ->
     (opt BatchGiftPackPublic) query;
    getCallerDiscount: () -> (CallerDiscount) query;
@@ -1222,8 +1272,9 @@ type ICSpicy =
    getDAOStats: () ->
     (record {
        activeProposals: nat;
-       totalProposals: nat;
+       callerVotes: nat;
        totalVotes: nat;
+       uniqueVoters: nat;
      }) query;
    getFeaturedRecipes: (limit: nat) -> (vec RecipePublic) query;
    getFollowers: (user: principal, offset: nat, limit: nat) ->
@@ -1284,6 +1335,10 @@ type ICSpicy =
    getPostWithComments: (post_id: PostId) -> (opt PostWithComments) query;
    getProduct: (product_id: ProductId) -> (opt ProductPublic) query;
    getProfile: (user: principal) -> (opt UserProfilePublic) query;
+   getProposal: (id: ProposalId) -> (opt ProposalPublic) query;
+   getProposalResults: (id: ProposalId) -> (opt ProposalResults) query;
+   getProposals: (status: opt ProposalStatus, category: opt ProposalCategory,
+    offset: nat, limit: nat) -> (vec ProposalPublic) query;
    getPublicProfile: (user: principal) -> (opt UserProfilePublic) query;
    getRecentActivity: (limit: nat) -> (vec ActivityEntry) query;
    getRecipe: (id: RecipeId) -> (opt RecipePublic) query;
@@ -1321,6 +1376,7 @@ type ICSpicy =
    hasDAOAccess: () -> (bool) query;
    hasLikedPost: (post_id: PostId) -> (bool) query;
    hasMembership: () -> (bool) query;
+   hasVoted: (proposalId: ProposalId) -> (opt CallerVoteInfo) query;
    icpayTransform: (record {
                       context: blob;
                       response: http_request_result;
@@ -1476,6 +1532,7 @@ type ICSpicy =
        context: blob;
        response: http_request_result;
      }) -> (http_request_result) query;
+   publishProposal: (id: ProposalId) -> (bool);
    publishRecipe: (id: RecipeId) -> (bool);
    purchasePepperHead: (paymentId: text) ->
     (record {
@@ -1535,6 +1592,7 @@ type ICSpicy =
    setPlantNFT: (plant_id: PlantId, nft_id: text) -> ();
    storeArtworkFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
+   storeAvatarFile: (data: vec nat8) -> (text);
    storeCommunityImage: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
    storeNimsPhotoFile: (path: text, data: vec nat8, mimeType: text) ->
@@ -1566,6 +1624,7 @@ type ICSpicy =
     text) -> ();
    updatePlantingEvent: (input: UpdatePlantingEventInput) -> (PlantingEvent);
    updateProduct: (input: UpdateProductInput) -> ();
+   updateProposal: (id: ProposalId, input: UpdateProposalInput) -> (bool);
    updateRecipe: (input: UpdateRecipeInput) -> (bool);
    updateSeedLot: (id: nat, quantity: opt nat, harvestDate: opt Timestamp,
     generation: opt text, germinationRate: opt nat, notes: opt text,
@@ -1665,11 +1724,13 @@ type CreateRecipeInput =
  };
 type CreateProposalInput = 
  record {
+   category: ProposalCategory;
    description: text;
-   ends_at: Timestamp;
-   options: vec text;
-   proposal_type: ProposalType;
+   options: vec ProposalOptionInput;
+   publish_now: bool;
    title: text;
+   voting_ends_at: Timestamp;
+   voting_starts_at: Timestamp;
  };
 type CreateProductInput = 
  record {
@@ -1806,6 +1867,11 @@ type CanisterTreasuryBalance =
    balance: nat;
    ledgerCanisterId: text;
    symbol: text;
+ };
+type CallerVoteInfo = 
+ record {
+   nft_token_id: nat;
+   option_id: nat;
  };
 type CallerDiscount = 
  record {

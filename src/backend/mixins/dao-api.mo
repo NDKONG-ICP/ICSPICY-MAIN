@@ -1,64 +1,122 @@
 import Map "mo:core/Map";
+import Set "mo:core/Set";
+import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import Time "mo:core/Time";
 import AccessControl "../lib/access-control";
 import Common "../types/common";
 import DAOTypes "../types/dao";
-import PlantTypes "../types/plants";
-import MembershipTypes "../types/membership";
 import DAOLib "../lib/dao";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
   proposals : Map.Map<Common.ProposalId, DAOTypes.Proposal>,
-  plants : Map.Map<Common.PlantId, PlantTypes.Plant>,
-  memberships : Map.Map<Principal, MembershipTypes.MembershipNFT>,
+  daoVotes : Map.Map<Text, DAOTypes.VoteRecord>,
+  icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
   nextProposalId : { var value : Nat },
 ) {
-  // Admin: create a DAO proposal
+  // ── Public queries ─────────────────────────────────────────────────────────
+
+  public query ({ caller }) func getProposals(
+    status : ?DAOTypes.ProposalStatus,
+    category : ?DAOTypes.ProposalCategory,
+    offset : Nat,
+    limit : Nat,
+  ) : async [DAOTypes.ProposalPublic] {
+    DAOLib.listProposals(proposals, daoVotes, caller, status, category, offset, limit);
+  };
+
+  public query ({ caller }) func getProposal(id : Common.ProposalId) : async ?DAOTypes.ProposalPublic {
+    DAOLib.getProposal(proposals, daoVotes, caller, id);
+  };
+
+  public query func getProposalResults(id : Common.ProposalId) : async ?DAOTypes.ProposalResults {
+    DAOLib.getProposalResults(proposals, id);
+  };
+
+  public query ({ caller }) func hasVoted(proposalId : Common.ProposalId) : async ?DAOTypes.CallerVoteInfo {
+    DAOLib.hasVoted(daoVotes, proposalId, caller);
+  };
+
+  public query ({ caller }) func hasDAOAccess() : async Bool {
+    DAOLib.hasDAOAccess(icrc7Balances, caller);
+  };
+
+  public query ({ caller }) func getDAOStats() : async {
+    activeProposals : Nat;
+    totalVotes : Nat;
+    callerVotes : Nat;
+    uniqueVoters : Nat;
+  } {
+    DAOLib.getDAOStats(proposals, daoVotes, caller);
+  };
+
+  // Legacy aliases
+  public query ({ caller }) func listDAOProposals() : async [DAOTypes.ProposalPublic] {
+    DAOLib.listProposals(proposals, daoVotes, caller, null, null, 0, 1000);
+  };
+
+  public query ({ caller }) func getDAOProposal(proposal_id : Common.ProposalId) : async ?DAOTypes.ProposalPublic {
+    DAOLib.getProposal(proposals, daoVotes, caller, proposal_id);
+  };
+
+  // ── Authenticated voting ───────────────────────────────────────────────────
+
+  public shared ({ caller }) func castVote(proposalId : Common.ProposalId, optionId : Nat) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    DAOLib.castVote(proposals, daoVotes, icrc7Balances, caller, proposalId, optionId);
+  };
+
+  public shared ({ caller }) func voteOnProposal(proposal_id : Common.ProposalId, option_index : Nat) : async () {
+    AccessControl.requireAuthenticated(caller);
+    ignore DAOLib.castVote(proposals, daoVotes, icrc7Balances, caller, proposal_id, option_index);
+  };
+
+  // ── Admin proposal management ──────────────────────────────────────────────
+
+  public shared ({ caller }) func createProposal(input : DAOTypes.CreateProposalInput) : async { proposalId : Nat } {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    let proposal = DAOLib.createProposal(proposals, nextProposalId.value, caller, input);
+    let id = nextProposalId.value;
+    nextProposalId.value += 1;
+    { proposalId = id };
+  };
+
   public shared ({ caller }) func createDAOProposal(input : DAOTypes.CreateProposalInput) : async DAOTypes.ProposalPublic {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Admin only");
     };
     let proposal = DAOLib.createProposal(proposals, nextProposalId.value, caller, input);
     nextProposalId.value += 1;
-    DAOLib.toPublic(proposal, caller);
+    DAOLib.toPublic(proposal, daoVotes, caller);
   };
 
-  // Member: vote on a DAO proposal (requires plant NFT or membership NFT)
-  public shared ({ caller }) func voteOnProposal(proposal_id : Common.ProposalId, option_index : Nat) : async () {
-    AccessControl.requireAuthenticated(caller);
-    DAOLib.vote(proposals, plants, memberships, caller, proposal_id, option_index);
-  };
-
-  // Public: list all DAO proposals
-  public query ({ caller }) func listDAOProposals() : async [DAOTypes.ProposalPublic] {
-    DAOLib.listProposals(proposals, caller);
-  };
-
-  // Public: fetch a single DAO proposal
-  public query ({ caller }) func getDAOProposal(proposal_id : Common.ProposalId) : async ?DAOTypes.ProposalPublic {
-    DAOLib.getProposal(proposals, caller, proposal_id);
-  };
-
-  // Public: check if caller has DAO access
-  public query ({ caller }) func hasDAOAccess() : async Bool {
-    DAOLib.hasDAOAccess(plants, memberships, caller);
-  };
-
-  // Public: aggregate DAO statistics
-  public query func getDAOStats() : async { totalProposals : Nat; activeProposals : Nat; totalVotes : Nat } {
-    var activeCount : Nat = 0;
-    var voteCount : Nat = 0;
-    let now = Time.now();
-    for ((_, p) in proposals.entries()) {
-      if (p.ends_at > now) { activeCount += 1 };
-      voteCount += p.votes.size();
+  public shared ({ caller }) func updateProposal(id : Common.ProposalId, input : DAOTypes.UpdateProposalInput) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
     };
-    {
-      totalProposals  = proposals.size();
-      activeProposals = activeCount;
-      totalVotes      = voteCount;
+    DAOLib.updateProposal(proposals, id, input);
+  };
+
+  public shared ({ caller }) func publishProposal(id : Common.ProposalId) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
     };
+    DAOLib.publishProposal(proposals, id);
+  };
+
+  public shared ({ caller }) func cancelProposal(id : Common.ProposalId) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    DAOLib.cancelProposal(proposals, id);
+  };
+
+  public shared ({ caller }) func closeProposal(id : Common.ProposalId) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    DAOLib.closeProposal(proposals, id);
   };
 };

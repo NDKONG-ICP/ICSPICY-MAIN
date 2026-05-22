@@ -298,6 +298,7 @@ export const idlFactory = ({ IDL }) => {
     'message' : IDL.Text,
     'success' : IDL.Bool,
   });
+  const ProposalId = IDL.Nat;
   const PlantingEventType = IDL.Variant({
     'directSow' : IDL.Null,
     'startIndoors' : IDL.Null,
@@ -343,31 +344,52 @@ export const idlFactory = ({ IDL }) => {
     'content' : IDL.Text,
     'anonymous' : IDL.Bool,
   });
-  const ProposalType = IDL.Variant({
-    'General' : IDL.Null,
-    'Seasoning' : IDL.Null,
-    'PlantVariety' : IDL.Null,
+  const ProposalCategory = IDL.Variant({
+    'VarietyVote' : IDL.Null,
+    'ProductVote' : IDL.Null,
+    'FeatureRequest' : IDL.Null,
+    'CommunityDecision' : IDL.Null,
+    'TreasurySpend' : IDL.Null,
+  });
+  const ProposalOptionInput = IDL.Record({
+    'description' : IDL.Opt(IDL.Text),
+    'option_label' : IDL.Text,
   });
   const CreateProposalInput = IDL.Record({
     'title' : IDL.Text,
-    'ends_at' : Timestamp,
+    'publish_now' : IDL.Bool,
     'description' : IDL.Text,
-    'options' : IDL.Vec(IDL.Text),
-    'proposal_type' : ProposalType,
+    'voting_ends_at' : Timestamp,
+    'category' : ProposalCategory,
+    'voting_starts_at' : Timestamp,
+    'options' : IDL.Vec(ProposalOptionInput),
   });
-  const ProposalId = IDL.Nat;
+  const ProposalStatus = IDL.Variant({
+    'Closed' : IDL.Null,
+    'Active' : IDL.Null,
+    'Draft' : IDL.Null,
+    'Cancelled' : IDL.Null,
+  });
+  const ProposalOptionPublic = IDL.Record({
+    'id' : IDL.Nat,
+    'description' : IDL.Opt(IDL.Text),
+    'option_label' : IDL.Text,
+    'vote_count' : IDL.Nat,
+  });
   const ProposalPublic = IDL.Record({
     'id' : ProposalId,
+    'status' : ProposalStatus,
     'title' : IDL.Text,
-    'vote_counts' : IDL.Vec(IDL.Nat),
-    'ends_at' : Timestamp,
+    'updated_at' : Timestamp,
+    'creator' : IDL.Principal,
     'description' : IDL.Text,
     'created_at' : Timestamp,
-    'created_by' : IDL.Principal,
-    'voter_count' : IDL.Nat,
+    'voting_ends_at' : Timestamp,
+    'category' : ProposalCategory,
+    'total_votes' : IDL.Nat,
+    'voting_starts_at' : Timestamp,
     'caller_vote' : IDL.Opt(IDL.Nat),
-    'options' : IDL.Vec(IDL.Text),
-    'proposal_type' : ProposalType,
+    'options' : IDL.Vec(ProposalOptionPublic),
   });
   const ShippingAddress = IDL.Record({
     'zip' : IDL.Text,
@@ -903,6 +925,16 @@ export const idlFactory = ({ IDL }) => {
     'has_liked' : IDL.Bool,
     'comments' : IDL.Vec(CommentPublic),
   });
+  const ProposalResultOption = IDL.Record({
+    'option_label' : IDL.Text,
+    'vote_count' : IDL.Nat,
+    'percentage' : IDL.Nat,
+  });
+  const ProposalResults = IDL.Record({
+    'winner' : IDL.Opt(IDL.Text),
+    'total_votes' : IDL.Nat,
+    'options' : IDL.Vec(ProposalResultOption),
+  });
   const ActivityEntry = IDL.Record({
     'plantName' : IDL.Text,
     'actionType' : IDL.Text,
@@ -1010,6 +1042,10 @@ export const idlFactory = ({ IDL }) => {
   const ZoneCalendar = IDL.Record({
     'zone_label' : IDL.Text,
     'months' : IDL.Vec(ZoneSchedule),
+  });
+  const CallerVoteInfo = IDL.Record({
+    'nft_token_id' : IDL.Nat,
+    'option_id' : IDL.Nat,
   });
   const ApprovalInfo = IDL.Record({
     'memo' : IDL.Opt(IDL.Vec(IDL.Nat8)),
@@ -1243,6 +1279,14 @@ export const idlFactory = ({ IDL }) => {
     'description' : IDL.Opt(IDL.Text),
     'image_keys' : IDL.Opt(IDL.Vec(IDL.Text)),
   });
+  const UpdateProposalInput = IDL.Record({
+    'title' : IDL.Opt(IDL.Text),
+    'description' : IDL.Opt(IDL.Text),
+    'voting_ends_at' : IDL.Opt(Timestamp),
+    'category' : IDL.Opt(ProposalCategory),
+    'voting_starts_at' : IDL.Opt(Timestamp),
+    'options' : IDL.Opt(IDL.Vec(ProposalOptionInput)),
+  });
   const UpdateRecipeInput = IDL.Record({
     'id' : RecipeId,
     'title' : IDL.Opt(IDL.Text),
@@ -1452,12 +1496,15 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'cancelOffer' : IDL.Func([IDL.Text], [Offer], []),
+    'cancelProposal' : IDL.Func([ProposalId], [IDL.Bool], []),
     'cancelResaleListing' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
+    'castVote' : IDL.Func([ProposalId, IDL.Nat], [IDL.Bool], []),
     'clearArtworkFiles' : IDL.Func([], [], []),
+    'closeProposal' : IDL.Func([ProposalId], [IDL.Bool], []),
     'completeEvent' : IDL.Func([IDL.Nat], [PlantingEvent], []),
     'confirmICPayPayment' : IDL.Func(
         [IDL.Nat, IDL.Text],
@@ -1495,6 +1542,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'createPost' : IDL.Func([CreatePostInput], [PostPublic], []),
     'createProduct' : IDL.Func([CreateProductInput], [ProductPublic], []),
+    'createProposal' : IDL.Func(
+        [CreateProposalInput],
+        [IDL.Record({ 'proposalId' : IDL.Nat })],
+        [],
+      ),
     'createRecipe' : IDL.Func(
         [CreateRecipeInput],
         [IDL.Record({ 'recipe_id' : RecipeId })],
@@ -1561,6 +1613,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(AuditEntry)],
         ['query'],
       ),
+    'getAvatarFile' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(IDL.Vec(IDL.Nat8))],
+        ['query'],
+      ),
     'getBatchGiftPack' : IDL.Func(
         [ClaimTokenId],
         [IDL.Opt(BatchGiftPackPublic)],
@@ -1617,7 +1674,8 @@ export const idlFactory = ({ IDL }) => {
         [
           IDL.Record({
             'totalVotes' : IDL.Nat,
-            'totalProposals' : IDL.Nat,
+            'uniqueVoters' : IDL.Nat,
+            'callerVotes' : IDL.Nat,
             'activeProposals' : IDL.Nat,
           }),
         ],
@@ -1753,6 +1811,21 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfilePublic)],
         ['query'],
       ),
+    'getProposal' : IDL.Func(
+        [ProposalId],
+        [IDL.Opt(ProposalPublic)],
+        ['query'],
+      ),
+    'getProposalResults' : IDL.Func(
+        [ProposalId],
+        [IDL.Opt(ProposalResults)],
+        ['query'],
+      ),
+    'getProposals' : IDL.Func(
+        [IDL.Opt(ProposalStatus), IDL.Opt(ProposalCategory), IDL.Nat, IDL.Nat],
+        [IDL.Vec(ProposalPublic)],
+        ['query'],
+      ),
     'getPublicProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfilePublic)],
@@ -1838,6 +1911,7 @@ export const idlFactory = ({ IDL }) => {
     'hasDAOAccess' : IDL.Func([], [IDL.Bool], ['query']),
     'hasLikedPost' : IDL.Func([PostId], [IDL.Bool], ['query']),
     'hasMembership' : IDL.Func([], [IDL.Bool], ['query']),
+    'hasVoted' : IDL.Func([ProposalId], [IDL.Opt(CallerVoteInfo)], ['query']),
     'icpayTransform' : IDL.Func(
         [
           IDL.Record({
@@ -2109,6 +2183,7 @@ export const idlFactory = ({ IDL }) => {
         [http_request_result],
         ['query'],
       ),
+    'publishProposal' : IDL.Func([ProposalId], [IDL.Bool], []),
     'publishRecipe' : IDL.Func([RecipeId], [IDL.Bool], []),
     'purchasePepperHead' : IDL.Func(
         [IDL.Text],
@@ -2216,6 +2291,7 @@ export const idlFactory = ({ IDL }) => {
         [StoredFile],
         [],
       ),
+    'storeAvatarFile' : IDL.Func([IDL.Vec(IDL.Nat8)], [IDL.Text], []),
     'storeCommunityImage' : IDL.Func(
         [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text],
         [StoredFile],
@@ -2274,6 +2350,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateProduct' : IDL.Func([UpdateProductInput], [], []),
+    'updateProposal' : IDL.Func(
+        [ProposalId, UpdateProposalInput],
+        [IDL.Bool],
+        [],
+      ),
     'updateRecipe' : IDL.Func([UpdateRecipeInput], [IDL.Bool], []),
     'updateSeedLot' : IDL.Func(
         [

@@ -66,6 +66,7 @@ export { NimsLocationPrompt } from "./NimsLocationPrompt";
 export { NewTrayModal } from "./NewTrayModal";
 export { AddPlantModal } from "./AddPlantModal";
 export { SeedBankPanel } from "./SeedBankPanel";
+export { NimsAnalyticsPanel } from "./NimsAnalyticsPanel";
 export { HarvestSeedsModal } from "./HarvestSeedsModal";
 export { NfcTagLinkModal } from "./NfcTagLinkModal";
 

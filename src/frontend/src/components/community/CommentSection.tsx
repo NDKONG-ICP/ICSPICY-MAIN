@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CommunityAvatar } from "./CommunityAvatar";
 import { Button } from "@/components/ui/button";
 import {
   ChevronDown,
@@ -128,11 +128,18 @@ export function CommentSection({
                     key={c.id.toString()}
                     className="flex gap-2.5 items-start"
                   >
-                    <Avatar className="w-7 h-7 shrink-0">
-                      <AvatarFallback className="text-[11px] font-semibold bg-secondary text-secondary-foreground">
-                        {getCommentAuthorInitial(c)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <CommunityAvatar
+                      principalText={
+                        c.author.toText()
+                      }
+                      username={
+                        c.author_username.length === 1
+                          ? c.author_username[0]
+                          : undefined
+                      }
+                      size="sm"
+                      className="w-7 h-7 text-[11px]"
+                    />
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex justify-between gap-2">
                         <p className="text-[11px] text-muted-foreground leading-tight">

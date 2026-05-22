@@ -118,3 +118,19 @@ export function getPlantingRecommendations(
     notes: `${overlay}${row.notes}`,
   }));
 }
+
+/** Map almanac action labels to Candid `PlantingEventType` keys. */
+export function plantingActionToEventTypeKey(
+  action: PlantingRecommendation["action"],
+): "startIndoors" | "directSow" | "transplantOutdoors" | "harvest" {
+  switch (action) {
+    case "Start Indoors":
+      return "startIndoors";
+    case "Direct Sow":
+      return "directSow";
+    case "Transplant Outdoors":
+      return "transplantOutdoors";
+    case "Harvest":
+      return "harvest";
+  }
+}

@@ -14,6 +14,7 @@ import {
   PostCard,
   PostComposer,
 } from "@/components/community";
+import { AvatarUpload } from "@/components/community/AvatarUpload";
 import type { FeedMode } from "@/hooks/useCommunityFeed";
 import {
   flattenCommunityFeedPages,
@@ -44,9 +45,13 @@ function ProfileSetupDialog({
   onComplete: () => void;
 }) {
   const saveProfile = useSaveCommunityProfile();
+  const { principal } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
+  const [avatarKey, setAvatarKey] = useState<string | undefined>();
+
+  const pidText = principal?.toText() ?? "";
 
   const handleSave = async () => {
     if (!displayName.trim()) {
@@ -57,7 +62,7 @@ function ProfileSetupDialog({
       await saveProfile.mutateAsync({
         username: displayName.trim(),
         bio: bio.trim(),
-        avatar_key: [],
+        avatar_key: avatarKey ? [avatarKey] : [],
         location: location.trim() ? [location.trim()] : [],
       });
       toast.success("Profile created! Welcome to the community 🌶️");
@@ -78,6 +83,14 @@ function ProfileSetupDialog({
           community.
         </p>
         <div className="space-y-3">
+          {pidText ? (
+            <AvatarUpload
+              principalText={pidText}
+              username={displayName}
+              avatarKey={avatarKey}
+              onAvatarKey={setAvatarKey}
+            />
+          ) : null}
           <div className="space-y-1.5">
             <Label htmlFor="setup-name">Display name *</Label>
             <Input

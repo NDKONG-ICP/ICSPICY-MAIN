@@ -29,15 +29,17 @@ import {
   useMyPlantingSchedule,
   useOverduePlantingEvents,
   useUpcomingPlantingEvents,
-  useZoneSchedule,
 } from "@/hooks/usePlantingSchedule";
 import { useMyPlantsNims } from "@/hooks/usePlantLifecycle";
 import { useNimsLocation } from "@/hooks/useNimsLocation";
 import { useWeather } from "@/hooks/useWeather";
 import {
+  getPlantingRecommendations,
   normalizeZone,
+  plantingActionToEventTypeKey,
   SUPPORTED_ZONES,
   ZONE_LABELS,
+  type PlantingRecommendation,
   type SupportedZone,
 } from "@/lib/planting-almanac";
 import { getWeatherSuggestions } from "@/lib/weather-suggestions";
@@ -94,7 +96,10 @@ export function PlantingCalendarPanel() {
   const schedule = useMyPlantingSchedule(startNs, endNs);
   const upcoming = useUpcomingPlantingEvents();
   const overdue = useOverduePlantingEvents();
-  const zoneRecs = useZoneSchedule(zone, viewMonth);
+  const zoneRecs = useMemo(
+    () => getPlantingRecommendations(viewMonth, zone),
+    [viewMonth, zone],
+  );
   const { data: weather } = useWeather(coordinates.lat, coordinates.lng);
   const { data: myPlants } = useMyPlantsNims();
   const createEvent = useCreatePlantingEvent();
@@ -137,19 +142,14 @@ export function PlantingCalendarPanel() {
     return getWeatherSuggestions(weather, plantHints);
   }, [weather, myPlants]);
 
-  const prefillFromRecommendation = (rec: {
-    name: string;
-    event_type: import("../declarations/backend.did").PlantingEventType;
-    notes: string;
-  }) => {
+  const prefillFromRecommendation = (rec: PlantingRecommendation) => {
     setPlantName(rec.name);
     setNotes(rec.notes);
-    if ("startIndoors" in rec.event_type) setEventTypeKey("startIndoors");
-    else if ("directSow" in rec.event_type) setEventTypeKey("directSow");
-    else if ("transplantOutdoors" in rec.event_type) setEventTypeKey("transplantOutdoors");
-    else if ("harvest" in rec.event_type) setEventTypeKey("harvest");
+    setEventTypeKey(plantingActionToEventTypeKey(rec.action));
     setAddOpen(true);
   };
+
+  const recommendationEventLabel = (rec: PlantingRecommendation) => rec.action;
 
   const suggestionColor = (type: string) => {
     if (type === "warning") return "text-red-400";
@@ -408,21 +408,21 @@ export function PlantingCalendarPanel() {
             month: "long",
           })}
         </h3>
-        {zoneRecs.isPending ? (
-          <Skeleton className="h-20 w-full" />
-        ) : zoneRecs.data && zoneRecs.data.length > 0 ? (
+        {zoneRecs.length > 0 ? (
           <div className="space-y-2">
-            {zoneRecs.data.map((rec, i) => (
+            {zoneRecs.map((rec, i) => (
               <div
                 key={i}
                 className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-muted/20 p-3 text-sm"
               >
                 <div>
-                  <p className="font-medium">{rec.name}</p>
+                  <p className="font-medium">
+                    {rec.emoji} {rec.name}
+                  </p>
                   <p className="text-xs text-muted-foreground">{rec.notes}</p>
                 </div>
                 <Badge variant="outline" className="text-[10px] shrink-0">
-                  {eventTypeLabel(rec.event_type)}
+                  {recommendationEventLabel(rec)}
                 </Badge>
                 {isAuthenticated ? (
                   <Button

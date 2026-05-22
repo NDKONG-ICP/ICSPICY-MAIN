@@ -299,6 +299,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // ── DAO state ──────────────────────────────────────────────────────────────
 
   let proposals = Map.empty<Common.ProposalId, DAOTypes.Proposal>();
+  let daoVotes = Map.empty<Text, DAOTypes.VoteRecord>();
 
   // ── Community state ────────────────────────────────────────────────────────
 
@@ -535,7 +536,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     nextProductId,
     nextOrderId,
   );
-  include DAOAPI(accessControlState, proposals, plants, memberships, nextProposalId);
+  include DAOAPI(accessControlState, proposals, daoVotes, icrc7Balances, nextProposalId);
   include CommunityAPI(
     accessControlState,
     posts,

@@ -24,6 +24,7 @@ import type {
   Icrc7TokenFilter,
 } from "../../declarations/backend.did";
 
+import { exportNftPoolCsv } from "../../lib/nims-export-mappers";
 import {
   useAdminReturnToPool,
   useAdminTransferFromPool,
@@ -305,19 +306,34 @@ export function AdminNFTPoolTab() {
             back for operations.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
-          onClick={() => {
-            refetchStats();
-            refetchRows();
-          }}
-        >
-          <RefreshCw className="w-4 h-4" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            disabled={displayRows.length === 0}
+            onClick={() => {
+              exportNftPoolCsv(displayRows);
+              toast.success("NFT pool CSV downloaded");
+            }}
+          >
+            Export CSV
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => {
+              refetchStats();
+              refetchRows();
+            }}
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

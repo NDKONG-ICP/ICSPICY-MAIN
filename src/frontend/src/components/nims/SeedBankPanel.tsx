@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { exportSeedLotsCsv } from "../../lib/nims-export-mappers";
 import { Loader2, Plus, Sprout } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -117,7 +118,18 @@ export function SeedBankPanel({ varieties, onPlantFromLot }: SeedBankPanelProps)
         )}
       </div>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap items-center">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            exportSeedLotsCsv(filteredLots);
+            toast.success("Seed bank CSV downloaded");
+          }}
+          disabled={filteredLots.length === 0}
+        >
+          📥 Export CSV
+        </Button>
         {(
           [
             ["collection", "Seed collection"],
