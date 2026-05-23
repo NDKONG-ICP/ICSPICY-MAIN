@@ -10,9 +10,12 @@ import AccessControl "../lib/access-control";
 import Types "../types/artwork-upload";
 import ArtworkLib "../lib/artwork-upload";
 import AssetUpload "../lib/asset-upload";
+import RateLimits "../lib/rate-limits";
+import RateLimit "../lib/rate-limit";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
+  rateLimits : RateLimits.Bundle,
   artworkUploadSession : Types.UploadSession,
   storedFiles   : Map.Map<Text, Types.StoredFile>,
   poolNFTs      : Map.Map<Nat, Types.PoolNFT>,
@@ -182,6 +185,7 @@ mixin (
   /// Authenticated users: profile avatar (avatars/*).
   public shared ({ caller }) func storeAvatarFile(data : [Nat8]) : async Text {
     AccessControl.requireAuthenticated(caller);
+    RateLimit.trapIfLimited(rateLimits.upload, caller, "Rate limited. Try again in a minute.");
     if (data.size() > 1_000_000) {
       Runtime.trap("File too large (max 1 MB)");
     };
@@ -211,6 +215,7 @@ mixin (
     mimeType : Text,
   ) : async Types.StoredFile {
     AccessControl.requireAuthenticated(caller);
+    RateLimit.trapIfLimited(rateLimits.upload, caller, "Rate limited. Try again in a minute.");
     if (not isCommunityImagePath(path)) {
       Runtime.trap("Invalid path: must start with community-images/");
     };
@@ -244,6 +249,7 @@ mixin (
     mimeType : Text,
   ) : async Types.StoredFile {
     AccessControl.requireAuthenticated(caller);
+    RateLimit.trapIfLimited(rateLimits.upload, caller, "Rate limited. Try again in a minute.");
     if (not isNimsPhotoPath(path)) {
       Runtime.trap("Invalid path: must start with nims-photos/");
     };

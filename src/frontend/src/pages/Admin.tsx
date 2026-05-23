@@ -72,6 +72,10 @@ import type { ArtworkLayer } from "../backend";
 import type { FoundersMintInput, FoundersMintResult } from "../backend";
 import { AdminNimsPanel } from "../components/AdminNimsPanel";
 import { AdminTreasuryTab } from "../components/AdminTreasuryTab";
+import {
+  AdminCanisterHealthBanner,
+  AdminCanisterHealthTab,
+} from "../components/AdminCanisterHealthTab";
 import { AdminBatchGiftsTab } from "../components/admin/AdminBatchGiftsTab";
 import { AdminCommunityTab } from "../components/admin/AdminCommunityTab";
 import { AdminNFTPoolTab } from "../components/admin/AdminNFTPoolTab";
@@ -5016,6 +5020,8 @@ export default function AdminPage() {
       {/* Canister ID Info Bar — always visible at top */}
       <CanisterIdBar />
 
+      <AdminCanisterHealthBanner />
+
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -5154,6 +5160,14 @@ export default function AdminPage() {
               <Wallet className="w-3.5 h-3.5" />
               Treasury
             </TabsTrigger>
+            <TabsTrigger
+              value="system"
+              className="text-xs gap-1.5 flex-1"
+              data-ocid="admin-tab-system"
+            >
+              <Cpu className="w-3.5 h-3.5" />
+              System
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="trays">
@@ -5203,6 +5217,9 @@ export default function AdminPage() {
           </TabsContent>
           <TabsContent value="treasury">
             <AdminTreasuryTab />
+          </TabsContent>
+          <TabsContent value="system">
+            <AdminCanisterHealthTab />
           </TabsContent>
         </Tabs>
       </motion.div>

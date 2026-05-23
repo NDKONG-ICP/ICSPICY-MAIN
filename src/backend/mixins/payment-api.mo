@@ -52,10 +52,13 @@ import Char "mo:core/Char";
 import Time "mo:core/Time";
 import Error "mo:core/Error";
 import IC "ic:aaaaa-aa";
+import RateLimits "../lib/rate-limits";
+import RateLimit "../lib/rate-limit";
 
 mixin (
   accessControlState      : AccessControl.AccessControlState,
   callerGuards            : CallerGuard.GuardMap,
+  rateLimits              : RateLimits.Bundle,
   orders                  : Map.Map<Common.OrderId, MarketTypes.Order>,
   products                : Map.Map<Common.ProductId, MarketTypes.Product>,
   productNftTokenIds      : Map.Map<Common.ProductId, Nat>,
@@ -340,6 +343,9 @@ mixin (
     paymentId : Text,
   ) : async { success : Bool; message : Text } {
     AccessControl.requireAuthenticated(caller);
+    if (not RateLimit.check(rateLimits.icpay, caller)) {
+      return { success = false; message = "Rate limited. Try again in a minute." };
+    };
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
       case (#ok) {};
@@ -622,6 +628,13 @@ mixin (
     amount : Nat,
   ) : async AdminWithdrawTokensResult {
     AccessControl.requireAdmin(accessControlState, caller);
+    if (not RateLimit.check(rateLimits.withdrawal, caller)) {
+      return {
+        success = false;
+        blockIndex = null;
+        message = "Withdrawal rate limited. Max 3 per hour.";
+      };
+    };
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
       case (#ok) {};
@@ -774,6 +787,9 @@ mixin (
     paymentId : Text,
   ) : async { success : Bool; tokenId : ?Nat; message : Text } {
     AccessControl.requireAuthenticated(caller);
+    if (not RateLimit.check(rateLimits.icpay, caller)) {
+      return { success = false; tokenId = null; message = "Rate limited. Try again in a minute." };
+    };
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
       case (#ok) {};
@@ -794,6 +810,9 @@ mixin (
     amount : Nat,
   ) : async { success : Bool; tokenId : ?Nat; message : Text } {
     AccessControl.requireAuthenticated(caller);
+    if (not RateLimit.check(rateLimits.payment, caller)) {
+      return { success = false; tokenId = null; message = "Rate limited. Try again in a minute." };
+    };
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
       case (#ok) {};
@@ -1050,6 +1069,14 @@ mixin (
     paymentId : Text,
   ) : async PlantTypes.PurchasePlantResult {
     AccessControl.requireAuthenticated(caller);
+    if (not RateLimit.check(rateLimits.icpay, caller)) {
+      return {
+        success = false;
+        nftTokenId = null;
+        claimToken = null;
+        message = "Rate limited. Try again in a minute.";
+      };
+    };
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
       case (#ok) {};

@@ -19,8 +19,12 @@ import ProductInventory "../lib/product-inventory";
 import ICRC7 "../types/icrc7";
 import Set "mo:core/Set";
 
+import RateLimits "../lib/rate-limits";
+import RateLimit "../lib/rate-limit";
+
 mixin (
   accessControlState : AccessControl.AccessControlState,
+  rateLimits : RateLimits.Bundle,
   products : Map.Map<Common.ProductId, MarketTypes.Product>,
   orders : Map.Map<Common.OrderId, MarketTypes.Order>,
   plants : Map.Map<Common.PlantId, PlantTypes.Plant>,
@@ -259,6 +263,7 @@ mixin (
 
   public shared ({ caller }) func placeOrder(input : MarketTypes.CreateOrderInput) : async MarketTypes.OrderPublic {
     AccessControl.requireAuthenticated(caller);
+    RateLimit.trapIfLimited(rateLimits.order, caller, "Rate limited. Try again in a minute.");
     toPublicOrder(placeOrderInternal(caller, input));
   };
 };

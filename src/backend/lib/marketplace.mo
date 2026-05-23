@@ -14,6 +14,7 @@ import Runtime "mo:core/Runtime";
 import Result "mo:core/Result";
 import Principal "mo:core/Principal";
 import ProductShipping "../lib/product-shipping";
+import Sanitize "../lib/sanitize";
 
 module {
   // ---------------------------------------------------------------------------
@@ -39,6 +40,9 @@ module {
   // products
   // ---------------------------------------------------------------------------
 
+  let MAX_PRODUCT_NAME : Nat = 200;
+  let MAX_PRODUCT_DESC : Nat = 5000;
+
   public func createProduct(
     products : Map.Map<Common.ProductId, Types.Product>,
     nextId : Nat,
@@ -47,8 +51,8 @@ module {
     let keys = resolveImageKeys(input);
     let product : Types.Product = {
       id = nextId;
-      var name = input.name;
-      var description = input.description;
+      var name = Sanitize.sanitizeText(input.name, MAX_PRODUCT_NAME);
+      var description = Sanitize.sanitizeText(input.description, MAX_PRODUCT_DESC);
       var price_cents = input.price_cents;
       category = input.category;
       inventory_category = input.inventory_category;
@@ -70,11 +74,11 @@ module {
       case null { Runtime.trap("Product not found") };
       case (?product) {
         switch (input.name) {
-          case (?n) { product.name := n };
+          case (?n) { product.name := Sanitize.sanitizeText(n, MAX_PRODUCT_NAME) };
           case null {};
         };
         switch (input.description) {
-          case (?d) { product.description := d };
+          case (?d) { product.description := Sanitize.sanitizeText(d, MAX_PRODUCT_DESC) };
           case null {};
         };
         switch (input.price_cents) {

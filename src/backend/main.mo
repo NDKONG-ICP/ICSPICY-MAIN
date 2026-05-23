@@ -4,6 +4,7 @@ import Set "mo:core/Set";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
+import Nat "mo:core/Nat";
 import AccessControl "lib/access-control";
 import CallerGuard "lib/caller-guard";
 import Common "types/common";
@@ -58,6 +59,9 @@ import SeedBankAPI "mixins/seed-bank-api";
 import PlantingScheduleAPI "mixins/planting-schedule-api";
 import NftResaleAPI "mixins/nft-resale-api";
 import ResaleTypes "types/nft-resale";
+import RateLimits "lib/rate-limits";
+import CanisterHealth "lib/canister-health";
+import Prim "mo:⛔";
 
 shared(msg) persistent actor class ICSpicy() = Self {
   transient let initialDeployer = msg.caller;
@@ -78,6 +82,9 @@ shared(msg) persistent actor class ICSpicy() = Self {
   //
   // See lib/caller-guard.mo for the API.
   transient let callerGuards : CallerGuard.GuardMap = CallerGuard.empty();
+
+  /// Per-principal rate limiters for cycle-drain protection (CDA).
+  transient let rateLimits : RateLimits.Bundle = RateLimits.init();
 
   // ── Admin management ───────────────────────────────────────────────────────
 
@@ -496,6 +503,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include NimsAPI(
     accessControlState,
     callerGuards,
+    rateLimits,
     plants,
     trays,
     trayOwners,
@@ -543,6 +551,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   );
   include MarketplaceAPI(
     accessControlState,
+    rateLimits,
     products,
     orders,
     plants,
@@ -561,9 +570,10 @@ shared(msg) persistent actor class ICSpicy() = Self {
     nextProductId,
     nextOrderId,
   );
-  include DAOAPI(accessControlState, daoProposals, daoVotes, icrc7Balances, nextProposalId);
+  include DAOAPI(accessControlState, rateLimits, daoProposals, daoVotes, icrc7Balances, nextProposalId);
   include CommunityAPI(
     accessControlState,
+    rateLimits,
     posts,
     comments,
     profiles,
@@ -646,11 +656,12 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include TreasuryAPI(accessControlState, treasuryState, treasuryTxLog, nextTreasuryTxId);
   include PriceOracleAPI(accessControlState, priceOracleState);
   include DABAPI(accessControlState);
-  include ArtworkUploadAPI(accessControlState, artworkUploadSession, storedFiles, poolNFTs, selfPrincipalText, uploadsCanisterPrincipal);
+  include ArtworkUploadAPI(accessControlState, rateLimits, artworkUploadSession, storedFiles, poolNFTs, selfPrincipalText, uploadsCanisterPrincipal);
   include PoolAPI(accessControlState, nftPool, nextPoolProductId);
   include PaymentAPI(
     accessControlState,
     callerGuards,
+    rateLimits,
     orders,
     products,
     productNftTokenIds,
@@ -710,17 +721,57 @@ shared(msg) persistent actor class ICSpicy() = Self {
     AuditLog.toArray(auditLog.value, offset, limit)
   };
 
+  // ── Canister health (cycles monitoring) ────────────────────────────────────
+
+  /// Public query — anyone can check backend canister health.
+  public query func getCanisterHealth() : async CanisterHealth.Health {
+    CanisterHealth.localHealth();
+  };
+
+  /// Admin: backend cycle balance (AGENTS.md hygiene).
+  public shared query ({ caller }) func getCycleBalance() : async Nat {
+    assert AccessControl.isAdmin(accessControlState, caller);
+    Prim.cyclesBalance();
+  };
+
+  /// Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
+  public shared ({ caller }) func getFleetCanisterHealth() : async [CanisterHealth.FleetEntry] {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let backendId = Principal.fromActor(Self).toText();
+    let local = CanisterHealth.localHealth();
+    let backendEntry : CanisterHealth.FleetEntry = {
+      name = "backend";
+      canisterId = backendId;
+      cyclesBalance = local.cyclesBalance;
+      memorySize = local.memoryUsed;
+      isHealthy = local.isHealthy;
+    };
+    let frontendId = "7rukv-hqaaa-aaaao-ba6ma-cai";
+    let nftAssetsId = "gawk3-2qaaa-aaaao-ba4sa-cai";
+    let uploadsId = switch uploadsCanisterIdStable {
+      case null "r53pg-maaaa-aaaao-ba7na-cai";
+      case (?id) id;
+    };
+    let frontend = await CanisterHealth.fetchRemoteHealth("frontend", frontendId);
+    let nftAssets = await CanisterHealth.fetchRemoteHealth("nft_assets", nftAssetsId);
+    let uploads = await CanisterHealth.fetchRemoteHealth("uploads", uploadsId);
+    [backendEntry, frontend, nftAssets, uploads];
+  };
+
   // ── Ingress filter ─────────────────────────────────────────────────────────
 
   // Block anonymous callers at ingress before consensus — no cycles burned on rejection.
   // All update calls from anonymous principals are rejected. Query calls (including
   // _initializeAccessControl, which is now a query) bypass this filter entirely.
+  // Reject oversized messages (>2 MB) to prevent memory exhaustion attacks.
+  let MAX_INGRESS_BYTES : Nat = 2_097_152;
+
   system func inspect({
     caller : Principal;
     arg    : Blob;
   }) : Bool {
-    ignore arg;
-    not caller.isAnonymous()
+    if (arg.size() > MAX_INGRESS_BYTES) { return false };
+    not caller.isAnonymous();
   };
 
   // Phase 3.6: re-establish the certified-data slot after upgrade.

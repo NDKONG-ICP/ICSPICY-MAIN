@@ -27,10 +27,13 @@ import VarietyTypes "../types/variety";
 import ClaimTypes "../types/claim";
 import ICRC7 "../types/icrc7";
 import DashTypes "../types/nims-dashboard";
+import RateLimits "../lib/rate-limits";
+import RateLimit "../lib/rate-limit";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
   callerGuards : CallerGuard.GuardMap,
+  rateLimits : RateLimits.Bundle,
   plants : Map.Map<Common.PlantId, PlantTypes.Plant>,
   trays : Map.Map<Common.TrayId, PlantTypes.Tray>,
   trayOwners : Map.Map<Common.TrayId, Principal>,
@@ -677,6 +680,14 @@ mixin (
     amount : Nat,
   ) : async PlantTypes.PurchasePlantResult {
     AccessControl.requireAuthenticated(caller);
+    if (not RateLimit.check(rateLimits.payment, caller)) {
+      return {
+        success = false;
+        nftTokenId = null;
+        claimToken = null;
+        message = "Rate limited. Try again in a minute.";
+      };
+    };
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
       case (#ok) {};

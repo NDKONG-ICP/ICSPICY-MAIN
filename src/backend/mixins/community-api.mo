@@ -9,8 +9,12 @@ import CommunityLib "../lib/community";
 import Principal "mo:core/Principal";
 import Time "mo:core/Time";
 
+import RateLimits "../lib/rate-limits";
+import RateLimit "../lib/rate-limit";
+
 mixin (
   accessControlState : AccessControl.AccessControlState,
+  rateLimits : RateLimits.Bundle,
   posts : Map.Map<Common.PostId, CommunityTypes.Post>,
   comments : Map.Map<Common.CommentId, CommunityTypes.Comment>,
   profiles : Map.Map<Principal, CommunityTypes.UserProfile>,
@@ -27,6 +31,7 @@ mixin (
     input : CommunityTypes.CreatePostInput,
   ) : async CommunityTypes.PostPublic {
     AccessControl.requireAuthenticated(caller);
+    RateLimit.trapIfLimited(rateLimits.communityPost, caller, "Rate limited. Try again in a minute.");
     let post = CommunityLib.createPost(
       posts, profiles, bannedUsers, nextPostId.value, caller, input,
     );
@@ -70,6 +75,7 @@ mixin (
     input : CommunityTypes.CreateCommentInput,
   ) : async CommunityTypes.CommentPublic {
     AccessControl.requireAuthenticated(caller);
+    RateLimit.trapIfLimited(rateLimits.communityComment, caller, "Rate limited. Try again in a minute.");
     let comment = CommunityLib.createComment(
       comments, posts, profiles, bannedUsers, nextCommentId.value, caller, input,
     );
@@ -83,6 +89,7 @@ mixin (
     is_anonymous : Bool,
   ) : async CommunityTypes.CommentPublic {
     AccessControl.requireAuthenticated(caller);
+    RateLimit.trapIfLimited(rateLimits.communityComment, caller, "Rate limited. Try again in a minute.");
     let comment = CommunityLib.createComment(
       comments, posts, profiles, bannedUsers, nextCommentId.value, caller,
       { post_id; content; anonymous = is_anonymous },

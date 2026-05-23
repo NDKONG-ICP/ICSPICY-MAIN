@@ -11,6 +11,7 @@ import Principal "mo:core/Principal";
 import Int "mo:core/Int";
 import Text "mo:core/Text";
 import Nat "mo:core/Nat";
+import Sanitize "../lib/sanitize";
 
 module {
   let MAX_POST_CHARS : Nat = 2000;
@@ -69,7 +70,8 @@ module {
     if (isBanned(bannedUsers, author)) {
       Runtime.trap("User is banned from community");
     };
-    if (input.content.size() > MAX_POST_CHARS) {
+    let content = Sanitize.sanitizeText(input.content, MAX_POST_CHARS);
+    if (content.size() > MAX_POST_CHARS) {
       Runtime.trap("Post content too long (max 2000 chars)");
     };
     let now = Time.now();
@@ -78,7 +80,7 @@ module {
       id = nextId;
       author = author;
       anonymous = input.anonymous;
-      var content = input.content;
+      var content = content;
       image_key = if (keys.size() > 0) ?keys[0] else null;
       image_keys = keys;
       plant_id = input.plant_id;
@@ -104,14 +106,15 @@ module {
         if (post.author != caller) {
           Runtime.trap("Unauthorized: can only edit your own posts");
         };
-        if (new_content.size() > MAX_POST_CHARS) {
+        let content = Sanitize.sanitizeText(new_content, MAX_POST_CHARS);
+        if (content.size() > MAX_POST_CHARS) {
           Runtime.trap("Post content too long (max 2000 chars)");
         };
         let now = Time.now();
         if (now - post.created_at > EDIT_WINDOW_NS) {
           return false;
         };
-        post.content := new_content;
+        post.content := content;
         post.updated_at := now;
         true;
       };
@@ -185,7 +188,8 @@ module {
     if (isBanned(bannedUsers, author)) {
       Runtime.trap("User is banned from community");
     };
-    if (input.content.size() > MAX_COMMENT_CHARS) {
+    let content = Sanitize.sanitizeText(input.content, MAX_COMMENT_CHARS);
+    if (content.size() > MAX_COMMENT_CHARS) {
       Runtime.trap("Comment too long (max 500 chars)");
     };
     switch (posts.get(input.post_id)) {
@@ -199,7 +203,7 @@ module {
       post_id = input.post_id;
       author = author;
       anonymous = input.anonymous;
-      content = input.content;
+      content = content;
       likes = Set.empty<Principal>();
       created_at = Time.now();
       var is_deleted = false;

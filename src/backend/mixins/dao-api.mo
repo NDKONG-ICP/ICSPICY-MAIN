@@ -7,8 +7,12 @@ import Common "../types/common";
 import DAOTypes "../types/dao";
 import DAOLib "../lib/dao";
 
+import RateLimits "../lib/rate-limits";
+import RateLimit "../lib/rate-limit";
+
 mixin (
   accessControlState : AccessControl.AccessControlState,
+  rateLimits : RateLimits.Bundle,
   proposals : Map.Map<Common.ProposalId, DAOTypes.Proposal>,
   daoVotes : Map.Map<Text, DAOTypes.VoteRecord>,
   icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
@@ -63,6 +67,7 @@ mixin (
 
   public shared ({ caller }) func castVote(proposalId : Common.ProposalId, optionId : Nat) : async Bool {
     AccessControl.requireAuthenticated(caller);
+    RateLimit.trapIfLimited(rateLimits.vote, caller, "Rate limited. Try again in a minute.");
     DAOLib.castVote(proposals, daoVotes, icrc7Balances, caller, proposalId, optionId);
   };
 

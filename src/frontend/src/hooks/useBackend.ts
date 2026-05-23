@@ -47,8 +47,8 @@ import type {
   UpdateCellDataInput,
   UpdatePlantMetadataInput,
   UpdateProductInput,
-  UserRole,
 } from "../backend";
+import { UserRole } from "../backend";
 import type {
   CreateRecipeInput,
   UpdateRecipeInput,
@@ -2386,5 +2386,91 @@ export function useSetICPaySecretKey() {
       if (!actor) throw new Error("Not connected");
       return actor.setICPaySecretKey(key);
     },
+  });
+}
+
+// ─── Canister health (cycles monitoring) ────────────────────────────────────
+
+export type CanisterHealthSnapshot = {
+  cyclesBalance: bigint;
+  memoryUsed: bigint;
+  heapSize: bigint;
+  isHealthy: boolean;
+};
+
+export type FleetCanisterEntry = {
+  name: string;
+  canisterId: string;
+  cyclesBalance: bigint;
+  memorySize: bigint;
+  isHealthy: boolean;
+};
+
+type CanisterHealthActor = {
+  getCanisterHealth: () => Promise<{
+    cyclesBalance: bigint;
+    memoryUsed: bigint;
+    heapSize: bigint;
+    isHealthy: boolean;
+  }>;
+  getFleetCanisterHealth: () => Promise<
+    Array<{
+      name: string;
+      canisterId: string;
+      cyclesBalance: bigint;
+      memorySize: bigint;
+      isHealthy: boolean;
+    }>
+  >;
+};
+
+function canisterHealthActor(
+  actor: import("../backend").Backend | null,
+): CanisterHealthActor | null {
+  if (!actor) return null;
+  return (actor as unknown as { actor: CanisterHealthActor }).actor;
+}
+
+export function useCanisterHealth() {
+  const { actor } = useBackendActor();
+  return useQuery({
+    queryKey: ["canisterHealth"],
+    queryFn: async (): Promise<CanisterHealthSnapshot | null> => {
+      const raw = canisterHealthActor(actor);
+      if (!raw) return null;
+      const h = await raw.getCanisterHealth();
+      return {
+        cyclesBalance: BigInt(h.cyclesBalance),
+        memoryUsed: BigInt(h.memoryUsed),
+        heapSize: BigInt(h.heapSize),
+        isHealthy: h.isHealthy,
+      };
+    },
+    enabled: !!actor,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useFleetCanisterHealth() {
+  const { actor } = useBackendActor();
+  const { actorReady } = useActorReady();
+  const { data: role } = useUserRole();
+  const isAdmin = role === UserRole.admin;
+  return useQuery({
+    queryKey: ["fleetCanisterHealth", actorReady, isAdmin],
+    queryFn: async (): Promise<FleetCanisterEntry[]> => {
+      const raw = canisterHealthActor(actor);
+      if (!raw) return [];
+      const fleet = await raw.getFleetCanisterHealth();
+      return fleet.map((e) => ({
+        name: e.name,
+        canisterId: e.canisterId,
+        cyclesBalance: BigInt(e.cyclesBalance),
+        memorySize: BigInt(e.memorySize),
+        isHealthy: e.isHealthy,
+      }));
+    },
+    enabled: !!actor && actorReady && isAdmin,
+    refetchInterval: 60_000,
   });
 }
