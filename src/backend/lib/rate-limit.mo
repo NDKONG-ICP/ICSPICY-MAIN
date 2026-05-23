@@ -55,7 +55,7 @@ module {
     for ((principal, times) in limiter.callLog.entries()) {
       let recent = Array.filter(times, func(t : Int) : Bool { t > windowStart });
       if (recent.size() == 0) {
-        limiter.callLog.delete(principal);
+        ignore limiter.callLog.delete(principal);
       } else {
         limiter.callLog.add(principal, recent);
       };

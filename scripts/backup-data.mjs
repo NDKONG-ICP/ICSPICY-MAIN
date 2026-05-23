@@ -163,10 +163,13 @@ async function main() {
 
   // NFT ownership: paginate icrc7_tokens then batch owner_of
   const TOKEN_PAGE = 500n;
-  let prev = null;
+  let prev;
   const ownership = [];
   for (;;) {
-    const tokens = await actor.icrc7_tokens([prev], [TOKEN_PAGE]);
+    const tokens = await actor.icrc7_tokens(
+      prev !== undefined ? [prev] : [],
+      [TOKEN_PAGE],
+    );
     if (!tokens || tokens.length === 0) break;
     const owners = await actor.icrc7_owner_of(tokens);
     for (let i = 0; i < tokens.length; i++) {

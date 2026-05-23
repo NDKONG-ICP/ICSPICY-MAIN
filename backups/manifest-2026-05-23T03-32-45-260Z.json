@@ -1,0 +1,19 @@
+{
+  "network": "ic",
+  "backendId": "ghxmp-xiaaa-aaaao-ba4sq-cai",
+  "exportedAt": "2026-05-23T03:32:56.955Z",
+  "files": [
+    "health-2026-05-23T03-32-45-260Z.json",
+    "products-2026-05-23T03-32-45-260Z.json",
+    "varieties-2026-05-23T03-32-45-260Z.json",
+    "plants-2026-05-23T03-32-45-260Z.json",
+    "orders-2026-05-23T03-32-45-260Z.json",
+    "nft-ownership-2026-05-23T03-32-45-260Z.json"
+  ],
+  "counts": {
+    "products": 1,
+    "varieties": 3,
+    "plants": 3,
+    "nftTokens": 8888
+  }
+}
