@@ -81,6 +81,7 @@ const PlantDetailPage = lazy(() => import("./pages/PlantDetail"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const DAOPage = lazy(() => import("./pages/DAO"));
 const CommunityPage = lazy(() => import("./pages/Community"));
+const CommunityPostPage = lazy(() => import("./pages/CommunityPost"));
 const CommunityProfilePage = lazy(() => import("./pages/CommunityProfile"));
 const AdminPage = lazy(() => import("./pages/Admin"));
 const CheckoutPage = lazy(() => import("./pages/Checkout"));
@@ -310,6 +311,12 @@ const daoRoute = createRoute({
   component: DAOPage,
 });
 
+const communityPostRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/community/post/$postId",
+  component: CommunityPostPage,
+});
+
 const communityRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/community",
@@ -400,6 +407,7 @@ const routeTree = rootRoute.addChildren([
   profileRoute,
   communityProfileRoute,
   daoRoute,
+  communityPostRoute,
   communityRoute,
   adminRoute,
   checkoutRoute,
