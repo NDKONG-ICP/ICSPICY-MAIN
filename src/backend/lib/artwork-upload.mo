@@ -116,6 +116,25 @@ module {
     file;
   };
 
+  /// Metadata-only record after bytes are stored in the uploads asset canister.
+  public func buildStoredFileMetadata(
+    path : Text,
+    dataSize : Nat,
+    mimeType : Text,
+    now : Common.Timestamp,
+  ) : Types.StoredFile {
+    let (layer, filename) = splitPath(path);
+    {
+      path = path;
+      layer = layer;
+      filename = filename;
+      mime_type = mimeType;
+      data = [];
+      size = dataSize;
+      uploaded_at = now;
+    };
+  };
+
   // ── Layer summary ─────────────────────────────────────────────────────────
 
   public func buildLayerSummaries(

@@ -598,6 +598,9 @@ export interface ICSpicy {
     }
   >,
   'getFeaturedRecipes' : ActorMethod<[bigint], Array<RecipePublic>>,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
   'getFollowers' : ActorMethod<
     [Principal, bigint, bigint],
     Array<UserProfilePublic>
@@ -695,6 +698,7 @@ export interface ICSpicy {
   'getTrendingPosts' : ActorMethod<[bigint], Array<PostPublic>>,
   'getUpcomingEvents' : ActorMethod<[], Array<PlantingEvent>>,
   'getUpgradeHistory' : ActorMethod<[PlantId], Array<LifecycleUpgradeEvent>>,
+  'getUploadsCanisterId' : ActorMethod<[], [] | [string]>,
   'getUserPosts' : ActorMethod<[Principal, bigint, bigint], Array<PostPublic>>,
   'getVariety' : ActorMethod<[bigint], [] | [VarietyPublic]>,
   'getZoneCalendar' : ActorMethod<[string], ZoneCalendar>,
@@ -704,6 +708,9 @@ export interface ICSpicy {
   'hasLikedPost' : ActorMethod<[PostId], boolean>,
   'hasMembership' : ActorMethod<[], boolean>,
   'hasVoted' : ActorMethod<[ProposalId], [] | [CallerVoteInfo]>,
+  /**
+   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   */
   'icpayTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
@@ -939,6 +946,9 @@ export interface ICSpicy {
   'removePlantPhoto' : ActorMethod<[PlantId, string], undefined>,
   'removeVariety' : ActorMethod<[bigint], boolean>,
   'removeZonePhoto' : ActorMethod<[TrayId, string], undefined>,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
   'reorderRecipes' : ActorMethod<[Array<RecipeId>], boolean>,
   'resetOrphanPoolNFT' : ActorMethod<[bigint], boolean>,
   'resetPoolNFT' : ActorMethod<
@@ -947,6 +957,9 @@ export interface ICSpicy {
       { 'err' : string }
   >,
   'revokeClaimTokenAdmin' : ActorMethod<[string], boolean>,
+  /**
+   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   */
   'saveCallerUserProfile' : ActorMethod<[SaveProfileInput], boolean>,
   'saveProfile' : ActorMethod<[SaveProfileInput], boolean>,
   'saveSchedule' : ActorMethod<[string, Array<string>], ScheduleId>,
@@ -957,6 +970,7 @@ export interface ICSpicy {
   'setForSale' : ActorMethod<[PlantId, boolean], undefined>,
   'setICPaySecretKey' : ActorMethod<[string], undefined>,
   'setPlantNFT' : ActorMethod<[PlantId, string], undefined>,
+  'setUploadsCanisterId' : ActorMethod<[string], undefined>,
   'storeArtworkFile' : ActorMethod<
     [string, Uint8Array | number[], string],
     StoredFile

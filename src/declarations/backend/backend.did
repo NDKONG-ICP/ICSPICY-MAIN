@@ -1277,6 +1277,7 @@ type ICSpicy =
        uniqueVoters: nat;
      }) query;
    getFeaturedRecipes: (limit: nat) -> (vec RecipePublic) query;
+   /// Uploads asset canister — user images served via HTTP from this canister.
    getFollowers: (user: principal, offset: nat, limit: nat) ->
     (vec UserProfilePublic) query;
    getFollowersCount: (user: principal) -> (nat) query;
@@ -1366,6 +1367,7 @@ type ICSpicy =
    getUpcomingEvents: () -> (vec PlantingEvent) query;
    getUpgradeHistory: (plant_id: PlantId) ->
     (vec LifecycleUpgradeEvent) query;
+   getUploadsCanisterId: () -> (opt text) query;
    getUserPosts: (user: principal, offset: nat, limit: nat) ->
     (vec PostPublic) query;
    getVariety: (id: nat) -> (opt VarietyPublic) query;
@@ -1377,6 +1379,7 @@ type ICSpicy =
    hasLikedPost: (post_id: PostId) -> (bool) query;
    hasMembership: () -> (bool) query;
    hasVoted: (proposalId: ProposalId) -> (opt CallerVoteInfo) query;
+   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    icpayTransform: (record {
                       context: blob;
                       response: http_request_result;
@@ -1573,6 +1576,7 @@ type ICSpicy =
    removePlantPhoto: (plant_id: PlantId, photo_key: text) -> ();
    removeVariety: (id: nat) -> (bool);
    removeZonePhoto: (tray_id: TrayId, photo_key: text) -> ();
+   /// Uploads asset canister — user images served via HTTP from this canister.
    reorderRecipes: (ids: vec RecipeId) -> (bool);
    resetOrphanPoolNFT: (nftId: nat) -> (bool);
    resetPoolNFT: (nftId: nat) -> (variant {
@@ -1580,6 +1584,7 @@ type ICSpicy =
                                     ok: text;
                                   });
    revokeClaimTokenAdmin: (token: text) -> (bool);
+   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    saveCallerUserProfile: (input: SaveProfileInput) -> (bool);
    saveProfile: (input: SaveProfileInput) -> (bool);
    saveSchedule: (stage: text, inputs: vec text) -> (ScheduleId);
@@ -1590,6 +1595,7 @@ type ICSpicy =
    setForSale: (plant_id: PlantId, for_sale: bool) -> ();
    setICPaySecretKey: (key: text) -> ();
    setPlantNFT: (plant_id: PlantId, nft_id: text) -> ();
+   setUploadsCanisterId: (canisterId: text) -> ();
    storeArtworkFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
    storeAvatarFile: (data: vec nat8) -> (text);

@@ -3,16 +3,16 @@ import { ActorReadyContext } from "../hooks/useActorReady";
 import { useAuth } from "../hooks/useAuth";
 
 /**
- * Actor is ready when Internet Identity session and backend actor exist.
- * use-auth-client builds the actor; no probe/backoff needed.
+ * Actor is ready when the backend actor exists (anonymous or authenticated).
+ * Public pages (Shop, Cookbook, NFT detail, home) query via the anon actor.
  */
 export function ActorReadyProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated, actor } = useAuth();
+  const { actor, isInitializing } = useAuth();
 
   return (
     <ActorReadyContext.Provider
       value={{
-        actorReady: isAuthenticated && !!actor,
+        actorReady: !!actor && !isInitializing,
         probeError: false,
       }}
     >

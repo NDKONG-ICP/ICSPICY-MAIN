@@ -9,6 +9,7 @@ import Runtime "mo:core/Runtime";
 import AccessControl "../lib/access-control";
 import Types "../types/artwork-upload";
 import ArtworkLib "../lib/artwork-upload";
+import AssetUpload "../lib/asset-upload";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
@@ -16,6 +17,7 @@ mixin (
   storedFiles   : Map.Map<Text, Types.StoredFile>,
   poolNFTs      : Map.Map<Nat, Types.PoolNFT>,
   selfPrincipalText : () -> Text,
+  uploadsCanisterPrincipal : () -> ?Principal,
 ) {
 
   // ── Upload session ─────────────────────────────────────────────────────────
@@ -66,7 +68,17 @@ mixin (
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Admin only");
     };
-    ArtworkLib.storeFile(storedFiles, path, data, mimeType, Time.now());
+    let now = Time.now();
+    if (isShopListingPath(path)) {
+      await AssetUpload.storeToUploadsCanister(
+        uploadsCanisterPrincipal(),
+        path,
+        data,
+        mimeType,
+      );
+      return ArtworkLib.buildStoredFileMetadata(path, data.size(), mimeType, now);
+    };
+    ArtworkLib.storeFile(storedFiles, path, data, mimeType, now);
   };
 
   /// Admin: clear all stored artwork files (reset for a fresh upload).
@@ -174,7 +186,12 @@ mixin (
       Runtime.trap("File too large (max 1 MB)");
     };
     let key = "avatars/" # Principal.toText(caller) # "-" # Nat.toText(Int.abs(Time.now())) # ".jpg";
-    ignore ArtworkLib.storeFile(storedFiles, key, data, "image/jpeg", Time.now());
+    await AssetUpload.storeToUploadsCanister(
+      uploadsCanisterPrincipal(),
+      key,
+      data,
+      "image/jpeg",
+    );
     key;
   };
 
@@ -200,7 +217,14 @@ mixin (
     if (data.size() > 1_000_000) {
       Runtime.trap("File too large (max 1 MB)");
     };
-    ArtworkLib.storeFile(storedFiles, path, data, mimeType, Time.now());
+    let now = Time.now();
+    await AssetUpload.storeToUploadsCanister(
+      uploadsCanisterPrincipal(),
+      path,
+      data,
+      mimeType,
+    );
+    ArtworkLib.buildStoredFileMetadata(path, data.size(), mimeType, now);
   };
 
   /// Public: community images stored via storeCommunityImage (community-images/* only).
@@ -226,7 +250,14 @@ mixin (
     if (data.size() > 5_000_000) {
       Runtime.trap("File too large (max 5 MB)");
     };
-    ArtworkLib.storeFile(storedFiles, path, data, mimeType, Time.now());
+    let now = Time.now();
+    await AssetUpload.storeToUploadsCanister(
+      uploadsCanisterPrincipal(),
+      path,
+      data,
+      mimeType,
+    );
+    ArtworkLib.buildStoredFileMetadata(path, data.size(), mimeType, now);
   };
 
   /// Public: shop listing photos stored via storeArtworkFile (shop-listings/* only).

@@ -21,7 +21,19 @@ import { useAuth } from "./useAuth";
 
 function rawService(actor: Backend | null): ActorSubclass<_SERVICE> | null {
   if (!actor) return null;
-  return actor as unknown as ActorSubclass<_SERVICE>;
+  return (actor as unknown as { actor: ActorSubclass<_SERVICE> }).actor;
+}
+
+/** Candid opt fields must be present as [] or [value], never omitted. */
+function normalizeCreatePostInput(input: CreatePostInput): CreatePostInput {
+  return {
+    content: input.content,
+    image_keys: input.image_keys ?? [],
+    anonymous: input.anonymous,
+    image_key: input.image_key ?? [],
+    plant_id: input.plant_id ?? [],
+    nft_token_id: input.nft_token_id ?? [],
+  };
 }
 
 function useCommunityBackendActor() {
@@ -99,7 +111,7 @@ export function useCreatePost() {
     mutationFn: async (input: CreatePostInput) => {
       const svc = rawService(actor);
       if (!svc) throw new Error("Not connected");
-      return svc.createPost(input);
+      return svc.createPost(normalizeCreatePostInput(input));
     },
     onSuccess: () => {
       invalidateCommunityFeeds(qc);

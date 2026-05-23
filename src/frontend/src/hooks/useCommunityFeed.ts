@@ -15,7 +15,7 @@ export const COMMUNITY_FEED_PAGE_SIZE = 20n;
 
 function rawService(actor: Backend | null): ActorSubclass<_SERVICE> | null {
   if (!actor) return null;
-  return actor as unknown as ActorSubclass<_SERVICE>;
+  return (actor as unknown as { actor: ActorSubclass<_SERVICE> }).actor;
 }
 
 function useCommunityBackendActor() {

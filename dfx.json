@@ -22,6 +22,11 @@
       "source": ["nft_assets_src"],
       "build": []
     },
+    "uploads": {
+      "type": "assets",
+      "source": ["dist/uploads"],
+      "build": []
+    },
     "llm": {
       "type": "pull",
       "id": "w36hm-eqaaa-aaaal-qr76a-cai"

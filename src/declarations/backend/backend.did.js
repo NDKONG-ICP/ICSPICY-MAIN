@@ -1891,6 +1891,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(LifecycleUpgradeEvent)],
         ['query'],
       ),
+    'getUploadsCanisterId' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
     'getUserPosts' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Nat],
         [IDL.Vec(PostPublic)],
@@ -2286,6 +2287,7 @@ export const idlFactory = ({ IDL }) => {
     'setForSale' : IDL.Func([PlantId, IDL.Bool], [], []),
     'setICPaySecretKey' : IDL.Func([IDL.Text], [], []),
     'setPlantNFT' : IDL.Func([PlantId, IDL.Text], [], []),
+    'setUploadsCanisterId' : IDL.Func([IDL.Text], [], []),
     'storeArtworkFile' : IDL.Func(
         [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text],
         [StoredFile],

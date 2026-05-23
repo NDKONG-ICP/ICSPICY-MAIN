@@ -10,6 +10,7 @@ import Common "types/common";
 import PlantTypes "types/plants";
 import MarketTypes "types/marketplace";
 import DAOTypes "types/dao";
+import DAOLegacy "types/dao-legacy";
 import CommunityTypes "types/community";
 import MembershipTypes "types/membership";
 import RecipeTypes "types/recipes";
@@ -116,6 +117,27 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   public query func getCanisterId() : async Text {
     Principal.fromActor(Self).toText()
+  };
+
+  /// Uploads asset canister — user images served via HTTP from this canister.
+  stable var uploadsCanisterIdStable : ?Text = null;
+
+  func uploadsCanisterPrincipal() : ?Principal {
+    switch (uploadsCanisterIdStable) {
+      case null null;
+      case (?id) ?Principal.fromText(id);
+    };
+  };
+
+  public shared ({ caller }) func setUploadsCanisterId(canisterId : Text) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    uploadsCanisterIdStable := ?canisterId;
+  };
+
+  public query func getUploadsCanisterId() : async ?Text {
+    uploadsCanisterIdStable;
   };
 
   // ── ICRC-10 / ICRC-28 (wallet signer + IdentityKit trusted origins) ────────
@@ -298,8 +320,11 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   // ── DAO state ──────────────────────────────────────────────────────────────
 
-  let proposals = Map.empty<Common.ProposalId, DAOTypes.Proposal>();
-  let daoVotes = Map.empty<Text, DAOTypes.VoteRecord>();
+  // Ghost — stable compat: empty legacy map matches mainnet stable type.
+  stable var proposals = Map.empty<Common.ProposalId, DAOLegacy.Proposal>();
+
+  stable var daoProposals = Map.empty<Common.ProposalId, DAOTypes.Proposal>();
+  stable var daoVotes = Map.empty<Text, DAOTypes.VoteRecord>();
 
   // ── Community state ────────────────────────────────────────────────────────
 
@@ -536,7 +561,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     nextProductId,
     nextOrderId,
   );
-  include DAOAPI(accessControlState, proposals, daoVotes, icrc7Balances, nextProposalId);
+  include DAOAPI(accessControlState, daoProposals, daoVotes, icrc7Balances, nextProposalId);
   include CommunityAPI(
     accessControlState,
     posts,
@@ -621,7 +646,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include TreasuryAPI(accessControlState, treasuryState, treasuryTxLog, nextTreasuryTxId);
   include PriceOracleAPI(accessControlState, priceOracleState);
   include DABAPI(accessControlState);
-  include ArtworkUploadAPI(accessControlState, artworkUploadSession, storedFiles, poolNFTs, selfPrincipalText);
+  include ArtworkUploadAPI(accessControlState, artworkUploadSession, storedFiles, poolNFTs, selfPrincipalText, uploadsCanisterPrincipal);
   include PoolAPI(accessControlState, nftPool, nextPoolProductId);
   include PaymentAPI(
     accessControlState,

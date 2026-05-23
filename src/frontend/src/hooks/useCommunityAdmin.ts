@@ -14,7 +14,7 @@ import { useActorReady } from "./useActorReady";
 
 function rawService(actor: Backend | null): ActorSubclass<_SERVICE> | null {
   if (!actor) return null;
-  return actor as unknown as ActorSubclass<_SERVICE>;
+  return (actor as unknown as { actor: ActorSubclass<_SERVICE> }).actor;
 }
 
 function useCommunityBackendActor() {
