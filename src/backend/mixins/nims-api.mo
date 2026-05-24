@@ -361,6 +361,47 @@ mixin (
     };
   };
 
+  public shared ({ caller }) func revivePlant(plantId : Common.PlantId) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    if (not nimsIsAdmin(caller)) {
+      Runtime.trap("Unauthorized: admin only");
+    };
+    switch (NimsLib.revivePlantInternal(plants, sideMaps(), plantId, caller)) {
+      case (#err(e)) Runtime.trap(e);
+      case (#ok(result)) {
+        let nftDetail = if (result.nftUnrecoverable) {
+          " nft_unrecoverable=true"
+        } else {
+          ""
+        };
+        logAdmin(caller, "plant_revived", "plantId=" # Nat.toText(plantId) # nftDetail);
+        true;
+      };
+    };
+  };
+
+  public shared ({ caller }) func markPlantDead(
+    plantId : Common.PlantId,
+    cause : DashTypes.DeathCause,
+    notes : ?Text,
+    photoUrl : ?Text,
+  ) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    switch (
+      NimsLib.markPlantDeadInternal(
+        plants, sideMaps(),
+        icrc7Owners, icrc7Balances, icrc37Approvals,
+        selfPrincipal(), caller, nimsIsAdmin, plantId, cause, notes, photoUrl,
+      )
+    ) {
+      case (#err(e)) Runtime.trap(e);
+      case (#ok(ok)) {
+        logAdmin(caller, "mark_plant_dead", "plantId=" # Nat.toText(plantId));
+        ok;
+      };
+    };
+  };
+
   public query func getTrayGrid(trayId : Common.TrayId) : async [DashTypes.TrayCellPublic] {
     NimsLib.getTrayGrid(plants, trays, sideMaps(), trayId);
   };
@@ -498,7 +539,11 @@ mixin (
     phLevel : ?Float,
     notes : ?Text,
   ) : async Bool {
-    await addWateringEntry(plantId, amountMl, phLevel, notes);
+    AccessControl.requireAuthenticated(caller);
+    NimsLib.addWateringEntry(
+      plants, sideMaps(), caller, nimsIsAdmin, plantId,
+      { timestamp = Time.now(); author = caller; amountMl; phLevel; notes },
+    );
   };
 
   public shared ({ caller }) func logFeeding(
@@ -508,7 +553,29 @@ mixin (
     dosage : Text,
     notes : ?Text,
   ) : async Bool {
-    await addFeedingEntry(plantId, productName, nutrientType, dosage, notes);
+    AccessControl.requireAuthenticated(caller);
+    switch (plants.get(plantId)) {
+      case null return false;
+      case (?plant) {
+        if (not NimsLib.ownerOrAdmin(plant, plantId, sideMaps(), caller, nimsIsAdmin)) {
+          Runtime.trap("Unauthorized: must be plant owner or admin");
+        };
+      };
+    };
+    ignore PlantsLib.addFeedingRecord(
+      feedings,
+      nextFeedingId.value,
+      {
+        plant_id = plantId;
+        date = Time.now();
+        product_name = productName;
+        nutrient_type = nutrientType;
+        dosage_amount = dosage;
+        notes;
+      },
+    );
+    nextFeedingId.value += 1;
+    true;
   };
 
   public shared ({ caller }) func logPest(
@@ -518,7 +585,11 @@ mixin (
     treatment : ?Text,
     notes : ?Text,
   ) : async Bool {
-    await addPestEntry(plantId, pestName, severity, treatment, notes);
+    AccessControl.requireAuthenticated(caller);
+    NimsLib.addPestEntry(
+      plants, sideMaps(), caller, nimsIsAdmin, plantId,
+      { timestamp = Time.now(); author = caller; pestName; severity; treatment; notes },
+    );
   };
 
   // ── Lifecycle entries (owner or admin) ──────────────────────────────────────

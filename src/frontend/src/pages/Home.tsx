@@ -157,7 +157,7 @@ export default function HomePage() {
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage:
-              "url('/assets/generated/hero-peppers.dim_1920x1080.jpg')",
+              "url('/assets/generated/hero.PNG')",
           }}
           aria-hidden="true"
         />
@@ -324,7 +324,7 @@ export default function HomePage() {
               transition={{ duration: 0.8 }}
             >
               <img
-                src="/assets/generated/farm-nursery.dim_1200x800.jpg"
+                src="/assets/generated/nursery.jpg"
                 alt="IC SPICY nursery in Port Charlotte, FL"
                 className="w-full object-cover"
                 style={{ aspectRatio: "4/3" }}

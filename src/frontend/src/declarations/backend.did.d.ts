@@ -332,6 +332,13 @@ export interface FeedingPublic {
   'notes' : [] | [string],
   'plant_id' : PlantId,
 }
+export interface FleetEntry {
+  'name' : string,
+  'isHealthy' : boolean,
+  'cyclesBalance' : bigint,
+  'memorySize' : bigint,
+  'canisterId' : string,
+}
 export interface FoundersMintInput {
   'layerCombination' : Array<bigint>,
   'recipient' : Principal,
@@ -344,6 +351,12 @@ export interface FoundersMintResult {
   'tokenId' : string,
   'recipient' : Principal,
   'standard' : NFTStandard,
+}
+export interface Health {
+  'heapSize' : bigint,
+  'isHealthy' : boolean,
+  'cyclesBalance' : bigint,
+  'memoryUsed' : bigint,
 }
 export interface ICSpicy {
   '_initializeAccessControl' : ActorMethod<[], undefined>,
@@ -567,6 +580,10 @@ export interface ICSpicy {
   'getCallerProfile' : ActorMethod<[], [] | [UserProfilePublic]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfilePublic]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  /**
+   * / Public query — anyone can check backend canister health.
+   */
+  'getCanisterHealth' : ActorMethod<[], Health>,
   'getCanisterId' : ActorMethod<[], string>,
   'getCanisterTreasuryBalances' : ActorMethod<
     [],
@@ -587,6 +604,10 @@ export interface ICSpicy {
     ]
   >,
   'getCommunityImageFile' : ActorMethod<[string], [] | [ShopListingFile]>,
+  /**
+   * / Admin: backend cycle balance (AGENTS.md hygiene).
+   */
+  'getCycleBalance' : ActorMethod<[], bigint>,
   'getDAOProposal' : ActorMethod<[ProposalId], [] | [ProposalPublic]>,
   'getDAOStats' : ActorMethod<
     [],
@@ -598,6 +619,13 @@ export interface ICSpicy {
     }
   >,
   'getFeaturedRecipes' : ActorMethod<[bigint], Array<RecipePublic>>,
+  /**
+   * / Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
+   */
+  'getFleetCanisterHealth' : ActorMethod<[], Array<FleetEntry>>,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
   'getFollowers' : ActorMethod<
     [Principal, bigint, bigint],
     Array<UserProfilePublic>
@@ -695,6 +723,7 @@ export interface ICSpicy {
   'getTrendingPosts' : ActorMethod<[bigint], Array<PostPublic>>,
   'getUpcomingEvents' : ActorMethod<[], Array<PlantingEvent>>,
   'getUpgradeHistory' : ActorMethod<[PlantId], Array<LifecycleUpgradeEvent>>,
+  'getUploadsCanisterId' : ActorMethod<[], [] | [string]>,
   'getUserPosts' : ActorMethod<[Principal, bigint, bigint], Array<PostPublic>>,
   'getVariety' : ActorMethod<[bigint], [] | [VarietyPublic]>,
   'getZoneCalendar' : ActorMethod<[string], ZoneCalendar>,
@@ -869,6 +898,13 @@ export interface ICSpicy {
     [TrayId, bigint, [] | [Timestamp]],
     AddPlantResult
   >,
+  'markPlantDead' : ActorMethod<
+    [PlantId, DeathCause, [] | [string], [] | [string]],
+    boolean
+  >,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
   'markPlantGerminated' : ActorMethod<[PlantId, Timestamp], undefined>,
   'mintEXT' : ActorMethod<[bigint, string, Array<[string, string]>], string>,
   'mintHederaNFT' : ActorMethod<
@@ -946,7 +982,11 @@ export interface ICSpicy {
     { 'ok' : string } |
       { 'err' : string }
   >,
+  'revivePlant' : ActorMethod<[PlantId], boolean>,
   'revokeClaimTokenAdmin' : ActorMethod<[string], boolean>,
+  /**
+   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   */
   'saveCallerUserProfile' : ActorMethod<[SaveProfileInput], boolean>,
   'saveProfile' : ActorMethod<[SaveProfileInput], boolean>,
   'saveSchedule' : ActorMethod<[string, Array<string>], ScheduleId>,
@@ -957,6 +997,7 @@ export interface ICSpicy {
   'setForSale' : ActorMethod<[PlantId, boolean], undefined>,
   'setICPaySecretKey' : ActorMethod<[string], undefined>,
   'setPlantNFT' : ActorMethod<[PlantId, string], undefined>,
+  'setUploadsCanisterId' : ActorMethod<[string], undefined>,
   'storeArtworkFile' : ActorMethod<
     [string, Uint8Array | number[], string],
     StoredFile
@@ -983,6 +1024,9 @@ export interface ICSpicy {
     [TreasuryToken, bigint, [] | [string]],
     TreasuryTransaction
   >,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'treasuryTransfer' : ActorMethod<
     [TreasuryToken, bigint, Principal, Principal, [] | [string]],
     TreasuryTransaction

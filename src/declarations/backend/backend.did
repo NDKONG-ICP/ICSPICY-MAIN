@@ -1254,6 +1254,8 @@ type ICSpicy =
    getCallerProfile: () -> (opt UserProfilePublic) query;
    getCallerUserProfile: () -> (opt UserProfilePublic) query;
    getCallerUserRole: () -> (UserRole) query;
+   /// Public query — anyone can check backend canister health.
+   getCanisterHealth: () -> (Health) query;
    getCanisterId: () -> (text) query;
    getCanisterTreasuryBalances: () -> (vec CanisterTreasuryBalance);
    getClaimInfo: (token: text) ->
@@ -1268,6 +1270,8 @@ type ICSpicy =
         variety: opt text;
       }) query;
    getCommunityImageFile: (path: text) -> (opt ShopListingFile) query;
+   /// Admin: backend cycle balance (AGENTS.md hygiene).
+   getCycleBalance: () -> (nat) query;
    getDAOProposal: (proposal_id: ProposalId) -> (opt ProposalPublic) query;
    getDAOStats: () ->
     (record {
@@ -1277,6 +1281,8 @@ type ICSpicy =
        uniqueVoters: nat;
      }) query;
    getFeaturedRecipes: (limit: nat) -> (vec RecipePublic) query;
+   /// Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
+   getFleetCanisterHealth: () -> (vec FleetEntry);
    /// Uploads asset canister — user images served via HTTP from this canister.
    getFollowers: (user: principal, offset: nat, limit: nat) ->
     (vec UserProfilePublic) query;
@@ -1379,7 +1385,6 @@ type ICSpicy =
    hasLikedPost: (post_id: PostId) -> (bool) query;
    hasMembership: () -> (bool) query;
    hasVoted: (proposalId: ProposalId) -> (opt CallerVoteInfo) query;
-   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    icpayTransform: (record {
                       context: blob;
                       response: http_request_result;
@@ -1504,6 +1509,9 @@ type ICSpicy =
     notes: opt text, _photoUrl: opt text) -> (bool);
    markCellGerminated: (trayId: TrayId, cellPosition: nat, date:
     opt Timestamp) -> (AddPlantResult);
+   markPlantDead: (plantId: PlantId, cause: DeathCause, notes: opt text,
+    photoUrl: opt text) -> (bool);
+   /// Uploads asset canister — user images served via HTTP from this canister.
    markPlantGerminated: (plant_id: PlantId, germination_date: Timestamp) ->
     ();
    mintEXT: (_plantId: nat, _imageKey: text, _attributes:
@@ -1576,13 +1584,13 @@ type ICSpicy =
    removePlantPhoto: (plant_id: PlantId, photo_key: text) -> ();
    removeVariety: (id: nat) -> (bool);
    removeZonePhoto: (tray_id: TrayId, photo_key: text) -> ();
-   /// Uploads asset canister — user images served via HTTP from this canister.
    reorderRecipes: (ids: vec RecipeId) -> (bool);
    resetOrphanPoolNFT: (nftId: nat) -> (bool);
    resetPoolNFT: (nftId: nat) -> (variant {
                                     err: text;
                                     ok: text;
                                   });
+   revivePlant: (plantId: PlantId) -> (bool);
    revokeClaimTokenAdmin: (token: text) -> (bool);
    /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    saveCallerUserProfile: (input: SaveProfileInput) -> (bool);
@@ -1612,6 +1620,7 @@ type ICSpicy =
     locationNotes: opt text) -> (bool);
    treasuryDeposit: (token: TreasuryToken, amount: nat, memo: opt text) ->
     (TreasuryTransaction);
+   /// Per-principal rate limiters for cycle-drain protection (CDA).
    treasuryTransfer: (token: TreasuryToken, amount: nat, from: principal, to:
     principal, memo: opt text) -> (TreasuryTransaction);
    treasuryWithdraw: (token: TreasuryToken, amount: nat, to: principal, memo:
@@ -1650,6 +1659,13 @@ type ICSpicy =
    waterEntireTray: (trayId: TrayId, amountMl: nat, phLevel: opt float64,
     notes: opt text) -> (nat);
  };
+type Health = 
+ record {
+   cyclesBalance: nat;
+   heapSize: nat;
+   isHealthy: bool;
+   memoryUsed: nat;
+ };
 type FoundersMintResult = 
  record {
    recipient: principal;
@@ -1664,6 +1680,14 @@ type FoundersMintInput =
    nft_standard: NFTStandard;
    rarityTier: RarityTier;
    recipient: principal;
+ };
+type FleetEntry = 
+ record {
+   canisterId: text;
+   cyclesBalance: nat;
+   isHealthy: bool;
+   memorySize: nat;
+   name: text;
  };
 type FeedingPublic = 
  record {

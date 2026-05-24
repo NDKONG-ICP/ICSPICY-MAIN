@@ -179,7 +179,7 @@ export default function CookBookPage() {
           <h1 className="font-display font-black text-3xl sm:text-5xl text-foreground leading-none mb-2">
             IC SPICY <span className="text-fire">CookBook</span>
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground max-w-xl leading-relaxed">
+          <p className="text-sm sm:text-base text-foreground/85 max-w-xl leading-relaxed">
             On-chain fermentation and soil-health recipes — structured for the
             greenhouse, written for reproducible batches.
           </p>

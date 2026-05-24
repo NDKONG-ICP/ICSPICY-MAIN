@@ -7,6 +7,7 @@ import {
   NotepadText,
   ShoppingBag,
   Skull,
+  Sprout,
   Tag,
   Wheat,
   Trash2,
@@ -26,40 +27,51 @@ export type QuickPlantAction =
   | "nfc_tag"
   | "list_sale"
   | "mark_dead"
+  | "revive_plant"
   | "remove_plant";
 
-const ACTIONS: ReadonlyArray<{
+type ActionDef = {
   key: QuickPlantAction;
   label: string;
   icon: typeof Droplet;
-  tone?: "danger";
-}> = [
-    { key: "water", label: "Water", icon: Droplet },
-    { key: "feed", label: "Feed", icon: Leaf },
-    { key: "pest", label: "Pest", icon: Bug },
-    { key: "photo", label: "Photo", icon: Camera },
-    { key: "note", label: "Note", icon: NotepadText },
-    { key: "transplant", label: "Transplant", icon: Move },
-    { key: "harvest_seeds", label: "Harvest Seeds", icon: Wheat },
-    { key: "nfc_tag", label: "NFC Tag Link", icon: Tag },
-    { key: "list_sale", label: "List for Sale", icon: ShoppingBag },
-    {
-      key: "mark_dead",
-      label: "Mark Dead",
-      icon: Skull,
-      tone: "danger",
-    },
-    {
-      key: "remove_plant",
-      label: "Remove Plant",
-      icon: Trash2,
-      tone: "danger",
-    },
-  ];
+  tone?: "danger" | "success";
+};
+
+const BASE_ACTIONS: ReadonlyArray<ActionDef> = [
+  { key: "water", label: "Water", icon: Droplet },
+  { key: "feed", label: "Feed", icon: Leaf },
+  { key: "pest", label: "Pest", icon: Bug },
+  { key: "photo", label: "Photo", icon: Camera },
+  { key: "note", label: "Note", icon: NotepadText },
+  { key: "transplant", label: "Transplant", icon: Move },
+  { key: "harvest_seeds", label: "Harvest Seeds", icon: Wheat },
+  { key: "nfc_tag", label: "NFC Tag Link", icon: Tag },
+  { key: "list_sale", label: "List for Sale", icon: ShoppingBag },
+  {
+    key: "mark_dead",
+    label: "☠️ Mark Dead",
+    icon: Skull,
+    tone: "danger",
+  },
+  {
+    key: "revive_plant",
+    label: "🌱 Revive Plant",
+    icon: Sprout,
+    tone: "success",
+  },
+  {
+    key: "remove_plant",
+    label: "Remove Plant",
+    icon: Trash2,
+    tone: "danger",
+  },
+];
 
 export type PlantQuickActionsProps = {
   onAction: (type: QuickPlantAction) => void;
   disabled?: boolean;
+  /** When true, show revive instead of mark dead (admin). */
+  isPlantDead?: boolean;
   /** Actions omitted from the toolbar (e.g. admin-only). */
   hiddenActions?: QuickPlantAction[];
 };
@@ -67,9 +79,16 @@ export type PlantQuickActionsProps = {
 export function PlantQuickActions({
   onAction,
   disabled = false,
+  isPlantDead = false,
   hiddenActions = [],
 }: PlantQuickActionsProps) {
-  const visible = ACTIONS.filter((a) => !hiddenActions.includes(a.key));
+  const visible = BASE_ACTIONS.filter((a) => {
+    if (hiddenActions.includes(a.key)) return false;
+    if (isPlantDead && a.key === "mark_dead") return false;
+    if (!isPlantDead && a.key === "revive_plant") return false;
+    return true;
+  });
+
   return (
     <div
       role="toolbar"
@@ -84,16 +103,29 @@ export function PlantQuickActions({
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {visible.map((a) => {
           const Icon = a.icon;
+          const actionDisabled = isPlantDead
+            ? a.key !== "revive_plant" && a.key !== "remove_plant"
+            : disabled;
           return (
             <Button
               key={a.key}
               type="button"
-              variant={a.tone === "danger" ? "destructive" : "secondary"}
+              variant={
+                a.tone === "danger"
+                  ? "destructive"
+                  : a.tone === "success"
+                    ? "default"
+                    : "secondary"
+              }
               size="sm"
-              disabled={disabled}
+              disabled={actionDisabled}
               data-ocid={`nims-quick-actions-${a.key}`}
               onClick={() => onAction(a.key)}
-              className="h-auto min-h-[44px] flex-col gap-1 py-3 text-[11px] font-semibold"
+              className={cn(
+                "h-auto min-h-[44px] flex-col gap-1 py-3 text-[11px] font-semibold",
+                a.tone === "success" &&
+                  "bg-emerald-600 text-white hover:bg-emerald-700",
+              )}
             >
               <Icon className="size-5" aria-hidden />
               <span>{a.label}</span>

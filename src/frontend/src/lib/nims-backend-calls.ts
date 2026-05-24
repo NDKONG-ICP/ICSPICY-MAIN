@@ -2,6 +2,7 @@ import { Actor, HttpAgent, type Identity } from "@dfinity/agent";
 import { idlFactory, type _SERVICE } from "../declarations/backend.did.js";
 import type {
   ContainerSize,
+  DeathCause,
   PlantId,
   WeatherSnapshot,
 } from "../declarations/backend.did";
@@ -37,6 +38,30 @@ export async function callAddWeatherSnapshot(
 ): Promise<boolean> {
   const actor = await createBackendActor(identity);
   return actor.addWeatherSnapshot(plantId, snapshot);
+}
+
+export async function callRevivePlant(
+  identity: Identity,
+  plantId: PlantId,
+): Promise<boolean> {
+  const actor = await createBackendActor(identity);
+  return actor.revivePlant(plantId);
+}
+
+export async function callMarkPlantDead(
+  identity: Identity,
+  plantId: PlantId,
+  cause: DeathCause,
+  notes: string | null,
+  photoUrl: string | null,
+): Promise<boolean> {
+  const actor = await createBackendActor(identity);
+  return actor.markPlantDead(
+    plantId,
+    cause,
+    notes != null && notes !== "" ? [notes] : [],
+    photoUrl != null && photoUrl !== "" ? [photoUrl] : [],
+  );
 }
 
 export async function callTransplantPlant(

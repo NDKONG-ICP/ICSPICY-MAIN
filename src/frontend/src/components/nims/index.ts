@@ -1,4 +1,6 @@
 export { WeatherBar } from "./WeatherBar";
+export { WeatherRadarMap } from "./WeatherRadarMap";
+export { WeatherImmersivePanel } from "./WeatherImmersivePanel";
 export { TrayCell, cellStatusLabel } from "./TrayCell";
 export type { TrayCellProps } from "./TrayCell";
 export { TrayGrid } from "./TrayGrid";
@@ -58,6 +60,12 @@ export type {
 
 export { MarkDeadModal } from "./MarkDeadModal";
 export type { MarkDeadModalProps, MarkDeadSubmit } from "./MarkDeadModal";
+
+export { RevivePlantModal } from "./RevivePlantModal";
+export type { RevivePlantModalProps } from "./RevivePlantModal";
+
+export { ConfirmMarkDeadDialog } from "./ConfirmMarkDeadDialog";
+export type { ConfirmMarkDeadDialogProps } from "./ConfirmMarkDeadDialog";
 
 export { AdoptPlantPrompt } from "./AdoptPlantPrompt";
 export type { AdoptPlantPromptProps, AdoptPlantSubmit } from "./AdoptPlantPrompt";

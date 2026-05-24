@@ -14,15 +14,18 @@ import type { PlantStage as BackendPlantStage, TransplantInput } from "../backen
 import { StageBadge } from "../components/ui/StageBadge";
 import { NftPlantFlipCard } from "../components/NftPlantFlipCard";
 import { uploadsUrl } from "@/lib/uploads-canister";
+import type { DeathCause } from "../declarations/backend.did";
 import {
   LogFeedingModal,
   LogPestModal,
   LogWateringModal,
   HarvestSeedsModal,
+  MarkDeadModal,
   NfcTagLinkModal,
   PlantQuickActions,
   PlantTimeline,
   RemovePlantModal,
+  RevivePlantModal,
   TransplantModal,
   WeatherBar,
   WeatherHistoryCharts,
@@ -30,19 +33,26 @@ import {
   type QuickPlantAction,
 } from "../components/nims";
 import { useAuth } from "../hooks/useAuth";
-import { useIsAdmin, useToggleCooked, useTransplantCell } from "../hooks/useBackend";
+import { useIsAdmin, useTransplantCell } from "../hooks/useBackend";
 import {
   useAddNimsPlantPhoto,
   useAddWeatherSnapshot,
   useLogFeeding,
   useLogPest,
   useLogWatering,
+  useMarkCellDead,
+  useMarkPlantDead,
   usePlantHealth,
+  useRevivePlant,
 } from "../hooks/useNimsDashboard";
 import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import { useWeather } from "../hooks/useWeather";
 import { weatherDataToSnapshot } from "@/lib/weather-snapshot";
-import { findDeathRecord } from "@/lib/plant-lifecycle-utils";
+import {
+  findDeathRecord,
+  isPlantMarkedDead,
+  nftLikelyLostOnDeath,
+} from "@/lib/plant-lifecycle-utils";
 import { useNimsLocation } from "../hooks/useNimsLocation";
 import { useHarvestSeeds } from "../hooks/useSeedBank";
 import {
@@ -89,7 +99,9 @@ export default function PlantDetailPage() {
   const uploadPhoto = useUploadNimsPhoto();
   const addPlantPhoto = useAddNimsPlantPhoto();
   const listForSale = useListPlantForSale();
-  const toggleCooked = useToggleCooked();
+  const markCellDead = useMarkCellDead();
+  const markPlantDead = useMarkPlantDead();
+  const revivePlant = useRevivePlant();
   const transplantCell = useTransplantCell();
   const transplantPlant = useTransplantPlant();
   const removePlant = useRemovePlant();
@@ -112,6 +124,8 @@ export default function PlantDetailPage() {
   const [pestOpen, setPestOpen] = useState(false);
   const [transplantOpen, setTransplantOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
+  const [deadOpen, setDeadOpen] = useState(false);
+  const [reviveOpen, setReviveOpen] = useState(false);
   const [salePrice, setSalePrice] = useState("2500");
 
   if (id === undefined) {
@@ -153,6 +167,8 @@ export default function PlantDetailPage() {
     null,
   );
   const deathRecord = findDeathRecord(lc.notes);
+  const plantIsDead = isPlantMarkedDead(lc);
+  const nftMayBeLost = nftLikelyLostOnDeath(lc);
 
   const captureWeather = async () => {
     if (!weather) return;
@@ -209,14 +225,10 @@ export default function PlantDetailPage() {
         })();
         break;
       case "mark_dead":
-        void (async () => {
-          try {
-            await toggleCooked.mutateAsync(id);
-            toast.success("Plant marked dead");
-          } catch (e) {
-            toast.error(e instanceof Error ? e.message : "Failed");
-          }
-        })();
+        setDeadOpen(true);
+        break;
+      case "revive_plant":
+        setReviveOpen(true);
         break;
       case "remove_plant":
         setRemoveOpen(true);
@@ -231,6 +243,8 @@ export default function PlantDetailPage() {
           data={weather}
           isLoading={weatherLoading}
           locationLabel={nimsLocation.coordinates.label}
+          lat={nimsLocation.coordinates.lat}
+          lng={nimsLocation.coordinates.lng}
           expanded={weatherExpanded}
           onExpandedChange={setWeatherExpanded}
         />
@@ -494,13 +508,71 @@ export default function PlantDetailPage() {
 
           <PlantQuickActions
             onAction={handleQuickAction}
+            isPlantDead={plantIsDead}
             hiddenActions={[
               ...(canEdit ? [] : (["harvest_seeds", "nfc_tag"] as const)),
-              ...(isAdmin ? [] : (["list_sale", "mark_dead", "remove_plant"] as const)),
+              ...(isAdmin
+                ? []
+                : (["list_sale", "mark_dead", "revive_plant", "remove_plant"] as const)),
             ]}
             disabled={
-              plant.is_cooked || uploadPhoto.isPending || addPlantPhoto.isPending
+              plantIsDead
+                ? uploadPhoto.isPending || addPlantPhoto.isPending
+                : uploadPhoto.isPending || addPlantPhoto.isPending
             }
+          />
+
+          <MarkDeadModal
+            open={deadOpen}
+            onOpenChange={setDeadOpen}
+            plantLabel={plant.variety}
+            onUploadPhoto={(file) => uploadPhoto.mutateAsync({ plantId: id, file })}
+            onConfirm={async ({ reason, photoPath }) => {
+              const cause: DeathCause = { Unknown: null };
+              try {
+                if (inTray && !plant.is_transplanted) {
+                  await markCellDead.mutateAsync({
+                    trayId: plant.tray_id,
+                    cellPosition: plant.cell_position,
+                    cause,
+                    notes: reason,
+                    photoUrl: photoPath,
+                  });
+                } else {
+                  await markPlantDead.mutateAsync({
+                    plantId: id,
+                    cause,
+                    notes: reason,
+                    photoUrl: photoPath,
+                  });
+                }
+                toast.success("Plant marked dead");
+                setDeadOpen(false);
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed");
+              }
+            }}
+          />
+
+          <RevivePlantModal
+            open={reviveOpen}
+            onOpenChange={setReviveOpen}
+            plantLabel={plant.variety}
+            nftMayBeLost={nftMayBeLost}
+            isPending={revivePlant.isPending}
+            onConfirm={async () => {
+              try {
+                await revivePlant.mutateAsync(id);
+                toast.success(
+                  nftMayBeLost
+                    ? "Plant revived — note: prior NFT was not restored"
+                    : "Plant revived",
+                );
+                setReviveOpen(false);
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Revive failed");
+              }
+            }}
           />
 
           <LogWateringModal

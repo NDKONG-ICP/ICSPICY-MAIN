@@ -1,5 +1,4 @@
 import {
-  AlertTriangle,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -7,21 +6,17 @@ import { AnimatePresence, motion, useMotionValueEvent, useSpring } from "motion/
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
+import { NURSERY_LAT, NURSERY_LNG } from "../../lib/weather-service";
 import type { WeatherData } from "../../hooks/useWeather";
-import {
-  getPlantingRecommendations,
-  PLANTING_ZONE_LABEL,
-} from "../../lib/planting-almanac";
-import {
-  uvIndexClass,
-  weatherIcon,
-  weatherToContext,
-} from "../../lib/weather-service";
+import { weatherIcon } from "../../lib/weather-service";
+import { WeatherImmersivePanel } from "./WeatherImmersivePanel";
 
 type WeatherBarProps = {
   data: WeatherData | undefined;
   isLoading: boolean;
   locationLabel?: string;
+  lat?: number;
+  lng?: number;
   expanded: boolean;
   onExpandedChange: (next: boolean) => void;
 };
@@ -58,11 +53,11 @@ export function WeatherBar({
   data,
   isLoading,
   locationLabel,
+  lat = NURSERY_LAT,
+  lng = NURSERY_LNG,
   expanded,
   onExpandedChange,
 }: WeatherBarProps) {
-  const hasRain = (data?.daily.totalRainInches ?? 0) > 0;
-
   return (
     <section
       data-ocid="nims-weather-bar"
@@ -117,166 +112,15 @@ export function WeatherBar({
             transition={{ duration: 0.28, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <ExpandedWeatherPanel
+            <WeatherImmersivePanel
               data={data}
               locationLabel={locationLabel}
-              hasRain={hasRain}
+              lat={lat}
+              lng={lng}
             />
           </motion.div>
         )}
       </AnimatePresence>
     </section>
-  );
-}
-
-function formatHm(iso: string): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-}
-
-function ExpandedWeatherPanel({
-  data,
-  locationLabel,
-  hasRain,
-}: {
-  data: WeatherData;
-  locationLabel?: string;
-  hasRain: boolean;
-}) {
-  const ctx = weatherToContext(data);
-  const uv = Math.round(data.current.uvIndex);
-  const uvClass = uvIndexClass(uv);
-  const planting = getPlantingRecommendations();
-  const monthName = new Date().toLocaleString(undefined, { month: "long" });
-
-  return (
-    <div
-      data-ocid="nims-weather-bar-panel"
-      className="space-y-3 border-t border-white/10 px-3 py-3 text-xs text-muted-foreground"
-    >
-      {locationLabel && (
-        <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">
-          {locationLabel}
-        </p>
-      )}
-
-      {data.extremeWeather && (
-        <p className="flex items-center gap-1.5 rounded-md bg-amber-500/15 px-2 py-1 font-medium text-amber-400">
-          <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
-          Extreme conditions flagged — extra plant care advised.
-        </p>
-      )}
-
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl" aria-hidden>
-            {data.moon.emoji}
-          </span>
-          <div>
-            <p className="font-medium text-foreground">{data.moon.phase}</p>
-            <div className="mt-1 h-1.5 w-16 overflow-hidden rounded-full bg-white/10">
-              <motion.div
-                className="h-full rounded-full bg-primary/70"
-                initial={{ width: 0 }}
-                animate={{ width: `${data.moon.illumination}%` }}
-                transition={{ duration: 0.8 }}
-              />
-            </div>
-            <p className="mt-0.5 text-[10px]">{data.moon.illumination}% lit</p>
-          </div>
-        </div>
-
-        <span className={cn("rounded-full border border-white/10 px-2 py-1 font-semibold", uvClass)}>
-          UV {uv}
-          {uv >= 11 ? " ⚠️" : ""}
-        </span>
-
-        {hasRain && (
-          <motion.span
-            animate={{ y: [0, 2, 0] }}
-            transition={{ repeat: Infinity, duration: 1.2 }}
-            className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 px-2 py-1 text-cyan-300"
-          >
-            🌧️ {data.daily.totalRainInches.toFixed(2)}″ today
-          </motion.span>
-        )}
-      </div>
-
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        <span>
-          Feels like{" "}
-          <strong className="text-foreground">
-            {Math.round(data.current.feelsLikeF)}°F
-          </strong>
-        </span>
-        <span>{data.current.weatherDescription}</span>
-      </div>
-
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        <span>
-          Gusts{" "}
-          <strong className="text-foreground">
-            {Math.round(data.current.windGustsMph)} mph
-          </strong>{" "}
-          {data.current.windDirection}
-        </span>
-        <span>
-          AQI{" "}
-          <strong className="text-foreground">{data.airQuality.aqi}</strong> (
-          {data.airQuality.level})
-        </span>
-      </div>
-
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        <span>
-          Today{" "}
-          <strong className="text-foreground">
-            {Math.round(data.daily.highF)}° / {Math.round(data.daily.lowF)}°
-          </strong>
-        </span>
-        <span>
-          Sun ↑ {formatHm(data.daily.sunrise)} · ↓ {formatHm(data.daily.sunset)}
-        </span>
-      </div>
-
-      <p className="pt-1 text-[11px] opacity-80">
-        Grower snapshot · RH {ctx.humidity}% · moon {ctx.moonPhase} · updated{" "}
-        {data.lastUpdated.toLocaleTimeString(undefined, {
-          hour: "numeric",
-          minute: "2-digit",
-        })}
-      </p>
-
-      {planting.length > 0 && (
-        <div className="mt-2 border-t border-white/10 pt-3">
-          <p className="mb-2 font-semibold text-foreground">
-            🌱 What to Plant This Month
-          </p>
-          <p className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground/80">
-            {monthName} · {PLANTING_ZONE_LABEL}
-          </p>
-          <ul className="space-y-1.5">
-            {planting.map((rec) => (
-              <li
-                key={rec.name}
-                className="flex items-start gap-2 rounded-md bg-white/5 px-2 py-1.5"
-              >
-                <span aria-hidden>{rec.emoji}</span>
-                <span>
-                  <strong className="text-foreground">{rec.name}</strong>
-                  {" — "}
-                  <span className="text-primary/90">{rec.action}</span>
-                  <span className="block text-[11px] text-muted-foreground">
-                    {rec.notes}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
   );
 }

@@ -11,7 +11,11 @@ import type {
   TrayId,
   WeatherSnapshot,
 } from "../declarations/backend.did";
-import { callAddWeatherSnapshot } from "../lib/nims-backend-calls";
+import {
+  callAddWeatherSnapshot,
+  callMarkPlantDead,
+  callRevivePlant,
+} from "../lib/nims-backend-calls";
 import {
   refreshAllTrayGrids,
   refreshNimsDashboardStats,
@@ -189,6 +193,50 @@ export function useWaterEntireTray() {
     },
     onSettled: async (_data, _err, vars) => {
       await refreshTrayGrid(qc, vars.trayId);
+      qc.invalidateQueries({ queryKey: ["nimsActivity"] });
+    },
+  });
+}
+
+export function useRevivePlant() {
+  const { identity } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (plantId: PlantId) => {
+      if (!identity) throw new Error("Not connected");
+      return callRevivePlant(identity, plantId);
+    },
+    onSuccess: (_, plantId) => {
+      qc.invalidateQueries({ queryKey: ["plantLifecycle", plantId.toString()] });
+      qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
+      qc.invalidateQueries({ queryKey: ["nimsActivity"] });
+      qc.invalidateQueries({ queryKey: ["nimsDashboardStats"] });
+    },
+  });
+}
+
+export function useMarkPlantDead() {
+  const { identity } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      plantId: PlantId;
+      cause: DeathCause;
+      notes?: string;
+      photoUrl?: string;
+    }) => {
+      if (!identity) throw new Error("Not connected");
+      return callMarkPlantDead(
+        identity,
+        args.plantId,
+        args.cause,
+        args.notes ?? null,
+        args.photoUrl ?? null,
+      );
+    },
+    onSuccess: (_, { plantId }) => {
+      qc.invalidateQueries({ queryKey: ["plantLifecycle", plantId.toString()] });
+      qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
       qc.invalidateQueries({ queryKey: ["nimsActivity"] });
     },
   });

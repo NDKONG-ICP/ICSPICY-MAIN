@@ -720,6 +720,12 @@ export const idlFactory = ({ IDL }) => {
     'principal_id' : IDL.Principal,
     'location' : IDL.Opt(IDL.Text),
   });
+  const Health = IDL.Record({
+    'heapSize' : IDL.Nat,
+    'isHealthy' : IDL.Bool,
+    'cyclesBalance' : IDL.Nat,
+    'memoryUsed' : IDL.Nat,
+  });
   const CanisterTreasuryBalance = IDL.Record({
     'balance' : IDL.Nat,
     'ledgerCanisterId' : IDL.Text,
@@ -756,6 +762,13 @@ export const idlFactory = ({ IDL }) => {
     'ingredients' : IDL.Vec(Ingredient),
     'prep_time' : IDL.Opt(IDL.Text),
     'application_rate' : IDL.Opt(IDL.Text),
+  });
+  const FleetEntry = IDL.Record({
+    'name' : IDL.Text,
+    'isHealthy' : IDL.Bool,
+    'cyclesBalance' : IDL.Nat,
+    'memorySize' : IDL.Nat,
+    'canisterId' : IDL.Text,
   });
   const Icrc7PoolStats = IDL.Record({
     'total' : IDL.Nat,
@@ -1636,6 +1649,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getCanisterHealth' : IDL.Func([], [Health], ['query']),
     'getCanisterId' : IDL.Func([], [IDL.Text], ['query']),
     'getCanisterTreasuryBalances' : IDL.Func(
         [],
@@ -1664,6 +1678,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(ShopListingFile)],
         ['query'],
       ),
+    'getCycleBalance' : IDL.Func([], [IDL.Nat], ['query']),
     'getDAOProposal' : IDL.Func(
         [ProposalId],
         [IDL.Opt(ProposalPublic)],
@@ -1686,6 +1701,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(RecipePublic)],
         ['query'],
       ),
+    'getFleetCanisterHealth' : IDL.Func([], [IDL.Vec(FleetEntry)], []),
     'getFollowers' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Nat],
         [IDL.Vec(UserProfilePublic)],
@@ -1891,6 +1907,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(LifecycleUpgradeEvent)],
         ['query'],
       ),
+    'getUploadsCanisterId' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
     'getUserPosts' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Nat],
         [IDL.Vec(PostPublic)],
@@ -2145,6 +2162,11 @@ export const idlFactory = ({ IDL }) => {
         [AddPlantResult],
         [],
       ),
+    'markPlantDead' : IDL.Func(
+        [PlantId, DeathCause, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
+        [IDL.Bool],
+        [],
+      ),
     'markPlantGerminated' : IDL.Func([PlantId, Timestamp], [], []),
     'mintEXT' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
@@ -2263,6 +2285,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
+    'revivePlant' : IDL.Func([PlantId], [IDL.Bool], []),
     'revokeClaimTokenAdmin' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'saveCallerUserProfile' : IDL.Func([SaveProfileInput], [IDL.Bool], []),
     'saveProfile' : IDL.Func([SaveProfileInput], [IDL.Bool], []),
@@ -2286,6 +2309,7 @@ export const idlFactory = ({ IDL }) => {
     'setForSale' : IDL.Func([PlantId, IDL.Bool], [], []),
     'setICPaySecretKey' : IDL.Func([IDL.Text], [], []),
     'setPlantNFT' : IDL.Func([PlantId, IDL.Text], [], []),
+    'setUploadsCanisterId' : IDL.Func([IDL.Text], [], []),
     'storeArtworkFile' : IDL.Func(
         [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text],
         [StoredFile],

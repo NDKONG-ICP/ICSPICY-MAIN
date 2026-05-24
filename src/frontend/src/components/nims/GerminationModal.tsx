@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmMarkDeadDialog } from "./ConfirmMarkDeadDialog";
 
 export type GerminationSubmit = {
   /** ISO yyyy-mm-dd (local picker) — Motoko ingestion converts upstream */
@@ -41,8 +42,19 @@ export function GerminationModal({
   const isoToday = () => new Date().toISOString().slice(0, 10);
   const [dateIso, setDateIso] = useState(defaultDateIso ?? isoToday());
   const [notes, setNotes] = useState("");
+  const [confirmDeadOpen, setConfirmDeadOpen] = useState(false);
 
   return (
+    <>
+      <ConfirmMarkDeadDialog
+        open={confirmDeadOpen}
+        onOpenChange={setConfirmDeadOpen}
+        onConfirm={() => {
+          setConfirmDeadOpen(false);
+          onOpenChange(false);
+          onMarkDead?.();
+        }}
+      />
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-ocid="nims-modal-germination" className="max-w-md gap-6">
         <DialogHeader>
@@ -81,10 +93,7 @@ export function GerminationModal({
               variant="destructive"
               size="sm"
               data-ocid="nims-germ-mark-dead"
-              onClick={() => {
-                onOpenChange(false);
-                onMarkDead();
-              }}
+              onClick={() => setConfirmDeadOpen(true)}
             >
               Mark dead instead
             </Button>
@@ -113,5 +122,6 @@ export function GerminationModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

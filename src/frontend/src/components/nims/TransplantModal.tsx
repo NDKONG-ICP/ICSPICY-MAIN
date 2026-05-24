@@ -17,6 +17,7 @@ import {
   containerSizeLabel,
   isContainerUpgrade,
 } from "../../lib/container-utils";
+import { ConfirmMarkDeadDialog } from "./ConfirmMarkDeadDialog";
 
 export type TransplantSubmitPayload = {
   container_size: ContainerSize;
@@ -57,6 +58,7 @@ export function TransplantModal({
   const [selected, setSelected] = useState<string>(defaultKey);
   const [otherLabel, setOtherLabel] = useState("custom container");
   const [locationNotes, setLocationNotes] = useState("");
+  const [confirmDeadOpen, setConfirmDeadOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -74,6 +76,16 @@ export function TransplantModal({
   }, [availableOptions, selected, otherLabel]);
 
   return (
+    <>
+      <ConfirmMarkDeadDialog
+        open={confirmDeadOpen}
+        onOpenChange={setConfirmDeadOpen}
+        onConfirm={() => {
+          setConfirmDeadOpen(false);
+          onOpenChange(false);
+          onMarkDead?.();
+        }}
+      />
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-ocid="nims-modal-transplant" className="max-w-md gap-6">
         <DialogHeader>
@@ -157,10 +169,7 @@ export function TransplantModal({
               variant="destructive"
               size="sm"
               data-ocid="nims-transplant-mark-dead"
-              onClick={() => {
-                onOpenChange(false);
-                onMarkDead();
-              }}
+              onClick={() => setConfirmDeadOpen(true)}
             >
               Mark dead
             </Button>
@@ -191,5 +200,6 @@ export function TransplantModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

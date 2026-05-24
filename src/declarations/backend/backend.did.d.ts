@@ -332,6 +332,13 @@ export interface FeedingPublic {
   'notes' : [] | [string],
   'plant_id' : PlantId,
 }
+export interface FleetEntry {
+  'name' : string,
+  'isHealthy' : boolean,
+  'cyclesBalance' : bigint,
+  'memorySize' : bigint,
+  'canisterId' : string,
+}
 export interface FoundersMintInput {
   'layerCombination' : Array<bigint>,
   'recipient' : Principal,
@@ -344,6 +351,12 @@ export interface FoundersMintResult {
   'tokenId' : string,
   'recipient' : Principal,
   'standard' : NFTStandard,
+}
+export interface Health {
+  'heapSize' : bigint,
+  'isHealthy' : boolean,
+  'cyclesBalance' : bigint,
+  'memoryUsed' : bigint,
 }
 export interface ICSpicy {
   '_initializeAccessControl' : ActorMethod<[], undefined>,
@@ -567,6 +580,10 @@ export interface ICSpicy {
   'getCallerProfile' : ActorMethod<[], [] | [UserProfilePublic]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfilePublic]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  /**
+   * / Public query — anyone can check backend canister health.
+   */
+  'getCanisterHealth' : ActorMethod<[], Health>,
   'getCanisterId' : ActorMethod<[], string>,
   'getCanisterTreasuryBalances' : ActorMethod<
     [],
@@ -587,6 +604,10 @@ export interface ICSpicy {
     ]
   >,
   'getCommunityImageFile' : ActorMethod<[string], [] | [ShopListingFile]>,
+  /**
+   * / Admin: backend cycle balance (AGENTS.md hygiene).
+   */
+  'getCycleBalance' : ActorMethod<[], bigint>,
   'getDAOProposal' : ActorMethod<[ProposalId], [] | [ProposalPublic]>,
   'getDAOStats' : ActorMethod<
     [],
@@ -598,6 +619,10 @@ export interface ICSpicy {
     }
   >,
   'getFeaturedRecipes' : ActorMethod<[bigint], Array<RecipePublic>>,
+  /**
+   * / Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
+   */
+  'getFleetCanisterHealth' : ActorMethod<[], Array<FleetEntry>>,
   /**
    * / Uploads asset canister — user images served via HTTP from this canister.
    */
@@ -708,9 +733,6 @@ export interface ICSpicy {
   'hasLikedPost' : ActorMethod<[PostId], boolean>,
   'hasMembership' : ActorMethod<[], boolean>,
   'hasVoted' : ActorMethod<[ProposalId], [] | [CallerVoteInfo]>,
-  /**
-   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
-   */
   'icpayTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
@@ -876,6 +898,13 @@ export interface ICSpicy {
     [TrayId, bigint, [] | [Timestamp]],
     AddPlantResult
   >,
+  'markPlantDead' : ActorMethod<
+    [PlantId, DeathCause, [] | [string], [] | [string]],
+    boolean
+  >,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
   'markPlantGerminated' : ActorMethod<[PlantId, Timestamp], undefined>,
   'mintEXT' : ActorMethod<[bigint, string, Array<[string, string]>], string>,
   'mintHederaNFT' : ActorMethod<
@@ -946,9 +975,6 @@ export interface ICSpicy {
   'removePlantPhoto' : ActorMethod<[PlantId, string], undefined>,
   'removeVariety' : ActorMethod<[bigint], boolean>,
   'removeZonePhoto' : ActorMethod<[TrayId, string], undefined>,
-  /**
-   * / Uploads asset canister — user images served via HTTP from this canister.
-   */
   'reorderRecipes' : ActorMethod<[Array<RecipeId>], boolean>,
   'resetOrphanPoolNFT' : ActorMethod<[bigint], boolean>,
   'resetPoolNFT' : ActorMethod<
@@ -956,6 +982,7 @@ export interface ICSpicy {
     { 'ok' : string } |
       { 'err' : string }
   >,
+  'revivePlant' : ActorMethod<[PlantId], boolean>,
   'revokeClaimTokenAdmin' : ActorMethod<[string], boolean>,
   /**
    * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
@@ -997,6 +1024,9 @@ export interface ICSpicy {
     [TreasuryToken, bigint, [] | [string]],
     TreasuryTransaction
   >,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'treasuryTransfer' : ActorMethod<
     [TreasuryToken, bigint, Principal, Principal, [] | [string]],
     TreasuryTransaction

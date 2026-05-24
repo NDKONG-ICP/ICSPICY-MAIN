@@ -225,6 +225,8 @@ export default function NIMSPage() {
           data={weather}
           isLoading={weatherLoading}
           locationLabel={nimsLocation.coordinates.label}
+          lat={nimsLocation.coordinates.lat}
+          lng={nimsLocation.coordinates.lng}
           expanded={weatherExpanded}
           onExpandedChange={setWeatherExpanded}
         />

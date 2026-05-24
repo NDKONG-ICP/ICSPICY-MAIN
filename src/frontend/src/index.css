@@ -143,6 +143,26 @@
     border-color: oklch(var(--primary));
   }
 
+  @keyframes weather-rain-fall {
+    0% {
+      transform: translateY(-20%) scale(0.8);
+      opacity: 0;
+    }
+    15% {
+      opacity: 0.85;
+    }
+    100% {
+      transform: translateY(120%) scale(1);
+      opacity: 0;
+    }
+  }
+
+  .weather-rain-drop {
+    top: -10%;
+    font-size: 0.65rem;
+    animation: weather-rain-fall 1.4s linear infinite;
+  }
+
   /* NIMS Table & Inventory Utilities */
   .table-header {
     @apply bg-muted/60 text-foreground font-semibold uppercase tracking-widest text-xs;

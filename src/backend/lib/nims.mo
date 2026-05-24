@@ -104,6 +104,29 @@ module {
     list.add(note);
   };
 
+  func isDeathNoteText(text : Text) : Bool {
+    switch (Text.stripStart(text, #text "Marked dead:")) {
+      case null false;
+      case (?_) true;
+    };
+  };
+
+  func inferStageAfterRevive(plant : Types.Plant) : Types.PlantStage {
+    switch (plant.germination_date) {
+      case null #Seed;
+      case (?_) {
+        if (plant.is_transplanted) #Seedling else #Seedling;
+      };
+    };
+  };
+
+  func hadNftBurnedOnDeath(plant : Types.Plant) : Bool {
+    switch (plant.germination_date) {
+      case null false;
+      case (?_) plant.nft_id == null and not plant.sold;
+    };
+  };
+
   func listToArrayNotes(l : List.List<Types.PlantNote>) : [Types.PlantNote] {
     l.toArray();
   };
@@ -1183,6 +1206,111 @@ module {
       case null {};
     };
     #ok(true);
+  };
+
+  public func markPlantDeadInternal(
+    plants : Map.Map<Common.PlantId, Types.Plant>,
+    side : SideMaps,
+    icrc7Owners : Map.Map<Nat, ICRC7.Account>,
+    icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
+    icrc37Approvals : ICRC37Lib.ApprovalsMap,
+    canister : Principal,
+    caller : Principal,
+    adminCheck : Principal -> Bool,
+    plantId : Common.PlantId,
+    cause : DashTypes.DeathCause,
+    notes : ?Text,
+    photoUrl : ?Text,
+  ) : Result.Result<Bool, Text> {
+    let plant = switch (plants.get(plantId)) {
+      case null return #err("Plant not found");
+      case (?p) p;
+    };
+    if (not ownerOrAdmin(plant, plantId, side, caller, adminCheck)) {
+      return #err("Unauthorized: must be plant owner or admin");
+    };
+    if (plant.is_cooked) return #err("Plant is already marked dead");
+    plant.is_cooked := true;
+    switch (nftTokenIdOf(plant)) {
+      case (?tokenId) {
+        let canisterAccount : ICRC7.Account = { owner = canister; subaccount = null };
+        let fromAccount = switch (icrc7Owners.get(tokenId)) {
+          case (?a) a;
+          case null return #err("NFT owner not found");
+        };
+        switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?fromAccount, canisterAccount)) {
+          case (#err(e)) return #err("Return NFT to pool failed: " # e);
+          case (#ok) {};
+        };
+        ignore ICRC37Lib.removeAllApprovals(icrc37Approvals, tokenId);
+        plant.nft_id := null;
+      };
+      case null {};
+    };
+    let causeText = switch cause {
+      case (#DampingOff) "Damping off";
+      case (#PestDamage) "Pest damage";
+      case (#Drought) "Drought";
+      case (#Disease) "Disease";
+      case (#Overwatering) "Overwatering";
+      case (#Unknown) "Unknown";
+      case (#Other) "Other";
+    };
+    let noteSuffix = switch notes { case (?n) " — " # n; case null "" };
+    let detail = "Marked dead: " # causeText # noteSuffix;
+    appendNote(side, plantId, { timestamp = Time.now(); author = caller; text = detail });
+    switch (photoUrl) {
+      case (?url) {
+        ignore addPlantPhotoEntry(
+          plants, side, caller, adminCheck, plantId, url, ?"Death record",
+        );
+      };
+      case null {};
+    };
+    #ok(true);
+  };
+
+  public type RevivePlantResult = {
+    nftUnrecoverable : Bool;
+  };
+
+  /// Admin-only undo for accidental markCellDead / markPlantDead.
+  public func revivePlantInternal(
+    plants : Map.Map<Common.PlantId, Types.Plant>,
+    side : SideMaps,
+    plantId : Common.PlantId,
+    admin : Principal,
+  ) : Result.Result<RevivePlantResult, Text> {
+    let plant = switch (plants.get(plantId)) {
+      case null return #err("Plant not found");
+      case (?p) p;
+    };
+    let notesArr = switch (side.plantNotesLog.get(plantId)) {
+      case (?l) l.toArray();
+      case null [];
+    };
+    var hasDeathNote = false;
+    for (n in notesArr.vals()) {
+      if (isDeathNoteText(n.text)) { hasDeathNote := true };
+    };
+    if (not hasDeathNote and not plant.is_cooked) {
+      return #err("Plant is not marked dead");
+    };
+    let nftUnrecoverable = hadNftBurnedOnDeath(plant);
+    plant.is_cooked := false;
+    plant.stage := inferStageAfterRevive(plant);
+    let kept = Array.filter<Types.PlantNote>(
+      notesArr,
+      func(n) { not isDeathNoteText(n.text) },
+    );
+    side.plantNotesLog.add(plantId, List.fromArray<Types.PlantNote>(kept));
+    appendNote(side, plantId, {
+      timestamp = Time.now();
+      author = admin;
+      text = "Plant revived by admin"
+        # (if (nftUnrecoverable) " — prior NFT was returned to pool and cannot be auto-restored" else "");
+    });
+    #ok({ nftUnrecoverable });
   };
 
   public func plantIdsInTray(

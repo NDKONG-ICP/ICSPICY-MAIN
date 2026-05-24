@@ -14,6 +14,7 @@ export interface WeatherData {
     uvIndex: number;
     windSpeedMph: number;
     windDirection: string;
+    windDirectionDeg: number;
     windGustsMph: number;
     pressureHpa: number;
     weatherCode: number;
@@ -176,6 +177,7 @@ export async function fetchWeatherData(
       uvIndex: cur.uv_index ?? 0,
       windSpeedMph,
       windDirection: degreesToCompass(cur.wind_direction_10m ?? 0),
+      windDirectionDeg: cur.wind_direction_10m ?? 0,
       windGustsMph: cur.wind_gusts_10m ?? 0,
       pressureHpa: cur.surface_pressure ?? 0,
       weatherCode: cur.weather_code ?? 0,
@@ -206,6 +208,39 @@ export function weatherToContext(data: WeatherData): WeatherContext {
     moonPhase: data.moon.phase,
     airQuality: data.airQuality.aqi,
   };
+}
+
+export function compassToDegrees(dir: string): number {
+  const map: Record<string, number> = {
+    N: 0,
+    NE: 45,
+    E: 90,
+    SE: 135,
+    S: 180,
+    SW: 225,
+    W: 270,
+    NW: 315,
+  };
+  return map[dir] ?? 0;
+}
+
+export function aqiRingColor(aqi: number): string {
+  if (aqi <= 50) return "#22c55e";
+  if (aqi <= 100) return "#eab308";
+  if (aqi <= 150) return "#f97316";
+  if (aqi <= 200) return "#ef4444";
+  if (aqi <= 300) return "#a855f7";
+  return "#7f1d1d";
+}
+
+export function sunDayProgress(sunriseIso: string, sunsetIso: string, now = new Date()): number {
+  if (!sunriseIso || !sunsetIso) return 0.5;
+  const rise = new Date(sunriseIso).getTime();
+  const set = new Date(sunsetIso).getTime();
+  const t = now.getTime();
+  if (t <= rise) return 0;
+  if (t >= set) return 1;
+  return (t - rise) / (set - rise);
 }
 
 export function weatherIcon(code: number): string {
