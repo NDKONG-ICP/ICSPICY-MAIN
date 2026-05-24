@@ -12,6 +12,8 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { PlantStage as BackendPlantStage, TransplantInput } from "../backend";
 import { StageBadge } from "../components/ui/StageBadge";
+import { NftPlantFlipCard } from "../components/NftPlantFlipCard";
+import { uploadsUrl } from "@/lib/uploads-canister";
 import {
   LogFeedingModal,
   LogPestModal,
@@ -23,6 +25,7 @@ import {
   RemovePlantModal,
   TransplantModal,
   WeatherBar,
+  WeatherHistoryCharts,
   NimsStoredPhoto,
   type QuickPlantAction,
 } from "../components/nims";
@@ -30,6 +33,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useIsAdmin, useToggleCooked, useTransplantCell } from "../hooks/useBackend";
 import {
   useAddNimsPlantPhoto,
+  useAddWeatherSnapshot,
   useLogFeeding,
   useLogPest,
   useLogWatering,
@@ -37,11 +41,12 @@ import {
 } from "../hooks/useNimsDashboard";
 import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import { useWeather } from "../hooks/useWeather";
+import { weatherDataToSnapshot } from "@/lib/weather-snapshot";
+import { findDeathRecord } from "@/lib/plant-lifecycle-utils";
 import { useNimsLocation } from "../hooks/useNimsLocation";
 import { useHarvestSeeds } from "../hooks/useSeedBank";
 import {
   formatCents,
-  nftImageUrl,
   stageLabel,
   unwrapOpt,
   useAddPlantNote,
@@ -51,6 +56,7 @@ import {
   useTransplantPlant,
   useVarieties,
 } from "../hooks/useNims";
+import { pestSeverityLabel } from "@/lib/candid-display";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 function fmtTs(ts: bigint | undefined): string {
@@ -79,6 +85,7 @@ export default function PlantDetailPage() {
   const logWater = useLogWatering();
   const logFeed = useLogFeeding();
   const logPest = useLogPest();
+  const addWeatherSnapshot = useAddWeatherSnapshot();
   const uploadPhoto = useUploadNimsPhoto();
   const addPlantPhoto = useAddNimsPlantPhoto();
   const listForSale = useListPlantForSale();
@@ -141,6 +148,23 @@ export default function PlantDetailPage() {
   const canEdit = isOwner;
   const inTray = !plant.is_transplanted && plant.tray_id !== 0n;
   const inInventory = (plant.container_size?.length ?? 0) > 0 && !plant.is_transplanted;
+  const latestPhoto = lc.photos.reduce<typeof lc.photos[number] | null>(
+    (best, photo) => (!best || photo.timestamp > best.timestamp ? photo : best),
+    null,
+  );
+  const deathRecord = findDeathRecord(lc.notes);
+
+  const captureWeather = async () => {
+    if (!weather) return;
+    try {
+      await addWeatherSnapshot.mutateAsync({
+        plantId: id,
+        snapshot: weatherDataToSnapshot(weather),
+      });
+    } catch {
+      // Non-blocking — lifecycle entry already saved
+    }
+  };
 
   const handleQuickAction = (action: QuickPlantAction) => {
     switch (action) {
@@ -219,12 +243,30 @@ export default function PlantDetailPage() {
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8 mb-8">
-        <div className="rounded-xl overflow-hidden border border-border aspect-square bg-muted">
-          <img
-            src={nftImageUrl(tokenId)}
-            alt={plant.variety}
-            className="w-full h-full object-cover"
-          />
+        <div className="max-w-md mx-auto w-full">
+          {tokenId !== undefined ? (
+            <NftPlantFlipCard
+              tokenId={tokenId}
+              photos={lc.photos}
+              alt={plant.variety}
+              data-ocid="plant-detail-flip-card"
+            />
+          ) : (
+            <div className="aspect-square rounded-2xl overflow-hidden border border-border bg-muted">
+              {latestPhoto ? (
+                <img
+                  src={uploadsUrl(latestPhoto.url)}
+                  alt="Plant photo"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center bg-zinc-800 text-zinc-400">
+                  <span className="mb-2 text-4xl">📸</span>
+                  <span className="text-sm">No plant photo yet</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div className="space-y-4">
           <div>
@@ -241,11 +283,14 @@ export default function PlantDetailPage() {
               </Badge>
             )}
             {plant.sold && <Badge>Sold</Badge>}
-            {plant.is_cooked && <Badge variant="destructive">Dead</Badge>}
+            {deathRecord && <Badge variant="destructive">Terminated</Badge>}
+            {plant.is_cooked && !deathRecord && (
+              <Badge variant="secondary">Harvested</Badge>
+            )}
             {health?.needsAttention && (
               <Badge variant="destructive">Needs attention</Badge>
             )}
-            {health && !health.needsAttention && !plant.is_cooked && (
+            {health && !health.needsAttention && !deathRecord && (
               <Badge className="bg-emerald-600">
                 Health {health.healthScore.toString()}%
               </Badge>
@@ -293,6 +338,7 @@ export default function PlantDetailPage() {
           <TabsTrigger value="pests">Pests ({lc.pestLog.length})</TabsTrigger>
           <TabsTrigger value="photos">Photos ({lc.photos.length})</TabsTrigger>
           <TabsTrigger value="notes">Notes ({lc.notes.length})</TabsTrigger>
+          <TabsTrigger value="weather">Weather ({lc.weatherSnapshots.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-2 text-sm">
@@ -358,7 +404,7 @@ export default function PlantDetailPage() {
             <ul className="space-y-2 text-sm">
               {lc.pestLog.map((p, i) => (
                 <li key={i} className="border-b border-border pb-2">
-                  {fmtTs(p.timestamp)} — {p.pestName} ({p.severity})
+                  {fmtTs(p.timestamp)} — {p.pestName} ({pestSeverityLabel(p.severity)})
                 </li>
               ))}
             </ul>
@@ -399,6 +445,7 @@ export default function PlantDetailPage() {
                 disabled={!noteText.trim() || addNote.isPending}
                 onClick={async () => {
                   await addNote.mutateAsync({ plantId: id, text: noteText });
+                  await captureWeather();
                   setNoteText("");
                   toast.success("Note added");
                 }}
@@ -407,6 +454,10 @@ export default function PlantDetailPage() {
               </Button>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="weather" className="mt-4">
+          <WeatherHistoryCharts lifecycle={lc} />
         </TabsContent>
       </Tabs>
 
@@ -459,6 +510,7 @@ export default function PlantDetailPage() {
             onSubmit={async ({ amountMl, notes }) => {
               try {
                 await logWater.mutateAsync({ plantId: id, amountMl, notes });
+                await captureWeather();
                 toast.success("Watering logged");
               } catch (e) {
                 toast.error(e instanceof Error ? e.message : "Failed");
@@ -479,6 +531,7 @@ export default function PlantDetailPage() {
                   dosage: dosageAmount,
                   notes,
                 });
+                await captureWeather();
                 toast.success("Feeding logged");
               } catch (e) {
                 toast.error(e instanceof Error ? e.message : "Failed");
@@ -498,9 +551,10 @@ export default function PlantDetailPage() {
                   await addPlantPhoto.mutateAsync({
                     plantId: id,
                     path: photoPath,
-                    caption: `Pest: ${pestName} (${severity})`,
+                    caption: `Pest: ${pestName} (${pestSeverityLabel(severity)})`,
                   });
                 }
+                await captureWeather();
                 toast.success("Pest issue logged");
               } catch (e) {
                 toast.error(e instanceof Error ? e.message : "Failed");

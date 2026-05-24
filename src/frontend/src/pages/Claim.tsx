@@ -22,6 +22,7 @@ import {
 } from "../hooks/useBackend";
 import type { Value } from "../declarations/backend.did";
 import { getNftImageUrl } from "../lib/nft-config";
+import { variantToString } from "@/lib/candid-display";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 function PlantPreview({
@@ -59,7 +60,7 @@ function PlantPreview({
         )}
         {stage && (
           <Badge variant="outline" className="text-xs">
-            {stage}
+            {variantToString(stage)}
           </Badge>
         )}
       </div>

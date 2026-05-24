@@ -87,6 +87,11 @@ import {
   productUnitPrice,
   type ShopProduct,
 } from "../lib/shop-products";
+import {
+  offerStatusLabel,
+  productCategoryLabel,
+  variantToString,
+} from "../lib/candid-display";
 import { OFFER_TOKENS, TOKEN_DECIMALS, TOKEN_DISPLAY } from "../types/index";
 import type { OfferTokenSymbol, Product } from "../types/index";
 import { usePageTitle } from "../hooks/usePageTitle";
@@ -217,9 +222,10 @@ function truncatePrincipal(p: string) {
   return `${p.slice(0, 8)}…${p.slice(-5)}`;
 }
 
-function getProductEmoji(category: string) {
-  if (category === ProductCategory.Spice) return "🧂";
-  if (category === ProductCategory.GardenInputs) return "🌿";
+function getProductEmoji(category: unknown) {
+  const key = variantToString(category);
+  if (key === ProductCategory.Spice || key === "Spice") return "🧂";
+  if (key === ProductCategory.GardenInputs || key === "GardenInputs") return "🌿";
   return "🌶️";
 }
 
@@ -239,9 +245,16 @@ function formatIcpEquiv(icp_e8s: bigint): string {
   return `≈ ${icp.toFixed(4)} ICP`;
 }
 
-function CategoryBadge({ category }: { category: string }) {
-  const cfg = CATEGORY_DISPLAY[category] ?? STAGE_LABELS[category];
-  if (!cfg) return null;
+function CategoryBadge({ category }: { category: unknown }) {
+  const key = variantToString(category);
+  const cfg = CATEGORY_DISPLAY[key] ?? STAGE_LABELS[key];
+  if (!cfg) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium bg-muted/40 text-muted-foreground border-border">
+        {productCategoryLabel(category)}
+      </span>
+    );
+  }
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium ${cfg.color}`}
@@ -253,7 +266,7 @@ function CategoryBadge({ category }: { category: string }) {
 
 // ─── Stage Badge ──────────────────────────────────────────────────────────────
 
-function StageBadge({ category }: { category: string }) {
+function StageBadge({ category }: { category: unknown }) {
   return <CategoryBadge category={category} />;
 }
 
@@ -284,16 +297,21 @@ const STATUS_STYLE: Record<OfferStatus, string> = {
   [OfferStatus.Cancelled]: "bg-muted/40 text-muted-foreground border-border",
 };
 
-function OfferStatusBadge({ status }: { status: OfferStatus }) {
+function OfferStatusBadge({ status }: { status: unknown }) {
+  const key = variantToString(status) as OfferStatus;
+  const style =
+    STATUS_STYLE[key] ??
+    STATUS_STYLE[OfferStatus.Pending];
+  const label = offerStatusLabel(status);
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${STATUS_STYLE[status]}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${style}`}
     >
-      {status === OfferStatus.Pending && <Clock className="w-3 h-3" />}
-      {status === OfferStatus.Accepted && <CheckCircle2 className="w-3 h-3" />}
-      {(status === OfferStatus.Rejected ||
-        status === OfferStatus.Cancelled) && <XCircle className="w-3 h-3" />}
-      {status}
+      {key === OfferStatus.Pending && <Clock className="w-3 h-3" />}
+      {key === OfferStatus.Accepted && <CheckCircle2 className="w-3 h-3" />}
+      {(key === OfferStatus.Rejected ||
+        key === OfferStatus.Cancelled) && <XCircle className="w-3 h-3" />}
+      {label}
     </span>
   );
 }

@@ -38,6 +38,7 @@ import {
   TransplantedCellModal,
   TrayGrid,
   WeatherBar,
+  NimsLandingPage,
 } from "../components/nims";
 import { exportPlantInventoryCsv } from "../lib/nims-export-mappers";
 import { useAuth } from "../hooks/useAuth";
@@ -191,16 +192,7 @@ export default function NIMSPage() {
   };
 
   if (!isAuthenticated) {
-    return (
-      <div className="container max-w-lg py-12 px-4 text-center space-y-4">
-        <Sprout className="mx-auto h-12 w-12 text-primary" />
-        <h1 className="text-2xl font-display font-bold">NIMS</h1>
-        <p className="text-muted-foreground text-sm">
-          Nursery Inventory Management — free for all authenticated growers.
-        </p>
-        <Button onClick={login}>Log in with Internet Identity</Button>
-      </div>
-    );
+    return <NimsLandingPage onLogin={login} />;
   }
 
   const handleCellClick = (position: bigint) => {

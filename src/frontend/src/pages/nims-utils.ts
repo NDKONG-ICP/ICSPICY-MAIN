@@ -1,6 +1,7 @@
 // NIMS utility helpers and shared types
 import type { ContainerSize, PlantPublic } from "../backend";
 import { PlantStage } from "../backend";
+import { variantToString } from "../lib/candid-display";
 
 export function formatDate(ts: bigint | undefined | null): string {
   if (!ts) return "—";
@@ -24,16 +25,20 @@ export function dateInputToTimestamp(val: string): bigint {
   return BigInt(ms * 1_000_000);
 }
 
-export function stageName(stage: PlantStage): string {
-  switch (stage) {
+export function stageName(stage: unknown): string {
+  const key = variantToString(stage);
+  switch (key) {
     case PlantStage.Seed:
+    case "Seed":
       return "Seed";
     case PlantStage.Seedling:
+    case "Seedling":
       return "Seedling";
     case PlantStage.Mature:
+    case "Mature":
       return "Mature";
     default:
-      return "Unknown";
+      return key || "Unknown";
   }
 }
 
@@ -248,7 +253,7 @@ export function printTrayMap(trayName: string, plants: PrintPlant[]): void {
     }
     let statusClass = "active";
     let statusMark = "";
-    let stageBadge = `<span class="stage">${p.stage}</span>`;
+    let stageBadge = `<span class="stage">${variantToString(p.stage)}</span>`;
     if (p.isCooked) {
       statusClass = "cooked";
       statusMark = `<span class="mark">✕ Cooked</span>`;

@@ -46,6 +46,7 @@ import {
   formatRarityLabel,
 } from "../lib/discount-utils";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { variantToString } from "@/lib/candid-display";
 
 // ─── Discount line ────────────────────────────────────────────────────────────
 
@@ -118,9 +119,10 @@ const EMPTY_FORM: ShippingForm = {
   phone: "",
 };
 
-function getProductEmoji(category: string) {
-  if (category === "Spice") return "🧂";
-  if (category === "GardenInputs" || category === "GardenAmendment") return "🌿";
+function getProductEmoji(category: unknown) {
+  const key = variantToString(category);
+  if (key === "Spice") return "🧂";
+  if (key === "GardenInputs" || key === "GardenAmendment") return "🌿";
   return "🌶️";
 }
 

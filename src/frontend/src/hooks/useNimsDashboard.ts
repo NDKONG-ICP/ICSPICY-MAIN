@@ -9,7 +9,9 @@ import type {
   PlantLifecycle,
   TrayCellPublic,
   TrayId,
+  WeatherSnapshot,
 } from "../declarations/backend.did";
+import { callAddWeatherSnapshot } from "../lib/nims-backend-calls";
 import {
   refreshAllTrayGrids,
   refreshNimsDashboardStats,
@@ -18,6 +20,7 @@ import {
 } from "../lib/nims-query";
 import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
+import { useAuth } from "./useAuth";
 import type { Backend } from "../backend";
 
 function useNimsOpsActor() {
@@ -187,6 +190,26 @@ export function useWaterEntireTray() {
     onSettled: async (_data, _err, vars) => {
       await refreshTrayGrid(qc, vars.trayId);
       qc.invalidateQueries({ queryKey: ["nimsActivity"] });
+    },
+  });
+}
+
+export function useAddWeatherSnapshot() {
+  const { identity } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      plantId,
+      snapshot,
+    }: {
+      plantId: PlantId;
+      snapshot: WeatherSnapshot;
+    }) => {
+      if (!identity) throw new Error("Not connected");
+      return callAddWeatherSnapshot(identity, plantId, snapshot);
+    },
+    onSuccess: (_, { plantId }) => {
+      qc.invalidateQueries({ queryKey: ["plantLifecycle", plantId.toString()] });
     },
   });
 }

@@ -2,6 +2,7 @@ import type { Principal } from "@icp-sdk/core/principal";
 import type { ActorSubclass } from "@dfinity/agent";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createActor } from "../backend";
+import { variantToString } from "../lib/candid-display";
 import { toNatBigInt, toOptionalNatBigInt } from "../lib/cart-utils";
 import { useIcrc7Actor } from "../lib/icrc7-actor";
 import {
@@ -1275,7 +1276,7 @@ export function useGetClaimInfo(token: string | undefined) {
         nftName: string;
         plantId?: [] | [bigint];
         variety?: [] | [string];
-        stage?: [] | [string];
+        stage?: [] | [unknown];
         photoUrl?: [] | [string];
       } | null;
       if (!raw) return null;
@@ -1285,7 +1286,7 @@ export function useGetClaimInfo(token: string | undefined) {
         nftName: raw.nftName,
         plantId: raw.plantId?.[0],
         variety: raw.variety?.[0],
-        stage: raw.stage?.[0],
+        stage: raw.stage?.[0] != null ? variantToString(raw.stage[0]) : undefined,
         photoUrl: raw.photoUrl?.[0],
       };
     },

@@ -17,6 +17,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { OrderStatus } from "../backend";
+import { variantToString } from "@/lib/candid-display";
 import { useAuth } from "../hooks/useAuth";
 import { useMyOrders } from "../hooks/useBackend";
 import type { Order } from "../types/index";
@@ -58,7 +59,8 @@ const STATUS_CONFIG: Record<
 
 function OrderRow({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false);
-  const cfg = STATUS_CONFIG[order.status];
+  const statusKey = variantToString(order.status) as OrderStatus;
+  const cfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG[OrderStatus.Pending];
   const { Icon } = cfg;
 
   const date = new Date(Number(order.created_at) / 1_000_000);
@@ -196,12 +198,12 @@ function OrderRow({ order }: { order: Order }) {
                       className={`w-2 h-2 rounded-full ${cfg.dotClass} flex-shrink-0`}
                     />
                     <span className="text-sm text-foreground">{cfg.label}</span>
-                    {order.pickup && order.status === OrderStatus.Pending && (
+                    {order.pickup && statusKey === OrderStatus.Pending && (
                       <span className="text-xs text-muted-foreground ml-1">
                         — awaiting pickup coordination
                       </span>
                     )}
-                    {!order.pickup && order.status === OrderStatus.Pending && (
+                    {!order.pickup && statusKey === OrderStatus.Pending && (
                       <span className="text-xs text-muted-foreground ml-1">
                         — preparing for shipment
                       </span>

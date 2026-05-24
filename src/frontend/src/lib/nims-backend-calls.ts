@@ -1,6 +1,10 @@
 import { Actor, HttpAgent, type Identity } from "@dfinity/agent";
 import { idlFactory, type _SERVICE } from "../declarations/backend.did.js";
-import type { ContainerSize, PlantId } from "../declarations/backend.did";
+import type {
+  ContainerSize,
+  PlantId,
+  WeatherSnapshot,
+} from "../declarations/backend.did";
 import { BACKEND_CANISTER_ID } from "./auth-config";
 
 const IC_HOST = import.meta.env.DEV
@@ -24,6 +28,15 @@ export async function callRemovePlant(
 ): Promise<boolean> {
   const actor = await createBackendActor(identity);
   return actor.removePlant(plantId);
+}
+
+export async function callAddWeatherSnapshot(
+  identity: Identity,
+  plantId: PlantId,
+  snapshot: WeatherSnapshot,
+): Promise<boolean> {
+  const actor = await createBackendActor(identity);
+  return actor.addWeatherSnapshot(plantId, snapshot);
 }
 
 export async function callTransplantPlant(

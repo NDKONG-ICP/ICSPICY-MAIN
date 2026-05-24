@@ -31,6 +31,9 @@ import {
   useTokenMetadata,
   useTokenOwner,
 } from "../hooks/useBackend";
+import { NftPlantFlipCard } from "../components/NftPlantFlipCard";
+import { WeatherProvenance } from "../components/nims/WeatherProvenance";
+import { usePlantByNft } from "../hooks/useNims";
 import { getNftImageUrl, isValidTokenId } from "../lib/nft-config";
 import { usePageTitle } from "../hooks/usePageTitle";
 
@@ -672,6 +675,7 @@ export default function NFTDetailPage() {
   const { data: isPepperHead } = useIsPepperHead(id);
   const { data: certified, isLoading: loadingCertified } =
     useTokenCertified(id);
+  const { data: linkedPlant, isLoading: loadingLinkedPlant } = usePlantByNft(id);
 
   if (id === null) {
     return (
@@ -742,7 +746,18 @@ export default function NFTDetailPage() {
           <div className="lg:col-span-1 space-y-4">
             <Card className="border-border bg-card">
               <CardContent className="p-3">
-                <NFTImage tokenId={id} alt={name} />
+                {loadingLinkedPlant ? (
+                  <Skeleton className="aspect-square w-full rounded-2xl" />
+                ) : linkedPlant ? (
+                  <NftPlantFlipCard
+                    tokenId={id}
+                    photos={linkedPlant.photos}
+                    alt={name}
+                    data-ocid="nft-detail-flip-card"
+                  />
+                ) : (
+                  <NFTImage tokenId={id} alt={name} />
+                )}
               </CardContent>
             </Card>
 
@@ -778,7 +793,11 @@ export default function NFTDetailPage() {
               />
             )}
 
-            <ProvenancePlaceholder />
+            {linkedPlant ? (
+              <WeatherProvenance lifecycle={linkedPlant} tokenId={id} />
+            ) : (
+              <ProvenancePlaceholder />
+            )}
           </div>
         </div>
       </div>

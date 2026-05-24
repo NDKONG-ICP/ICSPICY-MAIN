@@ -126,6 +126,13 @@ import {
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { CHILI_VARIETIES } from "../types/index";
 import { BACKEND_CANISTER_ID } from "@/lib/auth-config";
+import {
+  orderStatusLabel,
+  plantStageAdminLabel,
+  productCategoryLabel,
+  proposalCategoryLabel,
+  variantToString,
+} from "@/lib/candid-display";
 import type { Plant, Product, Tray } from "../types/index";
 import { compressImage } from "../utils/imageUtils";
 import AdminCookBookTab from "./AdminCookBookTab";
@@ -580,7 +587,7 @@ function PlantsTab() {
               <SelectContent>
                 {plants?.map((p) => (
                   <SelectItem key={p.id.toString()} value={p.id.toString()}>
-                    #{p.id.toString()} {p.variety} ({STAGE_LABELS[p.stage]})
+                    #{p.id.toString()} {p.variety} ({plantStageAdminLabel(p.stage)})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -630,7 +637,7 @@ function PlantsTab() {
               <SelectContent>
                 {plants?.map((p) => (
                   <SelectItem key={p.id.toString()} value={p.id.toString()}>
-                    #{p.id.toString()} {p.variety} ({STAGE_LABELS[p.stage]})
+                    #{p.id.toString()} {p.variety} ({plantStageAdminLabel(p.stage)})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -796,7 +803,7 @@ function PlantRow({ plant }: { plant: Plant }) {
         </p>
       </div>
       <Badge variant="outline" className="text-xs flex-shrink-0 ml-2">
-        {STAGE_LABELS[plant.stage]}
+        {plantStageAdminLabel(plant.stage)}
       </Badge>
     </div>
   );
@@ -2094,7 +2101,7 @@ function ProductsTab() {
                         {product.name}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {product.category}
+                        {productCategoryLabel(product.category)}
                         {product.variety ? ` · ${product.variety}` : ""}
                       </p>
                     </div>
@@ -2261,9 +2268,9 @@ function OrdersTab() {
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-md border ${STATUS_COLORS[order.status]}`}
+                  className={`text-xs px-2 py-0.5 rounded-md border ${STATUS_COLORS[variantToString(order.status) as OrderStatus] ?? STATUS_COLORS[OrderStatus.Pending]}`}
                 >
-                  {order.status}
+                  {orderStatusLabel(order.status)}
                 </span>
                 <span className="text-sm font-semibold text-foreground">
                   {formatCents(order.total_cents)}
@@ -2290,7 +2297,7 @@ function OrdersTab() {
               ))}
             </div>
 
-            {order.status === OrderStatus.Pending && (
+            {variantToString(order.status) === OrderStatus.Pending && (
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -2365,7 +2372,7 @@ function NFTMintingTab() {
       const attrs: Array<[string, string]> = plant
         ? [
             ["variety", plant.variety],
-            ["stage", plant.stage],
+            ["stage", variantToString(plant.stage)],
             ["tray", plant.tray_id.toString()],
           ]
         : [];
@@ -2440,7 +2447,7 @@ function NFTMintingTab() {
               <SelectContent>
                 {plants?.map((p) => (
                   <SelectItem key={p.id.toString()} value={p.id.toString()}>
-                    #{p.id.toString()} {p.variety} — {STAGE_LABELS[p.stage]}
+                    #{p.id.toString()} {p.variety} — {plantStageAdminLabel(p.stage)}
                     {p.nft_id ? " ✓ NFT" : ""}
                   </SelectItem>
                 ))}
@@ -2769,7 +2776,7 @@ function AdminDAOTab() {
                       {p.title}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {Object.keys(p.category)[0] ?? "Proposal"} ·{" "}
+                      {proposalCategoryLabel(p.category)} ·{" "}
                       {p.total_votes.toString()} votes
                     </p>
                   </div>

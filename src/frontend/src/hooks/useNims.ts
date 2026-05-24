@@ -19,6 +19,7 @@ import {
   callRemovePlant,
   callTransplantPlant,
 } from "../lib/nims-backend-calls";
+import { getNftImageUrl } from "../lib/nft-config";
 import {
   refreshAllTrayGrids,
   refreshNimsDashboardStats,
@@ -80,6 +81,20 @@ export function usePlantLifecycle(plantId: PlantId | undefined) {
       return actor.getPlantLifecycle(plantId);
     },
     enabled: actorReady && plantId !== undefined,
+  });
+}
+
+export function usePlantByNft(nftTokenId: bigint | null | undefined) {
+  const actor = useNimsActor();
+  const { actorReady } = useActorReady();
+  return useQuery({
+    queryKey: ["plantByNft", nftTokenId?.toString(), actorReady],
+    queryFn: async () => {
+      if (!actor || nftTokenId == null) return null;
+      return actor.getPlantByNft(nftTokenId);
+    },
+    enabled: actorReady && nftTokenId != null,
+    staleTime: 60_000,
   });
 }
 
@@ -392,11 +407,7 @@ export function formatCents(cents: bigint | undefined): string {
 
 export function nftImageUrl(tokenId: bigint | undefined): string {
   if (tokenId === undefined) return "/placeholder-plant.png";
-  const id = tokenId.toString();
-  const canister =
-    import.meta.env.VITE_CANISTER_ID_NFT_ASSETS ??
-    "gawk3-2qaaa-aaaao-ba4sa-cai";
-  return `https://${canister}.icp0.io/images/nft_${id}.png`;
+  return getNftImageUrl(tokenId);
 }
 
 export function opt<T>(v: T | undefined): [] | [T] {

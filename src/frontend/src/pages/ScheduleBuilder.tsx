@@ -30,6 +30,7 @@ import {
   useGetScheduleData,
   useSaveSchedule,
 } from "../hooks/useBackend";
+import { variantToString } from "@/lib/candid-display";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { PlantingCalendarPanel } from "../components/PlantingCalendarPanel";
 
@@ -429,7 +430,7 @@ function PrintScheduleView({
               lineHeight: 1,
             }}
           >
-            {stage} Stage
+            {variantToString(stage)} Stage
           </div>
           <div style={{ fontSize: "13px", color: "#444", marginTop: "4px" }}>
             KNF Schedule — {inputs.join(", ")}
@@ -719,7 +720,7 @@ function SavedScheduleCard({
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground">
-            {sched.stage} Stage
+            {variantToString(sched.stage)} Stage
           </p>
           <p className="text-xs text-muted-foreground truncate">
             {sched.inputs.join(", ")}
@@ -841,7 +842,7 @@ export default function ScheduleBuilderPage() {
       setSelectedStage(sharedSchedule.stage);
       setSelectedInputs(sharedSchedule.inputs);
       setHasBuilt(true);
-      toast.success(`Loaded shared schedule: ${sharedSchedule.stage} stage`);
+      toast.success(`Loaded shared schedule: ${variantToString(sharedSchedule.stage)} stage`);
     }
   }, [sharedSchedule]);
 

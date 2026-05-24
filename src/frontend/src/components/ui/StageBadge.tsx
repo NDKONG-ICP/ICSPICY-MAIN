@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { type VariantProps, cva } from "class-variance-authority";
 import { PlantStage } from "../../backend";
+import { plantStageEmoji, variantToString } from "@/lib/candid-display";
 
 const stageBadgeVariants = cva(
   "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold font-display uppercase tracking-wide border",
@@ -19,22 +20,28 @@ const stageBadgeVariants = cva(
   },
 );
 
-const STAGE_EMOJIS: Record<PlantStage, string> = {
-  [PlantStage.Seed]: "🌱",
-  [PlantStage.Seedling]: "🌿",
-  [PlantStage.Mature]: "🌶️",
-};
+function normalizePlantStage(stage: unknown): PlantStage {
+  const key = variantToString(stage);
+  if (key === PlantStage.Seedling || key === "Seedling") return PlantStage.Seedling;
+  if (key === PlantStage.Mature || key === "Mature") return PlantStage.Mature;
+  return PlantStage.Seed;
+}
 
-interface StageBadgeProps extends VariantProps<typeof stageBadgeVariants> {
-  stage: PlantStage;
+interface StageBadgeProps extends Omit<
+  VariantProps<typeof stageBadgeVariants>,
+  "stage"
+> {
+  stage: unknown;
   className?: string;
 }
 
 export function StageBadge({ stage, className }: StageBadgeProps) {
+  const label = variantToString(stage);
+  const normalized = normalizePlantStage(stage);
   return (
-    <span className={cn(stageBadgeVariants({ stage }), className)}>
-      <span>{STAGE_EMOJIS[stage]}</span>
-      {stage}
+    <span className={cn(stageBadgeVariants({ stage: normalized }), className)}>
+      <span>{plantStageEmoji(stage)}</span>
+      {label}
     </span>
   );
 }

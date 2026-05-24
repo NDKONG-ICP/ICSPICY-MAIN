@@ -72,6 +72,12 @@ export { NfcTagLinkModal } from "./NfcTagLinkModal";
 
 export { PlantTimeline } from "./PlantTimeline";
 
+export { NimsLandingPage } from "./NimsLandingPage";
+export { NimsDemo } from "./NimsDemo";
+export { NimsDemoStep } from "./NimsDemoStep";
+export { WeatherHistoryCharts } from "./WeatherHistoryCharts";
+export { WeatherProvenance } from "./WeatherProvenance";
+
 export { NimsStoredPhoto } from "./NimsStoredPhoto";
 export { PhotoUploadField } from "./PhotoUploadField";
 export type { PhotoUploadFieldProps } from "./PhotoUploadField";

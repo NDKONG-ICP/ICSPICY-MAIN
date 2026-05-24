@@ -1,5 +1,6 @@
 import { Droplets, FlaskConical, Leaf, Skull, Sprout } from "lucide-react";
 import type { PlantLifecycle } from "../../declarations/backend.did";
+import { findDeathRecord } from "@/lib/plant-lifecycle-utils";
 import { cn } from "@/lib/utils";
 
 function fmtTs(ts: bigint): string {
@@ -59,11 +60,13 @@ function buildEvents(lc: PlantLifecycle): TimelineEvent[] {
       tone: "default",
     });
   }
-  if (p.is_cooked) {
+  const deathRecord = findDeathRecord(lc.notes);
+  if (deathRecord) {
     events.push({
-      id: "dead",
-      ts: p.planting_date,
-      label: "Marked dead",
+      id: "terminated",
+      ts: deathRecord.timestamp,
+      label: "Terminated",
+      detail: deathRecord.cause,
       icon: Skull,
       tone: "danger",
     });
