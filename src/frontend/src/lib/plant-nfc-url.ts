@@ -1,5 +1,5 @@
 /** NFC / QR plant tag URL — matches on-canister external_url pattern. */
-export const PLANT_NFC_BASE = "https://icspicy.app/plant";
+export const PLANT_NFC_BASE = "https://www.icspicy.app/plant";
 
 export function plantNfcUrl(plantId: bigint | number | string): string {
   return `${PLANT_NFC_BASE}/${plantId.toString()}`;

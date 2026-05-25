@@ -49,7 +49,7 @@ import {
 import { toast } from "sonner";
 
 /** Public claim URL scanned from printed labels — keep in sync with app routes. */
-const CLAIM_BASE = "https://icspicy.app/claim";
+const CLAIM_BASE = "https://www.icspicy.app/claim";
 
 const STAGE_LABELS: Record<PlantStage, string> = {
   [PlantStage.Seed]: "🌱 Seed",

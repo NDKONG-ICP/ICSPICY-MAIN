@@ -384,7 +384,7 @@ const claimRoute = createRoute({
 });
 
 // Phase 3.6 — single-NFT detail page. Path matches the external_url
-// pattern in the metadata blob (https://icspicy.app/nft/<id>) so links
+// pattern in the metadata blob (https://www.icspicy.app/nft/<id>) so links
 // minted on-chain resolve directly to this route.
 const nftDetailRoute = createRoute({
   getParentRoute: () => rootRoute,

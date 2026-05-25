@@ -63,5 +63,5 @@ export function getCommentAuthorDisplay(c: CommentPublic): string {
 }
 
 export function communitySharePostUrl(postId: bigint): string {
-  return `https://icspicy.app/community/post/${postId.toString()}`;
+  return `https://www.icspicy.app/community/post/${postId.toString()}`;
 }
