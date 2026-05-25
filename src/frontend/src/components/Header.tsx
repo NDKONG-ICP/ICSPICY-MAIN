@@ -14,6 +14,7 @@ import { useMemo, useState } from "react";
 import { SiFacebook, SiInstagram, SiTiktok, SiX } from "react-icons/si";
 import { useAuth } from "../hooks/useAuth";
 import { useIsAdmin } from "../hooks/useBackend";
+import { useNewOrderCountAdmin } from "../hooks/useAdminShop";
 import { useCart } from "../hooks/useCart";
 import { SOCIAL_LINKS } from "../types/index";
 
@@ -50,6 +51,7 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated, isInitializing } = useAuth();
   const { data: isAdmin } = useIsAdmin();
+  const { data: newOrderCount = 0 } = useNewOrderCountAdmin();
   const itemCount = useCart((s) => s.itemCount());
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
@@ -147,7 +149,17 @@ export function Header() {
                       }
                       data-ocid="header-admin-link"
                     >
-                      Admin
+                      <span className="flex items-center gap-2">
+                        Admin
+                        {newOrderCount > 0 && (
+                          <Badge
+                            variant="destructive"
+                            className="h-5 min-w-5 px-1.5 text-[10px] font-semibold"
+                          >
+                            {newOrderCount > 99 ? "99+" : newOrderCount}
+                          </Badge>
+                        )}
+                      </span>
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -294,7 +306,17 @@ export function Header() {
                       isAdminLink ? "header-admin-link-mobile" : undefined
                     }
                   >
-                    {label}
+                    <span className="flex items-center gap-2">
+                      {label}
+                      {isAdminLink && newOrderCount > 0 && (
+                        <Badge
+                          variant="destructive"
+                          className="h-5 min-w-5 px-1.5 text-[10px] font-semibold"
+                        >
+                          {newOrderCount > 99 ? "99+" : newOrderCount}
+                        </Badge>
+                      )}
+                    </span>
                   </Link>
                 );
               })}

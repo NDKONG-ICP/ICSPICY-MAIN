@@ -655,6 +655,10 @@ export interface ICSpicy {
   'getMyTrays' : ActorMethod<[], Array<TrayPublic>>,
   'getMyVendors' : ActorMethod<[], Array<SeedVendorPublic>>,
   'getMyWeatherRecords' : ActorMethod<[bigint], Array<WeatherRecord>>,
+  'getNewOrderCount' : ActorMethod<[], bigint>,
+  /**
+   * / Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
+   */
   'getNftPoolStatus' : ActorMethod<
     [],
     { 'total' : bigint, 'available' : bigint }
@@ -675,6 +679,9 @@ export interface ICSpicy {
   'getPlantLifecycle' : ActorMethod<[PlantId], [] | [PlantLifecycle]>,
   'getPlantTimeline' : ActorMethod<[PlantId], [] | [PlantTimeline]>,
   'getPlantingEvent' : ActorMethod<[bigint], [] | [PlantingEvent]>,
+  /**
+   * / Admin: backend cycle balance (AGENTS.md hygiene).
+   */
   'getPlantsByContainer' : ActorMethod<[ContainerSize], Array<PlantLifecycle>>,
   'getPlantsForSale' : ActorMethod<
     [[] | [PlantStage], [] | [bigint]],
@@ -898,6 +905,7 @@ export interface ICSpicy {
     [TrayId, bigint, [] | [Timestamp]],
     AddPlantResult
   >,
+  'markOrdersSeen' : ActorMethod<[OrderId], undefined>,
   'markPlantDead' : ActorMethod<
     [PlantId, DeathCause, [] | [string], [] | [string]],
     boolean

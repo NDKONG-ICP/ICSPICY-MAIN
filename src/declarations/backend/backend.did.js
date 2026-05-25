@@ -1757,6 +1757,7 @@ export const idlFactory = ({ IDL }) => {
     'getMyTrays' : IDL.Func([], [IDL.Vec(TrayPublic)], ['query']),
     'getMyVendors' : IDL.Func([], [IDL.Vec(SeedVendorPublic)], ['query']),
     'getMyWeatherRecords' : IDL.Func([IDL.Nat], [IDL.Vec(WeatherRecord)], []),
+    'getNewOrderCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getNftPoolStatus' : IDL.Func(
         [],
         [IDL.Record({ 'total' : IDL.Nat, 'available' : IDL.Nat })],
@@ -2162,6 +2163,7 @@ export const idlFactory = ({ IDL }) => {
         [AddPlantResult],
         [],
       ),
+    'markOrdersSeen' : IDL.Func([OrderId], [], []),
     'markPlantDead' : IDL.Func(
         [PlantId, DeathCause, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
         [IDL.Bool],

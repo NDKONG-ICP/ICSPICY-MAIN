@@ -131,6 +131,37 @@ type FulfillmentMethod = "pickup" | "ship";
 const SHIPPING_FEE_CENTS = USPS_SMALL_FLAT_RATE_CENTS;
 const SHIPPING_FEE_LABEL = `$${(SHIPPING_FEE_CENTS / 100).toFixed(2)}`;
 
+function ShippingNoticeBox() {
+  return (
+    <div
+      className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+      data-ocid="checkout-shipping-notice"
+      role="note"
+    >
+      <p className="font-semibold text-amber-200">📦 Shipping Notice</p>
+      <p className="mt-1.5 text-amber-100/90 leading-relaxed">
+        Please allow 2–3 business days for your order to be processed and shipped
+        to ensure the freshest possible delivery. All plants are carefully packaged
+        to survive transit.
+      </p>
+    </div>
+  );
+}
+
+function ShippingSuccessNotice() {
+  return (
+    <div
+      className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-100/95 space-y-1"
+      data-ocid="checkout-shipping-success-notice"
+    >
+      <p>Your order will be shipped within 2–3 business days.</p>
+      <p className="text-amber-200/80 text-xs">
+        You&apos;ll receive your tracking information when your order ships.
+      </p>
+    </div>
+  );
+}
+
 function FulfillmentSelector({
   method,
   onChange,
@@ -420,10 +451,13 @@ function PaymentStep({
               )}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground flex items-start gap-2">
-              <Package className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              Your order is paid and will ship to the address you provided.
-            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground flex items-start gap-2">
+                <Package className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                Your order is paid and will ship to the address you provided.
+              </p>
+              <ShippingSuccessNotice />
+            </div>
           )}
         </div>
 
@@ -747,6 +781,7 @@ export default function CheckoutPage() {
                   className="space-y-3 mt-4"
                   data-ocid="checkout-shipping-form"
                 >
+                  <ShippingNoticeBox />
                   <div className="flex items-center gap-2 mb-1">
                     <Package className="w-4 h-4 text-primary" />
                     <p className="text-sm font-medium text-foreground">

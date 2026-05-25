@@ -1310,6 +1310,8 @@ type ICSpicy =
    getMyTrays: () -> (vec TrayPublic) query;
    getMyVendors: () -> (vec SeedVendorPublic) query;
    getMyWeatherRecords: (limit: nat) -> (vec WeatherRecord);
+   getNewOrderCount: () -> (nat) query;
+   /// Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
    getNftPoolStatus: () -> (record {
                               available: nat;
                               total: nat;
@@ -1330,6 +1332,7 @@ type ICSpicy =
    getPlantLifecycle: (plantId: PlantId) -> (opt PlantLifecycle) query;
    getPlantTimeline: (plant_id: PlantId) -> (opt PlantTimeline) query;
    getPlantingEvent: (event_id: nat) -> (opt PlantingEvent) query;
+   /// Admin: backend cycle balance (AGENTS.md hygiene).
    getPlantsByContainer: (container: ContainerSize) ->
     (vec PlantLifecycle) query;
    getPlantsForSale: (stage: opt PlantStage, varietyId: opt nat) ->
@@ -1509,6 +1512,7 @@ type ICSpicy =
     notes: opt text, _photoUrl: opt text) -> (bool);
    markCellGerminated: (trayId: TrayId, cellPosition: nat, date:
     opt Timestamp) -> (AddPlantResult);
+   markOrdersSeen: (upToOrderId: OrderId) -> ();
    markPlantDead: (plantId: PlantId, cause: DeathCause, notes: opt text,
     photoUrl: opt text) -> (bool);
    /// Uploads asset canister — user images served via HTTP from this canister.

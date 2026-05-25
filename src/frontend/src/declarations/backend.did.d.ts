@@ -655,6 +655,7 @@ export interface ICSpicy {
   'getMyTrays' : ActorMethod<[], Array<TrayPublic>>,
   'getMyVendors' : ActorMethod<[], Array<SeedVendorPublic>>,
   'getMyWeatherRecords' : ActorMethod<[bigint], Array<WeatherRecord>>,
+  'getNewOrderCount' : ActorMethod<[], bigint>,
   'getNftPoolStatus' : ActorMethod<
     [],
     { 'total' : bigint, 'available' : bigint }
@@ -906,6 +907,7 @@ export interface ICSpicy {
    * / Uploads asset canister — user images served via HTTP from this canister.
    */
   'markPlantGerminated' : ActorMethod<[PlantId, Timestamp], undefined>,
+  'markOrdersSeen' : ActorMethod<[OrderId], undefined>,
   'mintEXT' : ActorMethod<[bigint, string, Array<[string, string]>], string>,
   'mintHederaNFT' : ActorMethod<
     [PlantId, [] | [string], Array<[string, string]>],

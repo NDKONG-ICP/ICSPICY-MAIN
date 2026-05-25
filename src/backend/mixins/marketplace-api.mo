@@ -53,6 +53,23 @@ mixin (
     );
   };
 
+  func stripOrderShipping(pub : MarketTypes.OrderPublic) : MarketTypes.OrderPublic {
+    {
+      id = pub.id;
+      buyer = pub.buyer;
+      items = pub.items;
+      subtotal_cents = pub.subtotal_cents;
+      shipping_cents = pub.shipping_cents;
+      total_cents = pub.total_cents;
+      shipping_address = null;
+      shipping = null;
+      pickup = pub.pickup;
+      status = pub.status;
+      created_at = pub.created_at;
+      line_nft_token_ids = pub.line_nft_token_ids;
+    };
+  };
+
   func toPublicOrder(order : MarketTypes.Order) : MarketTypes.OrderPublic {
     let shipping = orderShippingCents.get(order.id);
     let lineNfts = switch (orderLineNftTokenIds.get(order.id)) {
@@ -227,10 +244,11 @@ mixin (
     switch (orders.get(order_id)) {
       case null null;
       case (?order) {
+        let pub = toPublicOrder(order);
         if (Principal.equal(order.buyer, caller) or AccessControl.isAdmin(accessControlState, caller)) {
-          ?toPublicOrder(order);
+          ?pub;
         } else {
-          null;
+          ?stripOrderShipping(pub);
         };
       };
     };

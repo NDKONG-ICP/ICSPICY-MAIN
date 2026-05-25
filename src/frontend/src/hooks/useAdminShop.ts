@@ -17,6 +17,7 @@ import type {
 } from "../declarations/backend.did";
 import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
+import { useIsAdmin } from "./useBackend";
 
 export type AdminBatchAirdropRow = {
   recipient: Principal;
@@ -294,6 +295,40 @@ export function useUpdateOrderStatusAdmin() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["adminOrders"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "newOrderCount"] });
+    },
+  });
+}
+
+export function useNewOrderCountAdmin() {
+  const { actor } = useBackendActor();
+  const { actorReady } = useActorReady();
+  const { data: isAdmin } = useIsAdmin();
+  const svc = rawService(actor);
+  return useQuery({
+    queryKey: ["admin", "newOrderCount", actorReady],
+    queryFn: async (): Promise<number> => {
+      if (!svc) return 0;
+      const count = await svc.getNewOrderCount();
+      return Number(count);
+    },
+    enabled: !!svc && actorReady && isAdmin === true,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+}
+
+export function useMarkOrdersSeenAdmin() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (upToOrderId: OrderId) => {
+      const svc = rawService(actor);
+      if (!svc) throw new Error("Not connected");
+      await svc.markOrdersSeen(upToOrderId);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["admin", "newOrderCount"] });
     },
   });
 }

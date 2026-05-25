@@ -26,6 +26,7 @@ mixin (
   orderShippingCents : Map.Map<Common.OrderId, Nat>,
   orderShippingAddresses : Map.Map<Common.OrderId, MarketTypes.ShippingAddress>,
   icpaySessionsConsumed : Map.Map<Text, Nat>,
+  adminOrdersSeenUpTo : Map.Map<Principal, Nat>,
   nftClaimTokens : Map.Map<Text, ClaimTypes.NftClaimEntry>,
   nftClaimPlantIds : Map.Map<Text, Common.PlantId>,
   plantClaimTokens : Map.Map<Common.PlantId, Text>,
@@ -58,6 +59,25 @@ mixin (
         )
       };
     };
+  };
+
+  public shared query ({ caller }) func getNewOrderCount() : async Nat {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let seen = switch (adminOrdersSeenUpTo.get(caller)) {
+      case (?n) n;
+      case null 0;
+    };
+    AdminOrdersLib.countOrdersSince(orders, seen);
+  };
+
+  public shared ({ caller }) func markOrdersSeen(upToOrderId : Common.OrderId) : async () {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let current = switch (adminOrdersSeenUpTo.get(caller)) {
+      case (?n) n;
+      case null 0;
+    };
+    let next = if (upToOrderId > current) upToOrderId else current;
+    adminOrdersSeenUpTo.add(caller, next);
   };
 
   func statusText(status : MarketTypes.OrderStatus) : Text {

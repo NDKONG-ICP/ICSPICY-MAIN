@@ -80,6 +80,7 @@ import { AdminBatchGiftsTab } from "../components/admin/AdminBatchGiftsTab";
 import { AdminCommunityTab } from "../components/admin/AdminCommunityTab";
 import { AdminNFTPoolTab } from "../components/admin/AdminNFTPoolTab";
 import { AdminOrdersTab } from "../components/admin/AdminOrdersTab";
+import { useNewOrderCountAdmin } from "../hooks/useAdminShop";
 import {
   useCreateProposal,
   useProposals,
@@ -5007,6 +5008,7 @@ function FoundersCard({
 
 export default function AdminPage() {
   usePageTitle("IC SPICY Admin");
+  const { data: newOrderCount = 0 } = useNewOrderCountAdmin();
 
   return (
     <div data-ocid="admin-panel">
@@ -5078,6 +5080,14 @@ export default function AdminPage() {
             >
               <Package className="w-3.5 h-3.5" />
               Orders
+              {newOrderCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="h-5 min-w-5 px-1.5 text-[10px] font-semibold"
+                >
+                  {newOrderCount > 99 ? "99+" : newOrderCount}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger
               value="nft"

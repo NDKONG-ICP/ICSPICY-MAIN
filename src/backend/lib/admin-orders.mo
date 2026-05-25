@@ -124,4 +124,29 @@ module {
       else #equal
     })
   };
+
+  public func countOrdersSince(
+    orders : Map.Map<Common.OrderId, MarketTypes.Order>,
+    sinceOrderId : Nat,
+  ) : Nat {
+    var count : Nat = 0;
+    for ((id, _) in orders.entries()) {
+      if (id > sinceOrderId) {
+        count += 1;
+      };
+    };
+    count;
+  };
+
+  public func maxOrderId(
+    orders : Map.Map<Common.OrderId, MarketTypes.Order>,
+  ) : Nat {
+    var maxId : Nat = 0;
+    for ((id, _) in orders.entries()) {
+      if (id > maxId) {
+        maxId := id;
+      };
+    };
+    maxId;
+  };
 };

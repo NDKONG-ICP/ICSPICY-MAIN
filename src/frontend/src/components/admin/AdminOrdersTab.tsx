@@ -5,6 +5,8 @@ import {
   adminFilterKey,
   useAdminOrderCounts,
   useAdminOrders,
+  useMarkOrdersSeenAdmin,
+  useNewOrderCountAdmin,
   useUpdateOrderStatusAdmin,
   type AdminOrderPublic,
   type AdminOrderStatusFilter,
@@ -12,8 +14,9 @@ import {
 import { OrderStatus } from "@/backend";
 import { formatCents } from "@/hooks/useNims";
 import { exportAdminOrdersCsv } from "@/lib/nims-export-mappers";
+import { candidOpt } from "@/lib/candid-opt";
 import { Download, Package } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const FILTER_TABS: {
@@ -72,11 +75,59 @@ function canCancel(order: AdminOrderPublic) {
   return statusVariantKey(order.status) === "Pending";
 }
 
+function ShippingAddressPanel({ order }: { order: AdminOrderPublic }) {
+  if (order.pickup) return null;
+
+  const structured = candidOpt(order.shipping);
+  const fallbackText = candidOpt(order.shipping_address);
+
+  if (!structured && !fallbackText) return null;
+
+  return (
+    <div
+      className="rounded-lg border border-border/80 bg-muted/20 px-3 py-2.5 text-xs space-y-1"
+      data-ocid="admin-order-shipping-address"
+    >
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+        Shipping Address
+      </p>
+      {structured ? (
+        <>
+          <p className="font-medium text-foreground">{structured.full_name}</p>
+          <p className="text-foreground/90">{structured.street_line1}</p>
+          {candidOpt(structured.street_line2) && (
+            <p className="text-foreground/90">{candidOpt(structured.street_line2)}</p>
+          )}
+          <p className="text-foreground/90">
+            {structured.city}, {structured.state} {structured.zip}
+          </p>
+          <p className="text-muted-foreground">{structured.phone}</p>
+        </>
+      ) : (
+        <p className="text-foreground/90 whitespace-pre-wrap">{fallbackText}</p>
+      )}
+    </div>
+  );
+}
+
 export function AdminOrdersTab() {
   const [filter, setFilter] = useState<AdminOrderStatusFilter>({ All: null });
   const { data: orders = [], isLoading, isPending } = useAdminOrders(filter);
   const { counts } = useAdminOrderCounts();
+  const { data: newOrderCount = 0 } = useNewOrderCountAdmin();
   const updateStatus = useUpdateOrderStatusAdmin();
+  const markSeen = useMarkOrdersSeenAdmin();
+
+  const maxOrderId = useMemo(
+    () => (orders.length > 0 ? orders.reduce((max, o) => (o.id > max ? o.id : max), 0n) : 0n),
+    [orders],
+  );
+
+  useEffect(() => {
+    if (maxOrderId <= 0n) return;
+    void markSeen.mutateAsync(maxOrderId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mark seen when order list max id changes
+  }, [maxOrderId]);
 
   const handleStatus = async (orderId: bigint, status: OrderStatus) => {
     try {
@@ -91,6 +142,16 @@ export function AdminOrdersTab() {
 
   return (
     <div className="space-y-4" data-ocid="admin-orders-tab">
+      {newOrderCount > 0 && (
+        <div
+          className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100"
+          data-ocid="admin-new-orders-banner"
+        >
+          <span className="font-semibold">🔴 {newOrderCount} new order{newOrderCount === 1 ? "" : "s"}</span>
+          <span className="text-red-200/80 ml-2">since you last reviewed orders</span>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
         {FILTER_TABS.map((tab) => {
@@ -146,10 +207,6 @@ export function AdminOrdersTab() {
         <div className="space-y-3">
           {orders.map((order) => {
             const disp = displayStatus(order);
-            const shipAddr =
-              order.shipping_address.length > 0
-                ? order.shipping_address[0]
-                : undefined;
             return (
               <div
                 key={order.id.toString()}
@@ -172,25 +229,9 @@ export function AdminOrdersTab() {
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {order.pickup ? (
-                        <>
-                          <span className="text-foreground/80">Pickup</span>
-                          {shipAddr !== undefined && (
-                            <span className="ml-2">
-                              · {shipAddr.slice(0, 40)}
-                              {shipAddr.length > 40 ? "…" : ""}
-                            </span>
-                          )}
-                        </>
+                        <span className="text-foreground/80">Pickup</span>
                       ) : (
-                        <>
-                          <span className="text-foreground/80">Ship</span>
-                          {shipAddr !== undefined && (
-                            <span className="ml-2">
-                              · {shipAddr.slice(0, 48)}
-                              {shipAddr.length > 48 ? "…" : ""}
-                            </span>
-                          )}
-                        </>
+                        <span className="text-foreground/80">Ship</span>
                       )}
                     </p>
                   </div>
@@ -225,6 +266,8 @@ export function AdminOrdersTab() {
                     </div>
                   ))}
                 </div>
+
+                <ShippingAddressPanel order={order} />
 
                 {order.line_nft_token_ids.length > 0 && (
                   <div className="text-xs">

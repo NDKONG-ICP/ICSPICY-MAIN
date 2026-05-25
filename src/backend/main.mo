@@ -372,6 +372,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let orderPickupClaimTokens = Map.empty<Common.OrderId, [Text]>();
   let orderShippingCents = Map.empty<Common.OrderId, Nat>();
   let orderShippingAddresses = Map.empty<Common.OrderId, MarketTypes.ShippingAddress>();
+  let adminOrdersSeenUpTo = Map.empty<Principal, Nat>();
 
   // ── Schedule state (KNF application schedule builder) ─────────────────────
 
@@ -704,6 +705,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     orderShippingCents,
     orderShippingAddresses,
     icpaySessionsConsumed,
+    adminOrdersSeenUpTo,
     nftClaimTokens,
     nftClaimPlantIds,
     plantClaimTokens,
