@@ -84,16 +84,24 @@ module {
     };
   };
 
-  public func callerNftToken(
+  /// All IC SPICY NFT token IDs held by caller (for eligibility checks).
+  public func callerNftTokens(
     icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
     caller : Principal,
-  ) : ?Nat {
+  ) : [Nat] {
     switch (icrc7Balances.get(caller)) {
-      case (?set) {
-        let tokens = IcrcLib.paginateSet(set, null, ?1);
-        if (tokens.size() > 0) { ?tokens[0] } else { null };
-      };
-      case null null;
+      case (?set) IcrcLib.paginateSet(set, null, null);
+      case null [];
+    };
+  };
+
+  public func callerNftCount(
+    icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
+    caller : Principal,
+  ) : Nat {
+    switch (icrc7Balances.get(caller)) {
+      case (?set) set.size();
+      case null 0;
     };
   };
 
@@ -101,10 +109,32 @@ module {
     icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
     caller : Principal,
   ) : Bool {
-    switch (callerNftToken(icrc7Balances, caller)) {
-      case (?_) true;
-      case null false;
-    };
+    callerNftCount(icrc7Balances, caller) > 0;
+  };
+
+  func getVote(
+    votes : Map.Map<Text, Types.VoteRecord>,
+    proposalId : Common.ProposalId,
+    voter : Principal,
+  ) : ?Types.VoteRecord {
+    votes.get(voteKey(proposalId, voter));
+  };
+
+  func recordVote(
+    votes : Map.Map<Text, Types.VoteRecord>,
+    proposalId : Common.ProposalId,
+    voter : Principal,
+    optionId : Nat,
+    nftTokenId : Nat,
+    votedAt : Common.Timestamp,
+  ) {
+    votes.add(voteKey(proposalId, voter), {
+      voter = voter;
+      proposal_id = proposalId;
+      option_id = optionId;
+      nft_token_id = nftTokenId;
+      voted_at = votedAt;
+    });
   };
 
   public func createProposal(
@@ -240,6 +270,7 @@ module {
     };
   };
 
+  /// One vote per principal per proposal. Holding multiple NFTs does not grant extra votes.
   public func castVote(
     proposals : Map.Map<Common.ProposalId, Types.Proposal>,
     votes : Map.Map<Text, Types.VoteRecord>,
@@ -248,10 +279,12 @@ module {
     proposal_id : Common.ProposalId,
     option_id : Nat,
   ) : Bool {
-    let nftToken = switch (callerNftToken(icrc7Balances, caller)) {
-      case (?t) t;
-      case null { Runtime.trap("DAO voting requires an IC SPICY NFT") };
+    // 1. Caller must hold at least one IC SPICY NFT.
+    let tokens = callerNftTokens(icrc7Balances, caller);
+    if (tokens.size() == 0) {
+      Runtime.trap("You need at least one IC SPICY NFT to vote");
     };
+
     switch (refreshProposal(proposals, proposal_id)) {
       case (?proposal) {
         if (proposal.status != #Active) {
@@ -261,10 +294,13 @@ module {
         if (now < proposal.voting_starts_at or now > proposal.voting_ends_at) {
           Runtime.trap("Outside voting window");
         };
-        let key = voteKey(proposal_id, caller);
-        if (votes.containsKey(key)) {
-          Runtime.trap("Already voted on this proposal");
+
+        // 2. One vote per (proposal, caller) — not per NFT.
+        switch (getVote(votes, proposal_id, caller)) {
+          case (?_) { Runtime.trap("You have already voted on this proposal") };
+          case null {};
         };
+
         var found = false;
         let updatedOptions = Array.map<Types.ProposalOption, Types.ProposalOption>(
           proposal.options,
@@ -280,13 +316,9 @@ module {
         if (not found) {
           Runtime.trap("Invalid option id");
         };
-        votes.add(key, {
-          voter = caller;
-          proposal_id = proposal_id;
-          option_id = option_id;
-          nft_token_id = nftToken;
-          voted_at = now;
-        });
+
+        // 3. Record one vote; store any held token ID as eligibility proof.
+        recordVote(votes, proposal_id, caller, option_id, tokens[0], now);
         proposals.add(proposal_id, {
           proposal with
           options = updatedOptions;

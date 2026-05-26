@@ -258,6 +258,7 @@ export function useAddWeatherSnapshot() {
     },
     onSuccess: (_, { plantId }) => {
       qc.invalidateQueries({ queryKey: ["plantLifecycle", plantId.toString()] });
+      qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
     },
   });
 }

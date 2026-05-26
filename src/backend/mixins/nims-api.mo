@@ -29,6 +29,9 @@ import ICRC7 "../types/icrc7";
 import DashTypes "../types/nims-dashboard";
 import RateLimits "../lib/rate-limits";
 import RateLimit "../lib/rate-limit";
+import IC "ic:aaaaa-aa";
+import Blob "mo:core/Blob";
+import WeatherProvenance "../lib/weather-provenance";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
@@ -218,10 +221,37 @@ mixin (
     ) {
       case (#err(e)) Runtime.trap(e);
       case (#ok(_)) {
+        let toLabel = PlantsLib.containerSizeText(newContainer);
+        ignore NimsLib.addPlantNote(
+          plants, sideMaps(), caller, nimsIsAdmin, plantId, "Transplanted to " # toLabel,
+        );
         logAdmin(caller, "transplant_plant", "plantId=" # Nat.toText(plantId));
         true;
       };
     };
+  };
+
+  public shared ({ caller }) func fixTransplantedPlant(
+    plantId : Common.PlantId,
+    newContainer : PlantTypes.ContainerSize,
+    duplicatePlantId : ?Common.PlantId,
+  ) : async Bool {
+    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    let ok = NimsLib.fixTransplantedPlantInternal(
+      plants, trays, stageHistory, sideMaps(), nftTokenPlantIds, plantId, newContainer, duplicatePlantId,
+    );
+    if (ok) {
+      let dupText = switch (duplicatePlantId) {
+        case (?d) Nat.toText(d);
+        case null "none";
+      };
+      logAdmin(
+        caller,
+        "fix_transplanted_plant",
+        "plantId=" # Nat.toText(plantId) # " duplicate=" # dupText,
+      );
+    };
+    ok;
   };
 
   public shared ({ caller }) func updateNimsPlantStage(
@@ -673,6 +703,128 @@ mixin (
   ) : async Bool {
     AccessControl.requireAuthenticated(caller);
     NimsLib.addWeatherSnapshot(plants, sideMaps(), caller, nimsIsAdmin, plantId, snapshot);
+  };
+
+  // Transform for Open-Meteo HTTPS outcalls — strip headers for replica consensus.
+  public query func weatherProvenanceTransform({
+    context : Blob;
+    response : IC.http_request_result;
+  }) : async IC.http_request_result {
+    ignore context;
+    { response with headers = [] };
+  };
+
+  func fetchOpenMeteoForecast() : async ?WeatherProvenance.ParsedDailyWeather {
+    let url = WeatherProvenance.forecastUrl();
+    try {
+      let httpResponse = await (with cycles = 300_000_000_000) IC.http_request({
+        url;
+        max_response_bytes = ?(10_000 : Nat64);
+        headers = [
+          { name = "Accept"; value = "application/json" },
+          { name = "User-Agent"; value = "ic-spicy-nims" },
+        ];
+        body = null;
+        method = #get;
+        transform = ?{
+          function = weatherProvenanceTransform;
+          context = Blob.fromArray([]);
+        };
+        is_replicated = null;
+      });
+      if (httpResponse.status != 200) return null;
+      switch (WeatherProvenance.parseForecastResponse(httpResponse.body)) {
+        case (#err(_)) null;
+        case (#ok(parsed)) ?parsed;
+      };
+    } catch (_) {
+      null;
+    };
+  };
+
+  func fetchOpenMeteoArchive(startDate : Text, endDate : Text) : async ?[WeatherProvenance.ParsedDailyWeather] {
+    let url = WeatherProvenance.archiveUrl(startDate, endDate);
+    try {
+      let httpResponse = await (with cycles = 300_000_000_000) IC.http_request({
+        url;
+        max_response_bytes = ?(50_000 : Nat64);
+        headers = [
+          { name = "Accept"; value = "application/json" },
+          { name = "User-Agent"; value = "ic-spicy-nims" },
+        ];
+        body = null;
+        method = #get;
+        transform = ?{
+          function = weatherProvenanceTransform;
+          context = Blob.fromArray([]);
+        };
+        is_replicated = null;
+      });
+      if (httpResponse.status != 200) return null;
+      switch (WeatherProvenance.parseArchiveResponse(httpResponse.body)) {
+        case (#err(_)) null;
+        case (#ok(parsed)) ?parsed;
+      };
+    } catch (_) {
+      null;
+    };
+  };
+
+  /// Daily timer entry point — fetches nursery weather and records snapshots for active plants.
+  public func runDailyWeatherCapture() : async Nat {
+    switch (await fetchOpenMeteoForecast()) {
+      case null 0;
+      case (?parsed) {
+        let snapshot = WeatherProvenance.snapshotFromParsed(parsed, "open-meteo-auto");
+        NimsLib.captureDailyWeatherForActivePlants(plants, sideMaps(), snapshot);
+      };
+    };
+  };
+
+  /// Admin: trigger daily weather capture immediately (same logic as the timer).
+  public shared ({ caller }) func adminRunDailyWeatherCapture() : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    await runDailyWeatherCapture();
+  };
+
+  /// Admin: backfill missing weather snapshots for one plant over a date range (YYYY-MM-DD).
+  public shared ({ caller }) func backfillWeatherHistory(
+    plantId : Common.PlantId,
+    startDate : Text,
+    endDate : Text,
+  ) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    switch (plants.get(plantId)) {
+      case null Runtime.trap("Plant not found");
+      case (?plant) {
+        if (not NimsLib.isActiveForWeather(plant)) {
+          Runtime.trap("Plant is not active for weather tracking");
+        };
+      };
+    };
+    switch (await fetchOpenMeteoArchive(startDate, endDate)) {
+      case null 0;
+      case (?days) {
+        var added : Nat = 0;
+        let side = sideMaps();
+        for (parsed in days.vals()) {
+          let snapshot = WeatherProvenance.snapshotFromParsed(parsed, "open-meteo-archive");
+          if (NimsLib.addWeatherSnapshotInternal(plants, side, plantId, snapshot)) {
+            added += 1;
+          };
+        };
+        logAdmin(
+          caller,
+          "backfill_weather",
+          "plantId=" # Nat.toText(plantId) # " added=" # Nat.toText(added),
+        );
+        added;
+      };
+    };
   };
 
   // ── Queries ─────────────────────────────────────────────────────────────────

@@ -9,6 +9,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  LOCATION_LABEL_GPS,
+  LOCATION_LABEL_NURSERY,
+  NURSERY_ZIP,
+} from "../../hooks/useNimsLocation";
 
 export function NimsLocationPrompt({
   open,
@@ -25,19 +30,20 @@ export function NimsLocationPrompt({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MapPin className="size-5 text-primary" />
-            Local weather
+            Weather & radar location
           </DialogTitle>
           <DialogDescription>
-            Enable location for Open-Meteo forecasts tuned to your garden, or use
-            our Port Charlotte nursery defaults.
+            Choose {LOCATION_LABEL_GPS} for device GPS forecasts, or{" "}
+            {LOCATION_LABEL_NURSERY} (zip {NURSERY_ZIP}, Port Charlotte, FL) as
+            the default.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col gap-2 sm:flex-row">
           <Button variant="outline" type="button" onClick={onUseDefault}>
-            Use Port Charlotte, FL
+            {LOCATION_LABEL_NURSERY}
           </Button>
           <Button type="button" onClick={onAllow}>
-            Allow location
+            {LOCATION_LABEL_GPS}
           </Button>
         </DialogFooter>
       </DialogContent>

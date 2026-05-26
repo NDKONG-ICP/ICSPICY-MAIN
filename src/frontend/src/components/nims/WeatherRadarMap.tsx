@@ -8,30 +8,61 @@ interface RadarFrame {
 }
 
 type RainViewerResponse = {
+  host?: string;
   radar?: {
     past?: RadarFrame[];
     nowcast?: RadarFrame[];
   };
 };
 
-export function WeatherRadarMap({ lat, lng }: { lat: number; lng: number }) {
+const DEFAULT_HOST = "https://tilecache.rainviewer.com";
+const TILE_SIZE = 256;
+const MAX_NATIVE_ZOOM = 7;
+const RADAR_OPACITY = 0.65;
+const HIDDEN_OPACITY = 0.001;
+const FRAME_MS = 700;
+
+function showRadarFrame(layers: L.TileLayer[], index: number) {
+  for (let i = 0; i < layers.length; i++) {
+    layers[i]?.setOpacity(i === index ? RADAR_OPACITY : HIDDEN_OPACITY);
+  }
+}
+
+export function WeatherRadarMap({
+  lat,
+  lng,
+  locationLabel,
+  active = true,
+}: {
+  lat: number;
+  lng: number;
+  locationLabel?: string;
+  active?: boolean;
+}) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
-  const radarLayerRef = useRef<L.TileLayer | null>(null);
+  const markerRef = useRef<L.CircleMarker | null>(null);
+  const radarLayersRef = useRef<L.TileLayer[]>([]);
+  const [host, setHost] = useState(DEFAULT_HOST);
   const [frames, setFrames] = useState<RadarFrame[]>([]);
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     fetch("https://api.rainviewer.com/public/weather-maps.json")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`RainViewer API ${r.status}`);
+        return r.json();
+      })
       .then((data: RainViewerResponse) => {
         if (cancelled) return;
         const past = data.radar?.past ?? [];
         const nowcast = data.radar?.nowcast ?? [];
         const all = [...past, ...nowcast];
+        if (data.host) setHost(data.host.replace(/\/$/, ""));
         setFrames(all);
         setCurrentFrame(Math.max(0, past.length - 1));
         setLoadError(all.length === 0);
@@ -45,60 +76,123 @@ export function WeatherRadarMap({ lat, lng }: { lat: number; lng: number }) {
   }, []);
 
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return;
+    if (!active) return;
+    const el = mapRef.current;
+    if (!el || mapInstanceRef.current) return;
 
-    const map = L.map(mapRef.current, {
-      center: [lat, lng],
-      zoom: 8,
-      zoomControl: false,
-      attributionControl: false,
+    const initMap = () => {
+      if (mapInstanceRef.current) return;
+      if (el.clientWidth < 16 || el.clientHeight < 16) return;
+
+      const map = L.map(el, {
+        center: [lat, lng],
+        zoom: 7,
+        maxZoom: 12,
+        zoomControl: false,
+        attributionControl: false,
+      });
+
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        {
+          maxZoom: 19,
+          subdomains: "abcd",
+        },
+      ).addTo(map);
+
+      markerRef.current = L.circleMarker([lat, lng], {
+        radius: 8,
+        color: "#ef4444",
+        fillColor: "#ef4444",
+        fillOpacity: 0.85,
+        weight: 2,
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
+      setMapReady(true);
+
+      requestAnimationFrame(() => {
+        map.invalidateSize();
+        window.setTimeout(() => map.invalidateSize(), 400);
+      });
+    };
+
+    initMap();
+
+    const ro = new ResizeObserver(() => {
+      const map = mapInstanceRef.current;
+      if (map) {
+        map.invalidateSize();
+      } else {
+        initMap();
+      }
     });
-
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      maxZoom: 19,
-    }).addTo(map);
-
-    L.circleMarker([lat, lng], {
-      radius: 8,
-      color: "#ef4444",
-      fillColor: "#ef4444",
-      fillOpacity: 0.85,
-      weight: 2,
-    }).addTo(map);
-
-    mapInstanceRef.current = map;
+    ro.observe(el);
 
     return () => {
-      map.remove();
-      mapInstanceRef.current = null;
-      radarLayerRef.current = null;
+      ro.disconnect();
+      for (const layer of radarLayersRef.current) {
+        layer.remove();
+      }
+      radarLayersRef.current = [];
+      markerRef.current = null;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+      setMapReady(false);
     };
-  }, [lat, lng]);
+  }, [active]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map || frames.length === 0) return;
-
-    if (radarLayerRef.current) {
-      map.removeLayer(radarLayerRef.current);
-      radarLayerRef.current = null;
+    if (!map || !mapReady) return;
+    map.setView([lat, lng], map.getZoom(), { animate: false });
+    if (markerRef.current) {
+      markerRef.current.setLatLng([lat, lng]);
     }
-
-    const frame = frames[currentFrame];
-    if (frame) {
-      radarLayerRef.current = L.tileLayer(
-        `https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`,
-        { opacity: 0.62, zIndex: 10 },
-      ).addTo(map);
-    }
-  }, [currentFrame, frames]);
+  }, [lat, lng, mapReady]);
 
   useEffect(() => {
-    if (!isPlaying || frames.length === 0) return;
-    const timer = setInterval(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !mapReady || frames.length === 0) return;
+
+    for (const layer of radarLayersRef.current) {
+      map.removeLayer(layer);
+    }
+    radarLayersRef.current = frames.map((frame) =>
+      L.tileLayer(
+        `${host}${frame.path}/${TILE_SIZE}/{z}/{x}/{y}/2/1_1.png`,
+        {
+          tileSize: TILE_SIZE,
+          opacity: HIDDEN_OPACITY,
+          maxNativeZoom: MAX_NATIVE_ZOOM,
+          maxZoom: 12,
+          updateWhenIdle: false,
+          updateWhenZooming: false,
+        },
+      ).addTo(map),
+    );
+
+    return () => {
+      for (const layer of radarLayersRef.current) {
+        map.removeLayer(layer);
+      }
+      radarLayersRef.current = [];
+    };
+  }, [frames, host, mapReady]);
+
+  useEffect(() => {
+    if (radarLayersRef.current.length === 0) return;
+    showRadarFrame(radarLayersRef.current, currentFrame);
+  }, [currentFrame, frames.length, mapReady]);
+
+  useEffect(() => {
+    if (!isPlaying || frames.length <= 1) return;
+    const timer = window.setInterval(() => {
       setCurrentFrame((c) => (c + 1) % frames.length);
-    }, 500);
-    return () => clearInterval(timer);
+    }, FRAME_MS);
+    return () => window.clearInterval(timer);
   }, [isPlaying, frames.length]);
 
   const frameTime = frames[currentFrame]?.time;
@@ -114,10 +208,20 @@ export function WeatherRadarMap({ lat, lng }: { lat: number; lng: number }) {
       data-ocid="nims-weather-radar"
       className="relative overflow-hidden rounded-2xl border border-white/10"
     >
-      <div ref={mapRef} className="h-64 w-full sm:h-80" />
+      <div ref={mapRef} className="h-64 w-full sm:h-80 [&_.leaflet-container]:h-full [&_.leaflet-container]:w-full" />
+      {locationLabel && (
+        <div className="pointer-events-none absolute left-2 top-2 rounded-md bg-black/60 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+          📍 {locationLabel}
+        </div>
+      )}
       {loadError && (
         <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/80 text-sm text-zinc-400">
           Radar tiles unavailable — try again shortly.
+        </div>
+      )}
+      {!loadError && frames.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/80 text-sm text-zinc-400">
+          Loading radar…
         </div>
       )}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/85 to-transparent p-3">
@@ -145,7 +249,7 @@ export function WeatherRadarMap({ lat, lng }: { lat: number; lng: number }) {
               aria-label="Radar timeline scrubber"
             />
           </div>
-          <span className="text-xs text-zinc-300">{timeLabel}</span>
+          <span className="text-xs text-zinc-300 tabular-nums">{timeLabel}</span>
         </div>
         <div className="mt-1 flex items-center justify-between">
           <span className="text-xs text-zinc-400">

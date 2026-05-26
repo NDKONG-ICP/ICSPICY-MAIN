@@ -71,6 +71,7 @@ export { AdoptPlantPrompt } from "./AdoptPlantPrompt";
 export type { AdoptPlantPromptProps, AdoptPlantSubmit } from "./AdoptPlantPrompt";
 
 export { NimsLocationPrompt } from "./NimsLocationPrompt";
+export { NimsLocationSelector } from "./NimsLocationSelector";
 export { NewTrayModal } from "./NewTrayModal";
 export { AddPlantModal } from "./AddPlantModal";
 export { SeedBankPanel } from "./SeedBankPanel";

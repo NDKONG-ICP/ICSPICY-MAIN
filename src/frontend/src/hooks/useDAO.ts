@@ -168,9 +168,15 @@ export function useCastVote() {
       await svc.voteOnProposal(proposalId, optionId);
       return true;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       void qc.invalidateQueries({ queryKey: ["proposals"] });
       void qc.invalidateQueries({ queryKey: ["daoStats"] });
+      void qc.invalidateQueries({
+        queryKey: ["proposal", variables.proposalId.toString()],
+      });
+      void qc.invalidateQueries({
+        queryKey: ["hasVoted", variables.proposalId.toString()],
+      });
     },
   });
 }

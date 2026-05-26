@@ -1,4 +1,4 @@
-/** Port Charlotte, FL — admin nursery default */
+/** IC SPICY Nursery — Port Charlotte, FL (zip 33954) */
 export const NURSERY_LAT = 26.9767;
 export const NURSERY_LNG = -82.0837;
 

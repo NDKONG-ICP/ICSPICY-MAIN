@@ -8,7 +8,9 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { NURSERY_LAT, NURSERY_LNG } from "../../lib/weather-service";
 import type { WeatherData } from "../../hooks/useWeather";
+import type { LocationPreference } from "../../hooks/useNimsLocation";
 import { weatherIcon } from "../../lib/weather-service";
+import { NimsLocationSelector } from "./NimsLocationSelector";
 import { WeatherImmersivePanel } from "./WeatherImmersivePanel";
 
 type WeatherBarProps = {
@@ -17,6 +19,9 @@ type WeatherBarProps = {
   locationLabel?: string;
   lat?: number;
   lng?: number;
+  locationPreference?: LocationPreference;
+  onChooseGps?: () => void;
+  onChooseNursery?: () => void;
   expanded: boolean;
   onExpandedChange: (next: boolean) => void;
 };
@@ -55,9 +60,18 @@ export function WeatherBar({
   locationLabel,
   lat = NURSERY_LAT,
   lng = NURSERY_LNG,
+  locationPreference = null,
+  onChooseGps,
+  onChooseNursery,
   expanded,
   onExpandedChange,
 }: WeatherBarProps) {
+  const [radarReady, setRadarReady] = useState(false);
+
+  useEffect(() => {
+    if (!expanded) setRadarReady(false);
+  }, [expanded]);
+
   return (
     <section
       data-ocid="nims-weather-bar"
@@ -111,12 +125,19 @@ export function WeatherBar({
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.28, ease: "easeInOut" }}
             className="overflow-hidden"
+            onAnimationComplete={() => {
+              if (expanded) setRadarReady(true);
+            }}
           >
             <WeatherImmersivePanel
               data={data}
               locationLabel={locationLabel}
               lat={lat}
               lng={lng}
+              radarReady={radarReady}
+              locationPreference={locationPreference}
+              onChooseGps={onChooseGps}
+              onChooseNursery={onChooseNursery}
             />
           </motion.div>
         )}

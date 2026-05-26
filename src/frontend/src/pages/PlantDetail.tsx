@@ -47,6 +47,7 @@ import {
 } from "../hooks/useNimsDashboard";
 import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import { useWeather } from "../hooks/useWeather";
+import { useAutoWeatherCapture } from "../hooks/useAutoWeatherCapture";
 import { weatherDataToSnapshot } from "@/lib/weather-snapshot";
 import {
   findDeathRecord,
@@ -118,6 +119,19 @@ export default function PlantDetailPage() {
     nimsLocation.coordinates.lng,
   );
   const { data: health } = usePlantHealth(id ?? null);
+
+  const callerTextEarly = identity?.getPrincipal().toText() ?? "";
+  const plantIsDeadEarly = lc ? isPlantMarkedDead(lc) : false;
+  const isOwnerEarly =
+    Boolean(isAdmin) ||
+    (lc != null &&
+      (lc.plant.created_by.toText() === callerTextEarly ||
+        unwrapOpt(lc.plant.sold_to)?.toText() === callerTextEarly));
+  useAutoWeatherCapture(
+    lc ? [lc] : undefined,
+    weather,
+    Boolean(identity && lc && isOwnerEarly && !plantIsDeadEarly),
+  );
 
   const [waterOpen, setWaterOpen] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
@@ -245,6 +259,9 @@ export default function PlantDetailPage() {
           locationLabel={nimsLocation.coordinates.label}
           lat={nimsLocation.coordinates.lat}
           lng={nimsLocation.coordinates.lng}
+          locationPreference={nimsLocation.preference}
+          onChooseGps={nimsLocation.chooseGps}
+          onChooseNursery={nimsLocation.chooseDefault}
           expanded={weatherExpanded}
           onExpandedChange={setWeatherExpanded}
         />

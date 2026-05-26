@@ -5,6 +5,7 @@ import Runtime "mo:core/Runtime";
 import AccessControl "../lib/access-control";
 import Common "../types/common";
 import Nat "mo:core/Nat";
+import Text "mo:core/Text";
 import PlantTypes "../types/plants";
 import PlantsLib "../lib/plants";
 
@@ -19,6 +20,7 @@ mixin (
   weatherIndex : Map.Map<Text, Common.WeatherRecordId>,
   artworkLayers : Map.Map<Common.ArtworkLayerId, PlantTypes.ArtworkLayer>,
   rwaTokens : Map.Map<Text, PlantTypes.RWATokenMetadata>,
+  plantNotesLog : Map.Map<Common.PlantId, List.List<PlantTypes.PlantNote>>,
   nextPlantId : { var value : Nat },
   nextTrayId : { var value : Nat },
   nextFeedingId : { var value : Nat },
@@ -29,6 +31,22 @@ mixin (
   // Helper: admin check function for passing into lib
   func isAdmin(p : Principal) : Bool {
     AccessControl.isAdmin(accessControlState, p)
+  };
+
+  func appendPlantNote(
+    plantId : Common.PlantId,
+    caller : Principal,
+    text : Text,
+  ) {
+    let list = switch (plantNotesLog.get(plantId)) {
+      case (?l) l;
+      case null {
+        let l = List.empty<PlantTypes.PlantNote>();
+        plantNotesLog.add(plantId, l);
+        l;
+      };
+    };
+    list.add({ timestamp = Time.now(); author = caller; text });
   };
 
   // ── Tray management (all authenticated users) ──────────────────────────────
@@ -101,11 +119,16 @@ mixin (
     PlantsLib.toggleCooked(plants, caller, isAdmin, plant_id);
   };
 
-  // Owner or admin: transplant a cell — marks source inactive, creates new inventory item
+  // Owner or admin: transplant a cell — updates the same plant record and marks the tray cell transplanted
   public shared ({ caller }) func transplantCell(input : PlantTypes.TransplantInput) : async PlantTypes.PlantPublic {
-    let newPlant = PlantsLib.transplantCell(plants, trays, stageHistory, caller, isAdmin, nextPlantId.value, input);
-    nextPlantId.value += 1;
-    PlantsLib.toPublic(newPlant);
+    let plant = PlantsLib.transplantCell(plants, trays, stageHistory, caller, isAdmin, input);
+    let toLabel = PlantsLib.containerSizeText(input.container_size);
+    appendPlantNote(
+      input.plant_id,
+      caller,
+      "Transplanted to " # toLabel,
+    );
+    PlantsLib.toPublic(plant);
   };
 
   // ── Stage management (admin only) ─────────────────────────────────────────

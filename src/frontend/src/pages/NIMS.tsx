@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@tanstack/react-router";
@@ -30,6 +29,7 @@ import {
   MarkDeadModal,
   NewTrayModal,
   NimsLocationPrompt,
+  NimsLocationSelector,
   NimsAnalyticsPanel,
   PlantLifecycleCard,
   PlantSeedModal,
@@ -65,6 +65,7 @@ import {
   useAddVariety,
 } from "../hooks/useNims";
 import { useWeather } from "../hooks/useWeather";
+import { useAutoWeatherCapture } from "../hooks/useAutoWeatherCapture";
 import { useTransplantCell } from "../hooks/useBackend";
 import { downloadTextFile, plantTagLinksCsv } from "../lib/plant-nfc-url";
 import type { TransplantInput } from "../backend";
@@ -126,6 +127,7 @@ export default function NIMSPage() {
   const traysLoading = isAdmin && showAllUsers ? allTraysLoading : myTraysLoading;
   const { data: varieties = [] } = useVarieties();
   const { data: myPlants = [] } = useMyPlantsNims();
+  useAutoWeatherCapture(myPlants, weather, isAuthenticated);
   const { data: adminInventory = [] } = useAdminInventory(undefined, undefined, undefined);
   const { data: activity = [] } = useActivityFeed(40);
   const { data: unadoptedIds = [], dismissUnadoptedNft } =
@@ -227,6 +229,9 @@ export default function NIMSPage() {
           locationLabel={nimsLocation.coordinates.label}
           lat={nimsLocation.coordinates.lat}
           lng={nimsLocation.coordinates.lng}
+          locationPreference={nimsLocation.preference}
+          onChooseGps={nimsLocation.chooseGps}
+          onChooseNursery={nimsLocation.chooseDefault}
           expanded={weatherExpanded}
           onExpandedChange={setWeatherExpanded}
         />
@@ -244,12 +249,14 @@ export default function NIMSPage() {
                 onClick={() => setShowAllUsers((v) => !v)}
               >
                 <Users className="h-3.5 w-3.5 mr-1" />
-                {showAllUsers ? "All users" : "Mine only"}
+                {showAllUsers ? "All users" : "My trays"}
               </Button>
             )}
-            <Badge variant="outline" className="text-xs shrink-0">
-              {nimsLocation.coordinates.label}
-            </Badge>
+            <NimsLocationSelector
+              preference={nimsLocation.preference}
+              onChooseGps={nimsLocation.chooseGps}
+              onChooseNursery={nimsLocation.chooseDefault}
+            />
           </div>
         </div>
 

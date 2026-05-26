@@ -575,9 +575,6 @@ module {
         };
         if (plant.is_cooked) return #err("Plant is dead");
         if (plant.sold) return #err("Plant is sold");
-        if (plant.is_transplanted) {
-          return #err("This is a tray history record — open the inventory plant to repot");
-        };
         switch (plant.container_size) {
           case null return #err("Plant is still in a tray cell — transplant from the tray first");
           case (?current) {
@@ -586,13 +583,19 @@ module {
             };
           };
         };
+        let fromLabel = switch (plant.container_size) {
+          case (?c) PlantsLib.containerSizeText(c);
+          case null "tray";
+        };
+        let toLabel = PlantsLib.containerSizeText(newContainer);
         plant.container_size := ?newContainer;
+        plant.transplant_date := ?Time.now();
         switch (locationNotes) {
           case (?n) plant.additional_notes := ?n;
           case null {};
         };
         let now = Time.now();
-        let notes = "Repotted to " # PlantsLib.containerSizeText(newContainer);
+        let notes = "Transplanted from " # fromLabel # " to " # toLabel;
         let history = switch (stageHistory.get(plantId)) {
           case (?h) h;
           case null {
@@ -603,6 +606,81 @@ module {
         };
         history.add({ stage = plant.stage; timestamp = now; notes = notes });
         #ok(());
+      };
+    };
+  };
+
+  /// One-time admin repair: point a tray-origin plant at the correct container and remove a duplicate inventory record.
+  public func fixTransplantedPlantInternal(
+    plants : Map.Map<Common.PlantId, Types.Plant>,
+    trays : Map.Map<Common.TrayId, Types.Tray>,
+    stageHistory : Map.Map<Common.PlantId, List.List<Types.StageHistory>>,
+    side : SideMaps,
+    nftTokenPlantIds : Map.Map<Nat, Common.PlantId>,
+    plantId : Common.PlantId,
+    newContainer : Types.ContainerSize,
+    duplicatePlantId : ?Common.PlantId,
+  ) : Bool {
+    switch (plants.get(plantId)) {
+      case null return false;
+      case (?plant) {
+        switch (duplicatePlantId) {
+          case (?dupId) {
+            if (dupId == plantId) {
+              Runtime.trap("Duplicate plant id must differ from primary");
+            };
+            switch (plants.get(dupId)) {
+              case (?dup) {
+                if (plant.nft_id == null and dup.nft_id != null) {
+                  plant.nft_id := dup.nft_id;
+                };
+                switch (nftTokenIdOf(dup)) {
+                  case (?tid) {
+                    ignore nftTokenPlantIds.delete(tid);
+                    nftTokenPlantIds.add(tid, plantId);
+                    if (plant.nft_id == null) {
+                      setNftTokenId(plant, tid);
+                    };
+                  };
+                  case null {};
+                };
+                if (dup.photos.size() > 0) {
+                  plant.photos := Array.concat(plant.photos, dup.photos);
+                };
+                if (dup.photo_keys.size() > 0) {
+                  plant.photo_keys := Array.concat(plant.photo_keys, dup.photo_keys);
+                };
+                clearTrayCellForPlant(trays, dup);
+                ignore plants.delete(dupId);
+                deletePlantSideMaps(side, dupId);
+                ignore stageHistory.delete(dupId);
+              };
+              case null {};
+            };
+          };
+          case null {};
+        };
+        plant.container_size := ?newContainer;
+        plant.transplant_date := ?Time.now();
+        plant.transplant_plant_id := null;
+        plant.is_transplanted := true;
+        let now = Time.now();
+        let noteText = "Transplanted to " # PlantsLib.containerSizeText(newContainer);
+        appendNote(side, plantId, {
+          timestamp = now;
+          author = plant.created_by;
+          text = "Admin data fix: " # noteText;
+        });
+        let history = switch (stageHistory.get(plantId)) {
+          case (?h) h;
+          case null {
+            let h = List.empty<Types.StageHistory>();
+            stageHistory.add(plantId, h);
+            h;
+          };
+        };
+        history.add({ stage = plant.stage; timestamp = now; notes = noteText });
+        true;
       };
     };
   };
@@ -863,6 +941,69 @@ module {
     };
   };
 
+  public func hasWeatherSnapshotForDate(
+    side : SideMaps,
+    plantId : Common.PlantId,
+    date : Text,
+  ) : Bool {
+    switch (side.plantWeatherSnapshots.get(plantId)) {
+      case null false;
+      case (?list) {
+        for (snapshot in listToArrayWeather(list).vals()) {
+          if (snapshot.date == date) return true;
+        };
+        false;
+      };
+    };
+  };
+
+  public func addWeatherSnapshotInternal(
+    plants : Map.Map<Common.PlantId, Types.Plant>,
+    side : SideMaps,
+    plantId : Common.PlantId,
+    snapshot : Types.WeatherSnapshot,
+  ) : Bool {
+    switch (plants.get(plantId)) {
+      case null false;
+      case (?_) {
+        if (hasWeatherSnapshotForDate(side, plantId, snapshot.date)) {
+          false;
+        } else {
+          let list = switch (side.plantWeatherSnapshots.get(plantId)) {
+            case (?l) l;
+            case null {
+              let l = List.empty<Types.WeatherSnapshot>();
+              side.plantWeatherSnapshots.add(plantId, l);
+              l;
+            };
+          };
+          list.add(snapshot);
+          true;
+        };
+      };
+    };
+  };
+
+  public func isActiveForWeather(plant : Types.Plant) : Bool {
+    not plant.sold and not plant.is_cooked;
+  };
+
+  public func captureDailyWeatherForActivePlants(
+    plants : Map.Map<Common.PlantId, Types.Plant>,
+    side : SideMaps,
+    snapshot : Types.WeatherSnapshot,
+  ) : Nat {
+    var added : Nat = 0;
+    for ((plantId, plant) in plants.entries()) {
+      if (isActiveForWeather(plant)) {
+        if (addWeatherSnapshotInternal(plants, side, plantId, snapshot)) {
+          added += 1;
+        };
+      };
+    };
+    added;
+  };
+
   public func settlePlantPurchase(
     plants : Map.Map<Common.PlantId, Types.Plant>,
     side : SideMaps,
@@ -992,20 +1133,27 @@ module {
               };
               let (inventoryPlantId, containerLabel) = switch (status) {
                 case (#Transplanted) {
-                  switch (plant.transplant_plant_id) {
-                    case (?invId) {
-                      switch (plants.get(invId)) {
-                        case (?inv) {
-                          let containerText = switch (inv.container_size) {
-                            case (?c) ?PlantsLib.containerSizeText(c);
-                            case null ?"Inventory";
+                  switch (plant.container_size) {
+                    case (?c) {
+                      (?pid, ?PlantsLib.containerSizeText(c));
+                    };
+                    case null {
+                      switch (plant.transplant_plant_id) {
+                        case (?invId) {
+                          switch (plants.get(invId)) {
+                            case (?inv) {
+                              let containerText = switch (inv.container_size) {
+                                case (?cs) ?PlantsLib.containerSizeText(cs);
+                                case null ?"Inventory";
+                              };
+                              (?invId, containerText);
+                            };
+                            case null (null, null);
                           };
-                          (?invId, containerText);
                         };
                         case null (null, null);
                       };
                     };
-                    case null (null, null);
                   };
                 };
                 case (_) (null, null);

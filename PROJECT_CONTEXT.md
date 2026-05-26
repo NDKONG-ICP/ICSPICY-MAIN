@@ -710,6 +710,7 @@ The `TERM=xterm-256color` suppresses the color panic; the here-string `<<< $'yes
 1. **External audit firm** (Phase 7) — Trail of Bits, Vespertine, OAK Security, Hacken. Budget $30–60K. Schedule early; firms book months out.
 2. **Spanish translation** — deferred. Add later if Florida customer demand warrants.
 3. **OHSHII LGE config details** — confirm with OHSHII dev: contribution unit (ICP vs token-denominated), default vesting schedule, ability to extend lock post-LGE.
+4. **Garden Designer** (Phase 13+) — Sims-style 3D garden/nursery plotter with NFT mint, validation rules, and optional multiplayer co-op. Full spec: [`docs/garden-designer-spec.md`](docs/garden-designer-spec.md). Do not implement until Phase 13 is explicitly scheduled.
 
 ---
 

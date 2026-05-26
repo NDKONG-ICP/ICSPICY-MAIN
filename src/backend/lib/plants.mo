@@ -301,7 +301,6 @@ module {
     stageHistory : Map.Map<Common.PlantId, List.List<Types.StageHistory>>,
     caller : Principal,
     adminCheck : Principal -> Bool,
-    nextId : Nat,
     input : Types.TransplantInput,
   ) : Types.Plant {
     let sourcePlant = switch (plants.get(input.plant_id)) {
@@ -315,59 +314,29 @@ module {
       Runtime.trap("Plant already transplanted");
     };
     let now = Time.now();
-    // Mark source cell as transplanted
+    let fromLabel = switch (sourcePlant.container_size) {
+      case (?c) containerSizeText(c);
+      case null "tray";
+    };
+    let toLabel = containerSizeText(input.container_size);
+    let noteText = "Transplanted from " # fromLabel # " to " # toLabel;
+
     sourcePlant.is_transplanted := true;
     sourcePlant.transplant_date := ?now;
     sourcePlant.stage := #Seedling;
+    sourcePlant.container_size := ?input.container_size;
+    sourcePlant.transplant_plant_id := null;
 
-    // Build new plant inheriting all lifecycle data
-    let newPlant : Types.Plant = {
-      id = nextId;
-      variety = sourcePlant.variety;
-      var genetics = sourcePlant.genetics;
-      tray_id = sourcePlant.tray_id;
-      cell_position = sourcePlant.cell_position;
-      planting_date = sourcePlant.planting_date;
-      var germination_date = sourcePlant.germination_date;
-      var transplant_date = ?now;
-      var stage = #Seedling;
-      var nft_id = null;
-      nft_standard = sourcePlant.nft_standard;
-      var sold = false;
-      var sold_to = null;
-      var notes = sourcePlant.notes;
-      var photos = sourcePlant.photos;
-      var common_name = sourcePlant.common_name;
-      var latin_name = sourcePlant.latin_name;
-      var origin = sourcePlant.origin;
-      var watering_schedule = sourcePlant.watering_schedule;
-      var pest_notes = sourcePlant.pest_notes;
-      var additional_notes = sourcePlant.additional_notes;
-      var is_cooked = false;
-      var is_transplanted = false;
-      var container_size = ?input.container_size;
-      var for_sale = false;
-      var photo_keys = sourcePlant.photo_keys;
-      var transplant_plant_id = null;
-      source_plant_id = ?sourcePlant.id;
-      created_by = sourcePlant.created_by;
+    let history = switch (stageHistory.get(input.plant_id)) {
+      case (?h) h;
+      case null {
+        let h = List.empty<Types.StageHistory>();
+        stageHistory.add(input.plant_id, h);
+        h;
+      };
     };
-    // Link the two plants
-    sourcePlant.transplant_plant_id := ?nextId;
-    plants.add(nextId, newPlant);
-
-    // Copy stage history to the new plant
-    let oldHistory = switch (stageHistory.get(input.plant_id)) {
-      case (?h) h.toArray();
-      case null [];
-    };
-    let newHistory = List.empty<Types.StageHistory>();
-    for (entry in oldHistory.values()) {
-      newHistory.add(entry);
-    };
-    newHistory.add({ stage = #Seedling; timestamp = now; notes = "Transplanted — container: " # containerSizeText(input.container_size) });
-    stageHistory.add(nextId, newHistory);
-    newPlant;
+    history.add({ stage = #Seedling; timestamp = now; notes = noteText });
+    sourcePlant;
   };
 
   public func addWeatherRecord(

@@ -45,6 +45,10 @@ mixin (
     DAOLib.hasDAOAccess(icrc7Balances, caller);
   };
 
+  public query ({ caller }) func getCallerDaoNftCount() : async Nat {
+    DAOLib.callerNftCount(icrc7Balances, caller);
+  };
+
   public query ({ caller }) func getDAOStats() : async {
     activeProposals : Nat;
     totalVotes : Nat;

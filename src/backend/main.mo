@@ -61,6 +61,7 @@ import NftResaleAPI "mixins/nft-resale-api";
 import ResaleTypes "types/nft-resale";
 import RateLimits "lib/rate-limits";
 import CanisterHealth "lib/canister-health";
+import Timer "mo:core/Timer";
 import Prim "mo:⛔";
 
 shared(msg) persistent actor class ICSpicy() = Self {
@@ -499,7 +500,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   // ── Mixins ─────────────────────────────────────────────────────────────────
 
-  include PlantsAPI(accessControlState, plants, trays, trayOwners, feedings, stageHistory, weatherRecords, weatherIndex, artworkLayers, rwaTokens, nextPlantId, nextTrayId, nextFeedingId, nextWeatherRecordId, nextArtworkLayerId);
+  include PlantsAPI(accessControlState, plants, trays, trayOwners, feedings, stageHistory, weatherRecords, weatherIndex, artworkLayers, rwaTokens, plantNotesLog, nextPlantId, nextTrayId, nextFeedingId, nextWeatherRecordId, nextArtworkLayerId);
   include VarietyAPI(accessControlState, varieties, plantVarietyIds, nextVarietyId);
   include NimsAPI(
     accessControlState,
@@ -716,6 +717,23 @@ shared(msg) persistent actor class ICSpicy() = Self {
     auditLog,
   );
 
+  // Daily weather provenance — Open-Meteo capture for all active plants.
+  // Timers are not persisted across upgrades; restart in postupgrade.
+  transient var dailyWeatherTimerId : ?Timer.TimerId = null;
+
+  func startDailyWeatherTimer<system>() {
+    switch (dailyWeatherTimerId) {
+      case (?id) Timer.cancelTimer(id);
+      case null {};
+    };
+    dailyWeatherTimerId := ?Timer.recurringTimer<system>(
+      #seconds(86400),
+      func () : async () { ignore await runDailyWeatherCapture() },
+    );
+  };
+
+  startDailyWeatherTimer<system>();
+
   // ── Audit log query ────────────────────────────────────────────────────────
 
   public query({ caller }) func getAuditLog(offset : Nat, limit : Nat) : async [AuditLog.AuditEntry] {
@@ -788,5 +806,6 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // hash. It does NOT mutate the tree, so it cannot lose data.
   system func postupgrade() {
     Cert.setCertifiedData(certStore);
+    startDailyWeatherTimer<system>();
   };
 };

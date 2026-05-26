@@ -49,6 +49,7 @@ import {
   useProposals,
   useVoteOnProposal,
 } from "../hooks/useDAO";
+import { useMyNftTokenIds } from "../hooks/useMyNftIds";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 type FilterType = "all" | string;
@@ -147,7 +148,7 @@ function ProposalCard({
         proposalId: proposal.id,
         optionIndex: optionId,
       });
-      toast.success("Vote cast! 🗳️");
+      toast.success("Your vote has been cast ✅");
     } catch {
       toast.error("Failed to cast vote. Try again.");
     }
@@ -196,7 +197,7 @@ function ProposalCard({
       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
         <span className="flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5" />
-          {proposal.total_votes.toString()} vote
+          {proposal.total_votes.toString()} voter
           {proposal.total_votes !== 1n ? "s" : ""}
         </span>
         <span className="flex items-center gap-1.5">
@@ -206,7 +207,7 @@ function ProposalCard({
         {hasVoted && (
           <span className="flex items-center gap-1.5 text-primary font-medium">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            You voted
+            Your vote has been cast ✅
           </span>
         )}
       </div>
@@ -243,7 +244,7 @@ function ProposalCard({
                   <span className="truncate">{opt.option_label}</span>
                 </span>
                 <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
-                  {votes.toString()} ({pct}%)
+                  {votes.toString()} voter{votes !== 1n ? "s" : ""} ({pct}%)
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -549,7 +550,7 @@ function DAOStatsBar() {
 
   const items = [
     {
-      label: "Your Votes",
+      label: "Proposals Voted",
       value: stats?.callerVotes ?? 0n,
       icon: <Vote className="w-4 h-4" />,
     },
@@ -559,8 +560,8 @@ function DAOStatsBar() {
       icon: <Flame className="w-4 h-4 text-primary" />,
     },
     {
-      label: "Total Votes",
-      value: stats?.totalVotes ?? BigInt(0),
+      label: "Total Voters",
+      value: stats?.uniqueVoters ?? stats?.totalVotes ?? BigInt(0),
       icon: <Users className="w-4 h-4" />,
     },
   ];
@@ -591,6 +592,30 @@ function DAOStatsBar() {
           </p>
         </div>
       ))}
+    </motion.div>
+  );
+}
+
+// ─── Eligibility Banner ───────────────────────────────────────────────────────
+
+function DAOEligibilityBanner({ nftCount }: { nftCount: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.15 }}
+      className="mb-5 p-3 rounded-xl bg-primary/10 border border-primary/30 flex items-start gap-2"
+      data-ocid="dao-eligibility-banner"
+    >
+      <Crown className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-foreground">
+          You hold {nftCount} NFT{nftCount !== 1 ? "s" : ""} — eligible to vote
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          One person, one vote per proposal — extra NFTs do not add votes.
+        </p>
+      </div>
     </motion.div>
   );
 }
@@ -664,6 +689,7 @@ export default function DAOPage() {
 
   const { isAuthenticated, login } = useAuth();
   const { data: hasAccess, isLoading: accessLoading } = useHasDAOAccess();
+  const { data: myNftIds } = useMyNftTokenIds();
   const { data: proposals, isLoading: proposalsLoading } = useProposals();
   const { data: isAdmin } = useIsAdmin();
 
@@ -729,18 +755,9 @@ export default function DAOPage() {
       {/* Access notice */}
       {!canVote && !accessLoading && <NoAccessBanner />}
 
-      {/* Member badge */}
+      {/* Eligibility */}
       {canVote && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.15 }}
-          className="mb-5 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/30"
-          data-ocid="dao-member-badge"
-        >
-          <Crown className="w-3.5 h-3.5" />
-          DAO Member — voting enabled
-        </motion.div>
+        <DAOEligibilityBanner nftCount={myNftIds?.length ?? 0} />
       )}
 
       {/* Filter tabs */}

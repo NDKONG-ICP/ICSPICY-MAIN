@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import type { WeatherData } from "../../hooks/useWeather";
+import type { LocationPreference } from "../../hooks/useNimsLocation";
 import {
   getPlantingRecommendations,
   PLANTING_ZONE_LABEL,
@@ -14,6 +15,7 @@ import {
   sunDayProgress,
   uvIndexClass,
 } from "../../lib/weather-service";
+import { NimsLocationSelector } from "./NimsLocationSelector";
 import { WeatherRadarMap } from "./WeatherRadarMap";
 
 function CountUpTemp({ value }: { value: number }) {
@@ -172,11 +174,19 @@ export function WeatherImmersivePanel({
   locationLabel,
   lat,
   lng,
+  radarReady = true,
+  locationPreference = null,
+  onChooseGps,
+  onChooseNursery,
 }: {
   data: WeatherData;
   locationLabel?: string;
   lat: number;
   lng: number;
+  radarReady?: boolean;
+  locationPreference?: LocationPreference;
+  onChooseGps?: () => void;
+  onChooseNursery?: () => void;
 }) {
   const planting = getPlantingRecommendations();
   const monthName = new Date().toLocaleString(undefined, { month: "long" });
@@ -200,7 +210,22 @@ export function WeatherImmersivePanel({
         </p>
       )}
 
-      <WeatherRadarMap lat={lat} lng={lng} />
+      {onChooseGps && onChooseNursery && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <NimsLocationSelector
+            preference={locationPreference}
+            onChooseGps={onChooseGps}
+            onChooseNursery={onChooseNursery}
+          />
+        </div>
+      )}
+
+      <WeatherRadarMap
+        lat={lat}
+        lng={lng}
+        locationLabel={locationLabel}
+        active={radarReady}
+      />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <GlassCard className="relative overflow-hidden">
