@@ -13,6 +13,7 @@ import Principal "mo:core/Principal";
 import Text "mo:core/Text";
 import Runtime "mo:core/Runtime";
 import Result "mo:core/Result";
+import Error "mo:core/Error";
 import AccessControl "../lib/access-control";
 import AuditLog "../lib/audit-log";
 import CallerGuard "../lib/caller-guard";
@@ -69,6 +70,20 @@ mixin (
   nextTrayId : { var value : Nat },
   nextFeedingId : { var value : Nat },
 ) {
+  stable var lastWeatherError : Text = "";
+  stable var lastWeatherUrl : Text = "";
+  stable var latestNurseryWeather : ?PlantTypes.WeatherSnapshot = null;
+
+  func countActivePlants() : Nat {
+    var count : Nat = 0;
+    for ((_, plant) in plants.entries()) {
+      if (NimsLib.isActiveForWeather(plant)) {
+        count += 1;
+      };
+    };
+    count;
+  };
+
   func nimsIsAdmin(p : Principal) : Bool {
     AccessControl.isAdmin(accessControlState, p);
   };
@@ -705,19 +720,24 @@ mixin (
     NimsLib.addWeatherSnapshot(plants, sideMaps(), caller, nimsIsAdmin, plantId, snapshot);
   };
 
-  // Transform for Open-Meteo HTTPS outcalls — strip headers for replica consensus.
+  // Transform for Open-Meteo HTTPS outcalls — canonical body for replica consensus.
   public query func weatherProvenanceTransform({
     context : Blob;
     response : IC.http_request_result;
   }) : async IC.http_request_result {
     ignore context;
-    { response with headers = [] };
+    {
+      response with
+      headers = [];
+      body = WeatherProvenance.canonicalWeatherBody(response.body);
+    };
   };
 
   func fetchOpenMeteoForecast() : async ?WeatherProvenance.ParsedDailyWeather {
     let url = WeatherProvenance.forecastUrl();
+    lastWeatherUrl := url;
     try {
-      let httpResponse = await (with cycles = 300_000_000_000) IC.http_request({
+      let httpResponse = await (with cycles = 1_600_000_000) IC.http_request({
         url;
         max_response_bytes = ?(10_000 : Nat64);
         headers = [
@@ -732,20 +752,31 @@ mixin (
         };
         is_replicated = null;
       });
-      if (httpResponse.status != 200) return null;
-      switch (WeatherProvenance.parseForecastResponse(httpResponse.body)) {
-        case (#err(_)) null;
-        case (#ok(parsed)) ?parsed;
+      if (httpResponse.status != 200) {
+        lastWeatherError := "HTTP status " # Nat.toText(httpResponse.status);
+        return null;
       };
-    } catch (_) {
+      switch (WeatherProvenance.parseForecastResponse(httpResponse.body)) {
+        case (#err(e)) {
+          lastWeatherError := "Parse error: " # e;
+          null;
+        };
+        case (#ok(parsed)) {
+          lastWeatherError := "";
+          ?parsed;
+        };
+      };
+    } catch (e) {
+      lastWeatherError := Error.message(e);
       null;
     };
   };
 
   func fetchOpenMeteoArchive(startDate : Text, endDate : Text) : async ?[WeatherProvenance.ParsedDailyWeather] {
     let url = WeatherProvenance.archiveUrl(startDate, endDate);
+    lastWeatherUrl := url;
     try {
-      let httpResponse = await (with cycles = 300_000_000_000) IC.http_request({
+      let httpResponse = await (with cycles = 1_600_000_000) IC.http_request({
         url;
         max_response_bytes = ?(50_000 : Nat64);
         headers = [
@@ -760,14 +791,41 @@ mixin (
         };
         is_replicated = null;
       });
-      if (httpResponse.status != 200) return null;
-      switch (WeatherProvenance.parseArchiveResponse(httpResponse.body)) {
-        case (#err(_)) null;
-        case (#ok(parsed)) ?parsed;
+      if (httpResponse.status != 200) {
+        lastWeatherError := "HTTP status " # Nat.toText(httpResponse.status);
+        return null;
       };
-    } catch (_) {
+      switch (WeatherProvenance.parseArchiveResponse(httpResponse.body)) {
+        case (#err(e)) {
+          lastWeatherError := "Parse error: " # e;
+          null;
+        };
+        case (#ok(parsed)) {
+          lastWeatherError := "";
+          ?parsed;
+        };
+      };
+    } catch (e) {
+      lastWeatherError := Error.message(e);
       null;
     };
+  };
+
+  public query func getWeatherDebug() : async {
+    lastError : Text;
+    lastUrl : Text;
+    activeCount : Nat;
+  } {
+    {
+      lastError = lastWeatherError;
+      lastUrl = lastWeatherUrl;
+      activeCount = countActivePlants();
+    };
+  };
+
+  /// Public: latest nursery weather from the daily HTTPS capture (no outcall).
+  public query func getLatestNurseryWeather() : async ?PlantTypes.WeatherSnapshot {
+    latestNurseryWeather;
   };
 
   /// Daily timer entry point — fetches nursery weather and records snapshots for active plants.
@@ -776,6 +834,7 @@ mixin (
       case null 0;
       case (?parsed) {
         let snapshot = WeatherProvenance.snapshotFromParsed(parsed, "open-meteo-auto");
+        latestNurseryWeather := ?snapshot;
         NimsLib.captureDailyWeatherForActivePlants(plants, sideMaps(), snapshot);
       };
     };

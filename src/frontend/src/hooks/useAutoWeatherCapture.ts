@@ -11,7 +11,7 @@ function todayIsoDate(): string {
 
 function isActivePlant(lc: PlantLifecycle): boolean {
   const plant = lc.plant;
-  return !plant.sold && !plant.is_cooked && !isPlantMarkedDead(lc);
+  return !plant.is_cooked && !isPlantMarkedDead(lc);
 }
 
 function hasSnapshotForDate(lc: PlantLifecycle, date: string): boolean {

@@ -1,4 +1,10 @@
 /** IC SPICY Nursery — Port Charlotte, FL (zip 33954) */
+import { Actor, HttpAgent } from "@dfinity/agent";
+import { idlFactory, type _SERVICE } from "../declarations/backend.did.js";
+import type { WeatherSnapshot } from "../declarations/backend.did";
+import { BACKEND_CANISTER_ID, IC_HOST } from "./auth-config";
+import { parseWeatherSource } from "./weather-snapshot";
+
 export const NURSERY_LAT = 26.9767;
 export const NURSERY_LNG = -82.0837;
 
@@ -115,12 +121,87 @@ function wmoDescription(code: number): string {
   return WMO_DESCRIPTIONS[code] ?? "Unknown";
 }
 
+/** Bypass IC asset-canister service worker for third-party weather APIs. */
+export const WEATHER_FETCH_INIT: RequestInit = {
+  mode: "cors",
+  cache: "no-cache",
+  credentials: "omit",
+};
+
+async function fetchOpenMeteo(url: string): Promise<Response> {
+  return fetch(url, WEATHER_FETCH_INIT);
+}
+
+function isNurseryCoords(latitude: number, longitude: number): boolean {
+  return (
+    Math.abs(latitude - NURSERY_LAT) < 0.01 &&
+    Math.abs(longitude - NURSERY_LNG) < 0.01
+  );
+}
+
+async function fetchCachedNurseryWeather(): Promise<WeatherData | null> {
+  const agent = await HttpAgent.create({ host: IC_HOST });
+  if (import.meta.env.DEV) {
+    await agent.fetchRootKey();
+  }
+  const actor = Actor.createActor<_SERVICE>(idlFactory, {
+    agent,
+    canisterId: BACKEND_CANISTER_ID,
+  });
+  const cached = await actor.getLatestNurseryWeather();
+  const snapshot = cached[0];
+  if (snapshot == null) return null;
+  return weatherDataFromSnapshot(snapshot);
+}
+
+function weatherDataFromSnapshot(snapshot: WeatherSnapshot): WeatherData {
+  const parsed = parseWeatherSource(snapshot.source);
+  const windMph = parsed.windMph ?? 0;
+  const aqi = parsed.aqi ?? 42;
+  const parts = snapshot.date.split("-").map(Number);
+  const snapshotDate = new Date(parts[0] ?? 0, (parts[1] ?? 1) - 1, parts[2] ?? 1, 12);
+  const moon = parsed.moonPhase
+    ? { phase: parsed.moonPhase, illumination: 0, emoji: "🌙" }
+    : getMoonPhase(snapshotDate);
+  const midTemp = (snapshot.tempHighF + snapshot.tempLowF) / 2;
+
+  return {
+    current: {
+      tempF: midTemp,
+      feelsLikeF: midTemp,
+      humidity: snapshot.humidity,
+      precipitationInches: snapshot.rainfallInches,
+      uvIndex: snapshot.uvIndex,
+      windSpeedMph: windMph,
+      windDirection: "—",
+      windDirectionDeg: 0,
+      windGustsMph: windMph,
+      pressureHpa: 0,
+      weatherCode: 0,
+      weatherDescription: "Cached nursery weather",
+    },
+    daily: {
+      highF: snapshot.tempHighF,
+      lowF: snapshot.tempLowF,
+      totalRainInches: snapshot.rainfallInches,
+      maxUvIndex: snapshot.uvIndex,
+      maxWindMph: windMph,
+      sunrise: "",
+      sunset: "",
+    },
+    airQuality: { aqi, pm25: 0, pm10: 0, level: aqiLevel(aqi) },
+    moon,
+    extremeWeather: false,
+    lastUpdated: snapshotDate,
+  };
+}
+
 export async function fetchWeatherData(
   latitude = NURSERY_LAT,
   longitude = NURSERY_LNG,
 ): Promise<WeatherData> {
   const forecastUrl =
-    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
+    `https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
     `&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,` +
     `surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index` +
     `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,uv_index_max,` +
@@ -133,70 +214,81 @@ export async function fetchWeatherData(
     `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}` +
     `&current=us_aqi,pm2_5,pm10&timezone=America/New_York`;
 
-  const [forecastRes, aqRes] = await Promise.all([
-    fetch(forecastUrl),
-    fetch(aqUrl),
-  ]);
+  try {
+    const [forecastRes, aqRes] = await Promise.all([
+      fetchOpenMeteo(forecastUrl),
+      fetchOpenMeteo(aqUrl),
+    ]);
 
-  if (!forecastRes.ok) throw new Error(`Weather API error: ${forecastRes.status}`);
-  const forecast = (await forecastRes.json()) as {
-    current: Record<string, number>;
-    daily: Record<string, (number | string)[]>;
-  };
+    if (!forecastRes.ok) {
+      throw new Error(`Weather API error: ${forecastRes.status}`);
+    }
+    const forecast = (await forecastRes.json()) as {
+      current: Record<string, number>;
+      daily: Record<string, (number | string)[]>;
+    };
 
-  let aqi = 42;
-  let pm25 = 0;
-  let pm10 = 0;
-  if (aqRes.ok) {
-    const aq = (await aqRes.json()) as { current: Record<string, number> };
-    aqi = aq.current.us_aqi ?? 42;
-    pm25 = aq.current.pm2_5 ?? 0;
-    pm10 = aq.current.pm10 ?? 0;
+    let aqi = 42;
+    let pm25 = 0;
+    let pm10 = 0;
+    if (aqRes.ok) {
+      const aq = (await aqRes.json()) as { current: Record<string, number> };
+      aqi = aq.current.us_aqi ?? 42;
+      pm25 = aq.current.pm2_5 ?? 0;
+      pm10 = aq.current.pm10 ?? 0;
+    }
+
+    const now = new Date();
+    const moon = getMoonPhase(now);
+    const cur = forecast.current;
+    const daily = forecast.daily;
+
+    const tempF = cur.temperature_2m ?? 0;
+    const feelsLikeF = cur.apparent_temperature ?? tempF;
+    const heatIndex = feelsLikeF;
+    const windSpeedMph = cur.wind_speed_10m ?? 0;
+    const totalRainInches = Number(daily.precipitation_sum?.[0] ?? 0);
+
+    const extremeWeather =
+      heatIndex > 105 || windSpeedMph > 40 || totalRainInches > 2;
+
+    return {
+      current: {
+        tempF,
+        feelsLikeF,
+        humidity: cur.relative_humidity_2m ?? 0,
+        precipitationInches: cur.precipitation ?? 0,
+        uvIndex: cur.uv_index ?? 0,
+        windSpeedMph,
+        windDirection: degreesToCompass(cur.wind_direction_10m ?? 0),
+        windDirectionDeg: cur.wind_direction_10m ?? 0,
+        windGustsMph: cur.wind_gusts_10m ?? 0,
+        pressureHpa: cur.surface_pressure ?? 0,
+        weatherCode: cur.weather_code ?? 0,
+        weatherDescription: wmoDescription(cur.weather_code ?? 0),
+      },
+      daily: {
+        highF: Number(daily.temperature_2m_max?.[0] ?? tempF),
+        lowF: Number(daily.temperature_2m_min?.[0] ?? tempF),
+        totalRainInches,
+        maxUvIndex: Number(daily.uv_index_max?.[0] ?? 0),
+        maxWindMph: Number(daily.wind_speed_10m_max?.[0] ?? 0),
+        sunrise: String(daily.sunrise?.[0] ?? ""),
+        sunset: String(daily.sunset?.[0] ?? ""),
+      },
+      airQuality: { aqi, pm25, pm10, level: aqiLevel(aqi) },
+      moon,
+      extremeWeather,
+      lastUpdated: now,
+    };
+  } catch (directError) {
+    if (!isNurseryCoords(latitude, longitude)) {
+      throw directError;
+    }
+    const cached = await fetchCachedNurseryWeather();
+    if (cached) return cached;
+    throw directError;
   }
-
-  const now = new Date();
-  const moon = getMoonPhase(now);
-  const cur = forecast.current;
-  const daily = forecast.daily;
-
-  const tempF = cur.temperature_2m ?? 0;
-  const feelsLikeF = cur.apparent_temperature ?? tempF;
-  const heatIndex = feelsLikeF;
-  const windSpeedMph = cur.wind_speed_10m ?? 0;
-  const totalRainInches = Number(daily.precipitation_sum?.[0] ?? 0);
-
-  const extremeWeather =
-    heatIndex > 105 || windSpeedMph > 40 || totalRainInches > 2;
-
-  return {
-    current: {
-      tempF,
-      feelsLikeF,
-      humidity: cur.relative_humidity_2m ?? 0,
-      precipitationInches: cur.precipitation ?? 0,
-      uvIndex: cur.uv_index ?? 0,
-      windSpeedMph,
-      windDirection: degreesToCompass(cur.wind_direction_10m ?? 0),
-      windDirectionDeg: cur.wind_direction_10m ?? 0,
-      windGustsMph: cur.wind_gusts_10m ?? 0,
-      pressureHpa: cur.surface_pressure ?? 0,
-      weatherCode: cur.weather_code ?? 0,
-      weatherDescription: wmoDescription(cur.weather_code ?? 0),
-    },
-    daily: {
-      highF: Number(daily.temperature_2m_max?.[0] ?? tempF),
-      lowF: Number(daily.temperature_2m_min?.[0] ?? tempF),
-      totalRainInches,
-      maxUvIndex: Number(daily.uv_index_max?.[0] ?? 0),
-      maxWindMph: Number(daily.wind_speed_10m_max?.[0] ?? 0),
-      sunrise: String(daily.sunrise?.[0] ?? ""),
-      sunset: String(daily.sunset?.[0] ?? ""),
-    },
-    airQuality: { aqi, pm25, pm10, level: aqiLevel(aqi) },
-    moon,
-    extremeWeather,
-    lastUpdated: now,
-  };
 }
 
 export function weatherToContext(data: WeatherData): WeatherContext {

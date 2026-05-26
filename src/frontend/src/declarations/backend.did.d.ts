@@ -640,6 +640,7 @@ export interface ICSpicy {
   'getForSalePlants' : ActorMethod<[], Array<PlantPublic>>,
   'getGlobalFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
   'getIcrc7PoolStatsAdmin' : ActorMethod<[], Icrc7PoolStats>,
+  'getLatestNurseryWeather' : ActorMethod<[], [] | [WeatherSnapshot]>,
   'getListedNfts' : ActorMethod<[[] | [boolean]], Array<NftListingPublic>>,
   'getLoadedMetadataCount' : ActorMethod<[], bigint>,
   'getMembershipPriceInToken' : ActorMethod<[OracleToken], bigint>,

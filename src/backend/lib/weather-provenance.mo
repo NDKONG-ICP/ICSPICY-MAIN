@@ -27,9 +27,11 @@ module {
   };
 
   public func forecastUrl() : Text {
-    "https://api.open-meteo.com/v1/forecast?"
-    # "latitude=" # Float.toText(NURSERY_LAT)
-    # "&longitude=" # Float.toText(NURSERY_LNG)
+    // api.open-meteo.com intermittently returns 502 from IC HTTP subnets;
+    // historical-forecast-api serves live forecast data on stable infrastructure.
+    "https://historical-forecast-api.open-meteo.com/v1/forecast?"
+    # "latitude=26.9767"
+    # "&longitude=-82.0837"
     # "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,uv_index_max"
     # "&current=relative_humidity_2m,wind_speed_10m"
     # "&temperature_unit=fahrenheit&precipitation_unit=inch&wind_speed_unit=mph"
@@ -38,12 +40,11 @@ module {
 
   public func archiveUrl(startDate : Text, endDate : Text) : Text {
     "https://archive-api.open-meteo.com/v1/archive?"
-    # "latitude=" # Float.toText(NURSERY_LAT)
-    # "&longitude=" # Float.toText(NURSERY_LNG)
+    # "latitude=26.9767"
+    # "&longitude=-82.0837"
     # "&start_date=" # startDate
     # "&end_date=" # endDate
     # "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,uv_index_max"
-    # "&hourly=relative_humidity_2m,wind_speed_10m"
     # "&temperature_unit=fahrenheit&precipitation_unit=inch&wind_speed_unit=mph"
     # "&timezone=America%2FNew_York";
   };
@@ -73,6 +74,106 @@ module {
       case (#err(e)) #err(e);
       case (#ok(#Map(root))) parseArchiveDailySeries(root);
       case (#ok(_)) #err("Expected JSON object");
+    };
+  };
+
+  /// Strip non-deterministic Open-Meteo fields (generationtime_ms, current.time, etc.)
+  /// so HTTPS outcall replicas reach consensus. Keeps daily arrays only.
+  public func canonicalWeatherBody(body : Blob) : Blob {
+    let PARSE_FAILED : Blob = Blob.fromArray([
+      (0x7b : Nat8), (0x22 : Nat8), (0x65 : Nat8), (0x72 : Nat8), (0x72 : Nat8),
+      (0x6f : Nat8), (0x72 : Nat8), (0x22 : Nat8), (0x3a : Nat8), (0x74 : Nat8),
+      (0x72 : Nat8), (0x75 : Nat8), (0x65 : Nat8), (0x7d : Nat8),
+    ]);
+    switch (JsonMini.parse(body)) {
+      case (#err(_)) PARSE_FAILED;
+      case (#ok(#Map(root))) {
+        switch (mapField(root, "daily")) {
+          case (?#Map(daily)) {
+            let time = switch (textArrayField(daily, "time")) {
+              case (?t) t;
+              case null return PARSE_FAILED;
+            };
+            let high = switch (textArrayFieldFromNumbers(daily, "temperature_2m_max")) {
+              case (?t) t;
+              case null return PARSE_FAILED;
+            };
+            let low = switch (textArrayFieldFromNumbers(daily, "temperature_2m_min")) {
+              case (?t) t;
+              case null return PARSE_FAILED;
+            };
+            let rain = switch (textArrayFieldFromNumbers(daily, "precipitation_sum")) {
+              case (?t) t;
+              case null Array.repeat("0", time.size());
+            };
+            let uv = switch (textArrayFieldFromNumbers(daily, "uv_index_max")) {
+              case (?t) t;
+              case null Array.repeat("0", time.size());
+            };
+            let jsonText = "{"
+              # "\"daily\":{"
+              # "\"time\":" # jsonQuotedStringArray(time) # ","
+              # "\"temperature_2m_max\":" # jsonNumberLexemeArray(high) # ","
+              # "\"temperature_2m_min\":" # jsonNumberLexemeArray(low) # ","
+              # "\"precipitation_sum\":" # jsonNumberLexemeArray(rain) # ","
+              # "\"uv_index_max\":" # jsonNumberLexemeArray(uv)
+              # "}}";
+            jsonText.encodeUtf8();
+          };
+          case _ PARSE_FAILED;
+        };
+      };
+      case _ PARSE_FAILED;
+    };
+  };
+
+  func jsonQuotedStringArray(values : [Text]) : Text {
+    var out = "[";
+    var i : Nat = 0;
+    while (i < values.size()) {
+      if (i > 0) out := out # ",";
+      out := out # "\"" # values[i] # "\"";
+      i += 1;
+    };
+    out # "]";
+  };
+
+  func jsonNumberLexemeArray(values : [Text]) : Text {
+    var out = "[";
+    var i : Nat = 0;
+    while (i < values.size()) {
+      if (i > 0) out := out # ",";
+      out := out # values[i];
+      i += 1;
+    };
+    out # "]";
+  };
+
+  func textLexemeFromValue(v : ICRC7.Value) : ?Text {
+    switch (v) {
+      case (#Text t) if (t == "null") ?"0" else ?t;
+      case (#Nat n) ?Nat.toText(n);
+      case (#Int i) ?Int.toText(i);
+      case _ null;
+    };
+  };
+
+  func textArrayFieldFromNumbers(
+    entries : [(Text, ICRC7.Value)],
+    key : Text,
+  ) : ?[Text] {
+    switch (mapField(entries, key)) {
+      case (?#Array(arr)) {
+        var out : [Text] = [];
+        for (v in arr.vals()) {
+          switch (textLexemeFromValue(v)) {
+            case (?t) out := Array.concat(out, [t]);
+            case null return null;
+          };
+        };
+        ?out;
+      };
+      case _ null;
     };
   };
 
@@ -232,7 +333,9 @@ module {
 
   func valueAsFloat(v : ICRC7.Value) : ?Float {
     switch (v) {
-      case (#Text t) parseDecimalText(t);
+      case (#Text t) {
+        if (t == "null") ?0.0 else parseDecimalText(t);
+      };
       case (#Nat n) ?Float.fromInt(Nat.toInt(n));
       case (#Int i) ?Float.fromInt(i);
       case _ null;

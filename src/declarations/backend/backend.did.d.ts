@@ -434,6 +434,7 @@ export interface ICSpicy {
   'adminDeleteComment' : ActorMethod<[CommentId], boolean>,
   'adminDeletePost' : ActorMethod<[PostId], boolean>,
   'adminReturnToPool' : ActorMethod<[bigint], TransferResult>,
+  'adminRunDailyWeatherCapture' : ActorMethod<[], bigint>,
   'adminSubmitToDAB' : ActorMethod<
     [string, string, string, [] | [string]],
     { 'ok' : string } |
@@ -455,6 +456,7 @@ export interface ICSpicy {
   'airdropNFT' : ActorMethod<[string, Principal], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignPoolNFT' : ActorMethod<[bigint, AssignAction], undefined>,
+  'backfillWeatherHistory' : ActorMethod<[PlantId, string, string], bigint>,
   'banUser' : ActorMethod<[Principal], undefined>,
   'batchAirdropFromPool' : ActorMethod<
     [Array<AirdropAssignment>],
@@ -500,6 +502,9 @@ export interface ICSpicy {
       { 'err' : string }
   >,
   'castVote' : ActorMethod<[ProposalId, bigint], boolean>,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'clearArtworkFiles' : ActorMethod<[], undefined>,
   'closeProposal' : ActorMethod<[ProposalId], boolean>,
   'completeEvent' : ActorMethod<[bigint], PlantingEvent>,
@@ -554,6 +559,10 @@ export interface ICSpicy {
     bigint
   >,
   'finalizeArtworkUpload' : ActorMethod<[], UploadResult>,
+  'fixTransplantedPlant' : ActorMethod<
+    [PlantId, ContainerSize, [] | [PlantId]],
+    boolean
+  >,
   'followUser' : ActorMethod<[Principal], boolean>,
   'generateAllPoolNFTs' : ActorMethod<[], bigint>,
   'generateClaimToken' : ActorMethod<[bigint], string>,
@@ -575,6 +584,7 @@ export interface ICSpicy {
   'getAuditLog' : ActorMethod<[bigint, bigint], Array<AuditEntry>>,
   'getAvatarFile' : ActorMethod<[string], [] | [Uint8Array | number[]]>,
   'getBatchGiftPack' : ActorMethod<[ClaimTokenId], [] | [BatchGiftPackPublic]>,
+  'getCallerDaoNftCount' : ActorMethod<[], bigint>,
   'getCallerDiscount' : ActorMethod<[], CallerDiscount>,
   'getCallerMembership' : ActorMethod<[], [] | [MembershipNFTPublic]>,
   'getCallerProfile' : ActorMethod<[], [] | [UserProfilePublic]>,
@@ -623,9 +633,6 @@ export interface ICSpicy {
    * / Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
    */
   'getFleetCanisterHealth' : ActorMethod<[], Array<FleetEntry>>,
-  /**
-   * / Uploads asset canister — user images served via HTTP from this canister.
-   */
   'getFollowers' : ActorMethod<
     [Principal, bigint, bigint],
     Array<UserProfilePublic>
@@ -639,7 +646,11 @@ export interface ICSpicy {
   'getFollowingFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
   'getForSalePlants' : ActorMethod<[], Array<PlantPublic>>,
   'getGlobalFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
   'getIcrc7PoolStatsAdmin' : ActorMethod<[], Icrc7PoolStats>,
+  'getLatestNurseryWeather' : ActorMethod<[], [] | [WeatherSnapshot]>,
   'getListedNfts' : ActorMethod<[[] | [boolean]], Array<NftListingPublic>>,
   'getLoadedMetadataCount' : ActorMethod<[], bigint>,
   'getMembershipPriceInToken' : ActorMethod<[OracleToken], bigint>,
@@ -656,9 +667,6 @@ export interface ICSpicy {
   'getMyVendors' : ActorMethod<[], Array<SeedVendorPublic>>,
   'getMyWeatherRecords' : ActorMethod<[bigint], Array<WeatherRecord>>,
   'getNewOrderCount' : ActorMethod<[], bigint>,
-  /**
-   * / Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
-   */
   'getNftPoolStatus' : ActorMethod<
     [],
     { 'total' : bigint, 'available' : bigint }
@@ -679,9 +687,6 @@ export interface ICSpicy {
   'getPlantLifecycle' : ActorMethod<[PlantId], [] | [PlantLifecycle]>,
   'getPlantTimeline' : ActorMethod<[PlantId], [] | [PlantTimeline]>,
   'getPlantingEvent' : ActorMethod<[bigint], [] | [PlantingEvent]>,
-  /**
-   * / Admin: backend cycle balance (AGENTS.md hygiene).
-   */
   'getPlantsByContainer' : ActorMethod<[ContainerSize], Array<PlantLifecycle>>,
   'getPlantsForSale' : ActorMethod<
     [[] | [PlantStage], [] | [bigint]],
@@ -733,6 +738,10 @@ export interface ICSpicy {
   'getUploadsCanisterId' : ActorMethod<[], [] | [string]>,
   'getUserPosts' : ActorMethod<[Principal, bigint, bigint], Array<PostPublic>>,
   'getVariety' : ActorMethod<[bigint], [] | [VarietyPublic]>,
+  'getWeatherDebug' : ActorMethod<
+    [],
+    { 'activeCount' : bigint, 'lastError' : string, 'lastUrl' : string }
+  >,
   'getZoneCalendar' : ActorMethod<[string], ZoneCalendar>,
   'getZoneSchedule' : ActorMethod<[string, bigint], ZoneSchedule>,
   'harvestSeeds' : ActorMethod<[PlantId, [] | [bigint], [] | [string]], bigint>,
@@ -824,6 +833,9 @@ export interface ICSpicy {
   >,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isFollowing' : ActorMethod<[Principal], boolean>,
+  /**
+   * / Public query — anyone can check backend canister health.
+   */
   'isPepperHead' : ActorMethod<[bigint], boolean>,
   'isPepperHeadAvailable' : ActorMethod<[], bigint>,
   'isUserBanned' : ActorMethod<[Principal], boolean>,
@@ -910,9 +922,6 @@ export interface ICSpicy {
     [PlantId, DeathCause, [] | [string], [] | [string]],
     boolean
   >,
-  /**
-   * / Uploads asset canister — user images served via HTTP from this canister.
-   */
   'markPlantGerminated' : ActorMethod<[PlantId, Timestamp], undefined>,
   'mintEXT' : ActorMethod<[bigint, string, Array<[string, string]>], string>,
   'mintHederaNFT' : ActorMethod<
@@ -992,9 +1001,7 @@ export interface ICSpicy {
   >,
   'revivePlant' : ActorMethod<[PlantId], boolean>,
   'revokeClaimTokenAdmin' : ActorMethod<[string], boolean>,
-  /**
-   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
-   */
+  'runDailyWeatherCapture' : ActorMethod<[], bigint>,
   'saveCallerUserProfile' : ActorMethod<[SaveProfileInput], boolean>,
   'saveProfile' : ActorMethod<[SaveProfileInput], boolean>,
   'saveSchedule' : ActorMethod<[string, Array<string>], ScheduleId>,
@@ -1032,9 +1039,6 @@ export interface ICSpicy {
     [TreasuryToken, bigint, [] | [string]],
     TreasuryTransaction
   >,
-  /**
-   * / Per-principal rate limiters for cycle-drain protection (CDA).
-   */
   'treasuryTransfer' : ActorMethod<
     [TreasuryToken, bigint, Principal, Principal, [] | [string]],
     TreasuryTransaction
@@ -1060,6 +1064,9 @@ export interface ICSpicy {
   >,
   'updateProduct' : ActorMethod<[UpdateProductInput], undefined>,
   'updateProposal' : ActorMethod<[ProposalId, UpdateProposalInput], boolean>,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'updateRecipe' : ActorMethod<[UpdateRecipeInput], boolean>,
   'updateSeedLot' : ActorMethod<
     [
@@ -1100,6 +1107,10 @@ export interface ICSpicy {
   'waterEntireTray' : ActorMethod<
     [TrayId, bigint, [] | [number], [] | [string]],
     bigint
+  >,
+  'weatherProvenanceTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
   >,
 }
 export interface Icrc7PoolStats {

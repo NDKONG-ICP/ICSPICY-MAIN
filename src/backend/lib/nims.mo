@@ -985,7 +985,8 @@ module {
   };
 
   public func isActiveForWeather(plant : Types.Plant) : Bool {
-    not plant.sold and not plant.is_cooked;
+    // Nursery and customer-owned plants both keep provenance until harvested/dead.
+    not plant.is_cooked;
   };
 
   public func captureDailyWeatherForActivePlants(

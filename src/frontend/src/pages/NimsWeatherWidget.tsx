@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { CloudRain, MapPin, Thermometer, Wind } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { WEATHER_FETCH_INIT } from "@/lib/weather-service";
 import type { WeatherRecord } from "../backend";
 import { useAddWeatherRecord, useMyWeatherRecords } from "../hooks/useBackend";
 
@@ -36,8 +37,8 @@ export function WeatherWidget({ compact = false }: WeatherWidgetProps) {
     async (lat: number, lon: number) => {
       if (polledRef.current) return;
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto&past_days=7`;
-        const res = await fetch(url);
+        const url = `https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto&past_days=7`;
+        const res = await fetch(url, WEATHER_FETCH_INIT);
         const data: OpenMeteoResponse = await res.json();
 
         const today = new Date().toISOString().split("T")[0];

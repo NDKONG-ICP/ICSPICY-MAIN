@@ -120,17 +120,11 @@ export default function PlantDetailPage() {
   );
   const { data: health } = usePlantHealth(id ?? null);
 
-  const callerTextEarly = identity?.getPrincipal().toText() ?? "";
   const plantIsDeadEarly = lc ? isPlantMarkedDead(lc) : false;
-  const isOwnerEarly =
-    Boolean(isAdmin) ||
-    (lc != null &&
-      (lc.plant.created_by.toText() === callerTextEarly ||
-        unwrapOpt(lc.plant.sold_to)?.toText() === callerTextEarly));
   useAutoWeatherCapture(
     lc ? [lc] : undefined,
     weather,
-    Boolean(identity && lc && isOwnerEarly && !plantIsDeadEarly),
+    Boolean(identity && lc && !plantIsDeadEarly),
   );
 
   const [waterOpen, setWaterOpen] = useState(false);

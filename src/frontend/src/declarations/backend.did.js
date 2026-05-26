@@ -1726,6 +1726,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getIcrc7PoolStatsAdmin' : IDL.Func([], [Icrc7PoolStats], ['query']),
+    'getLatestNurseryWeather' : IDL.Func(
+        [],
+        [IDL.Opt(WeatherSnapshot)],
+        ['query'],
+      ),
     'getListedNfts' : IDL.Func(
         [IDL.Opt(IDL.Bool)],
         [IDL.Vec(NftListingPublic)],

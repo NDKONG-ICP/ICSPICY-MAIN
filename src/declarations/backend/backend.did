@@ -1123,6 +1123,7 @@ type ICSpicy =
    adminDeleteComment: (comment_id: CommentId) -> (bool);
    adminDeletePost: (post_id: PostId) -> (bool);
    adminReturnToPool: (tokenId: nat) -> (TransferResult);
+   adminRunDailyWeatherCapture: () -> (nat);
    adminSubmitToDAB: (collectionName: text, collectionDescription: text,
     standard: text, canisterIdOverride: opt text) ->
     (variant {
@@ -1145,6 +1146,8 @@ type ICSpicy =
    airdropNFT: (_token_id: text, _recipient: principal) -> ();
    assignCallerUserRole: (_user: principal, _role: UserRole) -> ();
    assignPoolNFT: (nftId: nat, action: AssignAction) -> ();
+   backfillWeatherHistory: (plantId: PlantId, startDate: text, endDate:
+    text) -> (nat);
    banUser: (user: principal) -> ();
    batchAirdropFromPool: (assignments: vec AirdropAssignment) ->
     (record {
@@ -1180,6 +1183,7 @@ type ICSpicy =
                                                  ok;
                                                });
    castVote: (proposalId: ProposalId, optionId: nat) -> (bool);
+   /// Per-principal rate limiters for cycle-drain protection (CDA).
    clearArtworkFiles: () -> ();
    closeProposal: (id: ProposalId) -> (bool);
    completeEvent: (event_id: nat) -> (PlantingEvent);
@@ -1228,6 +1232,8 @@ type ICSpicy =
    feedEntireTray: (trayId: TrayId, productName: text, nutrientType: 
     text, dosage: text, notes: opt text) -> (nat);
    finalizeArtworkUpload: () -> (UploadResult);
+   fixTransplantedPlant: (plantId: PlantId, newContainer: ContainerSize,
+    duplicatePlantId: opt PlantId) -> (bool);
    followUser: (target: principal) -> (bool);
    generateAllPoolNFTs: () -> (nat);
    generateClaimToken: (tokenId: nat) -> (text);
@@ -1249,6 +1255,7 @@ type ICSpicy =
    getAvatarFile: (key: text) -> (opt vec nat8) query;
    getBatchGiftPack: (claim_token_id: ClaimTokenId) ->
     (opt BatchGiftPackPublic) query;
+   getCallerDaoNftCount: () -> (nat) query;
    getCallerDiscount: () -> (CallerDiscount) query;
    getCallerMembership: () -> (opt MembershipNFTPublic) query;
    getCallerProfile: () -> (opt UserProfilePublic) query;
@@ -1283,7 +1290,6 @@ type ICSpicy =
    getFeaturedRecipes: (limit: nat) -> (vec RecipePublic) query;
    /// Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
    getFleetCanisterHealth: () -> (vec FleetEntry);
-   /// Uploads asset canister — user images served via HTTP from this canister.
    getFollowers: (user: principal, offset: nat, limit: nat) ->
     (vec UserProfilePublic) query;
    getFollowersCount: (user: principal) -> (nat) query;
@@ -1293,7 +1299,9 @@ type ICSpicy =
    getFollowingFeed: (offset: nat, limit: nat) -> (vec PostPublic) query;
    getForSalePlants: () -> (vec PlantPublic) query;
    getGlobalFeed: (offset: nat, limit: nat) -> (vec PostPublic) query;
+   /// Uploads asset canister — user images served via HTTP from this canister.
    getIcrc7PoolStatsAdmin: () -> (Icrc7PoolStats) query;
+   getLatestNurseryWeather: () -> (opt WeatherSnapshot) query;
    getListedNfts: (pepperHeadOnly: opt bool) -> (vec NftListingPublic) query;
    getLoadedMetadataCount: () -> (nat) query;
    getMembershipPriceInToken: (token: OracleToken) -> (nat) query;
@@ -1311,7 +1319,6 @@ type ICSpicy =
    getMyVendors: () -> (vec SeedVendorPublic) query;
    getMyWeatherRecords: (limit: nat) -> (vec WeatherRecord);
    getNewOrderCount: () -> (nat) query;
-   /// Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
    getNftPoolStatus: () -> (record {
                               available: nat;
                               total: nat;
@@ -1332,7 +1339,6 @@ type ICSpicy =
    getPlantLifecycle: (plantId: PlantId) -> (opt PlantLifecycle) query;
    getPlantTimeline: (plant_id: PlantId) -> (opt PlantTimeline) query;
    getPlantingEvent: (event_id: nat) -> (opt PlantingEvent) query;
-   /// Admin: backend cycle balance (AGENTS.md hygiene).
    getPlantsByContainer: (container: ContainerSize) ->
     (vec PlantLifecycle) query;
    getPlantsForSale: (stage: opt PlantStage, varietyId: opt nat) ->
@@ -1380,6 +1386,12 @@ type ICSpicy =
    getUserPosts: (user: principal, offset: nat, limit: nat) ->
     (vec PostPublic) query;
    getVariety: (id: nat) -> (opt VarietyPublic) query;
+   getWeatherDebug: () ->
+    (record {
+       activeCount: nat;
+       lastError: text;
+       lastUrl: text;
+     }) query;
    getZoneCalendar: (zone: text) -> (ZoneCalendar) query;
    getZoneSchedule: (zone: text, month: nat) -> (ZoneSchedule) query;
    harvestSeeds: (plantId: PlantId, quantity: opt nat, notes: opt text) ->
@@ -1452,6 +1464,7 @@ type ICSpicy =
                              });
    isCallerAdmin: () -> (bool) query;
    isFollowing: (target: principal) -> (bool) query;
+   /// Public query — anyone can check backend canister health.
    isPepperHead: (tokenId: nat) -> (bool) query;
    isPepperHeadAvailable: () -> (nat) query;
    isUserBanned: (user: principal) -> (bool) query;
@@ -1515,7 +1528,6 @@ type ICSpicy =
    markOrdersSeen: (upToOrderId: OrderId) -> ();
    markPlantDead: (plantId: PlantId, cause: DeathCause, notes: opt text,
     photoUrl: opt text) -> (bool);
-   /// Uploads asset canister — user images served via HTTP from this canister.
    markPlantGerminated: (plant_id: PlantId, germination_date: Timestamp) ->
     ();
    mintEXT: (_plantId: nat, _imageKey: text, _attributes:
@@ -1596,7 +1608,7 @@ type ICSpicy =
                                   });
    revivePlant: (plantId: PlantId) -> (bool);
    revokeClaimTokenAdmin: (token: text) -> (bool);
-   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   runDailyWeatherCapture: () -> (nat);
    saveCallerUserProfile: (input: SaveProfileInput) -> (bool);
    saveProfile: (input: SaveProfileInput) -> (bool);
    saveSchedule: (stage: text, inputs: vec text) -> (ScheduleId);
@@ -1624,7 +1636,6 @@ type ICSpicy =
     locationNotes: opt text) -> (bool);
    treasuryDeposit: (token: TreasuryToken, amount: nat, memo: opt text) ->
     (TreasuryTransaction);
-   /// Per-principal rate limiters for cycle-drain protection (CDA).
    treasuryTransfer: (token: TreasuryToken, amount: nat, from: principal, to:
     principal, memo: opt text) -> (TreasuryTransaction);
    treasuryWithdraw: (token: TreasuryToken, amount: nat, to: principal, memo:
@@ -1644,6 +1655,7 @@ type ICSpicy =
    updatePlantingEvent: (input: UpdatePlantingEventInput) -> (PlantingEvent);
    updateProduct: (input: UpdateProductInput) -> ();
    updateProposal: (id: ProposalId, input: UpdateProposalInput) -> (bool);
+   /// Per-principal rate limiters for cycle-drain protection (CDA).
    updateRecipe: (input: UpdateRecipeInput) -> (bool);
    updateSeedLot: (id: nat, quantity: opt nat, harvestDate: opt Timestamp,
     generation: opt text, germinationRate: opt nat, notes: opt text,
@@ -1662,6 +1674,11 @@ type ICSpicy =
    voteOnProposal: (proposal_id: ProposalId, option_index: nat) -> ();
    waterEntireTray: (trayId: TrayId, amountMl: nat, phLevel: opt float64,
     notes: opt text) -> (nat);
+   weatherProvenanceTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
  };
 type Health = 
  record {
