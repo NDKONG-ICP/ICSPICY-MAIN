@@ -1175,5 +1175,16 @@ export const mockBackend = {
   getGardenDesign: async () => [],
   getGardenDesignForUser: async () => [],
   getPublicDesigns: async () => [],
+  validateGardenDesignInput: async () => [],
+  validateGardenDesign: async () => [],
+  calculateGardenYieldInput: async () => ({
+    totalPlantCount: 0n,
+    estimatedLbsMin: 0,
+    estimatedLbsMax: 0,
+    companionBonusPct: 0,
+    spacingPenaltyPct: 0,
+    notes: "",
+  }),
+  calculateGardenYield: async () => [],
   mintDesignAsNft: async () => ({ nftTokenId: 1n }),
 } as unknown as backendInterface;

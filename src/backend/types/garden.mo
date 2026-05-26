@@ -59,4 +59,27 @@ module {
   public type MintDesignNftResult = {
     nftTokenId : Nat;
   };
+
+  public type ValidationSeverity = {
+    #Info;
+    #Warning;
+    #Error;
+  };
+
+  public type ValidationWarning = {
+    code : Text;
+    message : Text;
+    severity : ValidationSeverity;
+    plantId : ?Nat;
+    relatedPlantId : ?Nat;
+  };
+
+  public type YieldEstimate = {
+    totalPlantCount : Nat;
+    estimatedLbsMin : Float;
+    estimatedLbsMax : Float;
+    companionBonusPct : Float;
+    spacingPenaltyPct : Float;
+    notes : Text;
+  };
 };

@@ -5,7 +5,10 @@ import { DesignerToolbar } from "@/components/garden/DesignerToolbar";
 import { GardenCanvas3D } from "@/components/garden/GardenCanvas3D";
 import { GardenTopDown } from "@/components/garden/GardenTopDown";
 import { LoadDesignDialog } from "@/components/garden/LoadDesignDialog";
+import { PreviewPanel } from "@/components/garden/PreviewPanel";
 import { PropertiesPanel } from "@/components/garden/PropertiesPanel";
+import { ValidationPanel } from "@/components/garden/ValidationPanel";
+import { YieldEstimator } from "@/components/garden/YieldEstimator";
 import { useAuth } from "@/hooks/useAuth";
 import { useGardenDesigner } from "@/hooks/useGardenDesigner";
 import {
@@ -18,6 +21,11 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { useVarieties } from "@/hooks/useNims";
 import type { DesignerMode } from "@/lib/garden-types";
 import { snapToGrid } from "@/lib/garden-utils";
+import {
+  calculateYieldLocally,
+  DEFAULT_NURSERY_COORDS,
+  validateGardenLocally,
+} from "@/lib/garden-rules";
 import { Leaf, Menu } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -42,6 +50,9 @@ export default function GardenDesignerPage() {
   const [mode, setMode] = useState<DesignerMode>("edit");
   const [mobileCatalog, setMobileCatalog] = useState(false);
   const [loadOpen, setLoadOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [growthStage, setGrowthStage] = useState(0.75);
+  const [sunCoords, setSunCoords] = useState(DEFAULT_NURSERY_COORDS);
   const [urlDesignId] = useState(() => designIdFromUrl());
 
   const onSave = useCallback(
@@ -124,6 +135,15 @@ export default function GardenDesignerPage() {
 
   const browseList = mode === "view" ? publicDesigns : myDesigns;
 
+  const validation = useMemo(
+    () => validateGardenLocally(design, varieties),
+    [design, varieties],
+  );
+  const yieldEst = useMemo(
+    () => calculateYieldLocally(design, varieties),
+    [design, varieties],
+  );
+
   const openLoad = () => {
     void refetchMine();
     setLoadOpen(true);
@@ -137,7 +157,15 @@ export default function GardenDesignerPage() {
         onModeChange={setMode}
         onLoadClick={openLoad}
         isAuthenticated={isAuthenticated}
+        previewOpen={previewOpen}
+        onPreviewToggle={() => setPreviewOpen((v) => !v)}
       />
+
+      {!previewOpen && validation.some((w) => w.severity === "Error") && (
+        <div className="px-3 py-1 bg-destructive/10 border-b border-destructive/30 text-xs text-destructive">
+          {validation.filter((w) => w.severity === "Error").length} layout error(s) — open Preview for details
+        </div>
+      )}
 
       <LoadDesignDialog
         open={loadOpen}
@@ -191,7 +219,12 @@ export default function GardenDesignerPage() {
               selectedType={designer.selectedType}
               ghost={ghost}
               pendingLabel={pendingLabel}
-              readOnly={mode === "view"}
+              readOnly={mode === "view" || previewOpen}
+              useProcedural={previewOpen}
+              growthStage={growthStage}
+              sunLat={sunCoords.lat}
+              sunLng={sunCoords.lng}
+              showSun={previewOpen}
               onSelectPlant={(id) => selectItem(id, "plant")}
               onSelectStructure={(id) => selectItem(id, "structure")}
               onPointerMove={handlePointer}
@@ -227,7 +260,26 @@ export default function GardenDesignerPage() {
 
         <PropertiesPanel designer={designer} varieties={varieties} />
 
-        {designer.selectedId != null && (
+        {previewOpen && (
+          <PreviewPanel
+            design={design}
+            varieties={varieties}
+            growthStage={growthStage}
+            onGrowthStageChange={setGrowthStage}
+            sunLat={sunCoords.lat}
+            sunLng={sunCoords.lng}
+            onSunCoordsChange={(lat, lng) => setSunCoords({ lat, lng })}
+          />
+        )}
+
+        {!previewOpen && (
+          <aside className="hidden lg:flex w-72 shrink-0 flex-col gap-3 border-l border-border bg-card/40 p-3 overflow-auto">
+            <YieldEstimator estimate={yieldEst} />
+            <ValidationPanel warnings={validation} />
+          </aside>
+        )}
+
+        {designer.selectedId != null && !previewOpen && (
           <PropertiesPanel designer={designer} varieties={varieties} mobile />
         )}
       </div>

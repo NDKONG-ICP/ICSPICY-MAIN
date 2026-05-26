@@ -659,7 +659,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   );
   include ScheduleAPI(accessControlState, savedSchedules, scheduleShareIndex);
   include PlantingScheduleAPI(accessControlState, plantingEvents, nextPlantingEventId);
-  include GardenAPI(accessControlState, gardenDesigns, nextGardenDesignId);
+  include GardenAPI(accessControlState, gardenDesigns, nextGardenDesignId, varieties);
   include LifecycleUpgradeAPI(accessControlState, plants, stageHistory, rwaTokens, upgradeEvents, artworkLayers);
   include BatchGiftAndResaleAPI(accessControlState, batchGiftPacks, resaleListings, claimTokens, plants, rwaTokens, claimMemberships);
   include OffersAPI(accessControlState, offers, treasuryState, treasuryTxLog, priceOracleState, nextOfferId, nextTreasuryTxId);

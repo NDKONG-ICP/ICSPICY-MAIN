@@ -1,14 +1,17 @@
 import { Suspense, useCallback, useMemo, useRef } from "react";
+import SunCalc from "suncalc";
 import { Canvas, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, TransformControls } from "@react-three/drei";
 import type { Group } from "three";
 import type { GardenDesign, PlantPlacement, StructurePlacement } from "@/lib/garden-types";
 import type { VarietyPublic } from "@/declarations/backend.did";
 import { formatScoville } from "@/lib/garden-utils";
+import { EzTreePlant } from "./EzTreePlant";
 import { GhostPreview3D } from "./GhostPreview";
 import { GridOverlay3D } from "./GridOverlay";
 import { PlantMesh } from "./PlantMesh";
 import { StructureMesh } from "./StructureMesh";
+import { SunlightSceneOverlay } from "./SunlightSimulation3D";
 
 type Props = {
   design: GardenDesign;
@@ -18,6 +21,11 @@ type Props = {
   ghost: { x: number; y: number } | null;
   pendingLabel?: string | null;
   readOnly?: boolean;
+  useProcedural?: boolean;
+  growthStage?: number;
+  sunLat?: number;
+  sunLng?: number;
+  showSun?: boolean;
   onSelectPlant: (id: number) => void;
   onSelectStructure: (id: number) => void;
   onPointerMove: (x: number, y: number) => void;
@@ -68,6 +76,11 @@ function Scene({
   onClearSelection,
   onMoveItem,
   onDeleteItem,
+  useProcedural = false,
+  growthStage = 1,
+  sunLat = 28.5383,
+  sunLng = -81.3792,
+  showSun = false,
 }: Props) {
   const scovilleByVariety = useMemo(() => {
     const m = new Map<number, string>();
@@ -100,18 +113,30 @@ function Scene({
     [design.depthMeters, design.widthMeters, onPlace, onPointerMove, readOnly],
   );
 
-  const renderPlant = (p: PlantPlacement, selected: boolean) => (
-    <PlantMesh
-      placement={p}
-      selected={selected}
-      scovilleLabel={
-        p.varietyId != null ? scovilleByVariety.get(p.varietyId) ?? null : null
-      }
-      readOnly={readOnly}
-      onSelect={() => onSelectPlant(p.id)}
-      onLongPressDelete={() => onDeleteItem(p.id, "plant")}
-    />
-  );
+  const sunPos = useMemo(() => {
+    const pos = SunCalc.getPosition(new Date(), sunLat, sunLng);
+    return {
+      altitudeDeg: (pos.altitude * 180) / Math.PI,
+      azimuthDeg: ((pos.azimuth * 180) / Math.PI + 180) % 360,
+    };
+  }, [sunLat, sunLng]);
+
+  const renderPlant = (p: PlantPlacement, selected: boolean) => {
+    const label =
+      p.varietyId != null ? scovilleByVariety.get(p.varietyId) ?? null : null;
+    const common = {
+      placement: p,
+      selected,
+      scovilleLabel: label,
+      readOnly,
+      onSelect: () => onSelectPlant(p.id),
+      onLongPressDelete: () => onDeleteItem(p.id, "plant"),
+    };
+    if (useProcedural) {
+      return <EzTreePlant {...common} growthStage={growthStage} />;
+    }
+    return <PlantMesh {...common} />;
+  };
 
   const renderStructure = (s: StructurePlacement, selected: boolean) => (
     <StructureMesh
@@ -191,6 +216,14 @@ function Scene({
         </group>
       )}
       {ghost && pendingLabel && <GhostPreview3D x={ghost.x} y={ghost.y} />}
+      {showSun && (
+        <SunlightSceneOverlay
+          azimuthDeg={sunPos.azimuthDeg}
+          altitudeDeg={sunPos.altitudeDeg}
+          plotWidth={design.widthMeters}
+          plotDepth={design.depthMeters}
+        />
+      )}
     </>
   );
 }

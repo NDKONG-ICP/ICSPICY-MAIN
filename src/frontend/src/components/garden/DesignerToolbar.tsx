@@ -20,6 +20,7 @@ import {
   Share2,
   Undo2,
   Upload,
+  Play,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,6 +30,8 @@ type Props = {
   onModeChange: (m: DesignerMode) => void;
   onLoadClick: () => void;
   isAuthenticated: boolean;
+  previewOpen?: boolean;
+  onPreviewToggle?: () => void;
 };
 
 export function DesignerToolbar({
@@ -37,6 +40,8 @@ export function DesignerToolbar({
   onModeChange,
   onLoadClick,
   isAuthenticated,
+  previewOpen,
+  onPreviewToggle,
 }: Props) {
   const {
     design,
@@ -175,6 +180,15 @@ export function DesignerToolbar({
         <Button size="sm" variant="outline" onClick={() => void share()}>
           <Share2 className="h-4 w-4 mr-1" /> Share
         </Button>
+        {onPreviewToggle && (
+          <Button
+            size="sm"
+            variant={previewOpen ? "default" : "outline"}
+            onClick={onPreviewToggle}
+          >
+            <Play className="h-4 w-4 mr-1" /> Preview
+          </Button>
+        )}
         <label className="flex items-center gap-2 text-sm ml-2">
           <input
             type="checkbox"
