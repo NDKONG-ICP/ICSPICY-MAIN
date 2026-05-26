@@ -1,7 +1,45 @@
 # IC SPICY Garden Designer — Full Specification
 
-## Save Date: May 25, 2026
-## Status: Saved for future implementation (Phase 13+)
+| Field | Value |
+|---|---|
+| **Status** | DRAFT — planning only |
+| **Phase gate** | Phase 13+ (see `PROJECT_CONTEXT.md`) |
+| **Deploy policy** | **No canister or frontend deploy** until Phase 13 is explicitly scheduled and this spec is approved |
+| **Save date** | May 25, 2026 |
+| **Last updated** | May 22, 2026 |
+
+---
+
+## 0. Kickoff (read this first)
+
+This document is the single source of truth for the **Garden Designer** feature — a Sims Build Mode–style 3D garden/nursery plotter with optional NFT mint, validation rules, and co-op editing.
+
+**Do not implement or deploy from this spec until:**
+1. Phase 13 is named on the roadmap and approved by project lead.
+2. Open decisions in [§12](#12-open-decisions) are resolved.
+3. A scoped implementation plan (files, methods, test approach) is reviewed per `AGENTS.md`.
+
+**In scope for Phase 13:** design CRUD on backend, `/garden` route, 2D/3D plotter MVP, variety catalog integration, mint-as-NFT.  
+**Out of scope until later sub-phases:** multiplayer WebSockets, terrain, voice notes, budget/IC-token checkout from design.
+
+---
+
+## Baseline in repo today (do not rebuild)
+
+The Garden Designer **extends** existing NIMS and shop flows — it does not replace them.
+
+| Existing feature | Location | Relationship to Garden Designer |
+|---|---|---|
+| NIMS tray grid (72-cell) | `TrayGrid`, `lib/plants.mo` | Real nursery layout; designer is *planning*, not tray mutation |
+| User plant inventory | `getMyPlantsNims()`, NIMS **My Plants** | Source for “drop my tracked plants into a plan” |
+| Variety catalog | `useVarieties()`, backend `varieties` map | Sidebar catalog for hypothetical placements |
+| 2D garden print/export | `nims-utils.ts` (`printGardenLayout`, `exportGardenLayoutPng`) | **Print-first** layout of *actual* trays — predecessor UX, not the 3D designer |
+| Planting calendar | `PlantingCalendarPanel.tsx` | Schedule timing; designer handles *spatial* layout |
+| Weather provenance | `getLatestNurseryWeather()`, Open-Meteo fallback | Sun/yield simulation inputs |
+| ICRC-7 mint path | `lib/icrc7.mo`, NFT pool | Reuse for “mint design as NFT” (new metadata schema TBD) |
+| Community posts | `community-api.mo` | Share public designs as posts (link + preview image) |
+
+**Key distinction:** NIMS tracks **what you actually grow**. Garden Designer tracks **what you plan to grow** (or replays your current garden visually at a larger scale).
 
 ---
 
@@ -29,7 +67,7 @@ A Sims Build Mode-style 3D interactive garden/nursery designer integrated into I
 | NFT mint | Save design → mint via existing ICRC-7 canister |
 | Community | Share garden designs as posts |
 | Shop | "Buy the plants in this design" → adds to cart |
-| Weather | Sunlight simulation uses the same Open-Meteo data |
+| Weather | Sunlight simulation uses nursery/user coords via Open-Meteo + `getLatestNurseryWeather()` cache |
 | Seed Bank | Suggest plants from user's seed collection |
 
 ## Sims-Like User Experience
@@ -291,3 +329,42 @@ type SessionRole = {
 - Free CC0 3D assets: Kenney.nl, three.js examples, Sketchfab CC0
 - IC WebSockets: ic-websocket-cdk-rs, ic-websocket-sdk-js
 - UI: Tailwind + shadcn (already installed)
+
+---
+
+## 12. Open decisions
+
+Resolve before implementation starts:
+
+| # | Decision | Options | Notes |
+|---|---|---|---|
+| 1 | **Canister home** | Extend `backend` vs new `garden_canister` | `PROJECT_CONTEXT.md` lists `nims_canister` extraction — align with Phase 6/13 split |
+| 2 | **Design storage size** | Cap plants/structures per design | Motoko heap — large designs may need pagination or asset-canister blobs for snapshots |
+| 3 | **NFT metadata schema** | ICRC-7 keys for design vs plant NFT | New collection vs sub-type of existing 8888 collection |
+| 4 | **On-chain SVG** | Generate in Motoko vs client-only export | `getDesignSvg` is expensive on-chain; may be query-only client render |
+| 5 | **NIMS plant drag-in** | Snapshot placement vs live link | Live link goes stale when plant sold/dead; snapshot is safer |
+| 6 | **Multiplayer** | Phase 3 vs defer entirely | IC WebSocket stack adds ops burden; MVP is single-user |
+| 7 | **Mobile** | Touch-first Phase 1 vs Phase 4 | R3F on mobile is usable but tool UX needs design |
+| 8 | **Public gallery moderation** | Admin review vs open publish | Tie to existing `communityBannedUsers`? |
+
+---
+
+## 13. Implementation smoke tests (post-build, pre-mainnet)
+
+- [ ] Create design, place 10 varieties, save, reload — state matches
+- [ ] `validateLayout` flags spacing violation and companion conflict
+- [ ] Mint design NFT; metadata resolves on asset canister
+- [ ] Fork public design → new owner copy
+- [ ] Drag NIMS plant into design (owner's plant only)
+- [ ] Shop CTA: design plant list → marketplace cart (server-side price recompute)
+- [ ] No regression to NIMS tray grid or `printGardenLayout`
+
+---
+
+## 14. References
+
+- `PROJECT_CONTEXT.md` — Phase 13 gate, canister map
+- `docs/ic-spicy-overview.md` — product context
+- `docs/natural-farming/NF_13_Pepper_Growing_Zone10a.md` — zone 10a rules for validation engine
+- [React Three Fiber](https://docs.pmnd.rs/react-three-fiber)
+- [EZ-Tree](https://github.com/dgreenheck/ez-tree) (MIT)

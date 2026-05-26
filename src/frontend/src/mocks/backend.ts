@@ -1168,4 +1168,12 @@ export const mockBackend = {
     data: new Uint8Array([0xff, 0xd8, 0xff]),
     mime_type: "image/jpeg",
   }),
+  createGardenDesign: async () => ({ designId: 1n }),
+  updateGardenDesign: async () => true,
+  deleteGardenDesign: async () => true,
+  getMyDesigns: async () => [],
+  getGardenDesign: async () => [],
+  getGardenDesignForUser: async () => [],
+  getPublicDesigns: async () => [],
+  mintDesignAsNft: async () => ({ nftTokenId: 1n }),
 } as unknown as backendInterface;

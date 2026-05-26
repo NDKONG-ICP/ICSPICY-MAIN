@@ -270,6 +270,9 @@ export interface CreateProductInput {
   'price_per_unit_cents' : [] | [bigint],
   'plant_id' : [] | [PlantId],
 }
+export interface CreateGardenDesignResult {
+  'designId' : bigint,
+}
 export interface CreateProposalInput {
   'title' : string,
   'publish_now' : boolean,
@@ -351,6 +354,31 @@ export interface FoundersMintResult {
   'tokenId' : string,
   'recipient' : Principal,
   'standard' : NFTStandard,
+}
+export interface GardenDesign {
+  'id' : bigint,
+  'owner' : Principal,
+  'name' : string,
+  'description' : [] | [string],
+  'plants' : Array<PlantPlacement>,
+  'structures' : Array<StructurePlacement>,
+  'widthMeters' : number,
+  'depthMeters' : number,
+  'gridSizeMeters' : number,
+  'isPublic' : boolean,
+  'nftTokenId' : [] | [bigint],
+  'createdAt' : Timestamp,
+  'updatedAt' : Timestamp,
+}
+export interface GardenDesignInput {
+  'name' : string,
+  'description' : [] | [string],
+  'plants' : Array<PlantPlacement>,
+  'structures' : Array<StructurePlacement>,
+  'widthMeters' : number,
+  'depthMeters' : number,
+  'gridSizeMeters' : number,
+  'isPublic' : boolean,
 }
 export interface Health {
   'heapSize' : bigint,
@@ -519,6 +547,7 @@ export interface ICSpicy {
   >,
   'createComment' : ActorMethod<[CreateCommentInput], CommentPublic>,
   'createDAOProposal' : ActorMethod<[CreateProposalInput], ProposalPublic>,
+  'createGardenDesign' : ActorMethod<[GardenDesignInput], CreateGardenDesignResult>,
   'createNimsTray' : ActorMethod<[string, Timestamp, [] | [bigint]], TrayId>,
   'createOrder' : ActorMethod<[Principal, CreateOrderInput], OrderPublic>,
   'createPlant' : ActorMethod<[CreatePlantInput], PlantPublic>,
@@ -539,6 +568,7 @@ export interface ICSpicy {
     http_request_result
   >,
   'deleteComment' : ActorMethod<[CommentId], boolean>,
+  'deleteGardenDesign' : ActorMethod<[bigint], boolean>,
   'deletePlantingEvent' : ActorMethod<[bigint], undefined>,
   'deletePost' : ActorMethod<[PostId], boolean>,
   'deleteProduct' : ActorMethod<[ProductId], undefined>,
@@ -637,6 +667,8 @@ export interface ICSpicy {
   >,
   'getFollowingCount' : ActorMethod<[Principal], bigint>,
   'getFollowingFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
+  'getGardenDesign' : ActorMethod<[bigint], [] | [GardenDesign]>,
+  'getGardenDesignForUser' : ActorMethod<[bigint], [] | [GardenDesign]>,
   'getForSalePlants' : ActorMethod<[], Array<PlantPublic>>,
   'getGlobalFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
   'getIcrc7PoolStatsAdmin' : ActorMethod<[], Icrc7PoolStats>,
@@ -645,6 +677,7 @@ export interface ICSpicy {
   'getLoadedMetadataCount' : ActorMethod<[], bigint>,
   'getMembershipPriceInToken' : ActorMethod<[OracleToken], bigint>,
   'getMyCrosses' : ActorMethod<[], Array<BreedingCrossPublic>>,
+  'getMyDesigns' : ActorMethod<[], Array<GardenDesign>>,
   'getMyFavorites' : ActorMethod<[bigint, bigint], Array<RecipePublic>>,
   'getMyNftListings' : ActorMethod<[], Array<NftListingPublic>>,
   'getMyOffers' : ActorMethod<[], Array<Offer>>,
@@ -699,6 +732,7 @@ export interface ICSpicy {
     Array<ProposalPublic>
   >,
   'getPublicProfile' : ActorMethod<[Principal], [] | [UserProfilePublic]>,
+  'getPublicDesigns' : ActorMethod<[bigint, bigint], Array<GardenDesign>>,
   'getRecentActivity' : ActorMethod<[bigint], Array<ActivityEntry>>,
   'getRecipe' : ActorMethod<[RecipeId], [] | [RecipePublic]>,
   'getRecipeBySlug' : ActorMethod<[string], [] | [RecipePublic]>,
@@ -909,6 +943,7 @@ export interface ICSpicy {
    */
   'markPlantGerminated' : ActorMethod<[PlantId, Timestamp], undefined>,
   'markOrdersSeen' : ActorMethod<[OrderId], undefined>,
+  'mintDesignAsNft' : ActorMethod<[bigint], MintDesignNftResult>,
   'mintEXT' : ActorMethod<[bigint, string, Array<[string, string]>], string>,
   'mintHederaNFT' : ActorMethod<
     [PlantId, [] | [string], Array<[string, string]>],
@@ -1043,6 +1078,7 @@ export interface ICSpicy {
   'unfollowUser' : ActorMethod<[Principal], undefined>,
   'unlikePost' : ActorMethod<[PostId], bigint>,
   'updateCellData' : ActorMethod<[UpdateCellDataInput], undefined>,
+  'updateGardenDesign' : ActorMethod<[bigint, GardenDesignInput], boolean>,
   'updateNimsPlantStage' : ActorMethod<[PlantId, PlantStage], boolean>,
   'updateOrderStatus' : ActorMethod<[OrderId, OrderStatus], undefined>,
   'updateOrderStatusAdmin' : ActorMethod<[OrderId, OrderStatus], undefined>,
@@ -1173,6 +1209,9 @@ export interface MembershipNFTPublic {
 }
 export type MembershipTier = { 'Premium' : null } |
   { 'Standard' : null };
+export interface MintDesignNftResult {
+  'nftTokenId' : bigint,
+}
 export interface MintRWAProvenanceInput {
   'custom_notes' : string,
   'artwork_layer_id' : ArtworkLayerId,
@@ -1273,6 +1312,17 @@ export interface PlantCountStats {
   'sold' : bigint,
   'byStage' : Array<[PlantStage, bigint]>,
   'forSale' : bigint,
+}
+export interface PlantPlacement {
+  'id' : bigint,
+  'varietyId' : [] | [bigint],
+  'plantLabel' : string,
+  'x' : number,
+  'y' : number,
+  'rotation' : number,
+  'scale' : number,
+  'color' : string,
+  'icon' : string,
 }
 export interface PlantHealth {
   'daysSinceFeed' : [] | [bigint],
@@ -1684,6 +1734,16 @@ export interface StageHistory {
   'stage' : PlantStage,
   'notes' : string,
   'timestamp' : Timestamp,
+}
+export interface StructurePlacement {
+  'id' : bigint,
+  'structureType' : string,
+  'x' : number,
+  'y' : number,
+  'width' : number,
+  'depth' : number,
+  'rotation' : number,
+  'color' : string,
 }
 export interface StoredFile {
   'data' : Uint8Array | number[],

@@ -59,6 +59,8 @@ import SeedBankAPI "mixins/seed-bank-api";
 import PlantingScheduleAPI "mixins/planting-schedule-api";
 import NftResaleAPI "mixins/nft-resale-api";
 import ResaleTypes "types/nft-resale";
+import GardenTypes "types/garden";
+import GardenAPI "mixins/garden-api";
 import RateLimits "lib/rate-limits";
 import CanisterHealth "lib/canister-health";
 import Timer "mo:core/Timer";
@@ -384,6 +386,11 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let plantingEvents      = Map.empty<Nat, PlantingScheduleTypes.PlantingEvent>();
   let nextPlantingEventId = { var value : Nat = 1 };
 
+  // ── Phase 13: Garden Designer ─────────────────────────────────────────────
+
+  let gardenDesigns = Map.empty<Nat, GardenTypes.GardenDesign>();
+  let nextGardenDesignId = { var value : Nat = 1 };
+
   // ── Lifecycle upgrade event log (plant NFT burn-and-mint history) ──────────
 
   let upgradeEvents = Map.empty<Common.PlantId, List.List<ClaimTypes.LifecycleUpgradeEvent>>();
@@ -652,6 +659,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   );
   include ScheduleAPI(accessControlState, savedSchedules, scheduleShareIndex);
   include PlantingScheduleAPI(accessControlState, plantingEvents, nextPlantingEventId);
+  include GardenAPI(accessControlState, gardenDesigns, nextGardenDesignId);
   include LifecycleUpgradeAPI(accessControlState, plants, stageHistory, rwaTokens, upgradeEvents, artworkLayers);
   include BatchGiftAndResaleAPI(accessControlState, batchGiftPacks, resaleListings, claimTokens, plants, rwaTokens, claimMemberships);
   include OffersAPI(accessControlState, offers, treasuryState, treasuryTxLog, priceOracleState, nextOfferId, nextTreasuryTxId);

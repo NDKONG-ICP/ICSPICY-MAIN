@@ -27,6 +27,7 @@ const PRIMARY_NAV = [
 ] as const;
 
 const MORE_NAV_ALWAYS = [
+  { label: "Garden", to: "/garden" },
   { label: "Schedule Builder", to: "/schedule-builder" },
   { label: "DAO", to: "/dao" },
 ] as const;

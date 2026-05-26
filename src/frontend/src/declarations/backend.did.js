@@ -225,6 +225,54 @@ export const idlFactory = ({ IDL }) => {
     'recipient' : IDL.Principal,
     'standard' : NFTStandard,
   });
+  const PlantPlacement = IDL.Record({
+    'id' : IDL.Nat,
+    'varietyId' : IDL.Opt(IDL.Nat),
+    'plantLabel' : IDL.Text,
+    'x' : IDL.Float64,
+    'y' : IDL.Float64,
+    'rotation' : IDL.Float64,
+    'scale' : IDL.Float64,
+    'color' : IDL.Text,
+    'icon' : IDL.Text,
+  });
+  const StructurePlacement = IDL.Record({
+    'id' : IDL.Nat,
+    'structureType' : IDL.Text,
+    'x' : IDL.Float64,
+    'y' : IDL.Float64,
+    'width' : IDL.Float64,
+    'depth' : IDL.Float64,
+    'rotation' : IDL.Float64,
+    'color' : IDL.Text,
+  });
+  const GardenDesignInput = IDL.Record({
+    'name' : IDL.Text,
+    'description' : IDL.Opt(IDL.Text),
+    'plants' : IDL.Vec(PlantPlacement),
+    'structures' : IDL.Vec(StructurePlacement),
+    'widthMeters' : IDL.Float64,
+    'depthMeters' : IDL.Float64,
+    'gridSizeMeters' : IDL.Float64,
+    'isPublic' : IDL.Bool,
+  });
+  const GardenDesign = IDL.Record({
+    'id' : IDL.Nat,
+    'owner' : IDL.Principal,
+    'name' : IDL.Text,
+    'description' : IDL.Opt(IDL.Text),
+    'plants' : IDL.Vec(PlantPlacement),
+    'structures' : IDL.Vec(StructurePlacement),
+    'widthMeters' : IDL.Float64,
+    'depthMeters' : IDL.Float64,
+    'gridSizeMeters' : IDL.Float64,
+    'isPublic' : IDL.Bool,
+    'nftTokenId' : IDL.Opt(IDL.Nat),
+    'createdAt' : Timestamp,
+    'updatedAt' : Timestamp,
+  });
+  const CreateGardenDesignResult = IDL.Record({ 'designId' : IDL.Nat });
+  const MintDesignNftResult = IDL.Record({ 'nftTokenId' : IDL.Nat });
   const InventoryCategory = IDL.Variant({
     'OtherSize' : IDL.Text,
     'Gal1' : IDL.Null,
@@ -1537,6 +1585,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'createComment' : IDL.Func([CreateCommentInput], [CommentPublic], []),
     'createDAOProposal' : IDL.Func([CreateProposalInput], [ProposalPublic], []),
+    'createGardenDesign' : IDL.Func([GardenDesignInput], [CreateGardenDesignResult], []),
     'createNimsTray' : IDL.Func(
         [IDL.Text, Timestamp, IDL.Opt(IDL.Nat)],
         [TrayId],
@@ -1577,6 +1626,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'deleteComment' : IDL.Func([CommentId], [IDL.Bool], []),
+    'deleteGardenDesign' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deletePlantingEvent' : IDL.Func([IDL.Nat], [], []),
     'deletePost' : IDL.Func([PostId], [IDL.Bool], []),
     'deleteProduct' : IDL.Func([ProductId], [], []),
@@ -1719,6 +1769,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostPublic)],
         ['query'],
       ),
+    'getGardenDesign' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Opt(GardenDesign)],
+        ['query'],
+      ),
+    'getGardenDesignForUser' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Opt(GardenDesign)],
+        ['query'],
+      ),
     'getForSalePlants' : IDL.Func([], [IDL.Vec(PlantPublic)], ['query']),
     'getGlobalFeed' : IDL.Func(
         [IDL.Nat, IDL.Nat],
@@ -1739,6 +1799,7 @@ export const idlFactory = ({ IDL }) => {
     'getLoadedMetadataCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getMembershipPriceInToken' : IDL.Func([OracleToken], [IDL.Nat], ['query']),
     'getMyCrosses' : IDL.Func([], [IDL.Vec(BreedingCrossPublic)], ['query']),
+    'getMyDesigns' : IDL.Func([], [IDL.Vec(GardenDesign)], ['query']),
     'getMyFavorites' : IDL.Func(
         [IDL.Nat, IDL.Nat],
         [IDL.Vec(RecipePublic)],
@@ -1851,6 +1912,11 @@ export const idlFactory = ({ IDL }) => {
     'getPublicProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfilePublic)],
+        ['query'],
+      ),
+    'getPublicDesigns' : IDL.Func(
+        [IDL.Nat, IDL.Nat],
+        [IDL.Vec(GardenDesign)],
         ['query'],
       ),
     'getRecentActivity' : IDL.Func(
@@ -2175,6 +2241,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'markPlantGerminated' : IDL.Func([PlantId, Timestamp], [], []),
     'markOrdersSeen' : IDL.Func([OrderId], [], []),
+    'mintDesignAsNft' : IDL.Func([IDL.Nat], [MintDesignNftResult], []),
     'mintEXT' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
         [IDL.Text],
@@ -2369,6 +2436,7 @@ export const idlFactory = ({ IDL }) => {
     'unfollowUser' : IDL.Func([IDL.Principal], [], []),
     'unlikePost' : IDL.Func([PostId], [IDL.Nat], []),
     'updateCellData' : IDL.Func([UpdateCellDataInput], [], []),
+    'updateGardenDesign' : IDL.Func([IDL.Nat, GardenDesignInput], [IDL.Bool], []),
     'updateNimsPlantStage' : IDL.Func([PlantId, PlantStage], [IDL.Bool], []),
     'updateOrderStatus' : IDL.Func([OrderId, OrderStatus], [], []),
     'updateOrderStatusAdmin' : IDL.Func([OrderId, OrderStatus], [], []),

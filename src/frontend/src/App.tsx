@@ -91,6 +91,7 @@ const NIMSPage = lazy(() => import("./pages/NIMS"));
 const CookBookPage = lazy(() => import("./pages/CookBook"));
 const CookbookRecipeDetailPage = lazy(() => import("./pages/CookbookRecipeDetail"));
 const ScheduleBuilderPage = lazy(() => import("./pages/ScheduleBuilder"));
+const GardenDesignerPage = lazy(() => import("./pages/GardenDesigner"));
 const ClaimPage = lazy(() => import("./pages/Claim"));
 const NFTDetailPage = lazy(() => import("./pages/NFTDetail"));
 
@@ -377,6 +378,12 @@ const scheduleBuilderRoute = createRoute({
   component: ScheduleBuilderPage,
 });
 
+const gardenRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/garden",
+  component: GardenDesignerPage,
+});
+
 const claimRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/claim/$claimToken",
@@ -417,6 +424,7 @@ const routeTree = rootRoute.addChildren([
   cookbookDetailRoute,
   cookbookRoute,
   scheduleBuilderRoute,
+  gardenRoute,
   claimRoute,
   nftDetailRoute,
 ]);
