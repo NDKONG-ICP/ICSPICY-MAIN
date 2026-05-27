@@ -3,6 +3,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CatalogSidebar } from "@/components/garden/CatalogSidebar";
 import { DesignerToolbar } from "@/components/garden/DesignerToolbar";
 import { GardenCanvas3D } from "@/components/garden/GardenCanvas3D";
+import { CompanionSuggestions } from "@/components/garden/CompanionSuggestions";
+import { DesignerStatusBar } from "@/components/garden/DesignerStatusBar";
+import { GardenEnvironmentDialog } from "@/components/garden/GardenEnvironmentDialog";
+import { GardenLocationPrompt } from "@/components/garden/GardenLocationPrompt";
 import { GardenTopDown } from "@/components/garden/GardenTopDown";
 import { LoadDesignDialog } from "@/components/garden/LoadDesignDialog";
 import { PreviewPanel } from "@/components/garden/PreviewPanel";
@@ -11,6 +15,7 @@ import { ValidationPanel } from "@/components/garden/ValidationPanel";
 import { YieldEstimator } from "@/components/garden/YieldEstimator";
 import { useAuth } from "@/hooks/useAuth";
 import { useGardenDesigner } from "@/hooks/useGardenDesigner";
+import { useGardenLocation } from "@/hooks/useGardenLocation";
 import {
   useGardenDesignLoader,
   useGardenDesignMutations,
@@ -19,7 +24,23 @@ import {
 } from "@/hooks/useGardenDesigns";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useVarieties } from "@/hooks/useNims";
-import type { DesignerMode } from "@/lib/garden-types";
+import type { CameraPresetId, DesignerMode, LayerVisibility } from "@/lib/garden-types";
+import { DEFAULT_LAYERS as DEFAULT_LAYER_STATE } from "@/lib/garden-types";
+import {
+  getCompanionSuggestions,
+  type CompanionSuggestion,
+} from "@/lib/garden-companions";
+import {
+  captureCanvasScreenshot,
+  downloadSvg,
+  exportDesignSvg,
+} from "@/lib/garden-export";
+import {
+  getPlantById,
+  loadEnvironment,
+  PLANT_CATALOG,
+  type GardenEnvironment,
+} from "@/lib/garden-plant-catalog";
 import { snapToGrid } from "@/lib/garden-utils";
 import {
   calculateYieldLocally,
@@ -27,7 +48,7 @@ import {
   validateGardenLocally,
 } from "@/lib/garden-rules";
 import { Leaf, Menu } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 function designIdFromUrl(): number | null {
@@ -52,8 +73,17 @@ export default function GardenDesignerPage() {
   const [loadOpen, setLoadOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [growthStage, setGrowthStage] = useState(0.75);
+  const [cameraPreset, setCameraPreset] = useState<CameraPresetId>("sims");
   const [sunCoords, setSunCoords] = useState(DEFAULT_NURSERY_COORDS);
   const [urlDesignId] = useState(() => designIdFromUrl());
+  const [locationPromptOpen, setLocationPromptOpen] = useState(false);
+  const [envOpen, setEnvOpen] = useState(false);
+  const [environment, setEnvironment] = useState<GardenEnvironment>(() => loadEnvironment());
+  const [layers, setLayers] = useState<LayerVisibility>(DEFAULT_LAYER_STATE);
+  const [timeOfDayHour, setTimeOfDayHour] = useState(14);
+  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
+  const [companions, setCompanions] = useState<CompanionSuggestion[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const onSave = useCallback(
     async (design: Parameters<typeof saveMutation.mutateAsync>[0]) => {
@@ -87,6 +117,18 @@ export default function GardenDesignerPage() {
     deleteItem,
   } = designer;
 
+  const gardenLocation = useGardenLocation(design.id);
+
+  useEffect(() => {
+    if (gardenLocation.needsPrompt) setLocationPromptOpen(true);
+  }, [gardenLocation.needsPrompt]);
+
+  useEffect(() => {
+    if (gardenLocation.location && gardenLocation.location.mode !== "skip") {
+      setSunCoords({ lat: gardenLocation.location.lat, lng: gardenLocation.location.lng });
+    }
+  }, [gardenLocation.location]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setPending(null);
@@ -108,6 +150,7 @@ export default function GardenDesignerPage() {
 
   const handlePointer = useCallback(
     (x: number, y: number) => {
+      setCursorPos({ x, y });
       if (!pending) return;
       setGhost({
         x: snapToGrid(x, design.gridSizeMeters, gridSnap),
@@ -118,8 +161,16 @@ export default function GardenDesignerPage() {
   );
 
   const handlePlace = useCallback(() => {
-    if (pending && ghost) placeAtGhost();
-  }, [ghost, pending, placeAtGhost]);
+    if (!pending || !ghost) return;
+    const catalogId = pending.kind === "plant" ? pending.catalogId : undefined;
+    const cat = catalogId ? getPlantById(catalogId) : undefined;
+    placeAtGhost();
+    if (catalogId && cat) {
+      setCompanions(
+        getCompanionSuggestions(catalogId, design.plants, ghost, PLANT_CATALOG, cat.spacing),
+      );
+    }
+  }, [ghost, pending, placeAtGhost, design.plants]);
 
   const handleDelete = useCallback(
     (id: number, type: "plant" | "structure") => {
@@ -159,6 +210,47 @@ export default function GardenDesignerPage() {
         isAuthenticated={isAuthenticated}
         previewOpen={previewOpen}
         onPreviewToggle={() => setPreviewOpen((v) => !v)}
+        cameraPreset={cameraPreset}
+        onCameraPreset={setCameraPreset}
+        yieldEstimate={yieldEst}
+        locationLabel={gardenLocation.location?.label ?? null}
+        onLocationClick={() => setLocationPromptOpen(true)}
+        timeOfDayHour={timeOfDayHour}
+        onTimeOfDayChange={setTimeOfDayHour}
+        onEnvironmentClick={() => setEnvOpen(true)}
+        onScreenshot={() => {
+          if (canvasRef.current) void captureCanvasScreenshot(canvasRef.current);
+          else toast.message("Switch to 3D view for screenshot.");
+        }}
+        onExportSvg={() => downloadSvg(exportDesignSvg(design), design.name)}
+      />
+
+      <GardenEnvironmentDialog
+        open={envOpen}
+        onOpenChange={setEnvOpen}
+        environment={environment}
+        onChange={setEnvironment}
+      />
+
+      <GardenLocationPrompt
+        open={locationPromptOpen}
+        address={gardenLocation.addressDraft}
+        onAddressChange={gardenLocation.setAddressDraft}
+        onGps={() => {
+          gardenLocation.chooseGps();
+          setLocationPromptOpen(false);
+          toast.success("Using GPS location for satellite imagery.");
+        }}
+        onAddress={async (addr) => {
+          const ok = await gardenLocation.chooseAddress(addr);
+          if (ok) setLocationPromptOpen(false);
+          return ok;
+        }}
+        onSkip={() => {
+          gardenLocation.chooseSkip();
+          setLocationPromptOpen(false);
+          toast.message("Using stylized ground — no satellite imagery.");
+        }}
       />
 
       {!previewOpen && validation.some((w) => w.severity === "Error") && (
@@ -203,6 +295,8 @@ export default function GardenDesignerPage() {
           varieties={varieties}
           myDesigns={myDesigns}
           readOnly={mode === "view"}
+          layers={layers}
+          onLayersChange={setLayers}
           onPending={setPending}
           onLoadDesign={loadDesign}
           onNewDesign={newDesign}
@@ -218,6 +312,7 @@ export default function GardenDesignerPage() {
               selectedId={designer.selectedId}
               selectedType={designer.selectedType}
               ghost={ghost}
+              pending={pending}
               pendingLabel={pendingLabel}
               readOnly={mode === "view" || previewOpen}
               useProcedural={previewOpen}
@@ -225,6 +320,13 @@ export default function GardenDesignerPage() {
               sunLat={sunCoords.lat}
               sunLng={sunCoords.lng}
               showSun={previewOpen}
+              satelliteEnabled={gardenLocation.satelliteEnabled}
+              gardenLat={gardenLocation.location?.lat}
+              gardenLng={gardenLocation.location?.lng}
+              cameraPreset={cameraPreset}
+              timeOfDayHour={timeOfDayHour}
+              layers={layers}
+              canvasRef={canvasRef}
               onSelectPlant={(id) => selectItem(id, "plant")}
               onSelectStructure={(id) => selectItem(id, "structure")}
               onPointerMove={handlePointer}
@@ -241,6 +343,9 @@ export default function GardenDesignerPage() {
               ghost={ghost}
               gridSnap={gridSnap}
               readOnly={mode === "view"}
+              satelliteEnabled={gardenLocation.satelliteEnabled}
+              gardenLat={gardenLocation.location?.lat}
+              gardenLng={gardenLocation.location?.lng}
               onSelectPlant={(id) => selectItem(id, "plant")}
               onSelectStructure={(id) => selectItem(id, "structure")}
               onMove={moveItem}
@@ -282,7 +387,28 @@ export default function GardenDesignerPage() {
         {designer.selectedId != null && !previewOpen && (
           <PropertiesPanel designer={designer} varieties={varieties} mobile />
         )}
+
+        <CompanionSuggestions
+          suggestions={companions}
+          onDismiss={() => setCompanions([])}
+          onAdd={(catalogId) => {
+            const p = getPlantById(catalogId);
+            if (!p) return;
+            setPending({
+              kind: "plant",
+              catalogId: p.id,
+              varietyId: null,
+              label: p.name,
+              color: p.color,
+              icon: p.iconEmoji,
+              scoville: p.scovilleMax,
+            });
+            setCompanions([]);
+          }}
+        />
       </div>
+
+      <DesignerStatusBar design={design} yieldEstimate={yieldEst} cursor={cursorPos} />
 
       <div className="sm:hidden fixed bottom-4 right-4 z-50 flex gap-2">
         <Button size="icon" onClick={() => setMobileCatalog((v) => !v)}>

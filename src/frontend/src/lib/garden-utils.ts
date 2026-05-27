@@ -152,6 +152,19 @@ export function spacingRecommendation(scovilleMax: number): string {
   return "30–40 cm";
 }
 
+export function darkenColor(hex: string, amount: number): string {
+  const n = hex.replace("#", "");
+  if (n.length !== 6) return hex;
+  const r = Math.max(0, Number.parseInt(n.slice(0, 2), 16) * (1 - amount));
+  const g = Math.max(0, Number.parseInt(n.slice(2, 4), 16) * (1 - amount));
+  const b = Math.max(0, Number.parseInt(n.slice(4, 6), 16) * (1 - amount));
+  return `#${Math.round(r).toString(16).padStart(2, "0")}${Math.round(g).toString(16).padStart(2, "0")}${Math.round(b).toString(16).padStart(2, "0")}`;
+}
+
+export function isHotPepper(placement: PlantPlacement): boolean {
+  return placement.icon === "🌶️" || placement.icon === "🔥";
+}
+
 export function plantSummary(design: GardenDesign): string {
   const n = design.plants.length;
   const s = design.structures.length;

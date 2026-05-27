@@ -1,6 +1,7 @@
-import { useMemo, useRef, useState, type ReactElement } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { motion } from "motion/react";
 import type { GardenDesign } from "@/lib/garden-types";
+import { singleTileUrl } from "@/lib/satellite-tiles";
 import { snapToGrid } from "@/lib/garden-utils";
 import { GhostPreview2D } from "./GhostPreview";
 
@@ -13,6 +14,9 @@ type Props = {
   ghost: { x: number; y: number } | null;
   gridSnap: boolean;
   readOnly?: boolean;
+  satelliteEnabled?: boolean;
+  gardenLat?: number;
+  gardenLng?: number;
   onSelectPlant: (id: number) => void;
   onSelectStructure: (id: number) => void;
   onMove: (id: number, type: "plant" | "structure", x: number, y: number) => void;
@@ -30,6 +34,9 @@ export function GardenTopDown({
   ghost,
   gridSnap,
   readOnly,
+  satelliteEnabled,
+  gardenLat,
+  gardenLng,
   onSelectPlant,
   onSelectStructure,
   onMove,
@@ -45,9 +52,18 @@ export function GardenTopDown({
     id: number;
     type: "plant" | "structure";
   } | null>(null);
+  const [satelliteUrl, setSatelliteUrl] = useState<string | null>(null);
 
   const w = design.widthMeters * PX_PER_M;
   const h = design.depthMeters * PX_PER_M;
+
+  useEffect(() => {
+    if (!satelliteEnabled || gardenLat == null || gardenLng == null) {
+      setSatelliteUrl(null);
+      return;
+    }
+    setSatelliteUrl(singleTileUrl(gardenLat, gardenLng, 19));
+  }, [satelliteEnabled, gardenLat, gardenLng]);
 
   const gridLines = useMemo(() => {
     const lines: ReactElement[] = [];
@@ -61,6 +77,7 @@ export function GardenTopDown({
           y2={h}
           stroke="#334155"
           strokeWidth={1}
+          opacity={0.6}
         />,
       );
     }
@@ -74,6 +91,7 @@ export function GardenTopDown({
           y2={y * PX_PER_M}
           stroke="#334155"
           strokeWidth={1}
+          opacity={0.6}
         />,
       );
     }
@@ -105,12 +123,12 @@ export function GardenTopDown({
   });
 
   return (
-    <div className="h-full w-full overflow-auto rounded-lg border border-border bg-[#0f172a] p-2">
+    <div className="h-full w-full overflow-auto rounded-lg border border-white/10 bg-[#0f172a] p-2 shadow-inner">
       <svg
         ref={svgRef}
         width={w}
         height={h}
-        className="mx-auto touch-none"
+        className="mx-auto touch-none rounded-md overflow-hidden"
         onMouseMove={(e) => {
           const m = toMeters(e.clientX, e.clientY);
           onPointerMove(m.x, m.y);
@@ -130,7 +148,23 @@ export function GardenTopDown({
           if (e.target === svgRef.current) onClearSelection();
         }}
       >
-        <rect width={w} height={h} fill="#14532d" opacity={0.35} />
+        {satelliteUrl ? (
+          <image
+            href={satelliteUrl}
+            x={0}
+            y={0}
+            width={w}
+            height={h}
+            preserveAspectRatio="xMidYMid slice"
+            opacity={0.92}
+          />
+        ) : (
+          <>
+            <rect width={w} height={h} fill="#4a7c2e" />
+            <rect width={w} height={h} fill="#3d6b25" opacity={0.65} />
+          </>
+        )}
+        <rect width={w} height={h} fill="none" stroke="#1e293b" strokeWidth={2} />
         {gridLines}
         {design.structures.map((s) => {
           const sel = selectedType === "structure" && selectedId === s.id;
@@ -149,8 +183,8 @@ export function GardenTopDown({
                 width={s.width * PX_PER_M}
                 height={s.depth * PX_PER_M}
                 fill={s.color}
-                opacity={0.65}
-                stroke={sel ? "#f97316" : "#fff"}
+                opacity={0.72}
+                stroke={sel ? "#f59e0b" : "#fff"}
                 strokeWidth={sel ? 2 : 1}
                 rx={2}
               />
@@ -165,6 +199,7 @@ export function GardenTopDown({
               key={`p-${p.id}`}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 18 }}
               transform={`translate(${p.x * PX_PER_M}, ${p.y * PX_PER_M})`}
               onMouseDown={(e) => {
                 e.stopPropagation();
@@ -177,8 +212,9 @@ export function GardenTopDown({
               <circle
                 r={r}
                 fill={p.color}
-                stroke={sel ? "#f97316" : "#fff"}
+                stroke={sel ? "#f59e0b" : "#fff"}
                 strokeWidth={sel ? 2 : 1}
+                filter={sel ? "url(#glow)" : undefined}
               />
               <text textAnchor="middle" dy={4} fill="#fff" fontSize={10} pointerEvents="none">
                 {p.label[0]?.toUpperCase() ?? "?"}
@@ -189,6 +225,11 @@ export function GardenTopDown({
         {ghost && hasPending && (
           <GhostPreview2D x={ghost.x} y={ghost.y} scalePx={PX_PER_M} />
         )}
+        <defs>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#f59e0b" floodOpacity="0.8" />
+          </filter>
+        </defs>
       </svg>
     </div>
   );

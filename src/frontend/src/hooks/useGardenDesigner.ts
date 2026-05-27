@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { playPlacementSound } from "@/lib/garden-export";
 import { toast } from "sonner";
 import type {
   GardenDesign,
@@ -65,10 +66,14 @@ export function useGardenDesigner({
 
   const placePlant = useCallback(
     (
-      varietyId: number,
-      label: string,
-      color: string,
-      icon: string,
+      opts: {
+        varietyId?: number | null;
+        catalogId?: string;
+        label: string;
+        color: string;
+        icon: string;
+        scoville?: number;
+      },
       x: number,
       y: number,
     ) => {
@@ -78,18 +83,21 @@ export function useGardenDesigner({
       const id = nextItemId(design.plants, design.structures);
       const plant = {
         id,
-        varietyId,
-        label,
+        varietyId: opts.varietyId ?? null,
+        catalogId: opts.catalogId ?? null,
+        label: opts.label,
         x: gx,
         y: gy,
         rotation: 0,
         scale: 1,
-        color,
-        icon,
+        color: opts.color,
+        icon: opts.icon,
+        scoville: opts.scoville,
       };
       applyDesign({ ...design, plants: [...design.plants, plant] });
       selectItem(id, "plant");
-      toast.success(`${icon} ${label} placed!`);
+      playPlacementSound();
+      toast.success(`${opts.icon} ${opts.label} placed!`);
       setPending(null);
       setGhost(null);
     },
@@ -121,6 +129,7 @@ export function useGardenDesigner({
       };
       applyDesign({ ...design, structures: [...design.structures, structure] });
       selectItem(id, "structure");
+      playPlacementSound();
       toast.success(`${structureType.replace(/_/g, " ")} placed!`);
       setPending(null);
       setGhost(null);
@@ -132,10 +141,14 @@ export function useGardenDesigner({
     if (!pending || !ghost) return;
     if (pending.kind === "plant") {
       placePlant(
-        pending.varietyId,
-        pending.label,
-        pending.color,
-        pending.icon,
+        {
+          varietyId: pending.varietyId,
+          catalogId: pending.catalogId,
+          label: pending.label,
+          color: pending.color,
+          icon: pending.icon,
+          scoville: pending.scoville,
+        },
         ghost.x,
         ghost.y,
       );

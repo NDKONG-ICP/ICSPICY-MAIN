@@ -245,6 +245,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.1.2
         version: 1.2.8(@types/react-dom@19.1.11(@types/react@19.1.17))(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      '@react-spring/three':
+        specifier: ^10.1.0
+        version: 10.1.0(@react-three/fiber@9.1.4(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)(three@0.176.0))(react@19.1.5)(three@0.176.0)
       '@react-three/cannon':
         specifier: ~6.6.0
         version: 6.6.0(@react-three/fiber@9.1.4(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)(three@0.176.0))(react@19.1.5)(three@0.176.0)(typescript@5.9.3)
@@ -254,6 +257,9 @@ importers:
       '@react-three/fiber':
         specifier: ~9.1.2
         version: 9.1.4(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)(three@0.176.0)
+      '@react-three/postprocessing':
+        specifier: ^3.0.4
+        version: 3.0.4(@react-three/fiber@9.1.4(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)(three@0.176.0))(@types/three@0.176.0)(react@19.1.5)(three@0.176.0)
       '@tanstack/react-query':
         specifier: ^5.24.0
         version: 5.95.2(react@19.1.5)
@@ -290,6 +296,9 @@ importers:
       next-themes:
         specifier: ~0.4.6
         version: 0.4.6(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      postprocessing:
+        specifier: ^6.39.1
+        version: 6.39.1(three@0.176.0)
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -1694,6 +1703,34 @@ packages:
   '@radix-ui/rect@1.1.1':
     resolution: {integrity: sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw==}
 
+  '@react-spring/animated@10.1.0':
+    resolution: {integrity: sha512-dvGVSfNYhbkzTAnyB1S1940ZiKp6/Ey+b2vQc70dJ5k6gzH/GdlfeDzCh65V94b6OPqF7Xl4VUICVUQpc07iUg==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@react-spring/core@10.1.0':
+    resolution: {integrity: sha512-XUG3UCCCxay6lYjBU2KOKzEgC1sx/w44ouB5gRh2Ex6rVJOdPcGVg7JJUIOAQo7uhKGfQdCQU4qUZaQnmInZPQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@react-spring/rafz@10.1.0':
+    resolution: {integrity: sha512-e/LRnNmvmg8Agl4j3MGcjHuSTSBcCrxr3xeoWdodxpLWeTHY1pHl8PJDOCEJ2Pj6BMdEBaWFRAX7uxRo1FLzCg==}
+
+  '@react-spring/shared@10.1.0':
+    resolution: {integrity: sha512-ogIUujWxdwcsQ2Vp2hZs+KehvH8tKeWGHsFb1eRBYoePzhKS541Qg1JfFlQ7ursBUwwPDBQ5Wpwn+Cwx6WV1PQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@react-spring/three@10.1.0':
+    resolution: {integrity: sha512-/XhDlpfVfsmIBMzK38M999oexmeyt+wlTLc66XTJKR/XlRpo9dpCGA+6viS+XjwEfD/S9/GlDrsTBy6vKiuxZA==}
+    peerDependencies:
+      '@react-three/fiber': '>=6.0'
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      three: '>=0.126'
+
+  '@react-spring/types@10.1.0':
+    resolution: {integrity: sha512-RkJAlkAZ5yZSRBMOSidamioBHLjf8wGKbtr3pZ5iKoHFNQuNM2k6DqJDIEUcNQlWRZXny6Eqys2c9NdugdbdyQ==}
+
   '@react-three/cannon@6.6.0':
     resolution: {integrity: sha512-lP9rJoVHQi0w+dYF8FJAm2xr5eLfNEckb04j72kjqndUkuOPr26N4rSBhQbHl5b5N3tEnhQaIMungAvHkcY8/A==}
     peerDependencies:
@@ -1736,6 +1773,13 @@ packages:
         optional: true
       react-native:
         optional: true
+
+  '@react-three/postprocessing@3.0.4':
+    resolution: {integrity: sha512-e4+F5xtudDYvhxx3y0NtWXpZbwvQ0x1zdOXWTbXMK6fFLVDd4qucN90YaaStanZGS4Bd5siQm0lGL/5ogf8iDQ==}
+    peerDependencies:
+      '@react-three/fiber': ^9.0.0
+      react: ^19.0
+      three: '>= 0.156.0'
 
   '@remix-run/router@1.23.2':
     resolution: {integrity: sha512-Ic6m2U/rMjTkhERIa/0ZtXJP17QUi2CbWE7cqx4J58M8aA3QTfW+2UlQ4psvTX9IO1RfNVhK3pcpdjej7L+t2w==}
@@ -2723,6 +2767,12 @@ packages:
       '@types/three': '>=0.134.0'
       three: '>=0.134.0'
 
+  maath@0.6.0:
+    resolution: {integrity: sha512-dSb2xQuP7vDnaYqfoKzlApeRcR2xtN8/f7WV/TMAkBC8552TwTLtOO0JTcSygkYMjNDPoo6V01jTw/aPi4JrMw==}
+    peerDependencies:
+      '@types/three': '>=0.144.0'
+      three: '>=0.144.0'
+
   markdown-table@3.0.4:
     resolution: {integrity: sha512-wiYz4+JrLyb/DqW2hkFJxP7Vd7JuTDm77fvbM8VfEQdmSMqcImWeeRbHwZjBjIFki/VaMK2BhFi7oUUZeM5bqw==}
 
@@ -2908,6 +2958,12 @@ packages:
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
 
+  n8ao@1.10.1:
+    resolution: {integrity: sha512-hhI1pC+BfOZBV1KMwynBrVlIm8wqLxj/abAWhF2nZ0qQKyzTSQa1QtLVS2veRiuoBQXojxobcnp0oe+PUoxf/w==}
+    peerDependencies:
+      postprocessing: '>=6.30.0'
+      three: '>=0.137'
+
   nano-css@5.6.2:
     resolution: {integrity: sha512-+6bHaC8dSDGALM1HJjOHVXpuastdu2xFoZlC77Jh4cg+33Zcgm+Gxd+1xsnpZK14eyHObSp82+ll5y3SX75liw==}
     peerDependencies:
@@ -3042,6 +3098,11 @@ packages:
   postcss@8.5.8:
     resolution: {integrity: sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==}
     engines: {node: ^10 || ^12 || >=14}
+
+  postprocessing@6.39.1:
+    resolution: {integrity: sha512-R2dG2zy+BAx3USl5EHw+PvnrlbT5PKnZVp3se0HCR0pWH8WQdh742yNG4YWOsq6c0bFpffk0Gd2RqPeoP/wKng==}
+    peerDependencies:
+      three: '>= 0.168.0 < 0.185.0'
 
   potpack@1.0.2:
     resolution: {integrity: sha512-choctRBIV9EMT9WGAZHn3V7t0Z2pMQyl0EZE6pFc/6ml3ssw7Dlf/oAOvFwjm1HVsqfQN8GfeFyJ+d8tRzqueQ==}
@@ -4920,6 +4981,39 @@ snapshots:
 
   '@radix-ui/rect@1.1.1': {}
 
+  '@react-spring/animated@10.1.0(react@19.1.5)':
+    dependencies:
+      '@react-spring/shared': 10.1.0(react@19.1.5)
+      '@react-spring/types': 10.1.0
+      react: 19.1.5
+
+  '@react-spring/core@10.1.0(react@19.1.5)':
+    dependencies:
+      '@react-spring/animated': 10.1.0(react@19.1.5)
+      '@react-spring/shared': 10.1.0(react@19.1.5)
+      '@react-spring/types': 10.1.0
+      react: 19.1.5
+
+  '@react-spring/rafz@10.1.0': {}
+
+  '@react-spring/shared@10.1.0(react@19.1.5)':
+    dependencies:
+      '@react-spring/rafz': 10.1.0
+      '@react-spring/types': 10.1.0
+      react: 19.1.5
+
+  '@react-spring/three@10.1.0(@react-three/fiber@9.1.4(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)(three@0.176.0))(react@19.1.5)(three@0.176.0)':
+    dependencies:
+      '@react-spring/animated': 10.1.0(react@19.1.5)
+      '@react-spring/core': 10.1.0(react@19.1.5)
+      '@react-spring/shared': 10.1.0(react@19.1.5)
+      '@react-spring/types': 10.1.0
+      '@react-three/fiber': 9.1.4(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)(three@0.176.0)
+      react: 19.1.5
+      three: 0.176.0
+
+  '@react-spring/types@10.1.0': {}
+
   '@react-three/cannon@6.6.0(@react-three/fiber@9.1.4(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)(three@0.176.0))(react@19.1.5)(three@0.176.0)(typescript@5.9.3)':
     dependencies:
       '@pmndrs/cannon-worker-api': 2.4.0(three@0.176.0)
@@ -4985,6 +5079,17 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
       - immer
+
+  '@react-three/postprocessing@3.0.4(@react-three/fiber@9.1.4(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)(three@0.176.0))(@types/three@0.176.0)(react@19.1.5)(three@0.176.0)':
+    dependencies:
+      '@react-three/fiber': 9.1.4(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)(three@0.176.0)
+      maath: 0.6.0(@types/three@0.176.0)(three@0.176.0)
+      n8ao: 1.10.1(postprocessing@6.39.1(three@0.176.0))(three@0.176.0)
+      postprocessing: 6.39.1(three@0.176.0)
+      react: 19.1.5
+      three: 0.176.0
+    transitivePeerDependencies:
+      - '@types/three'
 
   '@remix-run/router@1.23.2': {}
 
@@ -5859,6 +5964,11 @@ snapshots:
       '@types/three': 0.176.0
       three: 0.176.0
 
+  maath@0.6.0(@types/three@0.176.0)(three@0.176.0):
+    dependencies:
+      '@types/three': 0.176.0
+      three: 0.176.0
+
   markdown-table@3.0.4: {}
 
   mdast-util-find-and-replace@3.0.2:
@@ -6246,6 +6356,11 @@ snapshots:
       object-assign: 4.1.1
       thenify-all: 1.6.0
 
+  n8ao@1.10.1(postprocessing@6.39.1(three@0.176.0))(three@0.176.0):
+    dependencies:
+      postprocessing: 6.39.1(three@0.176.0)
+      three: 0.176.0
+
   nano-css@5.6.2(react-dom@19.1.5(react@19.1.5))(react@19.1.5):
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -6355,6 +6470,10 @@ snapshots:
       nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  postprocessing@6.39.1(three@0.176.0):
+    dependencies:
+      three: 0.176.0
 
   potpack@1.0.2: {}
 
