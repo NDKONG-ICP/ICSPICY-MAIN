@@ -92,6 +92,7 @@ const CookBookPage = lazy(() => import("./pages/CookBook"));
 const CookbookRecipeDetailPage = lazy(() => import("./pages/CookbookRecipeDetail"));
 const ScheduleBuilderPage = lazy(() => import("./pages/ScheduleBuilder"));
 const GardenDesignerPage = lazy(() => import("./pages/GardenDesigner"));
+const GardenGalleryPage = lazy(() => import("./pages/GardenGallery"));
 const ClaimPage = lazy(() => import("./pages/Claim"));
 const NFTDetailPage = lazy(() => import("./pages/NFTDetail"));
 
@@ -384,6 +385,12 @@ const gardenRoute = createRoute({
   component: GardenDesignerPage,
 });
 
+const gardenGalleryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/garden/gallery",
+  component: GardenGalleryPage,
+});
+
 const claimRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/claim/$claimToken",
@@ -425,6 +432,7 @@ const routeTree = rootRoute.addChildren([
   cookbookRoute,
   scheduleBuilderRoute,
   gardenRoute,
+  gardenGalleryRoute,
   claimRoute,
   nftDetailRoute,
 ]);

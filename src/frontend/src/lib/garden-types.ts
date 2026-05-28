@@ -96,6 +96,14 @@ export type LayerVisibility = {
   grid: boolean;
   labels: boolean;
   shadows: boolean;
+  spacing: boolean;
+  companions: boolean;
+  sunShade: boolean;
+  irrigation: boolean;
+  dimensions: boolean;
+  satellite: boolean;
+  annotations: boolean;
+  contours: boolean;
 };
 
 export const DEFAULT_LAYERS: LayerVisibility = {
@@ -104,6 +112,59 @@ export const DEFAULT_LAYERS: LayerVisibility = {
   grid: true,
   labels: true,
   shadows: true,
+  spacing: false,
+  companions: false,
+  sunShade: false,
+  irrigation: true,
+  dimensions: false,
+  satellite: true,
+  annotations: true,
+  contours: false,
+};
+
+export type GardenAnnotation = {
+  id: number;
+  x: number;
+  y: number;
+  text: string;
+};
+
+export type GardenScene = {
+  id: string;
+  name: string;
+  preset: CameraPresetId;
+};
+
+export type MeasurePoint = { x: number; y: number };
+
+export type GardenMeasurement =
+  | { id: number; type: "distance"; points: [MeasurePoint, MeasurePoint] }
+  | { id: number; type: "area"; points: MeasurePoint[] };
+
+export type IrrigationLine = {
+  id: number;
+  points: MeasurePoint[];
+  sourceLabel?: string;
+};
+
+export type GardenToolExtras = {
+  annotations: GardenAnnotation[];
+  scenes: GardenScene[];
+  measurements: GardenMeasurement[];
+  irrigationLines: IrrigationLine[];
+  sitePhotoUrl: string | null;
+  sectionCutY: number | null;
+  activeTool: "none" | "measure" | "area" | "note" | "irrigation" | "section";
+};
+
+export const DEFAULT_TOOL_EXTRAS: GardenToolExtras = {
+  annotations: [],
+  scenes: [],
+  measurements: [],
+  irrigationLines: [],
+  sitePhotoUrl: null,
+  sectionCutY: null,
+  activeTool: "none",
 };
 
 export const HISTORY_MAX = 30;

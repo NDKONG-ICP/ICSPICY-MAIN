@@ -10,6 +10,7 @@ export type GardenLocationState = {
   lng: number;
   mode: GardenLocationMode;
   label: string;
+  satelliteZoom?: number;
 };
 
 function storageKey(designId: number | null): string {
@@ -89,6 +90,14 @@ export function useGardenLocation(designId: number | null) {
     });
   }, [persist]);
 
+  const updateSatelliteZoom = useCallback(
+    (zoom: number) => {
+      if (!stored) return;
+      persist({ ...stored, satelliteZoom: zoom });
+    },
+    [persist, stored],
+  );
+
   const location = useMemo((): GardenLocationState | null => {
     if (stored) return stored;
     if (nims.preference === "gps" && nims.coordinates) {
@@ -115,5 +124,6 @@ export function useGardenLocation(designId: number | null) {
     chooseSkip,
     dismissPrompt: () => setNeedsPrompt(false),
     setLocation: persist,
+    updateSatelliteZoom,
   };
 }

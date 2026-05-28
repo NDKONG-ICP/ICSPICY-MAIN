@@ -8,11 +8,33 @@ import type {
 } from "../declarations/backend.did";
 import type { GardenDesign, PlantPlacement, StructurePlacement } from "./garden-types";
 
+const CATALOG_MARKER = "\u00A7";
+
+function decodePlantLabel(plantLabel: string): { catalogId: string | null; label: string } {
+  if (!plantLabel.startsWith(CATALOG_MARKER)) {
+    return { catalogId: null, label: plantLabel };
+  }
+  const rest = plantLabel.slice(1);
+  const end = rest.indexOf(CATALOG_MARKER);
+  if (end <= 0) return { catalogId: null, label: plantLabel };
+  return {
+    catalogId: rest.slice(0, end),
+    label: rest.slice(end + 1),
+  };
+}
+
+function encodePlantLabel(p: PlantPlacement): string {
+  if (p.catalogId) return `${CATALOG_MARKER}${p.catalogId}${CATALOG_MARKER}${p.label}`;
+  return p.label;
+}
+
 function plantFromCandid(p: CandidPlant): PlantPlacement {
+  const { catalogId, label } = decodePlantLabel(p.plantLabel);
   return {
     id: Number(p.id),
     varietyId: p.varietyId.length ? Number(p.varietyId[0]) : null,
-    label: p.plantLabel,
+    catalogId,
+    label,
     x: p.x,
     y: p.y,
     rotation: p.rotation,
@@ -53,7 +75,7 @@ function plantToCandid(p: PlantPlacement): CandidPlant {
   return {
     id: BigInt(p.id),
     varietyId: p.varietyId != null ? [BigInt(p.varietyId)] : [],
-    plantLabel: p.label,
+    plantLabel: encodePlantLabel(p),
     x: p.x,
     y: p.y,
     rotation: p.rotation,

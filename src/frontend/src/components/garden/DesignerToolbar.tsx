@@ -8,10 +8,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { CameraPresetId, DesignerMode } from "@/lib/garden-types";
+import type { CameraPresetId, DesignerMode, GardenToolExtras } from "@/lib/garden-types";
 import type { GardenDesignerState } from "@/hooks/useGardenDesigner";
 import type { YieldEstimate } from "@/lib/garden-rules";
 import { plantSummary } from "@/lib/garden-utils";
+import {
+  clampSatelliteZoom,
+  MAX_SATELLITE_ZOOM,
+  MIN_SATELLITE_ZOOM,
+} from "@/lib/satellite-tiles";
+import { ProfessionalToolsBar } from "./ProfessionalToolsBar";
 import {
   Bird,
   Box,
@@ -51,6 +57,20 @@ type Props = {
   onEnvironmentClick?: () => void;
   onScreenshot?: () => void;
   onExportSvg?: () => void;
+  onExportPlan?: () => void;
+  onShareCard?: () => void;
+  onGalleryClick?: () => void;
+  weatherOverlay?: boolean;
+  onWeatherToggle?: () => void;
+  weatherLabel?: string | null;
+  onWalkMode?: () => void;
+  walkModeActive?: boolean;
+  satelliteZoom?: number;
+  onSatelliteZoomChange?: (z: number) => void;
+  satelliteEnabled?: boolean;
+  activeTool?: GardenToolExtras["activeTool"];
+  onToolChange?: (t: GardenToolExtras["activeTool"]) => void;
+  onPhotoUpload?: () => void;
 };
 
 const CAMERA_BUTTONS: { id: CameraPresetId; label: string; icon: typeof Box }[] = [
@@ -78,6 +98,20 @@ export function DesignerToolbar({
   onEnvironmentClick,
   onScreenshot,
   onExportSvg,
+  onExportPlan,
+  onShareCard,
+  onGalleryClick,
+  weatherOverlay,
+  onWeatherToggle,
+  weatherLabel,
+  onWalkMode,
+  walkModeActive,
+  satelliteZoom = 17,
+  onSatelliteZoomChange,
+  satelliteEnabled,
+  activeTool = "none",
+  onToolChange,
+  onPhotoUpload,
 }: Props) {
   const {
     design,
@@ -178,13 +212,17 @@ export function DesignerToolbar({
               <Button
                 key={id}
                 size="sm"
-                variant={cameraPreset === id ? "default" : "ghost"}
+                variant={cameraPreset === id || (id === "walk" && walkModeActive) ? "default" : "ghost"}
                 className={cn(
                   "rounded-none text-xs px-2",
-                  cameraPreset === id && "shadow-[0_0_10px_rgba(249,115,22,0.3)]",
+                  (cameraPreset === id || (id === "walk" && walkModeActive)) && "shadow-[0_0_10px_rgba(249,115,22,0.3)]",
                 )}
-                onClick={() => onCameraPreset(id)}
+                onClick={() => {
+                  if (id === "walk" && onWalkMode) onWalkMode();
+                  else onCameraPreset(id);
+                }}
                 title={label}
+                data-tour={id === "walk" ? "walk" : undefined}
               >
                 <Icon className="h-3.5 w-3.5" />
               </Button>
@@ -223,7 +261,7 @@ export function DesignerToolbar({
       <div className="flex flex-wrap items-center gap-2">
         {!readOnly && isAuthenticated && (
           <>
-            <Button size="sm" onClick={() => void saveDesign()} disabled={isSaving}>
+            <Button size="sm" onClick={() => void saveDesign()} disabled={isSaving} data-tour="save">
               <Save className="h-4 w-4 mr-1" />
               {isSaving ? "Saving…" : isDirty ? "Save*" : "Save"}
             </Button>
@@ -255,6 +293,31 @@ export function DesignerToolbar({
             <FileImage className="h-4 w-4 mr-1" /> SVG
           </Button>
         )}
+        {onExportPlan && (
+          <Button size="sm" variant="outline" className="border-white/10 bg-white/5 hidden lg:inline-flex" onClick={onExportPlan}>
+            <FileImage className="h-4 w-4 mr-1" /> Plan
+          </Button>
+        )}
+        {onShareCard && (
+          <Button size="sm" variant="outline" className="border-white/10 bg-white/5 hidden lg:inline-flex" onClick={onShareCard}>
+            <Share2 className="h-4 w-4 mr-1" /> Card
+          </Button>
+        )}
+        {onGalleryClick && (
+          <Button size="sm" variant="outline" className="border-white/10 bg-white/5" onClick={onGalleryClick}>
+            🌿 Gallery
+          </Button>
+        )}
+        {onWeatherToggle && (
+          <Button
+            size="sm"
+            variant={weatherOverlay ? "default" : "outline"}
+            className={cn(!weatherOverlay && "border-white/10 bg-white/5")}
+            onClick={onWeatherToggle}
+          >
+            {weatherLabel ?? "Live Weather"}
+          </Button>
+        )}
         {onEnvironmentClick && (
           <Button size="sm" variant="outline" className="border-white/10 bg-white/5" onClick={onEnvironmentClick}>
             <Settings2 className="h-4 w-4 mr-1" /> Env
@@ -271,6 +334,29 @@ export function DesignerToolbar({
             {locationLabel ?? "Set location"}
           </Button>
         )}
+        {satelliteEnabled && onSatelliteZoomChange && (
+          <div className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2"
+              disabled={satelliteZoom <= MIN_SATELLITE_ZOOM}
+              onClick={() => onSatelliteZoomChange(clampSatelliteZoom(satelliteZoom - 1))}
+            >
+              −
+            </Button>
+            <span className="text-xs tabular-nums w-8 text-center">🛰️{satelliteZoom}</span>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2"
+              disabled={satelliteZoom >= MAX_SATELLITE_ZOOM}
+              onClick={() => onSatelliteZoomChange(clampSatelliteZoom(satelliteZoom + 1))}
+            >
+              +
+            </Button>
+          </div>
+        )}
         <label className="flex items-center gap-2 text-sm ml-1">
           <input
             type="checkbox"
@@ -284,6 +370,13 @@ export function DesignerToolbar({
           {plantSummary(design)}
         </Badge>
       </div>
+      {onToolChange && onPhotoUpload && (
+        <ProfessionalToolsBar
+          activeTool={activeTool}
+          onTool={onToolChange}
+          onPhotoUpload={onPhotoUpload}
+        />
+      )}
       {onTimeOfDayChange && (
         <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs">
           <span>☀️</span>

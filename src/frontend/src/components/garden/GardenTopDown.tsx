@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { motion } from "motion/react";
-import type { GardenDesign } from "@/lib/garden-types";
-import { singleTileUrl } from "@/lib/satellite-tiles";
+import type { GardenDesign, GardenToolExtras, LayerVisibility } from "@/lib/garden-types";
+import { SATELLITE_ZOOM } from "@/lib/satellite-tiles";
+import { preloadSatelliteTileUrl } from "@/lib/satellite-texture-cache";
 import { snapToGrid } from "@/lib/garden-utils";
 import { GhostPreview2D } from "./GhostPreview";
+import { GardenProOverlays } from "./GardenProOverlays";
 
 const PX_PER_M = 50;
 
@@ -17,6 +19,14 @@ type Props = {
   satelliteEnabled?: boolean;
   gardenLat?: number;
   gardenLng?: number;
+  satelliteZoom?: number;
+  layers?: LayerVisibility;
+  toolExtras?: GardenToolExtras;
+  sunLat?: number;
+  sunLng?: number;
+  timeOfDayHour?: number;
+  pendingCatalogId?: string | null;
+  onToolClick?: (x: number, y: number) => void;
   onSelectPlant: (id: number) => void;
   onSelectStructure: (id: number) => void;
   onMove: (id: number, type: "plant" | "structure", x: number, y: number) => void;
@@ -37,6 +47,14 @@ export function GardenTopDown({
   satelliteEnabled,
   gardenLat,
   gardenLng,
+  satelliteZoom,
+  layers,
+  toolExtras,
+  sunLat = 26,
+  sunLng = -80,
+  timeOfDayHour = 14,
+  pendingCatalogId,
+  onToolClick,
   onSelectPlant,
   onSelectStructure,
   onMove,
@@ -53,17 +71,33 @@ export function GardenTopDown({
     type: "plant" | "structure";
   } | null>(null);
   const [satelliteUrl, setSatelliteUrl] = useState<string | null>(null);
+  const [satelliteUrlPrev, setSatelliteUrlPrev] = useState<string | null>(null);
+  const [satelliteFade, setSatelliteFade] = useState(1);
 
   const w = design.widthMeters * PX_PER_M;
   const h = design.depthMeters * PX_PER_M;
 
   useEffect(() => {
-    if (!satelliteEnabled || gardenLat == null || gardenLng == null) {
+    if (!satelliteEnabled || gardenLat == null || gardenLng == null || layers?.satellite === false) {
       setSatelliteUrl(null);
+      setSatelliteUrlPrev(null);
       return;
     }
-    setSatelliteUrl(singleTileUrl(gardenLat, gardenLng, 19));
-  }, [satelliteEnabled, gardenLat, gardenLng]);
+    const z = satelliteZoom ?? SATELLITE_ZOOM;
+    let cancelled = false;
+    void preloadSatelliteTileUrl(gardenLat, gardenLng, z).then((url) => {
+      if (cancelled) return;
+      setSatelliteUrl((prev) => {
+        if (prev && prev !== url) setSatelliteUrlPrev(prev);
+        return url;
+      });
+      setSatelliteFade(0);
+      requestAnimationFrame(() => setSatelliteFade(1));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [satelliteEnabled, gardenLat, gardenLng, satelliteZoom, layers?.satellite]);
 
   const gridLines = useMemo(() => {
     const lines: ReactElement[] = [];
@@ -141,6 +175,11 @@ export function GardenTopDown({
         onMouseUp={() => setDrag(null)}
         onMouseLeave={() => setDrag(null)}
         onClick={(e) => {
+          const m = toMeters(e.clientX, e.clientY);
+          if (toolExtras?.activeTool && toolExtras.activeTool !== "none" && onToolClick) {
+            onToolClick(m.x, m.y);
+            return;
+          }
           if (hasPending && !readOnly) {
             onPlace();
             return;
@@ -148,6 +187,17 @@ export function GardenTopDown({
           if (e.target === svgRef.current) onClearSelection();
         }}
       >
+        {satelliteUrlPrev && (
+          <image
+            href={satelliteUrlPrev}
+            x={0}
+            y={0}
+            width={w}
+            height={h}
+            preserveAspectRatio="xMidYMid slice"
+            opacity={0.92 * (1 - satelliteFade)}
+          />
+        )}
         {satelliteUrl ? (
           <image
             href={satelliteUrl}
@@ -156,17 +206,19 @@ export function GardenTopDown({
             width={w}
             height={h}
             preserveAspectRatio="xMidYMid slice"
-            opacity={0.92}
+            opacity={0.92 * satelliteFade}
+            style={{ transition: "opacity 180ms ease-out" }}
           />
-        ) : (
+        ) : !satelliteUrlPrev ? (
           <>
             <rect width={w} height={h} fill="#4a7c2e" />
             <rect width={w} height={h} fill="#3d6b25" opacity={0.65} />
           </>
-        )}
+        ) : null}
         <rect width={w} height={h} fill="none" stroke="#1e293b" strokeWidth={2} />
-        {gridLines}
-        {design.structures.map((s) => {
+        {(layers?.grid ?? true) && gridLines}
+        {(layers?.structures ?? true) &&
+        design.structures.map((s) => {
           const sel = selectedType === "structure" && selectedId === s.id;
           return (
             <g
@@ -191,7 +243,20 @@ export function GardenTopDown({
             </g>
           );
         })}
-        {design.plants.map((p) => {
+        {toolExtras && layers && (
+          <GardenProOverlays
+            design={design}
+            layers={layers}
+            extras={toolExtras}
+            sunLat={sunLat}
+            sunLng={sunLng}
+            timeOfDayHour={timeOfDayHour}
+            ghost={ghost}
+            pendingCatalogId={pendingCatalogId}
+          />
+        )}
+        {(layers?.plants ?? true) &&
+        design.plants.map((p) => {
           const sel = selectedType === "plant" && selectedId === p.id;
           const r = 12 * p.scale;
           return (
@@ -217,7 +282,7 @@ export function GardenTopDown({
                 filter={sel ? "url(#glow)" : undefined}
               />
               <text textAnchor="middle" dy={4} fill="#fff" fontSize={10} pointerEvents="none">
-                {p.label[0]?.toUpperCase() ?? "?"}
+                {(layers?.labels ?? true) ? (p.label[0]?.toUpperCase() ?? "?") : ""}
               </text>
             </motion.g>
           );

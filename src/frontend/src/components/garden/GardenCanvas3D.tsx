@@ -18,6 +18,7 @@ import type {
 } from "@/lib/garden-types";
 import type { VarietyPublic } from "@/declarations/backend.did";
 import { formatScoville } from "@/lib/garden-utils";
+import { getSeasonalState, monthSkyTint } from "@/lib/garden-seasonal";
 import { useSunPosition } from "@/hooks/useSunPosition";
 import { AnimatedPlacement } from "./AnimatedPlacement";
 import { AtmosphericEffects } from "./AtmosphericEffects";
@@ -27,12 +28,14 @@ import { GhostPreview3D } from "./GhostPreview";
 import { GridOverlay3D } from "./GridOverlay";
 import { InstancedPlantField, instancedPlantIds } from "./InstancedPlantField";
 import { PlantModel } from "./plants/PlantModel";
+import { RainParticles } from "./RainParticles";
 import { SatelliteGround } from "./SatelliteGround";
-import { ScenePostProcessing } from "./ScenePostProcessing";
+import { ScenePostProcessing, PixelRatioLimiter } from "./ScenePostProcessing";
 import { StructureMesh } from "./StructureMesh";
 import { SunlightSceneOverlay } from "./SunlightSimulation3D";
 import { SwayingPlant } from "./SwayingPlant";
 import { TexturedGround } from "./TexturedGround";
+import { WalkMode } from "./WalkMode";
 
 type Props = {
   design: GardenDesign;
@@ -52,9 +55,19 @@ type Props = {
   satelliteEnabled?: boolean;
   gardenLat?: number;
   gardenLng?: number;
+  satelliteZoom?: number;
   cameraPreset?: CameraPresetId;
   layers?: LayerVisibility;
   canvasRef?: React.RefObject<HTMLCanvasElement | null>;
+  walkMode?: boolean;
+  onExitWalk?: () => void;
+  simulationMonth?: number | null;
+  revealedPlantIds?: Set<number> | null;
+  weatherOverlay?: boolean;
+  isRaining?: boolean;
+  windDirection?: number;
+  liveWeatherHour?: number | null;
+  tempTint?: "warm" | "cool" | "neutral";
   onSelectPlant: (id: number) => void;
   onSelectStructure: (id: number) => void;
   onPointerMove: (x: number, y: number) => void;
@@ -112,14 +125,43 @@ function Scene({
   satelliteEnabled = false,
   gardenLat = 28.5383,
   gardenLng = -81.3792,
+  satelliteZoom,
   cameraPreset = "sims",
   layers,
+  walkMode = false,
+  onExitWalk,
+  simulationMonth = null,
+  revealedPlantIds = null,
+  weatherOverlay = false,
+  isRaining = false,
+  windDirection = 0,
+  liveWeatherHour = null,
+  tempTint = "neutral",
 }: Props) {
   const cx = design.widthMeters / 2;
   const cz = design.depthMeters / 2;
   const plotSize = Math.max(design.widthMeters, design.depthMeters);
-  const sun = useSunPosition(sunLat, sunLng, timeOfDayHour);
+  const effectiveHour =
+    weatherOverlay && liveWeatherHour != null
+      ? liveWeatherHour
+      : simulationMonth != null
+        ? monthSkyTint(simulationMonth).hour
+        : timeOfDayHour;
+  const sun = useSunPosition(sunLat, sunLng, effectiveHour);
+  const monthTint = simulationMonth != null ? monthSkyTint(simulationMonth) : null;
+  const skyColor =
+    tempTint === "warm"
+      ? "#ffd4a8"
+      : tempTint === "cool"
+        ? "#a8c8e8"
+        : monthTint?.fogColor ?? sun.skyColor;
   const [atmospheric, setAtmospheric] = useState(false);
+
+  const visiblePlants = useMemo(() => {
+    let plants = design.plants;
+    if (revealedPlantIds) plants = plants.filter((p) => revealedPlantIds.has(p.id));
+    return plants;
+  }, [design.plants, revealedPlantIds]);
 
   useEffect(() => {
     if (window.innerWidth < 1024) return;
@@ -137,9 +179,9 @@ function Scene({
     return m;
   }, [varieties]);
 
-  const instancedIds = useMemo(() => instancedPlantIds(design.plants), [design.plants]);
+  const instancedIds = useMemo(() => instancedPlantIds(visiblePlants), [visiblePlants]);
   const selectedPlant =
-    selectedType === "plant" ? design.plants.find((p) => p.id === selectedId) ?? null : null;
+    selectedType === "plant" ? visiblePlants.find((p) => p.id === selectedId) ?? design.plants.find((p) => p.id === selectedId) ?? null : null;
   const selectedStructure =
     selectedType === "structure" ? design.structures.find((s) => s.id === selectedId) ?? null : null;
 
@@ -165,11 +207,13 @@ function Scene({
   const renderPlant = (p: PlantPlacement, selected: boolean) => {
     if (layers && !layers.plants) return null;
     if (instancedIds.has(p.id)) return null;
+    const seasonal = simulationMonth != null ? getSeasonalState(p, simulationMonth) : null;
+    const maturity = seasonal?.maturity ?? growthStage;
     const label = p.varietyId != null ? scovilleByVariety.get(p.varietyId) ?? null : null;
     const mesh = useProcedural ? (
       <EzTreePlant
-        placement={p}
-        growthStage={growthStage}
+        placement={{ ...p, color: seasonal?.color ?? p.color, scale: seasonal?.scale ?? p.scale }}
+        growthStage={maturity}
         selected={selected}
         scovilleLabel={label}
         readOnly={readOnly}
@@ -178,17 +222,17 @@ function Scene({
       />
     ) : (
       <PlantModel
-        placement={p}
+        placement={{ ...p, color: seasonal?.color ?? p.color, scale: seasonal?.scale ?? p.scale }}
         selected={selected}
         scovilleLabel={label}
-        maturity={growthStage}
+        maturity={maturity}
         readOnly={readOnly}
         onSelect={() => onSelectPlant(p.id)}
         onLongPressDelete={() => onDeleteItem(p.id, "plant")}
       />
     );
     return (
-      <SwayingPlant intensity={0.012} seed={p.id}>
+      <SwayingPlant intensity={0.012} seed={p.id} windDirection={windDirection}>
         <AnimatedPlacement>{mesh}</AnimatedPlacement>
       </SwayingPlant>
     );
@@ -204,9 +248,15 @@ function Scene({
   const showGrid = layers?.grid !== false;
   const showShadows = layers?.shadows !== false;
 
+  if (walkMode && onExitWalk) {
+    return <WalkMode design={design} onExit={onExitWalk} />;
+  }
+
   return (
     <>
-      <CameraPresetController preset={cameraPreset} plotCenter={[cx, 0, cz]} plotSize={plotSize} />
+      {cameraPreset !== "walk" && (
+        <CameraPresetController preset={cameraPreset} plotCenter={[cx, 0, cz]} plotSize={plotSize} />
+      )}
       <Sky
         sunPosition={sun.position}
         turbidity={sun.skyTurbidity}
@@ -214,8 +264,8 @@ function Scene({
         mieCoefficient={0.005}
         mieDirectionalG={0.8}
       />
-      <color attach="background" args={[sun.skyColor]} />
-      <fog attach="fog" args={[sun.skyColor, 25, 90]} />
+      <color attach="background" args={[skyColor]} />
+      <fog attach="fog" args={[monthTint?.fogColor ?? skyColor, 25, 90]} />
       <ambientLight intensity={sun.ambientIntensity} color="#b8d4e3" />
       <directionalLight
         position={sun.position}
@@ -235,7 +285,7 @@ function Scene({
         <ContactShadows position={[cx, 0, cz]} scale={plotSize + 4} blur={2} far={4} opacity={0.4} />
       )}
 
-      {satelliteEnabled ? (
+      {satelliteEnabled && layers?.satellite !== false ? (
         <SatelliteGround
           lat={gardenLat}
           lng={gardenLng}
@@ -244,6 +294,7 @@ function Scene({
           centerX={cx}
           centerZ={cz}
           enabled
+          zoom={satelliteZoom}
         />
       ) : (
         <TexturedGround
@@ -276,14 +327,14 @@ function Scene({
         />
       )}
 
-      <InstancedPlantField plants={design.plants} />
+      <InstancedPlantField plants={visiblePlants} />
 
       {design.structures
         .filter((s) => s.id !== selectedStructure?.id)
         .map((s) => (
           <AnimatedPlacement key={`s-${s.id}`}>{renderStructure(s, false)}</AnimatedPlacement>
         ))}
-      {design.plants
+      {visiblePlants
         .filter((p) => p.id !== selectedPlant?.id)
         .map((p) => (
           <group key={`p-${p.id}`}>{renderPlant(p, false)}</group>
@@ -315,10 +366,18 @@ function Scene({
         />
       )}
       <AtmosphericEffects
-        enabled={atmospheric}
+        enabled={atmospheric && !walkMode}
         plotWidth={design.widthMeters}
         plotDepth={design.depthMeters}
       />
+      {isRaining && (
+        <RainParticles
+          active
+          bounds={plotSize}
+          centerX={cx}
+          centerZ={cz}
+        />
+      )}
     </>
   );
 }
@@ -329,13 +388,14 @@ export function GardenCanvas3D(props: Props) {
   const cz = props.design.depthMeters / 2;
   const [desktopFx, setDesktopFx] = useState(true);
   const internalRef = useRef<HTMLCanvasElement>(null);
+  const walkMode = props.walkMode ?? false;
 
   useEffect(() => {
-    setDesktopFx(window.innerWidth >= 768);
-    const onResize = () => setDesktopFx(window.innerWidth >= 768);
+    setDesktopFx(window.innerWidth >= 768 && !walkMode);
+    const onResize = () => setDesktopFx(window.innerWidth >= 768 && !walkMode);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, []);
+  }, [walkMode]);
 
   return (
     <div className="h-full w-full min-h-[320px] rounded-lg overflow-hidden bg-[#0f172a] shadow-inner">
@@ -347,21 +407,29 @@ export function GardenCanvas3D(props: Props) {
               el as unknown as HTMLCanvasElement;
           }
         }}
-        shadows
+        dpr={[1, 2]}
+        shadows={!walkMode}
         camera={{ position: [cx + cam * 0.4, cam, cz + cam * 0.4], fov: 50 }}
-        gl={{ preserveDrawingBuffer: true }}
+        gl={{
+          preserveDrawingBuffer: true,
+          antialias: true,
+          powerPreference: "high-performance",
+        }}
       >
         <Suspense fallback={null}>
+          <PixelRatioLimiter />
           <Scene {...props} />
-          <ScenePostProcessing enabled={desktopFx} />
+          <ScenePostProcessing enabled={desktopFx && !walkMode} />
         </Suspense>
-        <OrbitControls
-          makeDefault
-          maxPolarAngle={Math.PI / 2.1}
-          minDistance={3}
-          maxDistance={40}
-          target={[cx, 0, cz]}
-        />
+        {!walkMode && (
+          <OrbitControls
+            makeDefault
+            maxPolarAngle={Math.PI / 2.1}
+            minDistance={3}
+            maxDistance={40}
+            target={[cx, 0, cz]}
+          />
+        )}
       </Canvas>
     </div>
   );

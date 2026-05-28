@@ -1,6 +1,6 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { stitchSatelliteTexture } from "@/lib/satellite-tiles";
+import { loadSatelliteThreeTexture } from "@/lib/satellite-texture-cache";
 import { ProceduralGround } from "./ProceduralGround";
 
 type Props = {
@@ -11,6 +11,7 @@ type Props = {
   centerX: number;
   centerZ: number;
   enabled?: boolean;
+  zoom?: number;
 };
 
 export const SatelliteGround = memo(function SatelliteGround({
@@ -21,58 +22,41 @@ export const SatelliteGround = memo(function SatelliteGround({
   centerX,
   centerZ,
   enabled = true,
+  zoom = 17,
 }: Props) {
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
-  const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
+  const displayedRef = useRef<THREE.Texture | null>(null);
 
   useEffect(() => {
     if (!enabled) {
       setTexture(null);
       setFailed(false);
+      displayedRef.current = null;
       return;
     }
 
     let cancelled = false;
-    let revoke: (() => void) | null = null;
-    setLoading(true);
     setFailed(false);
 
-    void stitchSatelliteTexture(lat, lng, widthMeters, depthMeters).then((result) => {
-      if (cancelled) {
-        result?.revoke();
-        return;
-      }
-      setLoading(false);
-      if (!result) {
-        setFailed(true);
-        return;
-      }
-      revoke = result.revoke;
-      const loader = new THREE.TextureLoader();
-      loader.load(result.url, (tex) => {
-        if (cancelled) {
-          tex.dispose();
-          return;
-        }
-        tex.wrapS = THREE.ClampToEdgeWrapping;
-        tex.wrapT = THREE.ClampToEdgeWrapping;
-        tex.colorSpace = THREE.SRGBColorSpace;
+    void loadSatelliteThreeTexture(lat, lng, zoom)
+      .then((tex) => {
+        if (cancelled) return;
+        displayedRef.current = tex;
         setTexture(tex);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
       });
-    });
 
     return () => {
       cancelled = true;
-      revoke?.();
-      setTexture((prev) => {
-        prev?.dispose();
-        return null;
-      });
     };
-  }, [enabled, lat, lng, widthMeters, depthMeters]);
+  }, [enabled, lat, lng, zoom]);
 
-  if (!enabled || failed) {
+  const activeTexture = texture ?? displayedRef.current;
+
+  if (!enabled || (failed && !activeTexture)) {
     return (
       <ProceduralGround
         widthMeters={widthMeters}
@@ -84,27 +68,17 @@ export const SatelliteGround = memo(function SatelliteGround({
   }
 
   return (
-    <>
-      {loading && !texture && (
-        <ProceduralGround
-          widthMeters={widthMeters}
-          depthMeters={depthMeters}
-          centerX={centerX}
-          centerZ={centerZ}
-        />
-      )}
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[centerX, -0.01, centerZ]}
-        receiveShadow
-      >
-        <planeGeometry args={[widthMeters, depthMeters]} />
-        {texture ? (
-          <meshStandardMaterial map={texture} roughness={0.95} metalness={0} />
-        ) : (
-          <meshStandardMaterial color="#2d5016" roughness={0.9} />
-        )}
-      </mesh>
-    </>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[centerX, -0.01, centerZ]} receiveShadow>
+      <planeGeometry args={[widthMeters, depthMeters]} />
+      <meshStandardMaterial
+        map={activeTexture ?? undefined}
+        transparent
+        opacity={activeTexture ? 0.85 : 0.6}
+        toneMapped={false}
+        color="#cccccc"
+        roughness={0.95}
+        metalness={0}
+      />
+    </mesh>
   );
 });

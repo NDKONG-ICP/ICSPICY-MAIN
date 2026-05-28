@@ -29,8 +29,8 @@ export function LoadDesignDialog({
         <DialogHeader>
           <DialogTitle>Load saved design</DialogTitle>
         </DialogHeader>
-        <Button variant="outline" size="sm" className="w-full mb-3" onClick={onNew}>
-          New blank design
+        <Button size="sm" variant="outline" className="w-full mb-3" onClick={onNew}>
+          New blank plot…
         </Button>
         <ScrollArea className="max-h-[50vh]">
           {designs.length === 0 ? (
