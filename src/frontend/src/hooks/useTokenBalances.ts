@@ -187,3 +187,52 @@ export function useTokenBalances() {
     },
   });
 }
+
+/**
+ * Query token balances for any principal (no II session needed).
+ * ICRC-1 icrc1_balance_of is a public query — no auth required.
+ */
+export function useTokenBalancesForPrincipal(
+  ownerPrincipal: { toText(): string; isAnonymous?(): boolean } | undefined,
+) {
+  const principalText = ownerPrincipal?.toText() ?? "";
+  const enabled =
+    !!ownerPrincipal &&
+    principalText !== "" &&
+    ownerPrincipal.isAnonymous?.() !== true;
+
+  return useQuery({
+    queryKey: ["tokenBalancesForPrincipal", principalText],
+    enabled,
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      if (!ownerPrincipal) return [];
+      // Use a surrogate IcpPrincipal shape — balanceOf converts via .toText()
+      const surrogate = { toText: () => principalText } as IcpPrincipal;
+      const rows: TokenBalanceRow[] = [];
+      for (const L of TOKEN_LEDGER_CONFIG) {
+        try {
+          const bal = await balanceOf(null, L.canisterId, surrogate);
+          rows.push({
+            symbol: L.symbol,
+            canisterId: L.canisterId,
+            decimals: L.decimals,
+            fee: L.fee,
+            balance: bal,
+            formattedBalance: formatBalance(bal, L.decimals, L.fractionDigits),
+          });
+        } catch {
+          rows.push({
+            symbol: L.symbol,
+            canisterId: L.canisterId,
+            decimals: L.decimals,
+            fee: L.fee,
+            balance: 0n,
+            formattedBalance: "—",
+          });
+        }
+      }
+      return rows;
+    },
+  });
+}

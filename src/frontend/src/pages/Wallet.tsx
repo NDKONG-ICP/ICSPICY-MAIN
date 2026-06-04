@@ -36,7 +36,7 @@ import {
   User,
   Wallet,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ConnectButton } from "../components/ConnectButton";
 import { OisyConnectButton } from "../components/OisyConnectButton";
@@ -48,13 +48,14 @@ import {
   useUnlinkWallet,
 } from "../hooks/useBackend";
 import { useNftDiscount } from "../hooks/useNftDiscount";
-import { useMyNftTokenIds } from "../hooks/useMyNftIds";
+import { useMyNftTokenIds, useNftTokenIdsForPrincipal } from "../hooks/useMyNftIds";
 import { usePageTitle } from "../hooks/usePageTitle";
 import {
   type TokenBalanceRow,
   formatTokenFee,
   parseTokenAmount,
   useTokenBalances,
+  useTokenBalancesForPrincipal,
 } from "../hooks/useTokenBalances";
 import { BACKEND_CANISTER_ID } from "../lib/auth-config";
 import { sendTokens } from "../lib/ledger-transfer";
@@ -599,25 +600,75 @@ function OisyExplainerCard() {
 export default function WalletPage() {
   usePageTitle("Wallet");
 
-  const { isAuthenticated, isInitializing, principal } = useAuth();
+  const { isAuthenticated, isInitializing, principal, actor } = useAuth();
   const { isOisyConnected, isOisyInitializing, oisyPrincipal, oisyAccount, disconnectOisy } = useOisyWallet();
   const { data: isAdmin } = useIsAdmin();
   const nftDiscount = useNftDiscount();
   const queryClient = useQueryClient();
   const { data: balances, isLoading: balLoading } = useTokenBalances();
   const { data: tokenIds, isLoading: nftsLoading } = useMyNftTokenIds();
+  const { data: linkedWallets = [], isLoading } = useLinkedWallets();
+  const linkWallet = useLinkWallet();
+  const unlinkWallet = useUnlinkWallet();
   const [copied, setCopied] = useState(false);
 
   const pidText = principal?.toText() ?? "";
+
+  // OISY balance + NFT queries — public queries, no II session needed
+  const { data: oisyBalances, isLoading: oisyBalLoading } = useTokenBalancesForPrincipal(oisyPrincipal);
+  const { data: oisyTokenIds, isLoading: oisyNftsLoading } = useNftTokenIdsForPrincipal(
+    oisyPrincipal as import("@dfinity/principal").Principal | undefined,
+  );
+
+  const oisyAlreadyLinked = oisyPrincipal
+    ? linkedWallets.some((p) => p.toText() === oisyPrincipal.toText())
+    : false;
+
+  // Auto-link OISY when both II and OISY are connected
+  const autoLinkedRef = useRef(false);
+  useEffect(() => {
+    if (!oisyPrincipal || !isAuthenticated || !actor) return;
+    if (oisyPrincipal.toText() === pidText) return;
+    if (oisyAlreadyLinked || autoLinkedRef.current) return;
+    autoLinkedRef.current = true;
+    void actor.linkWallet(oisyPrincipal as import("@dfinity/principal").Principal).then((success) => {
+      if (success) {
+        toast.success("OISY wallet linked — your NFTs now count for discounts and DAO access");
+        void queryClient.invalidateQueries({ queryKey: ["linkedWallets"] });
+        void queryClient.invalidateQueries({ queryKey: ["nftDiscount"] });
+      }
+    }).catch(() => {
+      autoLinkedRef.current = false;
+    });
+  }, [oisyPrincipal, isAuthenticated, actor, pidText, oisyAlreadyLinked, queryClient]);
 
   const nftCards = useMemo(() => {
     if (!tokenIds?.length) return [];
     return tokenIds.slice(0, 48).map((id) => ({ id }));
   }, [tokenIds]);
 
+  const oisyNftCards = useMemo(() => {
+    if (!oisyTokenIds?.length) return [];
+    return oisyTokenIds.slice(0, 48).map((id) => ({ id }));
+  }, [oisyTokenIds]);
+
   const hasNft = (nftCards.length > 0) || nftDiscount.discountPercent > 0;
   const discountPct = nftDiscount.discountPercent;
   const rarity = nftDiscount.rarity;
+
+  async function handleLink(p: import("@dfinity/principal").Principal) {
+    if (!actor) return;
+    try {
+      await linkWallet.mutateAsync(p);
+      toast.success("OISY wallet linked! Your NFTs in OISY now count for DAO voting and shop discounts.");
+    } catch {
+      toast.error("Failed to link wallet");
+    }
+  }
+  async function handleUnlink(p: import("@dfinity/principal").Principal) {
+    await unlinkWallet.mutateAsync(p);
+    toast.success("Wallet unlinked");
+  }
 
   function refreshBalances() { void queryClient.invalidateQueries({ queryKey: ["tokenBalances"] }); }
   function refreshNfts() {
@@ -758,33 +809,78 @@ export default function WalletPage() {
         </div>
       )}
 
-      {/* ── OISY NFTs info ── */}
+      {/* ── OISY token balances ── */}
       {isOisyConnected && oisyPrincipal && (
-        <Card className="border-orange-500/20 bg-orange-500/5">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-orange-400" />
-              OISY NFTs
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground mb-2">
-              NFTs custodied in OISY live at principal{" "}
-              <code className="font-mono text-orange-400/80">{truncatePid(oisyPrincipal.toText())}</code>.
-              View them at oisy.com.
-            </p>
-            <p className="text-xs text-muted-foreground mb-3">
-              Link your OISY wallet below so NFTs there count toward shop discounts and DAO voting.
-            </p>
-            <a href="https://oisy.com" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 font-medium">
-              View NFTs at oisy.com <ExternalLink className="h-3 w-3" />
-            </a>
-          </CardContent>
-        </Card>
+        <div>
+          <h2 className="font-display text-xl font-semibold mb-4 text-foreground flex items-center gap-2">
+            <Wallet className="h-5 w-5 text-orange-400" />
+            OISY Token Balances
+            {oisyAlreadyLinked && (
+              <Badge className="ml-1 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">Linked</Badge>
+            )}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {oisyBalLoading && Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
+            {!oisyBalLoading && oisyBalances?.map((row) => (
+              <TokenBalanceCard key={row.symbol} row={row} onSent={() => {
+                void queryClient.invalidateQueries({ queryKey: ["tokenBalancesForPrincipal"] });
+              }} />
+            ))}
+          </div>
+        </div>
       )}
 
-      {/* ── Link wallet (II + OISY) ── */}
+      {/* ── OISY NFTs ── */}
+      {isOisyConnected && oisyPrincipal && (
+        <div>
+          <h2 className="font-display text-xl font-semibold mb-4 text-foreground flex items-center gap-2">
+            <Flame className="h-6 w-6 text-orange-500" />
+            OISY NFTs
+            <span className="text-sm font-normal text-muted-foreground">(OISY Wallet)</span>
+          </h2>
+          {oisyNftsLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="aspect-square rounded-lg" />)}
+            </div>
+          ) : oisyNftCards.length === 0 ? (
+            <div className="text-center py-8 rounded-xl border border-dashed border-orange-500/20 bg-orange-500/5">
+              <Wallet className="h-8 w-8 text-orange-400/50 mx-auto mb-3" />
+              <p className="text-muted-foreground text-sm mb-1">No IC SPICY NFTs custodied in OISY.</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                NFTs purchased via OISY checkout will appear here.
+              </p>
+              <a href="https://oisy.com" target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 font-medium">
+                View at oisy.com <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {oisyNftCards.map(({ id }) => (
+                <WalletNftCard key={id.toString()} tokenId={id} isAdmin={!!isAdmin}
+                  onTransferred={() => void queryClient.invalidateQueries({ queryKey: ["icrc7_tokens_of_external"] })}
+                  walletBadge="OISY" />
+              ))}
+            </div>
+          )}
+          {!oisyAlreadyLinked && isAuthenticated && (
+            <div className="mt-3 rounded-lg border border-orange-500/30 bg-orange-500/5 px-4 py-3 flex items-center gap-3">
+              <CheckCircle2 className="h-4 w-4 text-orange-400 flex-shrink-0" />
+              <p className="text-xs text-muted-foreground flex-1">
+                Link your OISY wallet so these NFTs count for shop discounts and DAO voting.
+              </p>
+              <Button size="sm" className="gap-1.5 bg-orange-600 hover:bg-orange-700 text-white shrink-0"
+                onClick={() => void handleLink(oisyPrincipal as import("@dfinity/principal").Principal)}
+                disabled={linkWallet.isPending}>
+                {linkWallet.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />}
+                Link
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Link wallet (II + OISY) — manage linked wallets ── */}
       {isAuthenticated && <LinkWalletCard />}
 
       {/* ── OISY explainer if not connected ── */}

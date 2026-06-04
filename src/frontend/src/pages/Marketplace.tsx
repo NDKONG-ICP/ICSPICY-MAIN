@@ -64,6 +64,7 @@ import {
 } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
+import { useRavenPerks } from "../hooks/useRavenPerks";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useTokenPrices } from "../hooks/useTokenPrices";
 import { useUsageTracking } from "../hooks/useUsageTracking";
@@ -2001,7 +2002,9 @@ export default function MarketplacePage() {
   const isPlantsTab = shopTab === "plants";
 
   const { data: allProducts, isLoading: allLoading } = useProducts();
-  const { discountPercent, rarity } = useNftDiscount();
+  const { discountPercent: nftDiscountPercent, rarity } = useNftDiscount();
+  const { discount: ravenDiscountPercent } = useRavenPerks();
+  const discountPercent = Math.min(nftDiscountPercent + ravenDiscountPercent, 20);
 
   const catalogProducts = filterNonPlantProducts(
     filterActiveShopProducts(allProducts as ShopProduct[]),
@@ -2054,18 +2057,20 @@ export default function MarketplacePage() {
           data-ocid="nft-discount-banner"
         >
           <span className="text-lg flex-shrink-0">🌶️</span>
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">
-              NFT Holder Discount Active
+              Member Discounts Active
             </p>
-            <p className="text-xs text-muted-foreground">
-              {discountPercent}% off all shop products
-              {formatRarityLabel(rarity)
-                ? ` — ${formatRarityLabel(rarity)} tier`
-                : ""}
+            <p className="text-xs text-muted-foreground flex flex-wrap gap-x-2">
+              {nftDiscountPercent > 0 && (
+                <span>🌶️ PepperHead {nftDiscountPercent}%{formatRarityLabel(rarity) ? ` (${formatRarityLabel(rarity)})` : ""}</span>
+              )}
+              {ravenDiscountPercent > 0 && (
+                <span>🐦‍⬛ RAVEN {ravenDiscountPercent}%</span>
+              )}
             </p>
           </div>
-          <Badge className="ml-auto bg-primary/10 text-primary border-primary/30 border text-xs">
+          <Badge className="ml-auto bg-primary/10 text-primary border-primary/30 border text-xs shrink-0">
             -{discountPercent}%
           </Badge>
         </motion.div>

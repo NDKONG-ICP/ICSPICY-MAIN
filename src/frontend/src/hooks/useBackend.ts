@@ -58,6 +58,7 @@ import type {
 } from "../declarations/backend.did";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
+import { useOisyWallet } from "../providers/OisyWalletProvider";
 
 export function useBackendActor() {
   return useActor<import("../backend").Backend>(createActor);
@@ -1045,19 +1046,16 @@ function checkIsAdminPid(raw: string): boolean {
  */
 export function useIsAdmin() {
   const { principal, isAuthenticated, isInitializing } = useAuth();
+  const { oisyPrincipal, isOisyInitializing } = useOisyWallet();
   const principalText = principal?.toText() ?? "";
 
-  // isAdmin is true ONLY when authenticated AND the PID matches admin list.
-  // We use checkIsAdminPid() which applies trim/case/prefix normalization as
-  // a safety net against encoding artifacts from Internet Identity.
+  // isAdmin is true when the II principal OR the connected OISY principal is in ADMIN_PIDS.
   const isAdmin =
-    isAuthenticated && principalText !== ""
-      ? checkIsAdminPid(principalText)
-      : false;
+    (isAuthenticated && principalText !== "" ? checkIsAdminPid(principalText) : false) ||
+    (!!oisyPrincipal ? checkIsAdminPid(oisyPrincipal.toText()) : false);
 
-  // isPending is ONLY true while Internet Identity is still initializing.
-  // Once isInitializing=false, we have a definitive answer — no waiting needed.
-  const isPending = isInitializing;
+  // isPending while either II or OISY is still initializing.
+  const isPending = isInitializing || isOisyInitializing;
 
   return {
     data: isAdmin,

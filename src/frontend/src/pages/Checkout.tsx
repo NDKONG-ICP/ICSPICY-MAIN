@@ -39,6 +39,7 @@ import {
 } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
+import { useRavenPerks } from "../hooks/useRavenPerks";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useUsageTracking } from "../hooks/useUsageTracking";
 import {
@@ -235,6 +236,7 @@ function FulfillmentSelector({
 }
 
 function AuthGate({ login }: { login: () => void }) {
+  const { connectOisy, isOisyInitializing } = useOisyWallet();
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -246,20 +248,36 @@ function AuthGate({ login }: { login: () => void }) {
         <Lock className="w-7 h-7 text-primary" />
       </div>
       <h2 className="font-display font-bold text-2xl text-foreground mb-2">
-        Sign in to Checkout
+        Connect a Wallet to Checkout
       </h2>
       <p className="text-muted-foreground text-sm max-w-xs mb-6">
-        You need an Internet Identity account to place orders. It's free and
-        secure.
+        Sign in with Internet Identity or connect your OISY wallet to place an
+        order.
       </p>
-      <Button
-        className="bg-primary hover:bg-primary/90 text-primary-foreground"
-        onClick={login}
-        data-ocid="checkout-login-btn"
-      >
-        <Flame className="w-4 h-4" />
-        Connect with Internet Identity
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Button
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          onClick={login}
+          data-ocid="checkout-login-btn"
+        >
+          <Flame className="w-4 h-4" />
+          Connect with Internet Identity
+        </Button>
+        <Button
+          variant="outline"
+          className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10"
+          onClick={() => void connectOisy()}
+          disabled={isOisyInitializing}
+          data-ocid="checkout-oisy-btn"
+        >
+          {isOisyInitializing ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <span className="text-base leading-none mr-1">🌐</span>
+          )}
+          Connect OISY Wallet
+        </Button>
+      </div>
     </motion.div>
   );
 }
@@ -427,7 +445,7 @@ function PaymentStep({
     navigate({ to: "/orders" });
   };
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isOisyConnected) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -437,11 +455,11 @@ function PaymentStep({
       >
         <Lock className="w-10 h-10 text-muted-foreground" />
         <p className="text-sm text-muted-foreground max-w-xs">
-          Sign in with Internet Identity to pay for your order.
+          Connect a wallet to pay for your order.
         </p>
         <Button onClick={login} data-ocid="checkout-payment-login-btn">
           <Flame className="w-4 h-4" />
-          Sign in with Internet Identity to pay
+          Sign in with Internet Identity
         </Button>
       </motion.div>
     );
@@ -594,12 +612,21 @@ function PaymentStep({
       className="space-y-6"
       data-ocid="checkout-payment-step"
     >
-      <div className="flex items-center gap-2">
-        <Lock className="w-4 h-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">
-          Order #{orderId.toString()} placed — choose a payment method
-        </span>
-      </div>
+      {orderId !== 0n && (
+        <div className="flex items-center gap-2">
+          <Lock className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">
+            Order #{orderId.toString()} placed — choose a payment method
+          </span>
+        </div>
+      )}
+      {orderId === 0n && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Choose a payment method — order will be placed when you confirm
+          </span>
+        </div>
+      )}
 
       <div className="text-center py-2">
         <p className="text-muted-foreground text-sm mb-1">Order total</p>
@@ -608,23 +635,38 @@ function PaymentStep({
         </p>
       </div>
 
-      <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2">
-        <span className="text-xs text-muted-foreground">
-          Signed in with Internet Identity
-        </span>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-400" />
-          <span className="text-xs font-mono text-emerald-400">
-            {principalShort}
+      {isAuthenticated && (
+        <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2">
+          <span className="text-xs text-muted-foreground">
+            Internet Identity
           </span>
-          <Badge
-            variant="outline"
-            className="text-[10px] px-1.5 py-0 h-4 border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-          >
-            Ready to pay
-          </Badge>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span className="text-xs font-mono text-emerald-400">
+              {principalShort}
+            </span>
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+              Ready to pay
+            </Badge>
+          </div>
         </div>
-      </div>
+      )}
+      {isOisyConnected && oisyBackendActor && (
+        <div className="flex items-center justify-between rounded-lg border border-orange-500/30 bg-orange-500/5 px-3 py-2">
+          <span className="text-xs text-muted-foreground">
+            OISY Wallet
+          </span>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-orange-400" />
+            <span className="text-xs font-mono text-orange-400">
+              {`${oisyBackendActor ? "connected" : ""}`}
+            </span>
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-orange-500/30 bg-orange-500/10 text-orange-400">
+              OISY pay available
+            </Badge>
+          </div>
+        </div>
+      )}
 
       <div
         className="rounded-xl border border-border bg-card p-5"
@@ -671,8 +713,11 @@ export default function CheckoutPage() {
   }
 
   const { isAuthenticated, login } = useAuth();
+  const { isOisyConnected, oisyBackendActor } = useOisyWallet();
   const { items, removeItem, updateQuantity, subtotalCents } = useCart();
-  const { discountPercent, rarity } = useNftDiscount();
+  const { discountPercent: nftDiscountPct, rarity } = useNftDiscount();
+  const { discount: ravenDiscountPct } = useRavenPerks();
+  const discountPercent = Math.min(nftDiscountPct + ravenDiscountPct, 20);
   const placeOrder = usePlaceOrder();
 
   const [fulfillment, setFulfillment] = useState<FulfillmentMethod>("pickup");
@@ -706,7 +751,7 @@ export default function CheckoutPage() {
 
   const handleContinueToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !isOisyConnected) {
       login();
       return;
     }
@@ -726,7 +771,7 @@ export default function CheckoutPage() {
           }
         : undefined;
 
-      // OISY uses Candid-style [] | [T] optionals; store for OISY re-placement
+      // Build OISY Candid-style order input ([] | [T] optionals)
       const oisyInput: OisyOrderInput = {
         pickup: !wantsShipping,
         shipping: shippingData,
@@ -742,7 +787,17 @@ export default function CheckoutPage() {
       };
       setPendingOisyOrderInput(oisyInput);
 
-      // II placeOrder uses the hook's friendly format
+      if (isOisyConnected && !isAuthenticated) {
+        // OISY-only path: skip the II placeOrder step entirely.
+        // handleOisyPay inside PaymentStep will place the order under the OISY
+        // principal and then approve + confirm payment in one flow.
+        // Use 0n as a sentinel orderId — PaymentStep detects this and shows OISY-only UI.
+        setFinalTotalForPayment(BigInt(finalTotal));
+        setPendingOrderId(0n);
+        return;
+      }
+
+      // II path (existing)
       const orderInput = {
         pickup: !wantsShipping,
         shipping: shippingData,
@@ -770,7 +825,7 @@ export default function CheckoutPage() {
   };
 
   // ─ Guards ─
-  if (!isAuthenticated) return <AuthGate login={login} />;
+  if (!isAuthenticated && !isOisyConnected) return <AuthGate login={login} />;
   if (items.length === 0 && !pendingOrderId) return <EmptyCart />;
 
   // ─ Payment step ─
