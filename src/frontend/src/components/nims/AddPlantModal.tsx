@@ -16,7 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ContainerSize, PlantStage, VarietyPublic } from "../../declarations/backend.did";
+import type {
+  ContainerSize,
+  PlantStage,
+  VarietyPublic,
+} from "../../declarations/backend.did";
 
 const CONTAINERS: ReadonlyArray<{ label: string; size: ContainerSize }> = [
   { label: "1 gallon pot", size: { Gal1New: null } },

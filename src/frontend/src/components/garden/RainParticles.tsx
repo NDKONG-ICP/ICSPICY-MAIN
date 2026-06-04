@@ -1,8 +1,13 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
-import * as THREE from "three";
+import type * as THREE from "three";
 
-export function RainParticles({ active, bounds = 20, centerX = 5, centerZ = 5 }: {
+export function RainParticles({
+  active,
+  bounds = 20,
+  centerX = 5,
+  centerZ = 5,
+}: {
   active: boolean;
   bounds?: number;
   centerX?: number;
@@ -22,10 +27,12 @@ export function RainParticles({ active, bounds = 20, centerX = 5, centerZ = 5 }:
 
   useFrame(() => {
     if (!active || !ref.current) return;
-    const pos = ref.current.geometry.attributes.position as THREE.BufferAttribute;
+    const pos = ref.current.geometry.attributes
+      .position as THREE.BufferAttribute;
     for (let i = 0; i < count; i += 1) {
       pos.array[i * 3 + 1] -= 0.08;
-      if (pos.array[i * 3 + 1] < 0) pos.array[i * 3 + 1] = 4 + Math.random() * 2;
+      if (pos.array[i * 3 + 1] < 0)
+        pos.array[i * 3 + 1] = 4 + Math.random() * 2;
     }
     pos.needsUpdate = true;
   });
@@ -34,7 +41,11 @@ export function RainParticles({ active, bounds = 20, centerX = 5, centerZ = 5 }:
   return (
     <points ref={ref}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} count={count} />
+        <bufferAttribute
+          attach="attributes-position"
+          args={[positions, 3]}
+          count={count}
+        />
       </bufferGeometry>
       <pointsMaterial size={0.04} color="#93c5fd" transparent opacity={0.6} />
     </points>

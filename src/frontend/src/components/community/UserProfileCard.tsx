@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import type { ReactNode } from "react";
-import { CommunityAvatar } from "./CommunityAvatar";
 import type { UserProfilePublic } from "../../declarations/backend.did";
+import { CommunityAvatar } from "./CommunityAvatar";
 
 export function UserProfileCard({
   profile,

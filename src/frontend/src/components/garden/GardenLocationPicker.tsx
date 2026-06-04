@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  boundsFromCenter,
-  clampSatelliteZoom,
   DEFAULT_SATELLITE_ZOOM,
   ESRI_SATELLITE_URL,
-  geocodeAddress,
   MAX_SATELLITE_ZOOM,
   MIN_SATELLITE_ZOOM,
+  boundsFromCenter,
+  clampSatelliteZoom,
+  geocodeAddress,
   metersToLatLngDelta,
 } from "@/lib/satellite-tiles";
 import { MapPin, Minus, Plus, Search } from "lucide-react";
@@ -165,7 +165,8 @@ export function GardenLocationPicker({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) return;
+      if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key))
+        return;
       if ((e.target as HTMLElement)?.tagName === "INPUT") return;
       e.preventDefault();
       const step = e.shiftKey ? 0.000004 : 0.000015;
@@ -223,7 +224,10 @@ export function GardenLocationPicker({
         return;
       }
       setCenter(coords);
-      mapInstance.current?.setView([coords.lat, coords.lng], DEFAULT_SATELLITE_ZOOM);
+      mapInstance.current?.setView(
+        [coords.lat, coords.lng],
+        DEFAULT_SATELLITE_ZOOM,
+      );
       setMapZoom(DEFAULT_SATELLITE_ZOOM);
       toast.success("Address found — drag the pin to fine-tune.");
     } finally {
@@ -241,7 +245,11 @@ export function GardenLocationPicker({
 
   if (!open) return null;
 
-  const { latDelta, lngDelta } = metersToLatLngDelta(center.lat, widthMeters, depthMeters);
+  const { latDelta, lngDelta } = metersToLatLngDelta(
+    center.lat,
+    widthMeters,
+    depthMeters,
+  );
   const plotAreaLabel = `${widthMeters}×${depthMeters}m`;
 
   return (
@@ -252,8 +260,8 @@ export function GardenLocationPicker({
           Position Your Garden
         </h3>
         <p className="text-sm text-zinc-400 mb-3">
-          Pan and zoom to your property. Drag the red pin or use arrow keys (Shift = fine). Red box =
-          your {plotAreaLabel} plot.
+          Pan and zoom to your property. Drag the red pin or use arrow keys
+          (Shift = fine). Red box = your {plotAreaLabel} plot.
         </p>
         <div className="flex gap-2 mb-3">
           <Input
@@ -278,21 +286,39 @@ export function GardenLocationPicker({
           <Button size="sm" variant="secondary" onClick={handleGps}>
             📍 My GPS
           </Button>
-          <Button size="sm" variant="outline" className="border-zinc-600" onClick={() => nudgeZoom(1)}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-zinc-600"
+            onClick={() => nudgeZoom(1)}
+          >
             <Plus className="h-4 w-4" />
           </Button>
-          <Button size="sm" variant="outline" className="border-zinc-600" onClick={() => nudgeZoom(-1)}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-zinc-600"
+            onClick={() => nudgeZoom(-1)}
+          >
             <Minus className="h-4 w-4" />
           </Button>
         </div>
         <p className="text-[10px] text-zinc-500 mb-3 font-mono">
-          {center.lat.toFixed(6)}, {center.lng.toFixed(6)} · zoom {mapZoom} · ±{(latDelta * 111320).toFixed(0)}m N/S
+          {center.lat.toFixed(6)}, {center.lng.toFixed(6)} · zoom {mapZoom} · ±
+          {(latDelta * 111320).toFixed(0)}m N/S
         </p>
         <div className="flex gap-2">
-          <Button className="flex-1 bg-red-600 hover:bg-red-700" onClick={handleConfirm}>
+          <Button
+            className="flex-1 bg-red-600 hover:bg-red-700"
+            onClick={handleConfirm}
+          >
             ✓ Confirm Location
           </Button>
-          <Button variant="secondary" className="bg-zinc-700 hover:bg-zinc-600" onClick={onSkip}>
+          <Button
+            variant="secondary"
+            className="bg-zinc-700 hover:bg-zinc-600"
+            onClick={onSkip}
+          >
             Skip
           </Button>
         </div>

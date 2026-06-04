@@ -1,7 +1,11 @@
 import { ProductCategory } from "../backend";
 import type { Product } from "../types/index";
-import { lineIdForProduct, toNatBigInt, toOptionalNatBigInt } from "./cart-utils";
 import type { CartItem } from "../types/index";
+import {
+  lineIdForProduct,
+  toNatBigInt,
+  toOptionalNatBigInt,
+} from "./cart-utils";
 
 export type ShopProduct = Product & {
   active?: boolean;
@@ -25,7 +29,9 @@ export function filterActiveShopProducts(
   });
 }
 
-export function filterLivePlantProducts(products: ShopProduct[]): ShopProduct[] {
+export function filterLivePlantProducts(
+  products: ShopProduct[],
+): ShopProduct[] {
   return products.filter((p) => p.category === ProductCategory.LivePlant);
 }
 
@@ -85,14 +91,25 @@ export const CATALOG_CATEGORY_TABS: Array<{
 }> = [
   { label: "All", emoji: "🌶️", value: null },
   { label: "Dried Pods", emoji: "🫑", value: ProductCategory.DriedPods },
-  { label: "Fresh Pods (lb)", emoji: "🌶️", value: ProductCategory.FreshPodsByLb },
-  { label: "Fresh Pods (box)", emoji: "📦", value: ProductCategory.FreshPodsFlatRate },
+  {
+    label: "Fresh Pods (lb)",
+    emoji: "🌶️",
+    value: ProductCategory.FreshPodsByLb,
+  },
+  {
+    label: "Fresh Pods (box)",
+    emoji: "📦",
+    value: ProductCategory.FreshPodsFlatRate,
+  },
   { label: "Spices", emoji: "🧂", value: ProductCategory.Spice },
   { label: "Amendments", emoji: "🌿", value: ProductCategory.GardenAmendment },
   { label: "Garden Inputs", emoji: "🪴", value: ProductCategory.GardenInputs },
 ];
 
-export const CATEGORY_DISPLAY: Record<string, { label: string; color: string }> = {
+export const CATEGORY_DISPLAY: Record<
+  string,
+  { label: string; color: string }
+> = {
   [ProductCategory.Spice]: {
     label: "Spice",
     color: "bg-amber-950/60 text-amber-300 border-amber-700/40",

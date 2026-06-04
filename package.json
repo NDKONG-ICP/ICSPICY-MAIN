@@ -26,6 +26,10 @@
       "@dfinity/candid": "~3.3.1",
       "@dfinity/identity": "~3.3.1",
       "@dfinity/principal": "~3.3.1"
+    },
+    "patchedDependencies": {
+      "@slide-computer/signer-agent@3.20.0": "patches/@slide-computer__signer-agent@3.20.0.patch",
+      "@slide-computer/signer-transport-stoic@3.20.0": "patches/@slide-computer__signer-transport-stoic@3.20.0.patch"
     }
   }
 }

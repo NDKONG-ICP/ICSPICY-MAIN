@@ -16,6 +16,34 @@ import NftDiscount "../lib/nft-discount";
 import Set "mo:core/Set";
 
 module {
+  // 100K RAVEN in base units (8 decimals = 10_000_000_000_000). Holders earn a 5% shop discount.
+  let RAVEN_MEMBER_THRESHOLD : Nat = 10_000_000_000_000;
+
+  /// Return 5% discount if the buyer (or a linked wallet) holds ≥ 100K RAVEN.
+  /// Reads from a balance cache populated by `refreshRavenBalance()`.
+  func ravenDiscountPercent(
+    cache : Map.Map<Principal, Nat>,
+    linkedWallets : Map.Map<Principal, [Principal]>,
+    buyer : Principal,
+  ) : Nat {
+    let check = func(p : Principal) : Bool {
+      switch (cache.get(p)) {
+        case (?bal) bal >= RAVEN_MEMBER_THRESHOLD;
+        case null false;
+      };
+    };
+    if (check(buyer)) return 5;
+    switch (linkedWallets.get(buyer)) {
+      case null {};
+      case (?wallets) {
+        for (wallet in wallets.vals()) {
+          if (check(wallet)) return 5;
+        };
+      };
+    };
+    0;
+  };
+
   public func createValidatedOrder(
     orders : Map.Map<Common.OrderId, MarketTypes.Order>,
     products : Map.Map<Common.ProductId, MarketTypes.Product>,
@@ -24,6 +52,8 @@ module {
     orderShippingCents : Map.Map<Common.OrderId, Nat>,
     orderShippingAddresses : Map.Map<Common.OrderId, MarketTypes.ShippingAddress>,
     icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
+    linkedWallets : Map.Map<Principal, [Principal]>,
+    ravenBalanceCache : Map.Map<Principal, Nat>,
     nextId : Nat,
     buyer : Principal,
     input : MarketTypes.CreateOrderInput,
@@ -102,8 +132,10 @@ module {
       };
       validatedItems := Array.concat(validatedItems, [validated]);
     };
-    let discount = NftDiscount.callerDiscountFromBalances(icrc7Balances, buyer);
-    let discountedSubtotal = NftDiscount.discountedSubtotalCents(subtotal, discount.discountPercent);
+    let nftDiscount = NftDiscount.callerDiscountFromBalances(icrc7Balances, linkedWallets, buyer);
+    let ravenBonus = ravenDiscountPercent(ravenBalanceCache, linkedWallets, buyer);
+    let totalDiscountPct = Nat.min(nftDiscount.discountPercent + ravenBonus, 20);
+    let discountedSubtotal = NftDiscount.discountedSubtotalCents(subtotal, totalDiscountPct);
     let total = discountedSubtotal + shippingCents;
     orderShippingCents.add(nextId, shippingCents);
     let shippingText = switch (orderShippingAddresses.get(nextId)) {

@@ -1,6 +1,6 @@
 import { Actor, HttpAgent, type Identity } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
-import { idlFactory, type _SERVICE } from "../declarations/backend.did.js";
+import { type _SERVICE, idlFactory } from "../declarations/backend.did.js";
 import { BACKEND_CANISTER_ID } from "./auth-config";
 
 const IC_HOST = import.meta.env.DEV

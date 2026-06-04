@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
-import * as THREE from "three";
 import { CAMERA_PRESETS, type CameraPresetId } from "@/lib/garden-types";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
+import * as THREE from "three";
 
 type Props = {
   preset: CameraPresetId;
@@ -9,7 +9,11 @@ type Props = {
   plotSize: number;
 };
 
-export function CameraPresetController({ preset, plotCenter, plotSize }: Props) {
+export function CameraPresetController({
+  preset,
+  plotCenter,
+  plotSize,
+}: Props) {
   const { camera } = useThree();
   const target = useRef(new THREE.Vector3(...plotCenter));
   const desiredPos = useRef(new THREE.Vector3());

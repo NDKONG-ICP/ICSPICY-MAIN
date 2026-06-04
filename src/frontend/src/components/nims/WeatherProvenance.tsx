@@ -4,7 +4,6 @@ import {
   buildWeatherHistory,
   weatherHistorySummary,
 } from "@/lib/weather-history";
-import type { PlantLifecycle } from "../../declarations/backend.did";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import {
@@ -17,6 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type { PlantLifecycle } from "../../declarations/backend.did";
 
 export function WeatherProvenance({
   lifecycle,
@@ -25,7 +25,10 @@ export function WeatherProvenance({
   lifecycle: PlantLifecycle;
   tokenId: bigint;
 }) {
-  const points = useMemo(() => buildWeatherHistory(lifecycle, "all"), [lifecycle]);
+  const points = useMemo(
+    () => buildWeatherHistory(lifecycle, "all"),
+    [lifecycle],
+  );
   const summary = useMemo(() => weatherHistorySummary(points), [points]);
 
   const miniData = useMemo(
@@ -50,8 +53,8 @@ export function WeatherProvenance({
       <CardContent className="space-y-4">
         {points.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Weather provenance will appear as lifecycle entries are logged for this
-            plant.
+            Weather provenance will appear as lifecycle entries are logged for
+            this plant.
           </p>
         ) : (
           <>
@@ -72,10 +75,21 @@ export function WeatherProvenance({
             </p>
             <div className="h-[140px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={miniData} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+                <ComposedChart
+                  data={miniData}
+                  margin={{ top: 4, right: 4, left: -16, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    className="stroke-border/40"
+                  />
                   <XAxis dataKey="label" tick={{ fontSize: 9 }} />
-                  <YAxis yAxisId="temp" tick={{ fontSize: 9 }} unit="°" width={32} />
+                  <YAxis
+                    yAxisId="temp"
+                    tick={{ fontSize: 9 }}
+                    unit="°"
+                    width={32}
+                  />
                   <YAxis
                     yAxisId="rain"
                     orientation="right"
@@ -103,7 +117,12 @@ export function WeatherProvenance({
             </div>
           </>
         )}
-        <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="w-full sm:w-auto"
+        >
           <Link
             to="/plant/$plantId"
             params={{ plantId: plantId.toString() }}

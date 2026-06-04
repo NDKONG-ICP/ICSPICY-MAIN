@@ -1,14 +1,14 @@
-import { useAuthClient } from "@dfinity/use-auth-client";
 import { Actor, HttpAgent, type Identity } from "@dfinity/agent";
+import { useAuthClient } from "@dfinity/use-auth-client";
 import { Principal } from "@icp-sdk/core/principal";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  type ReactNode,
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
-  type ReactNode,
 } from "react";
 import { Backend, ExternalBlob } from "../backend";
 import type { _SERVICE } from "../declarations/backend.did";
@@ -135,9 +135,7 @@ export function ICSpicyAuthProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuthContext(): AuthState {

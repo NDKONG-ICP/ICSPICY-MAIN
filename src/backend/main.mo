@@ -5,6 +5,7 @@ import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
 import Nat "mo:core/Nat";
+import Array "mo:core/Array";
 import AccessControl "lib/access-control";
 import CallerGuard "lib/caller-guard";
 import Common "types/common";
@@ -65,6 +66,8 @@ import RateLimits "lib/rate-limits";
 import CanisterHealth "lib/canister-health";
 import Timer "mo:core/Timer";
 import Prim "mo:⛔";
+import UsageAnalytics "UsageAnalytics";
+import Iter "mo:base/Iter";
 
 shared(msg) persistent actor class ICSpicy() = Self {
   transient let initialDeployer = msg.caller;
@@ -445,6 +448,33 @@ shared(msg) persistent actor class ICSpicy() = Self {
     started_at       = 0;
   };
 
+  // ── Linked wallets — maps an II principal to their self-reported OISY/other principals ──
+  //
+  // Used by DAO voting and shop discount to accept NFTs custodied in a linked
+  // wallet (e.g. OISY). The II-authenticated caller asserts ownership of the
+  // external wallet. Max 5 entries per principal; duplicates silently accepted.
+  let linkedWallets = Map.empty<Principal, [Principal]>();
+
+  // ── Reverse map: wallet principal → owning II principal (one-to-one) ────────
+  //
+  // Enforces that one OISY wallet cannot be linked to multiple II identities,
+  // which would allow a single NFT to vote in multiple DAO proposals.
+  let walletToIdentity = Map.empty<Principal, Principal>();
+
+  // ── DAO sybil protection: records which NFT token IDs have voted per proposal ─
+  //
+  // Key: "proposalId:tok:tokenId". Prevents NFT-shuffle attacks where an NFT
+  // is transferred between wallets to cast multiple votes on the same proposal.
+  let daoTokenVotes = Map.empty<Text, Bool>();
+
+  // ── RAVEN balance cache ────────────────────────────────────────────────────
+  //
+  // Maps a principal to their last-known RAVEN balance (queried from the RAVEN
+  // ledger). Used to compute the RAVEN holder shop discount (5% for ≥ 100K
+  // RAVEN) without making an async call during order creation.
+  // Users refresh via `refreshRavenBalance()` before checkout.
+  let ravenBalanceCache = Map.empty<Principal, Nat>();
+
   // ── Ghost wallet state — kept for stable-memory upgrade compatibility ──────
   //
   // These variables existed in the pre-Phase-4 canister. Motoko's upgrade
@@ -575,11 +605,13 @@ shared(msg) persistent actor class ICSpicy() = Self {
     orderShippingAddresses,
     icrc7Owners,
     icrc7Balances,
+    linkedWallets,
+    ravenBalanceCache,
     func() : Principal { Principal.fromActor(Self) },
     nextProductId,
     nextOrderId,
   );
-  include DAOAPI(accessControlState, rateLimits, daoProposals, daoVotes, icrc7Balances, nextProposalId);
+  include DAOAPI(accessControlState, rateLimits, daoProposals, daoVotes, icrc7Balances, linkedWallets, daoTokenVotes, nextProposalId);
   include CommunityAPI(
     accessControlState,
     rateLimits,
@@ -610,6 +642,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     recentTxCursor,
     icrc37Approvals,
     certStore,
+    linkedWallets,
   );
   include RecipesAPI(accessControlState, recipes, recipeFavorites, nextRecipeId, auditLog);
   include ClaimAPI(
@@ -725,6 +758,13 @@ shared(msg) persistent actor class ICSpicy() = Self {
     auditLog,
   );
 
+  // ── Usage analytics (daily rollups) ─────────────────────────────────────────
+
+  stable var usageRollupEntries : [(Text, Nat)] = [];
+  stable var usageUniqueEntries : [(Text, [(Text, Bool)])] = [];
+
+  var _usageState : UsageAnalytics.UsageState = UsageAnalytics.newState();
+
   // Daily weather provenance — Open-Meteo capture for all active plants.
   // Timers are not persisted across upgrades; restart in postupgrade.
   transient var dailyWeatherTimerId : ?Timer.TimerId = null;
@@ -736,11 +776,111 @@ shared(msg) persistent actor class ICSpicy() = Self {
     };
     dailyWeatherTimerId := ?Timer.recurringTimer<system>(
       #seconds(86400),
-      func () : async () { ignore await runDailyWeatherCapture() },
+      func () : async () {
+        ignore await runDailyWeatherCapture();
+        UsageAnalytics.prune(_usageState, 90);
+      },
     );
   };
 
   startDailyWeatherTimer<system>();
+
+  // ── Usage analytics ─────────────────────────────────────────────────────────
+
+  public shared ({ caller }) func recordUsageEvent(feature : Text, action : Text) : async () {
+    if (caller.isAnonymous()) return;
+    UsageAnalytics.record(_usageState, caller, feature, action);
+  };
+
+  public query ({ caller }) func getUsageRollups(days : Nat) : async [UsageAnalytics.DailyFeatureStat] {
+    assert AccessControl.isAdmin(accessControlState, caller);
+    UsageAnalytics.getRollups(_usageState, days);
+  };
+
+  public shared ({ caller }) func pruneUsageData() : async () {
+    AccessControl.requireAdmin(accessControlState, caller);
+    UsageAnalytics.prune(_usageState, 90);
+  };
+
+  // ── Linked wallets (for OISY NFT custody + DAO voting eligibility) ─────────
+  //
+  // II-authenticated users can self-report their OISY (or other) principal.
+  // These linked principals are checked by DAO voting and shop discount
+  // to honour NFTs custodied outside the caller's II identity.
+
+  public shared ({ caller }) func linkWallet(walletPrincipal : Principal) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    // Reject anonymous, self-links, and canister principal.
+    if (Principal.isAnonymous(walletPrincipal)) return false;
+    if (Principal.equal(caller, walletPrincipal)) Runtime.trap("Cannot link your own identity as a wallet");
+    if (Principal.equal(walletPrincipal, Principal.fromActor(Self))) Runtime.trap("Invalid wallet principal");
+    // Enforce one-to-one: an OISY wallet may only be linked to one II identity.
+    switch (walletToIdentity.get(walletPrincipal)) {
+      case (?existingOwner) {
+        if (not Principal.equal(existingOwner, caller)) {
+          Runtime.trap("This wallet is already linked to another identity");
+        };
+        // Already linked to this caller — idempotent success.
+        return true;
+      };
+      case null {};
+    };
+    let existing = switch (linkedWallets.get(caller)) {
+      case (?list) list;
+      case null [];
+    };
+    if (existing.size() >= 5) return false;
+    for (p in existing.vals()) {
+      if (Principal.equal(p, walletPrincipal)) return true;
+    };
+    linkedWallets.add(caller, existing.concat([walletPrincipal]));
+    walletToIdentity.add(walletPrincipal, caller);
+    true;
+  };
+
+  public query ({ caller }) func getLinkedWallets() : async [Principal] {
+    switch (linkedWallets.get(caller)) {
+      case (?list) list;
+      case null [];
+    };
+  };
+
+  public shared ({ caller }) func unlinkWallet(walletPrincipal : Principal) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    switch (linkedWallets.get(caller)) {
+      case null false;
+      case (?list) {
+        linkedWallets.add(
+          caller,
+          Array.filter<Principal>(list, func(p) { not Principal.equal(p, walletPrincipal) }),
+        );
+        // Remove the reverse-map entry so the wallet can be re-linked later.
+        walletToIdentity.remove(walletPrincipal);
+        true;
+      };
+    };
+  };
+
+  // ── RAVEN balance cache refresh ────────────────────────────────────────────
+  //
+  // Queries the RAVEN ledger for the caller's balance and stores it in the
+  // cache. Frontend calls this before checkout so the RAVEN 5% discount is
+  // applied at order creation time without an inline async ledger call.
+
+  public shared ({ caller }) func refreshRavenBalance() : async () {
+    AccessControl.requireAuthenticated(caller);
+    let ledger : actor { icrc1_balance_of : ({ owner : Principal; subaccount : ?Blob }) -> async Nat } = actor("4k7jk-vyaaa-aaaam-qcyaa-cai");
+    let balance = await ledger.icrc1_balance_of({ owner = caller; subaccount = null });
+    ravenBalanceCache.add(caller, balance);
+  };
+
+  public query ({ caller }) func getRavenDiscountPercent() : async Nat {
+    let RAVEN_THRESHOLD : Nat = 100_000 * 100_000_000;
+    switch (ravenBalanceCache.get(caller)) {
+      case (?bal) if (bal >= RAVEN_THRESHOLD) 5 else 0;
+      case null 0;
+    };
+  };
 
   // ── Audit log query ────────────────────────────────────────────────────────
 
@@ -812,7 +952,31 @@ shared(msg) persistent actor class ICSpicy() = Self {
   //
   // No-op on tokens: this just re-publishes the existing tree's root
   // hash. It does NOT mutate the tree, so it cannot lose data.
+  system func preupgrade() {
+    usageRollupEntries := Iter.toArray(_usageState.rollups.entries());
+    usageUniqueEntries := Array.map<
+      (Text, Map.Map<Text, Bool>),
+      (Text, [(Text, Bool)]),
+    >(
+      Iter.toArray(_usageState.uniqueSets.entries()),
+      func((k, v)) = (k, Iter.toArray(v.entries())),
+    );
+  };
+
   system func postupgrade() {
+    for ((k, v) in usageRollupEntries.vals()) {
+      _usageState.rollups.add(k, v);
+    };
+    for ((k, pairs) in usageUniqueEntries.vals()) {
+      let s = Map.empty<Text, Bool>();
+      for ((uk, uv) in pairs.vals()) {
+        s.add(uk, uv);
+      };
+      _usageState.uniqueSets.add(k, s);
+    };
+    usageRollupEntries := [];
+    usageUniqueEntries := [];
+
     Cert.setCertifiedData(certStore);
     startDailyWeatherTimer<system>();
   };

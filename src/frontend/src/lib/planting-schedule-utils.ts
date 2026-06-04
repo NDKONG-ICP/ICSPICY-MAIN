@@ -1,5 +1,8 @@
 import type { ActorSubclass } from "@dfinity/agent";
-import type { CreatePlantingEventInput, _SERVICE } from "../declarations/backend.did";
+import type {
+  CreatePlantingEventInput,
+  _SERVICE,
+} from "../declarations/backend.did";
 
 const DAY_NS = 86_400_000_000_000n;
 

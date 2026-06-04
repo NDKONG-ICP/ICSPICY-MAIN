@@ -1,10 +1,13 @@
-import type { ShopProduct } from "./shop-products";
-import { filterLivePlantProducts } from "./shop-products";
 import type { CostLine } from "./garden-cost";
 import { getPlantById } from "./garden-plant-catalog";
+import type { ShopProduct } from "./shop-products";
+import { filterLivePlantProducts } from "./shop-products";
 
 function normalizeName(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 export function matchPepperProducts(
@@ -21,7 +24,11 @@ export function matchPepperProducts(
     const product =
       live.find((p) => normalizeName(p.name).includes(needle)) ??
       live.find((p) => normalizeName(p.variety ?? "").includes(needle)) ??
-      live.find((p) => needle.split(" ").some((w) => w.length > 3 && normalizeName(p.name).includes(w)));
+      live.find((p) =>
+        needle
+          .split(" ")
+          .some((w) => w.length > 3 && normalizeName(p.name).includes(w)),
+      );
     if (product) out.push({ product, qty: line.qty });
   }
   return out;

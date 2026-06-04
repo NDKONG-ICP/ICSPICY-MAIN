@@ -58,7 +58,10 @@ export function LogWateringModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-ocid="nims-modal-log-water" className="max-w-md gap-6">
+      <DialogContent
+        data-ocid="nims-modal-log-water"
+        className="max-w-md gap-6"
+      >
         <DialogHeader>
           <DialogTitle>Log watering</DialogTitle>
           <DialogDescription>
@@ -74,7 +77,11 @@ export function LogWateringModal({
                 <Button
                   key={p.label}
                   type="button"
-                  variant={mode === "preset" && presetIdx === i ? "default" : "secondary"}
+                  variant={
+                    mode === "preset" && presetIdx === i
+                      ? "default"
+                      : "secondary"
+                  }
                   size="sm"
                   data-ocid={`nims-water-amt-${p.label.replace(/\s+/g, "-")}`}
                   onClick={() => {

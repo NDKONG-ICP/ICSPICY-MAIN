@@ -1,6 +1,6 @@
 import type { PendingPlacement } from "@/lib/garden-types";
-import { PepperPlantModel } from "./plants/PepperPlantModel";
 import { StructureMesh } from "./StructureMesh";
+import { PepperPlantModel } from "./plants/PepperPlantModel";
 
 type Props = {
   x: number;
@@ -9,7 +9,12 @@ type Props = {
   maturity?: number;
 };
 
-export function GhostPreview3D({ x, y, pending, maturity = 0.7 }: Pick<Props, "x" | "y" | "pending" | "maturity">) {
+export function GhostPreview3D({
+  x,
+  y,
+  pending,
+  maturity = 0.7,
+}: Pick<Props, "x" | "y" | "pending" | "maturity">) {
   if (pending?.kind === "plant") {
     return (
       <group position={[x, 0, y]}>

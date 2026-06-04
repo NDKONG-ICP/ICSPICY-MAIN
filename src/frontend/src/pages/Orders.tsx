@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { variantToString } from "@/lib/candid-display";
 import { Link } from "@tanstack/react-router";
 import {
   Check,
@@ -17,11 +18,10 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { OrderStatus } from "../backend";
-import { variantToString } from "@/lib/candid-display";
 import { useAuth } from "../hooks/useAuth";
 import { useMyOrders } from "../hooks/useBackend";
-import type { Order } from "../types/index";
 import { usePageTitle } from "../hooks/usePageTitle";
+import type { Order } from "../types/index";
 
 // ─── Status config ────────────────────────────────────────────────────────────
 

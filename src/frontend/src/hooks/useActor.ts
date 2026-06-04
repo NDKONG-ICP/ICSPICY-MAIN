@@ -4,7 +4,9 @@ import { useAuth } from "./useAuth";
 /**
  * Thin passthrough — backend actor is built in ICSpicyAuthProvider when II session is ready.
  */
-export function useActor<T = Backend>(_createActorFn?: unknown): {
+export function useActor<T = Backend>(
+  _createActorFn?: unknown,
+): {
   actor: T | null;
   isFetching: boolean;
 } {

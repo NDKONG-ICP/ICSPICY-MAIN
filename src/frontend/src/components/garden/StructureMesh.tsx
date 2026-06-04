@@ -1,5 +1,5 @@
-import { memo } from "react";
 import type { StructurePlacement } from "@/lib/garden-types";
+import { memo } from "react";
 import { resolveStructureMesh } from "./structures/StructureModels";
 
 type Props = {

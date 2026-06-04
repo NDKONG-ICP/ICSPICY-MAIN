@@ -22,6 +22,7 @@ module {
     #ckETH;
     #ckUSDC;
     #ckUSDT;
+    #RAVEN;
   };
 
   public type TransferFromError = {
@@ -84,6 +85,7 @@ module {
       case (#ckETH)  "ss2fx-dyaaa-aaaar-qacoq-cai";
       case (#ckUSDC) "xevnm-gaaaa-aaaar-qafnq-cai";
       case (#ckUSDT) "cngnf-vqaaa-aaaar-qag4q-cai";
+      case (#RAVEN)  "4k7jk-vyaaa-aaaam-qcyaa-cai";
     };
   };
 
@@ -96,7 +98,7 @@ module {
   };
 
   public func allPaymentTokens() : [PaymentToken] {
-    [#ICP, #ckBTC, #ckETH, #ckUSDC, #ckUSDT];
+    [#ICP, #ckBTC, #ckETH, #ckUSDC, #ckUSDT, #RAVEN];
   };
 
   public func tokenSymbol(token : PaymentToken) : Text {
@@ -106,6 +108,7 @@ module {
       case (#ckETH) "ckETH";
       case (#ckUSDC) "ckUSDC";
       case (#ckUSDT) "ckUSDT";
+      case (#RAVEN) "RAVEN";
     };
   };
 
@@ -118,6 +121,11 @@ module {
 
   public func isStableLedgerId(id : Text) : Bool {
     id == ledgerCanisterId(#ckUSDC) or id == ledgerCanisterId(#ckUSDT);
+  };
+
+  /// True for tokens that require price slippage buffer (non-stable volatile tokens).
+  public func isVolatileLedgerId(id : Text) : Bool {
+    not isStableLedgerId(id);
   };
 
   public func balanceOf(ledgerCanisterId : Text, owner : Principal) : async Nat {

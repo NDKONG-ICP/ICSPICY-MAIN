@@ -1,7 +1,7 @@
-import type { GardenDesign } from "./garden-types";
-import { getPlantById } from "./garden-plant-catalog";
 import { calculateGardenCost } from "./garden-cost";
+import { getPlantById } from "./garden-plant-catalog";
 import type { YieldEstimate } from "./garden-rules";
+import type { GardenDesign } from "./garden-types";
 
 export type SmartData = {
   totalPlotM2: number;
@@ -34,7 +34,10 @@ function circleArea(r: number) {
   return Math.PI * r * r;
 }
 
-export function computeSmartData(design: GardenDesign, yieldEst: YieldEstimate): SmartData {
+export function computeSmartData(
+  design: GardenDesign,
+  yieldEst: YieldEstimate,
+): SmartData {
   const totalPlotM2 = design.widthMeters * design.depthMeters;
   let plantedAreaM2 = 0;
   let trees = 0;
@@ -52,15 +55,18 @@ export function computeSmartData(design: GardenDesign, yieldEst: YieldEstimate):
     const spacing = cat?.spacing ?? 0.6;
     const area = circleArea(spacing / 2) * (p.scale ?? 1);
     plantedAreaM2 += area;
-    if (cat?.modelType === "large_tree" || cat?.modelType === "palm") trees += 1;
-    else if (cat?.modelType === "small_tree" || cat?.modelType === "shrub") shrubs += 1;
+    if (cat?.modelType === "large_tree" || cat?.modelType === "palm")
+      trees += 1;
+    else if (cat?.modelType === "small_tree" || cat?.modelType === "shrub")
+      shrubs += 1;
     else if (cat?.category === "herb") herbs += 1;
     else ground += 1;
     if (cat?.nativeFlorida) nativeCount += 1;
     if (cat?.edible !== false) edibleCount += 1;
     if (cat?.category === "pollinator") pollinatorCount += 1;
     if (cat?.waterNeed === "low") droughtTolerantCount += 1;
-    const wk = cat?.waterNeed === "high" ? 3 : cat?.waterNeed === "medium" ? 1.5 : 0.5;
+    const wk =
+      cat?.waterNeed === "high" ? 3 : cat?.waterNeed === "medium" ? 1.5 : 0.5;
     weeklyWaterGal += wk;
   }
 
@@ -73,7 +79,8 @@ export function computeSmartData(design: GardenDesign, yieldEst: YieldEstimate):
   for (const s of design.structures) {
     const area = s.width * s.depth;
     hardscapeM2 += area;
-    if (/path|gravel|mulch|brick|stepping/.test(s.structureType)) pathAreaM2 += area;
+    if (/path|gravel|mulch|brick|stepping/.test(s.structureType))
+      pathAreaM2 += area;
     if (/rain-barrel/.test(s.structureType)) rainBarrelGal += 55;
     if (/drip|irrigation|sprinkler/.test(s.structureType)) hasIrrigation = true;
     if (/compost/.test(s.structureType)) hasCompost = true;
@@ -83,8 +90,11 @@ export function computeSmartData(design: GardenDesign, yieldEst: YieldEstimate):
   const totalPlants = design.plants.length;
   const nativePct = totalPlants > 0 ? (nativeCount / totalPlants) * 100 : 0;
   const ediblePct = totalPlants > 0 ? (edibleCount / totalPlants) * 100 : 0;
-  const droughtPct = totalPlants > 0 ? (droughtTolerantCount / totalPlants) * 100 : 0;
-  const irrigationCoveragePct = hasIrrigation ? Math.min(100, 40 + plantedAreaM2 / totalPlotM2 * 60) : 0;
+  const droughtPct =
+    totalPlants > 0 ? (droughtTolerantCount / totalPlants) * 100 : 0;
+  const irrigationCoveragePct = hasIrrigation
+    ? Math.min(100, 40 + (plantedAreaM2 / totalPlotM2) * 60)
+    : 0;
 
   let score = 40;
   if (nativePct >= 50) score += 15;
@@ -132,13 +142,22 @@ export function m2ToFt2(m2: number) {
 }
 
 export function exportPlantScheduleCsv(design: GardenDesign): string {
-  const rows = [["ID", "Common Name", "Latin Name", "Qty", "Spacing", "Sun", "Water"]];
-  const groups = new Map<string, { plant: ReturnType<typeof getPlantById> | undefined; qty: number }>();
+  const rows = [
+    ["ID", "Common Name", "Latin Name", "Qty", "Spacing", "Sun", "Water"],
+  ];
+  const groups = new Map<
+    string,
+    { plant: ReturnType<typeof getPlantById> | undefined; qty: number }
+  >();
   for (const p of design.plants) {
     const key = p.catalogId ?? p.label;
     const prev = groups.get(key);
     if (prev) prev.qty += 1;
-    else groups.set(key, { plant: p.catalogId ? getPlantById(p.catalogId) : undefined, qty: 1 });
+    else
+      groups.set(key, {
+        plant: p.catalogId ? getPlantById(p.catalogId) : undefined,
+        qty: 1,
+      });
   }
   let i = 1;
   for (const [, { plant, qty }] of groups) {
@@ -152,7 +171,9 @@ export function exportPlantScheduleCsv(design: GardenDesign): string {
       plant?.waterNeed ?? "",
     ]);
   }
-  return rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+  return rows
+    .map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(","))
+    .join("\n");
 }
 
 export function generateProjectTimeline(design: GardenDesign): string[] {
@@ -161,16 +182,27 @@ export function generateProjectTimeline(design: GardenDesign): string[] {
     const c = getPlantById(p.catalogId ?? "");
     return c?.modelType === "large_tree" || c?.modelType === "small_tree";
   });
-  const hasPeppers = design.plants.some((p) => getPlantById(p.catalogId ?? "")?.category === "pepper");
-  const hasCoop = design.structures.some((s) => s.structureType.includes("chicken"));
-  lines.push("Month 1: Site preparation — clear, grade, install beds & main irrigation");
+  const hasPeppers = design.plants.some(
+    (p) => getPlantById(p.catalogId ?? "")?.category === "pepper",
+  );
+  const hasCoop = design.structures.some((s) =>
+    s.structureType.includes("chicken"),
+  );
+  lines.push(
+    "Month 1: Site preparation — clear, grade, install beds & main irrigation",
+  );
   if (hasTrees) lines.push("Month 2: Plant canopy trees and nitrogen fixers");
   if (design.structures.some((s) => s.structureType.includes("rain"))) {
     lines.push("Month 2: Install rain barrels and swales");
   }
   lines.push("Month 3: Understory shrubs, citrus, and compost system");
   if (hasCoop) lines.push("Month 3: Build chicken coop and run");
-  if (hasPeppers) lines.push("Month 4: Plant peppers, herbs, and vegetables (after last frost)");
-  lines.push("Ongoing: Mulch quarterly, compost weekly, irrigation check monthly");
+  if (hasPeppers)
+    lines.push(
+      "Month 4: Plant peppers, herbs, and vegetables (after last frost)",
+    );
+  lines.push(
+    "Ongoing: Mulch quarterly, compost weekly, irrigation check monthly",
+  );
   return lines;
 }

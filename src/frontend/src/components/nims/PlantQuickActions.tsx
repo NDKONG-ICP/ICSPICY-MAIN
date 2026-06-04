@@ -9,8 +9,8 @@ import {
   Skull,
   Sprout,
   Tag,
-  Wheat,
   Trash2,
+  Wheat,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";

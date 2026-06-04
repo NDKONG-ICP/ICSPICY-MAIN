@@ -156,6 +156,7 @@ export const OFFER_TOKENS = [
   "ckETH",
   "ckUSDC",
   "ckUSDT",
+  "RAVEN",
 ] as const;
 export type OfferTokenSymbol = (typeof OFFER_TOKENS)[number];
 
@@ -165,6 +166,7 @@ export const TOKEN_DECIMALS: Record<OfferTokenSymbol, number> = {
   ckETH: 18,
   ckUSDC: 6,
   ckUSDT: 6,
+  RAVEN: 8,
 };
 
 export const TOKEN_DISPLAY: Record<
@@ -200,5 +202,11 @@ export const TOKEN_DISPLAY: Record<
     colorClass: "text-teal-400",
     bgClass: "bg-teal-500/20",
     borderClass: "border-teal-500/30",
+  },
+  RAVEN: {
+    symbol: "🐦‍⬛",
+    colorClass: "text-indigo-300",
+    bgClass: "bg-indigo-900/40",
+    borderClass: "border-indigo-500/30",
   },
 };

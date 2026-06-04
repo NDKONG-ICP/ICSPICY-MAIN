@@ -12,7 +12,9 @@ export function SunDirectionMarker({ position }: Props) {
         <meshBasicMaterial color="#fbbf24" />
       </mesh>
       <Html center distanceFactor={20}>
-        <span className="text-xs font-medium text-amber-300 drop-shadow">☀️ Sun</span>
+        <span className="text-xs font-medium text-amber-300 drop-shadow">
+          ☀️ Sun
+        </span>
       </Html>
     </group>
   );

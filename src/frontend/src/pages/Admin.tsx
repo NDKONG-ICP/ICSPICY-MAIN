@@ -19,8 +19,18 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import { BACKEND_CANISTER_ID } from "@/lib/auth-config";
+import {
+  orderStatusLabel,
+  plantStageAdminLabel,
+  productCategoryLabel,
+  proposalCategoryLabel,
+  variantToString,
+} from "@/lib/candid-display";
 import {
   AlertCircle,
+  BarChart3,
   BookOpen,
   Box,
   CheckCircle2,
@@ -70,22 +80,19 @@ import {
 } from "../backend";
 import type { ArtworkLayer } from "../backend";
 import type { FoundersMintInput, FoundersMintResult } from "../backend";
-import { AdminNimsPanel } from "../components/AdminNimsPanel";
-import { AdminTreasuryTab } from "../components/AdminTreasuryTab";
 import {
   AdminCanisterHealthBanner,
   AdminCanisterHealthTab,
 } from "../components/AdminCanisterHealthTab";
+import { AdminNimsPanel } from "../components/AdminNimsPanel";
+import { AdminTreasuryTab } from "../components/AdminTreasuryTab";
 import { AdminBatchGiftsTab } from "../components/admin/AdminBatchGiftsTab";
 import { AdminCommunityTab } from "../components/admin/AdminCommunityTab";
 import { AdminNFTPoolTab } from "../components/admin/AdminNFTPoolTab";
 import { AdminOrdersTab } from "../components/admin/AdminOrdersTab";
-import { useNewOrderCountAdmin } from "../hooks/useAdminShop";
-import {
-  useCreateProposal,
-  useProposals,
-} from "../hooks/useDAO";
 import { AdminQRLabelsTab } from "../components/admin/AdminQRLabelsTab";
+import { AdminUsageTab } from "../components/admin/AdminUsageTab";
+import { useNewOrderCountAdmin } from "../hooks/useAdminShop";
 import { useAuth } from "../hooks/useAuth";
 import {
   useAddArtworkLayer,
@@ -124,16 +131,8 @@ import {
   useUpdateProduct,
   useUploadArtworkChunk,
 } from "../hooks/useBackend";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { useCreateProposal, useProposals } from "../hooks/useDAO";
 import { CHILI_VARIETIES } from "../types/index";
-import { BACKEND_CANISTER_ID } from "@/lib/auth-config";
-import {
-  orderStatusLabel,
-  plantStageAdminLabel,
-  productCategoryLabel,
-  proposalCategoryLabel,
-  variantToString,
-} from "@/lib/candid-display";
 import type { Plant, Product, Tray } from "../types/index";
 import { compressImage } from "../utils/imageUtils";
 import AdminCookBookTab from "./AdminCookBookTab";
@@ -588,7 +587,8 @@ function PlantsTab() {
               <SelectContent>
                 {plants?.map((p) => (
                   <SelectItem key={p.id.toString()} value={p.id.toString()}>
-                    #{p.id.toString()} {p.variety} ({plantStageAdminLabel(p.stage)})
+                    #{p.id.toString()} {p.variety} (
+                    {plantStageAdminLabel(p.stage)})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -638,7 +638,8 @@ function PlantsTab() {
               <SelectContent>
                 {plants?.map((p) => (
                   <SelectItem key={p.id.toString()} value={p.id.toString()}>
-                    #{p.id.toString()} {p.variety} ({plantStageAdminLabel(p.stage)})
+                    #{p.id.toString()} {p.variety} (
+                    {plantStageAdminLabel(p.stage)})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1225,7 +1226,10 @@ const FOR_SALE_CATEGORIES = [
   { label: "Live Plant", value: ProductCategory.LivePlant },
   { label: "Dried Pods", value: ProductCategory.DriedPods },
   { label: "Fresh Pods (by lb)", value: ProductCategory.FreshPodsByLb },
-  { label: "Fresh Pods (Flat Rate Box)", value: ProductCategory.FreshPodsFlatRate },
+  {
+    label: "Fresh Pods (Flat Rate Box)",
+    value: ProductCategory.FreshPodsFlatRate,
+  },
   { label: "Spice", value: ProductCategory.Spice },
   { label: "Garden Amendment", value: ProductCategory.GardenAmendment },
 ] as const;
@@ -2448,7 +2452,8 @@ function NFTMintingTab() {
               <SelectContent>
                 {plants?.map((p) => (
                   <SelectItem key={p.id.toString()} value={p.id.toString()}>
-                    #{p.id.toString()} {p.variety} — {plantStageAdminLabel(p.stage)}
+                    #{p.id.toString()} {p.variety} —{" "}
+                    {plantStageAdminLabel(p.stage)}
                     {p.nft_id ? " ✓ NFT" : ""}
                   </SelectItem>
                 ))}
@@ -4357,8 +4362,8 @@ function CanisterIdBar() {
       </div>
       <p className="text-[11px] text-muted-foreground leading-relaxed">
         This is your NFT ledger / backend principal on ICP — set in{" "}
-        <span className="font-mono">auth-config</span> per deployment. Register the
-        collection with the DAB registry at{" "}
+        <span className="font-mono">auth-config</span> per deployment. Register
+        the collection with the DAB registry at{" "}
         <a
           href="https://dab.ooo"
           target="_blank"
@@ -5090,6 +5095,14 @@ export default function AdminPage() {
               )}
             </TabsTrigger>
             <TabsTrigger
+              value="usage"
+              className="text-xs gap-1.5 flex-1"
+              data-ocid="admin-tab-usage"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              Usage
+            </TabsTrigger>
+            <TabsTrigger
               value="nft"
               className="text-xs gap-1.5 flex-1"
               data-ocid="admin-tab-nft"
@@ -5201,6 +5214,9 @@ export default function AdminPage() {
           </TabsContent>
           <TabsContent value="orders">
             <AdminOrdersTab />
+          </TabsContent>
+          <TabsContent value="usage">
+            <AdminUsageTab />
           </TabsContent>
           <TabsContent value="nft">
             <NFTMintingTab />

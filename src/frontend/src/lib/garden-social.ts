@@ -21,7 +21,9 @@ export function getLikeCount(designId: number): number {
 
 export function toggleLike(designId: number): number {
   const userKey = "garden-user-liked";
-  const liked = new Set<string>(JSON.parse(localStorage.getItem(userKey) ?? "[]") as string[]);
+  const liked = new Set<string>(
+    JSON.parse(localStorage.getItem(userKey) ?? "[]") as string[],
+  );
   const id = String(designId);
   const counts = readMap(LIKES_KEY);
   if (liked.has(id)) {
@@ -37,7 +39,9 @@ export function toggleLike(designId: number): number {
 }
 
 export function hasLiked(designId: number): boolean {
-  const liked = JSON.parse(localStorage.getItem("garden-user-liked") ?? "[]") as string[];
+  const liked = JSON.parse(
+    localStorage.getItem("garden-user-liked") ?? "[]",
+  ) as string[];
   return liked.includes(String(designId));
 }
 

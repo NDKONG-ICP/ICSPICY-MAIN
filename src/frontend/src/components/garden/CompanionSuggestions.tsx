@@ -17,7 +17,11 @@ export function CompanionSuggestions({ suggestions, onAdd, onDismiss }: Props) {
         <span className="text-sm font-medium flex items-center gap-1">
           <Sprout className="h-4 w-4 text-primary" /> Companion suggestions
         </span>
-        <button type="button" className="text-xs text-muted-foreground hover:text-foreground" onClick={onDismiss}>
+        <button
+          type="button"
+          className="text-xs text-muted-foreground hover:text-foreground"
+          onClick={onDismiss}
+        >
           Dismiss
         </button>
       </div>
@@ -37,7 +41,12 @@ export function CompanionSuggestions({ suggestions, onAdd, onDismiss }: Props) {
               <p className="text-muted-foreground">{s.reason}</p>
             </div>
             {s.type === "companion" && (
-              <Button size="sm" variant="outline" className="h-7 text-xs shrink-0" onClick={() => onAdd(s.plant.id)}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs shrink-0"
+                onClick={() => onAdd(s.plant.id)}
+              >
                 Add
               </Button>
             )}

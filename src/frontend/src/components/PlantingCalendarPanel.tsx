@@ -19,6 +19,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
+import { useNimsLocation } from "@/hooks/useNimsLocation";
+import { useMyPlantsNims } from "@/hooks/usePlantLifecycle";
 import {
   emojiForEventType,
   eventTypeLabel,
@@ -30,20 +32,24 @@ import {
   useOverduePlantingEvents,
   useUpcomingPlantingEvents,
 } from "@/hooks/usePlantingSchedule";
-import { useMyPlantsNims } from "@/hooks/usePlantLifecycle";
-import { useNimsLocation } from "@/hooks/useNimsLocation";
 import { useWeather } from "@/hooks/useWeather";
 import {
+  type PlantingRecommendation,
+  SUPPORTED_ZONES,
+  type SupportedZone,
+  ZONE_LABELS,
   getPlantingRecommendations,
   normalizeZone,
   plantingActionToEventTypeKey,
-  SUPPORTED_ZONES,
-  ZONE_LABELS,
-  type PlantingRecommendation,
-  type SupportedZone,
 } from "@/lib/planting-almanac";
 import { getWeatherSuggestions } from "@/lib/weather-suggestions";
-import { CalendarDays, Check, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import {
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -87,9 +93,7 @@ export function PlantingCalendarPanel() {
   const [addOpen, setAddOpen] = useState(false);
   const [plantName, setPlantName] = useState("");
   const [eventTypeKey, setEventTypeKey] = useState<string>("directSow");
-  const [eventDate, setEventDate] = useState(
-    now.toISOString().slice(0, 10),
-  );
+  const [eventDate, setEventDate] = useState(now.toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
 
   const { startNs, endNs } = monthRange(viewYear, viewMonth);
@@ -247,7 +251,11 @@ export function PlantingCalendarPanel() {
             List
           </Button>
           {isAuthenticated ? (
-            <Button size="sm" className="bg-primary" onClick={() => setAddOpen(true)}>
+            <Button
+              size="sm"
+              className="bg-primary"
+              onClick={() => setAddOpen(true)}
+            >
               <Plus className="w-4 h-4 mr-1" />
               Add Event
             </Button>
@@ -263,7 +271,9 @@ export function PlantingCalendarPanel() {
         <div className="rounded-xl border border-border bg-card/50 px-4 py-3 text-sm space-y-1.5">
           <div className="text-muted-foreground">
             {weather.current.tempF != null && (
-              <span className="mr-3">{Math.round(weather.current.tempF)}°F now</span>
+              <span className="mr-3">
+                {Math.round(weather.current.tempF)}°F now
+              </span>
             )}
             {weather.moon.emoji} {weather.moon.phase}
           </div>
@@ -279,7 +289,10 @@ export function PlantingCalendarPanel() {
         <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 space-y-2">
           <p className="text-sm font-medium text-red-400">Overdue</p>
           {overdue.data?.map((ev) => (
-            <div key={ev.id.toString()} className="flex items-center justify-between gap-2 text-sm">
+            <div
+              key={ev.id.toString()}
+              className="flex items-center justify-between gap-2 text-sm"
+            >
               <span>
                 {ev.name} — {eventTypeLabel(ev.event_type)}
               </span>
@@ -345,10 +358,14 @@ export function PlantingCalendarPanel() {
                   key={key}
                   className={[
                     "min-h-[72px] rounded-lg border p-1 text-left",
-                    isToday ? "border-primary/50 bg-primary/5" : "border-border/60",
+                    isToday
+                      ? "border-primary/50 bg-primary/5"
+                      : "border-border/60",
                   ].join(" ")}
                 >
-                  <span className="text-[11px] font-medium">{day.getDate()}</span>
+                  <span className="text-[11px] font-medium">
+                    {day.getDate()}
+                  </span>
                   <div className="mt-0.5 space-y-0.5">
                     {evs.slice(0, 2).map((ev) => (
                       <div
@@ -373,7 +390,9 @@ export function PlantingCalendarPanel() {
       ) : (
         <div className="space-y-2">
           {(upcoming.data ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground italic">No upcoming events.</p>
+            <p className="text-sm text-muted-foreground italic">
+              No upcoming events.
+            </p>
           ) : (
             upcoming.data?.map((ev) => (
               <div
@@ -438,7 +457,9 @@ export function PlantingCalendarPanel() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No zone data for this month.</p>
+          <p className="text-sm text-muted-foreground">
+            No zone data for this month.
+          </p>
         )}
       </div>
 
@@ -450,7 +471,10 @@ export function PlantingCalendarPanel() {
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label>Plant name</Label>
-              <Input value={plantName} onChange={(e) => setPlantName(e.target.value)} />
+              <Input
+                value={plantName}
+                onChange={(e) => setPlantName(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Event type</Label>
@@ -477,7 +501,11 @@ export function PlantingCalendarPanel() {
             </div>
             <div className="space-y-1.5">
               <Label>Notes</Label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+              />
             </div>
           </div>
           <DialogFooter>

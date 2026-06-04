@@ -21,12 +21,12 @@ import {
   useCanisterTreasuryBalances,
 } from "../hooks/useBackend";
 import {
+  TOKEN_LEDGER_CONFIG,
   formatTokenAmount,
   formatTokenFee,
   parseTokenAmount,
-  TOKEN_LEDGER_CONFIG,
 } from "../hooks/useTokenBalances";
-import { TOKEN_DISPLAY, type OfferTokenSymbol } from "../types";
+import { type OfferTokenSymbol, TOKEN_DISPLAY } from "../types";
 
 const DISPLAY_FRACTIONS: Record<string, number> = {
   ICP: 4,
@@ -149,7 +149,11 @@ function WithdrawSection({
   balances,
   onSuccess,
 }: {
-  balances: Array<{ symbol: string; balance: bigint; ledgerCanisterId: string }>;
+  balances: Array<{
+    symbol: string;
+    balance: bigint;
+    ledgerCanisterId: string;
+  }>;
   onSuccess: () => void;
 }) {
   const withdraw = useAdminWithdrawTokens();
@@ -237,7 +241,10 @@ function WithdrawSection({
                 setAmount("");
               }}
             >
-              <SelectTrigger id="treasury-wd-token" data-ocid="treasury-wd-token">
+              <SelectTrigger
+                id="treasury-wd-token"
+                data-ocid="treasury-wd-token"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -381,8 +388,11 @@ function WithdrawalHistorySection() {
 }
 
 export function AdminTreasuryTab() {
-  const { data: balances = [], refetch, isFetching } =
-    useCanisterTreasuryBalances();
+  const {
+    data: balances = [],
+    refetch,
+    isFetching,
+  } = useCanisterTreasuryBalances();
 
   return (
     <div className="space-y-8" data-ocid="treasury-tab">

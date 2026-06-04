@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "@tanstack/react-router";
 import {
   BookOpen,
   ChefHat,
@@ -13,28 +14,22 @@ import {
   X,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { Link } from "@tanstack/react-router";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { RecipePublic } from "../declarations/backend.did";
-import { useAuth } from "../hooks/useAuth";
 import { useActorReady } from "../hooks/useActorReady";
+import { useAuth } from "../hooks/useAuth";
 import {
   COOKBOOK_PAGE_SIZE,
+  type CategoryFilter,
   difficultyLabel,
   recipeCategoryLabel,
   useFeaturedRecipes,
   useRecipeCategories,
   useRecipesInfinite,
   useToggleFavorite,
-  type CategoryFilter,
 } from "../hooks/useCookbook";
+import { useUsageTracking } from "../hooks/useUsageTracking";
 
 function difficultyBadgeClass(diff: RecipePublic["difficulty"]): string {
   if ("Beginner" in diff) {
@@ -71,9 +66,11 @@ function RecipeGridSkeleton({ count }: { count: number }) {
 export default function CookBookPage() {
   const { actorReady } = useActorReady();
   const { isAuthenticated } = useAuth();
+  const { track, USAGE } = useUsageTracking();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>(null);
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryFilter>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -87,6 +84,14 @@ export default function CookBookPage() {
   );
 
   const favoriteMut = useToggleFavorite();
+
+  useEffect(() => {
+    track(
+      USAGE.COOKBOOK.OPEN.feature,
+      USAGE.COOKBOOK.OPEN.action,
+      "cookbook:open",
+    );
+  }, [track, USAGE.COOKBOOK.OPEN]);
 
   useEffect(() => {
     const id = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -127,7 +132,13 @@ export default function CookBookPage() {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [loadMore, actorReady, flatRecipes.length, selectedCategory, debouncedSearch]);
+  }, [
+    loadMore,
+    actorReady,
+    flatRecipes.length,
+    selectedCategory,
+    debouncedSearch,
+  ]);
 
   async function toggleFavorite(ev: React.MouseEvent, recipe: RecipePublic) {
     ev.preventDefault();
@@ -190,7 +201,10 @@ export default function CookBookPage() {
             >
               Phase 8 model
             </Badge>
-            <Badge variant="outline" className="text-xs border-border text-muted-foreground">
+            <Badge
+              variant="outline"
+              className="text-xs border-border text-muted-foreground"
+            >
               Pagination {COOKBOOK_PAGE_SIZE.toString()}/page
             </Badge>
           </div>
@@ -299,9 +313,7 @@ export default function CookBookPage() {
       <section aria-label="Recipes">
         <div className="flex items-center gap-2 mb-5">
           <BookOpen className="w-4 h-4 text-muted-foreground" />
-          <h2 className="font-display font-bold text-lg">
-            Recipes
-          </h2>
+          <h2 className="font-display font-bold text-lg">Recipes</h2>
           <span className="text-xs text-muted-foreground">
             {flatRecipes.length} loaded
           </span>
@@ -399,7 +411,9 @@ export default function CookBookPage() {
                     <button
                       type="button"
                       aria-label={
-                        recipe.caller_favorited ? "Remove favorite" : "Add favorite"
+                        recipe.caller_favorited
+                          ? "Remove favorite"
+                          : "Add favorite"
                       }
                       disabled={favoriteMut.isPending}
                       onClick={(e) => void toggleFavorite(e, recipe)}
@@ -456,10 +470,14 @@ export default function CookBookPage() {
         <FlaskConical className="w-8 h-8 text-primary mx-auto mb-3" />
         <h3 className="font-display font-bold text-xl mb-2">Need inputs?</h3>
         <p className="text-sm text-muted-foreground max-w-md mx-auto mb-5">
-          Garden amendments and nursery stock ship from the IC SPICY marketplace.
+          Garden amendments and nursery stock ship from the IC SPICY
+          marketplace.
         </p>
         <Button asChild className="bg-primary hover:bg-primary/90">
-          <a href="/marketplace?category=GardenInputs" data-ocid="cookbook-shop-cta">
+          <a
+            href="/marketplace?category=GardenInputs"
+            data-ocid="cookbook-shop-cta"
+          >
             Shop supplies
           </a>
         </Button>
@@ -513,7 +531,9 @@ function FeaturedCard({
         }`}
         aria-label="Toggle favorite"
       >
-        <Heart className={`w-4 h-4 ${recipe.caller_favorited ? "fill-current" : ""}`} />
+        <Heart
+          className={`w-4 h-4 ${recipe.caller_favorited ? "fill-current" : ""}`}
+        />
       </button>
     </div>
   );

@@ -3,13 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { GardenDesign, LayerVisibility, PendingPlacement } from "@/lib/garden-types";
-import { formatScoville, varietyColor, varietyIcon } from "@/lib/garden-utils";
 import type { VarietyPublic } from "@/declarations/backend.did";
-import { CatalogAccordion } from "./CatalogAccordion";
-import { LayersPanel } from "./LayersPanel";
+import type {
+  GardenDesign,
+  LayerVisibility,
+  PendingPlacement,
+} from "@/lib/garden-types";
+import { formatScoville, varietyColor, varietyIcon } from "@/lib/garden-utils";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { CatalogAccordion } from "./CatalogAccordion";
+import { LayersPanel } from "./LayersPanel";
 
 type Props = {
   varieties: VarietyPublic[];
@@ -54,17 +58,32 @@ export function CatalogSidebar({
   const icSpicyFiltered = varieties.filter((v) => {
     const needle = q.trim().toLowerCase();
     if (!needle) return true;
-    return v.name.toLowerCase().includes(needle) || v.species.toLowerCase().includes(needle);
+    return (
+      v.name.toLowerCase().includes(needle) ||
+      v.species.toLowerCase().includes(needle)
+    );
   });
 
   const inner = (
-    <Tabs defaultValue="catalog" className="flex h-full flex-col" data-tour="catalog">
+    <Tabs
+      defaultValue="catalog"
+      className="flex h-full flex-col"
+      data-tour="catalog"
+    >
       <div className="border-b border-white/10 p-3 space-y-2 bg-white/5">
         <TabsList className="grid w-full grid-cols-4 bg-white/5 border border-white/10">
-          <TabsTrigger value="catalog" className="text-xs">Catalog</TabsTrigger>
-          <TabsTrigger value="icspicy" className="text-xs">IC SPICY</TabsTrigger>
-          <TabsTrigger value="layers" className="text-xs">Layers</TabsTrigger>
-          <TabsTrigger value="designs" className="text-xs">Designs</TabsTrigger>
+          <TabsTrigger value="catalog" className="text-xs">
+            Catalog
+          </TabsTrigger>
+          <TabsTrigger value="icspicy" className="text-xs">
+            IC SPICY
+          </TabsTrigger>
+          <TabsTrigger value="layers" className="text-xs">
+            Layers
+          </TabsTrigger>
+          <TabsTrigger value="designs" className="text-xs">
+            Designs
+          </TabsTrigger>
         </TabsList>
       </div>
       <ScrollArea className="flex-1 p-3">
@@ -108,10 +127,17 @@ export function CatalogSidebar({
           ))}
         </TabsContent>
         <TabsContent value="layers" className="mt-0">
-          {layers && onLayersChange && <LayersPanel layers={layers} onChange={onLayersChange} />}
+          {layers && onLayersChange && (
+            <LayersPanel layers={layers} onChange={onLayersChange} />
+          )}
         </TabsContent>
         <TabsContent value="designs" className="mt-0 space-y-2">
-          <Button variant="outline" size="sm" className="w-full" onClick={onNewDesign}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={onNewDesign}
+          >
             <Plus className="h-4 w-4 mr-1" /> New Design
           </Button>
           {myDesigns.map((d) => (

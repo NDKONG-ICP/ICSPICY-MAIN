@@ -82,8 +82,7 @@ export function PlantSeedModal({
     if (!q) return varieties;
     return varieties.filter(
       (v) =>
-        v.name.toLowerCase().includes(q) ||
-        v.species.toLowerCase().includes(q),
+        v.name.toLowerCase().includes(q) || v.species.toLowerCase().includes(q),
     );
   }, [search, varieties]);
 
@@ -101,12 +100,14 @@ export function PlantSeedModal({
     }
   };
 
-  const canSubmit =
-    selectedId !== "" && selectedId !== ADD_NEW && !showAddForm;
+  const canSubmit = selectedId !== "" && selectedId !== ADD_NEW && !showAddForm;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-ocid="nims-modal-plant-seed" className="max-w-md gap-6">
+      <DialogContent
+        data-ocid="nims-modal-plant-seed"
+        className="max-w-md gap-6"
+      >
         <DialogHeader>
           <DialogTitle>Plant seed · {slotLabel ?? "Tray cell"}</DialogTitle>
           <DialogDescription>
@@ -151,12 +152,16 @@ export function PlantSeedModal({
                     key={v.id.toString()}
                     type="button"
                     className={`flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm transition hover:bg-muted ${
-                      selectedId === v.id.toString() ? "bg-primary/10 ring-1 ring-primary" : ""
+                      selectedId === v.id.toString()
+                        ? "bg-primary/10 ring-1 ring-primary"
+                        : ""
                     }`}
                     onClick={() => setSelectedId(v.id.toString())}
                   >
                     <span className="font-medium">{v.name}</span>
-                    <span className="text-xs text-muted-foreground">{v.species}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {v.species}
+                    </span>
                   </button>
                 ))
               )}
@@ -256,7 +261,11 @@ export function PlantSeedModal({
         )}
 
         <DialogFooter>
-          <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           {!showAddForm && (
@@ -267,7 +276,8 @@ export function PlantSeedModal({
               onClick={() => {
                 void onSubmit({
                   varietyId: BigInt(selectedId),
-                  genetics: genetics.trim() === "" ? undefined : genetics.trim(),
+                  genetics:
+                    genetics.trim() === "" ? undefined : genetics.trim(),
                   notes: notes.trim() === "" ? undefined : notes.trim(),
                 });
               }}

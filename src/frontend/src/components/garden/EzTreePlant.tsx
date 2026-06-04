@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
-import { Html } from "@react-three/drei";
-import { Tree } from "@dgreenheck/ez-tree";
-import * as THREE from "three";
 import type { PlantPlacement } from "@/lib/garden-types";
+import { Tree } from "@dgreenheck/ez-tree";
+import { Html } from "@react-three/drei";
+import { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
 
 const BUSH_PRESETS = ["Bush 1", "Bush 2", "Bush 3"] as const;
 
@@ -93,7 +93,9 @@ export function EzTreePlant({
     >
       {selected && (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-          <ringGeometry args={[0.22 * placement.scale, 0.26 * placement.scale, 32]} />
+          <ringGeometry
+            args={[0.22 * placement.scale, 0.26 * placement.scale, 32]}
+          />
           <meshBasicMaterial color="#f97316" transparent opacity={0.85} />
         </mesh>
       )}
@@ -103,7 +105,9 @@ export function EzTreePlant({
         >
           <span className="font-medium">{placement.label}</span>
           {scovilleLabel && (
-            <span className="text-muted-foreground ml-1">· {scovilleLabel}</span>
+            <span className="text-muted-foreground ml-1">
+              · {scovilleLabel}
+            </span>
           )}
         </div>
       </Html>

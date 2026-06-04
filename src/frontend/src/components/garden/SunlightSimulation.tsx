@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import SunCalc from "suncalc";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DEFAULT_NURSERY_COORDS } from "@/lib/garden-rules";
 import { Sun } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import SunCalc from "suncalc";
 
 type Props = {
   lat?: number;
@@ -46,7 +46,9 @@ export function SunlightSimulation({
   return (
     <div className="rounded-lg border border-border bg-card/60 p-3 space-y-3">
       <div className="flex items-center gap-2">
-        <Sun className={`h-4 w-4 ${sun.isDay ? "text-amber-400" : "text-muted-foreground"}`} />
+        <Sun
+          className={`h-4 w-4 ${sun.isDay ? "text-amber-400" : "text-muted-foreground"}`}
+        />
         <h3 className="text-sm font-semibold">Sunlight simulation</h3>
       </div>
       <div className="grid grid-cols-2 gap-2">

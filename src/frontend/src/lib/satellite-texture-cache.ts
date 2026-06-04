@@ -9,7 +9,11 @@ function cacheKey(lat: number, lng: number, zoom: number) {
 }
 
 /** Preload a satellite tile URL; returns cached URL when ready. */
-export function preloadSatelliteTileUrl(lat: number, lng: number, zoom: number): Promise<string> {
+export function preloadSatelliteTileUrl(
+  lat: number,
+  lng: number,
+  zoom: number,
+): Promise<string> {
   const key = cacheKey(lat, lng, zoom);
   const hit = urlCache.get(key);
   if (hit) return Promise.resolve(hit);
@@ -36,7 +40,11 @@ export function preloadSatelliteTileUrl(lat: number, lng: number, zoom: number):
   return promise;
 }
 
-export function getCachedSatelliteTileUrl(lat: number, lng: number, zoom: number): string | null {
+export function getCachedSatelliteTileUrl(
+  lat: number,
+  lng: number,
+  zoom: number,
+): string | null {
   return urlCache.get(cacheKey(lat, lng, zoom)) ?? null;
 }
 

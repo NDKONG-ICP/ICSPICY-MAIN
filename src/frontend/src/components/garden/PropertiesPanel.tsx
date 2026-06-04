@@ -2,12 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import type { GardenDesignerState } from "@/hooks/useGardenDesigner";
 import type { VarietyPublic } from "@/declarations/backend.did";
-import {
-  formatScoville,
-  spacingRecommendation,
-} from "@/lib/garden-utils";
+import type { GardenDesignerState } from "@/hooks/useGardenDesigner";
+import { formatScoville, spacingRecommendation } from "@/lib/garden-utils";
 import { Copy, Trash2 } from "lucide-react";
 
 type Props = {
@@ -53,8 +50,8 @@ export function PropertiesPanel({ designer, varieties, mobile }: Props) {
 
   const name =
     selectedType === "plant"
-      ? selectedPlant?.label ?? "Plant"
-      : selectedStructure?.structureType.replace(/_/g, " ") ?? "Structure";
+      ? (selectedPlant?.label ?? "Plant")
+      : (selectedStructure?.structureType.replace(/_/g, " ") ?? "Structure");
 
   const x = selectedType === "plant" ? selectedPlant!.x : selectedStructure!.x;
   const y = selectedType === "plant" ? selectedPlant!.y : selectedStructure!.y;

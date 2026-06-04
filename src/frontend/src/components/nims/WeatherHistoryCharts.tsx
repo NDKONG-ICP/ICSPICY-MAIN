@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { ChartContainer } from "@/components/ui/chart";
+import { downloadTextFile } from "@/lib/plant-nfc-url";
 import {
-  buildWeatherHistory,
-  weatherHistoryToCsv,
   type WeatherDateRange,
   type WeatherHistoryPoint,
+  buildWeatherHistory,
+  weatherHistoryToCsv,
 } from "@/lib/weather-history";
-import type { PlantLifecycle } from "../../declarations/backend.did";
 import { ChevronDown, Download } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -21,7 +21,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { downloadTextFile } from "@/lib/plant-nfc-url";
+import type { PlantLifecycle } from "../../declarations/backend.did";
 
 const RANGE_OPTIONS: { id: WeatherDateRange; label: string }[] = [
   { id: "7d", label: "Last 7 days" },
@@ -30,7 +30,11 @@ const RANGE_OPTIONS: { id: WeatherDateRange; label: string }[] = [
   { id: "all", label: "All time" },
 ];
 
-const CHART_ANIMATION = { isAnimationActive: true, animationDuration: 1400, animationEasing: "ease-out" as const };
+const CHART_ANIMATION = {
+  isAnimationActive: true,
+  animationDuration: 1400,
+  animationEasing: "ease-out" as const,
+};
 
 type ChartRow = WeatherHistoryPoint & {
   label: string;
@@ -84,20 +88,29 @@ function WeatherHistoryTooltip({
 
   return (
     <div className="rounded-xl border border-white/10 bg-zinc-950/95 px-3 py-2.5 text-xs shadow-xl backdrop-blur-md">
-      <p className="mb-2 font-semibold text-amber-200">{formatFullDate(row.date)}</p>
+      <p className="mb-2 font-semibold text-amber-200">
+        {formatFullDate(row.date)}
+      </p>
       <div className="grid gap-1 text-zinc-300">
         <span>
           <span className="text-red-400">High</span> {row.highF.toFixed(0)}°F ·{" "}
           <span className="text-blue-400">Low</span> {row.lowF.toFixed(0)}°F
         </span>
-        <span>💧 Humidity {row.humidity.toFixed(0)}% · 🌧️ {row.rainInches.toFixed(2)}&quot;</span>
-        <span>☀️ UV {row.uvIndex.toFixed(1)} · 🌬️ {row.windMph?.toFixed(0) ?? "—"} mph</span>
+        <span>
+          💧 Humidity {row.humidity.toFixed(0)}% · 🌧️ {row.rainInches.toFixed(2)}
+          &quot;
+        </span>
+        <span>
+          ☀️ UV {row.uvIndex.toFixed(1)} · 🌬️ {row.windMph?.toFixed(0) ?? "—"} mph
+        </span>
         {row.aqi != null && <span>🫁 AQI {row.aqi}</span>}
         {row.moonPhase && <span>🌙 {row.moonPhase}</span>}
       </div>
       {activities.length > 0 ? (
         <div className="mt-2 border-t border-white/10 pt-2">
-          <p className="mb-1 text-[10px] uppercase tracking-wide text-zinc-500">Logged</p>
+          <p className="mb-1 text-[10px] uppercase tracking-wide text-zinc-500">
+            Logged
+          </p>
           <ul className="space-y-0.5 text-zinc-200">
             {activities.map((a) => (
               <li key={a}>{a}</li>
@@ -105,7 +118,9 @@ function WeatherHistoryTooltip({
           </ul>
         </div>
       ) : (
-        <p className="mt-2 border-t border-white/10 pt-2 text-zinc-500">No care logs this day</p>
+        <p className="mt-2 border-t border-white/10 pt-2 text-zinc-500">
+          No care logs this day
+        </p>
       )}
     </div>
   );
@@ -125,7 +140,15 @@ function ActivityDot({
   if (cx == null || cy == null) return <g />;
   return (
     <g className="cursor-pointer">
-      <circle cx={cx} cy={cy} r={12} fill={color} fillOpacity={0.15} stroke={color} strokeWidth={1.5} />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={12}
+        fill={color}
+        fillOpacity={0.15}
+        stroke={color}
+        strokeWidth={1.5}
+      />
       <text x={cx} y={cy + 4} textAnchor="middle" fontSize={11}>
         {emoji}
       </text>
@@ -164,8 +187,8 @@ export function WeatherHistoryCharts({
         data-ocid="weather-history-empty"
         className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground"
       >
-        No weather snapshots yet. Log watering, feeding, or notes to capture local
-        weather with each entry.
+        No weather snapshots yet. Log watering, feeding, or notes to capture
+        local weather with each entry.
       </div>
     );
   }
@@ -187,7 +210,9 @@ export function WeatherHistoryCharts({
       </div>
 
       <div className="rounded-xl border border-white/10 bg-zinc-950/40 p-4 backdrop-blur-sm">
-        <h3 className="mb-3 font-display font-semibold text-foreground">Temperature (°F)</h3>
+        <h3 className="mb-3 font-display font-semibold text-foreground">
+          Temperature (°F)
+        </h3>
         <ChartContainer
           config={{
             highF: { label: "High", color: "#ef4444" },
@@ -196,21 +221,52 @@ export function WeatherHistoryCharts({
           className="h-[240px] w-full"
         >
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <ComposedChart
+              data={chartData}
+              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+            >
               <defs>
-                <linearGradient id="tempHighGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="tempHighGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="0%" stopColor="#ef4444" stopOpacity={0.45} />
                   <stop offset="100%" stopColor="#ef4444" stopOpacity={0.02} />
                 </linearGradient>
-                <linearGradient id="tempLowGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="tempLowGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.35} />
                   <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "#a1a1aa" }} unit="°" axisLine={false} tickLine={false} />
-              <Tooltip content={<WeatherHistoryTooltip />} cursor={{ stroke: "#ef4444", strokeOpacity: 0.3 }} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.06)"
+              />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                unit="°"
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                content={<WeatherHistoryTooltip />}
+                cursor={{ stroke: "#ef4444", strokeOpacity: 0.3 }}
+              />
               <Area
                 type="monotone"
                 dataKey="highF"
@@ -239,17 +295,23 @@ export function WeatherHistoryCharts({
                     payload?: ChartRow;
                   };
                   if (!payload?.watered) return <g />;
-                  return <ActivityDot cx={cx} cy={cy} emoji="💧" color="#38bdf8" />;
+                  return (
+                    <ActivityDot cx={cx} cy={cy} emoji="💧" color="#38bdf8" />
+                  );
                 }}
               />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartContainer>
-        <p className="mt-1 text-xs text-muted-foreground">💧 = watering logged · hover for details</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          💧 = watering logged · hover for details
+        </p>
       </div>
 
       <div className="rounded-xl border border-white/10 bg-zinc-950/40 p-4 backdrop-blur-sm">
-        <h3 className="mb-3 font-display font-semibold text-foreground">Humidity & Rainfall</h3>
+        <h3 className="mb-3 font-display font-semibold text-foreground">
+          Humidity & Rainfall
+        </h3>
         <ChartContainer
           config={{
             rainInches: { label: "Rain (in)", color: "#3b82f6" },
@@ -258,22 +320,61 @@ export function WeatherHistoryCharts({
           className="h-[240px] w-full"
         >
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <ComposedChart
+              data={chartData}
+              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+            >
               <defs>
-                <linearGradient id="rainBarGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="rainBarGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.95} />
                   <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.35} />
                 </linearGradient>
-                <linearGradient id="humidityLineGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="humidityLineGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="0%" stopColor="#fbbf24" stopOpacity={0.35} />
                   <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
-              <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "#a1a1aa" }} unit='"' axisLine={false} tickLine={false} />
-              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "#a1a1aa" }} unit="%" axisLine={false} tickLine={false} />
-              <Tooltip content={<WeatherHistoryTooltip />} cursor={{ fill: "rgba(59,130,246,0.08)" }} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.06)"
+              />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                yAxisId="left"
+                tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                unit='"'
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                unit="%"
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                content={<WeatherHistoryTooltip />}
+                cursor={{ fill: "rgba(59,130,246,0.08)" }}
+              />
               <Bar
                 yAxisId="left"
                 dataKey="rainInches"
@@ -303,29 +404,64 @@ export function WeatherHistoryCharts({
                     payload?: ChartRow;
                   };
                   if (!payload?.fed) return <g />;
-                  return <ActivityDot cx={cx} cy={cy} emoji="🧪" color="#a3e635" />;
+                  return (
+                    <ActivityDot cx={cx} cy={cy} emoji="🧪" color="#a3e635" />
+                  );
                 }}
               />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartContainer>
-        <p className="mt-1 text-xs text-muted-foreground">🧪 = feeding logged</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          🧪 = feeding logged
+        </p>
       </div>
 
       <div className="rounded-xl border border-white/10 bg-zinc-950/40 p-4 backdrop-blur-sm">
-        <h3 className="mb-3 font-display font-semibold text-foreground">UV Index</h3>
+        <h3 className="mb-3 font-display font-semibold text-foreground">
+          UV Index
+        </h3>
         <ChartContainer
           config={{ uvIndex: { label: "UV", color: "#f97316" } }}
           className="h-[220px] w-full"
         >
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "#a1a1aa" }} domain={[0, 12]} axisLine={false} tickLine={false} />
-              <ReferenceLine y={6} stroke="#f97316" strokeDasharray="4 4" strokeOpacity={0.6} />
-              <ReferenceLine y={8} stroke="#ef4444" strokeDasharray="4 4" strokeOpacity={0.6} />
-              <Tooltip content={<WeatherHistoryTooltip />} cursor={{ stroke: "#f97316", strokeOpacity: 0.25 }} />
+            <ComposedChart
+              data={chartData}
+              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.06)"
+              />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                domain={[0, 12]}
+                axisLine={false}
+                tickLine={false}
+              />
+              <ReferenceLine
+                y={6}
+                stroke="#f97316"
+                strokeDasharray="4 4"
+                strokeOpacity={0.6}
+              />
+              <ReferenceLine
+                y={8}
+                stroke="#ef4444"
+                strokeDasharray="4 4"
+                strokeOpacity={0.6}
+              />
+              <Tooltip
+                content={<WeatherHistoryTooltip />}
+                cursor={{ stroke: "#f97316", strokeOpacity: 0.25 }}
+              />
               <defs>
                 <linearGradient id="uvGradient" x1="0" y1="0" x2="0" y2="1">
                   {chartData.map((d, i) => (
@@ -358,13 +494,17 @@ export function WeatherHistoryCharts({
                     payload?: ChartRow;
                   };
                   if (!payload?.pestLogged) return <g />;
-                  return <ActivityDot cx={cx} cy={cy} emoji="🐛" color="#f87171" />;
+                  return (
+                    <ActivityDot cx={cx} cy={cy} emoji="🐛" color="#f87171" />
+                  );
                 }}
               />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartContainer>
-        <p className="mt-1 text-xs text-muted-foreground">🐛 = pest treatment logged</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          🐛 = pest treatment logged
+        </p>
       </div>
 
       <div className="rounded-xl border border-border bg-card">

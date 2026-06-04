@@ -215,6 +215,7 @@ export interface CreateCommentInput {
   'content' : string,
   'anonymous' : boolean,
 }
+export interface CreateGardenDesignResult { 'designId' : bigint }
 export interface CreateOrderInput {
   'shipping' : [] | [ShippingAddress],
   'pickup' : boolean,
@@ -306,12 +307,20 @@ export interface CreateTrayInput {
   'planting_date' : Timestamp,
   'nft_standard' : NFTStandard,
 }
+export interface DailyFeatureStat {
+  'day' : DayBucket,
+  'action' : string,
+  'feature' : string,
+  'count' : bigint,
+  'uniqueUsers' : bigint,
+}
 export interface DashboardStats {
   'needsAttention' : bigint,
   'germinatedToday' : bigint,
   'lastWateredMsAgo' : [] | [bigint],
   'totalPlants' : bigint,
 }
+export type DayBucket = bigint;
 export type DeathCause = { 'DampingOff' : null } |
   { 'PestDamage' : null } |
   { 'Disease' : null } |
@@ -351,6 +360,31 @@ export interface FoundersMintResult {
   'tokenId' : string,
   'recipient' : Principal,
   'standard' : NFTStandard,
+}
+export interface GardenDesign {
+  'id' : bigint,
+  'structures' : Array<StructurePlacement>,
+  'plants' : Array<PlantPlacement>,
+  'owner' : Principal,
+  'widthMeters' : number,
+  'name' : string,
+  'createdAt' : Timestamp,
+  'description' : [] | [string],
+  'gridSizeMeters' : number,
+  'nftTokenId' : [] | [bigint],
+  'updatedAt' : Timestamp,
+  'depthMeters' : number,
+  'isPublic' : boolean,
+}
+export interface GardenDesignInput {
+  'structures' : Array<StructurePlacement>,
+  'plants' : Array<PlantPlacement>,
+  'widthMeters' : number,
+  'name' : string,
+  'description' : [] | [string],
+  'gridSizeMeters' : number,
+  'depthMeters' : number,
+  'isPublic' : boolean,
 }
 export interface Health {
   'heapSize' : bigint,
@@ -494,6 +528,8 @@ export interface ICSpicy {
     { 'ok' : null } |
       { 'err' : string }
   >,
+  'calculateGardenYield' : ActorMethod<[bigint], [] | [YieldEstimate]>,
+  'calculateGardenYieldInput' : ActorMethod<[GardenDesignInput], YieldEstimate>,
   'cancelOffer' : ActorMethod<[string], Offer>,
   'cancelProposal' : ActorMethod<[ProposalId], boolean>,
   'cancelResaleListing' : ActorMethod<
@@ -502,9 +538,6 @@ export interface ICSpicy {
       { 'err' : string }
   >,
   'castVote' : ActorMethod<[ProposalId, bigint], boolean>,
-  /**
-   * / Per-principal rate limiters for cycle-drain protection (CDA).
-   */
   'clearArtworkFiles' : ActorMethod<[], undefined>,
   'closeProposal' : ActorMethod<[ProposalId], boolean>,
   'completeEvent' : ActorMethod<[bigint], PlantingEvent>,
@@ -524,6 +557,10 @@ export interface ICSpicy {
   >,
   'createComment' : ActorMethod<[CreateCommentInput], CommentPublic>,
   'createDAOProposal' : ActorMethod<[CreateProposalInput], ProposalPublic>,
+  'createGardenDesign' : ActorMethod<
+    [GardenDesignInput],
+    CreateGardenDesignResult
+  >,
   'createNimsTray' : ActorMethod<[string, Timestamp, [] | [bigint]], TrayId>,
   'createOrder' : ActorMethod<[Principal, CreateOrderInput], OrderPublic>,
   'createPlant' : ActorMethod<[CreatePlantInput], PlantPublic>,
@@ -544,6 +581,7 @@ export interface ICSpicy {
     http_request_result
   >,
   'deleteComment' : ActorMethod<[CommentId], boolean>,
+  'deleteGardenDesign' : ActorMethod<[bigint], boolean>,
   'deletePlantingEvent' : ActorMethod<[bigint], undefined>,
   'deletePost' : ActorMethod<[PostId], boolean>,
   'deleteProduct' : ActorMethod<[ProductId], undefined>,
@@ -645,16 +683,16 @@ export interface ICSpicy {
   'getFollowingCount' : ActorMethod<[Principal], bigint>,
   'getFollowingFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
   'getForSalePlants' : ActorMethod<[], Array<PlantPublic>>,
+  'getGardenDesign' : ActorMethod<[bigint], [] | [GardenDesign]>,
+  'getGardenDesignForUser' : ActorMethod<[bigint], [] | [GardenDesign]>,
   'getGlobalFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
-  /**
-   * / Uploads asset canister — user images served via HTTP from this canister.
-   */
   'getIcrc7PoolStatsAdmin' : ActorMethod<[], Icrc7PoolStats>,
   'getLatestNurseryWeather' : ActorMethod<[], [] | [WeatherSnapshot]>,
   'getListedNfts' : ActorMethod<[[] | [boolean]], Array<NftListingPublic>>,
   'getLoadedMetadataCount' : ActorMethod<[], bigint>,
   'getMembershipPriceInToken' : ActorMethod<[OracleToken], bigint>,
   'getMyCrosses' : ActorMethod<[], Array<BreedingCrossPublic>>,
+  'getMyDesigns' : ActorMethod<[], Array<GardenDesign>>,
   'getMyFavorites' : ActorMethod<[bigint, bigint], Array<RecipePublic>>,
   'getMyNftListings' : ActorMethod<[], Array<NftListingPublic>>,
   'getMyOffers' : ActorMethod<[], Array<Offer>>,
@@ -708,6 +746,7 @@ export interface ICSpicy {
     [[] | [ProposalStatus], [] | [ProposalCategory], bigint, bigint],
     Array<ProposalPublic>
   >,
+  'getPublicDesigns' : ActorMethod<[bigint, bigint], Array<GardenDesign>>,
   'getPublicProfile' : ActorMethod<[Principal], [] | [UserProfilePublic]>,
   'getRecentActivity' : ActorMethod<[bigint], Array<ActivityEntry>>,
   'getRecipe' : ActorMethod<[RecipeId], [] | [RecipePublic]>,
@@ -736,6 +775,7 @@ export interface ICSpicy {
   'getUpcomingEvents' : ActorMethod<[], Array<PlantingEvent>>,
   'getUpgradeHistory' : ActorMethod<[PlantId], Array<LifecycleUpgradeEvent>>,
   'getUploadsCanisterId' : ActorMethod<[], [] | [string]>,
+  'getUsageRollups' : ActorMethod<[bigint], Array<DailyFeatureStat>>,
   'getUserPosts' : ActorMethod<[Principal, bigint, bigint], Array<PostPublic>>,
   'getVariety' : ActorMethod<[bigint], [] | [VarietyPublic]>,
   'getWeatherDebug' : ActorMethod<
@@ -833,9 +873,6 @@ export interface ICSpicy {
   >,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isFollowing' : ActorMethod<[Principal], boolean>,
-  /**
-   * / Public query — anyone can check backend canister health.
-   */
   'isPepperHead' : ActorMethod<[bigint], boolean>,
   'isPepperHeadAvailable' : ActorMethod<[], bigint>,
   'isUserBanned' : ActorMethod<[Principal], boolean>,
@@ -851,6 +888,11 @@ export interface ICSpicy {
   >,
   'likeComment' : ActorMethod<[CommentId], boolean>,
   'likePost' : ActorMethod<[PostId], boolean>,
+  'linkWallet' : ActorMethod<[Principal], boolean>,
+  'getLinkedWallets' : ActorMethod<[], Array<Principal>>,
+  'unlinkWallet' : ActorMethod<[Principal], boolean>,
+  'refreshRavenBalance' : ActorMethod<[], undefined>,
+  'getRavenDiscountPercent' : ActorMethod<[], bigint>,
   'listAllOrdersAdmin' : ActorMethod<
     [AdminOrderStatusFilter],
     Array<AdminOrderPublic>
@@ -923,6 +965,7 @@ export interface ICSpicy {
     boolean
   >,
   'markPlantGerminated' : ActorMethod<[PlantId, Timestamp], undefined>,
+  'mintDesignAsNft' : ActorMethod<[bigint], MintDesignNftResult>,
   'mintEXT' : ActorMethod<[bigint, string, Array<[string, string]>], string>,
   'mintHederaNFT' : ActorMethod<
     [PlantId, [] | [string], Array<[string, string]>],
@@ -946,6 +989,7 @@ export interface ICSpicy {
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
   >,
+  'pruneUsageData' : ActorMethod<[], undefined>,
   'publishProposal' : ActorMethod<[ProposalId], boolean>,
   'publishRecipe' : ActorMethod<[RecipeId], boolean>,
   'purchasePepperHead' : ActorMethod<
@@ -976,6 +1020,7 @@ export interface ICSpicy {
     bigint
   >,
   'recordTip' : ActorMethod<[RecordTipInput], boolean>,
+  'recordUsageEvent' : ActorMethod<[string, string], undefined>,
   'redeemBatchClaim' : ActorMethod<
     [ClaimTokenId],
     { 'ok' : BatchGiftPackPublic } |
@@ -1007,6 +1052,9 @@ export interface ICSpicy {
   'saveSchedule' : ActorMethod<[string, Array<string>], ScheduleId>,
   'searchRecipes' : ActorMethod<[string, bigint], Array<RecipePublic>>,
   'searchUsers' : ActorMethod<[string, bigint], Array<UserProfilePublic>>,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'searchVarieties' : ActorMethod<[string], Array<VarietyPublic>>,
   'seedDefaultRecipes' : ActorMethod<[], undefined>,
   'setForSale' : ActorMethod<[PlantId, boolean], undefined>,
@@ -1052,6 +1100,7 @@ export interface ICSpicy {
   'unfollowUser' : ActorMethod<[Principal], undefined>,
   'unlikePost' : ActorMethod<[PostId], bigint>,
   'updateCellData' : ActorMethod<[UpdateCellDataInput], undefined>,
+  'updateGardenDesign' : ActorMethod<[bigint, GardenDesignInput], boolean>,
   'updateNimsPlantStage' : ActorMethod<[PlantId, PlantStage], boolean>,
   'updateOrderStatus' : ActorMethod<[OrderId, OrderStatus], undefined>,
   'updateOrderStatusAdmin' : ActorMethod<[OrderId, OrderStatus], undefined>,
@@ -1064,9 +1113,6 @@ export interface ICSpicy {
   >,
   'updateProduct' : ActorMethod<[UpdateProductInput], undefined>,
   'updateProposal' : ActorMethod<[ProposalId, UpdateProposalInput], boolean>,
-  /**
-   * / Per-principal rate limiters for cycle-drain protection (CDA).
-   */
   'updateRecipe' : ActorMethod<[UpdateRecipeInput], boolean>,
   'updateSeedLot' : ActorMethod<
     [
@@ -1102,6 +1148,11 @@ export interface ICSpicy {
     [bigint, bigint, Uint8Array | number[]],
     { 'ok' : null } |
       { 'err' : string }
+  >,
+  'validateGardenDesign' : ActorMethod<[bigint], Array<ValidationWarning>>,
+  'validateGardenDesignInput' : ActorMethod<
+    [GardenDesignInput],
+    Array<ValidationWarning>
   >,
   'voteOnProposal' : ActorMethod<[ProposalId, bigint], undefined>,
   'waterEntireTray' : ActorMethod<
@@ -1189,6 +1240,7 @@ export interface MembershipNFTPublic {
 }
 export type MembershipTier = { 'Premium' : null } |
   { 'Standard' : null };
+export interface MintDesignNftResult { 'nftTokenId' : bigint }
 export interface MintRWAProvenanceInput {
   'custom_notes' : string,
   'artwork_layer_id' : ArtworkLayerId,
@@ -1322,6 +1374,17 @@ export interface PlantPhotoEntry {
   'author' : Principal,
   'timestamp' : Timestamp,
   'caption' : [] | [string],
+}
+export interface PlantPlacement {
+  'x' : number,
+  'y' : number,
+  'id' : bigint,
+  'rotation' : number,
+  'plantLabel' : string,
+  'icon' : string,
+  'color' : string,
+  'scale' : number,
+  'varietyId' : [] | [bigint],
 }
 export interface PlantPublic {
   'id' : PlantId,
@@ -1710,6 +1773,16 @@ export interface StoredFile {
   'filename' : string,
   'uploaded_at' : Timestamp,
 }
+export interface StructurePlacement {
+  'x' : number,
+  'y' : number,
+  'id' : bigint,
+  'rotation' : number,
+  'color' : string,
+  'width' : number,
+  'depth' : number,
+  'structureType' : string,
+}
 export type Subaccount = Uint8Array | number[];
 export interface SubmitOfferInput {
   'nft_id' : string,
@@ -1910,6 +1983,16 @@ export interface UserProfilePublic {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export type ValidationSeverity = { 'Error' : null } |
+  { 'Info' : null } |
+  { 'Warning' : null };
+export interface ValidationWarning {
+  'code' : string,
+  'plantId' : [] | [bigint],
+  'message' : string,
+  'severity' : ValidationSeverity,
+  'relatedPlantId' : [] | [bigint],
+}
 export type Value = { 'Int' : bigint } |
   { 'Map' : Array<[string, Value]> } |
   { 'Nat' : bigint } |
@@ -1957,6 +2040,14 @@ export interface WeatherSnapshot {
   'uvIndex' : number,
   'humidity' : number,
   'tempLowF' : number,
+}
+export interface YieldEstimate {
+  'estimatedLbsMax' : number,
+  'estimatedLbsMin' : number,
+  'spacingPenaltyPct' : number,
+  'companionBonusPct' : number,
+  'notes' : string,
+  'totalPlantCount' : bigint,
 }
 export interface ZoneCalendar {
   'zone_label' : string,

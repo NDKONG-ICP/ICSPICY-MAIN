@@ -1,14 +1,6 @@
-import { Suspense, useCallback, useMemo, useRef, useState, useEffect } from "react";
-import SunCalc from "suncalc";
-import { Canvas, type ThreeEvent } from "@react-three/fiber";
-import {
-  ContactShadows,
-  Environment,
-  OrbitControls,
-  Sky,
-  TransformControls,
-} from "@react-three/drei";
-import type { Group } from "three";
+import type { VarietyPublic } from "@/declarations/backend.did";
+import { useSunPosition } from "@/hooks/useSunPosition";
+import { getSeasonalState, monthSkyTint } from "@/lib/garden-seasonal";
 import type {
   CameraPresetId,
   GardenDesign,
@@ -16,10 +8,25 @@ import type {
   PlantPlacement,
   StructurePlacement,
 } from "@/lib/garden-types";
-import type { VarietyPublic } from "@/declarations/backend.did";
 import { formatScoville } from "@/lib/garden-utils";
-import { getSeasonalState, monthSkyTint } from "@/lib/garden-seasonal";
-import { useSunPosition } from "@/hooks/useSunPosition";
+import {
+  ContactShadows,
+  Environment,
+  OrbitControls,
+  Sky,
+  TransformControls,
+} from "@react-three/drei";
+import { Canvas, type ThreeEvent } from "@react-three/fiber";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import SunCalc from "suncalc";
+import type { Group } from "three";
 import { AnimatedPlacement } from "./AnimatedPlacement";
 import { AtmosphericEffects } from "./AtmosphericEffects";
 import { CameraPresetController } from "./CameraPresetController";
@@ -27,15 +34,15 @@ import { EzTreePlant } from "./EzTreePlant";
 import { GhostPreview3D } from "./GhostPreview";
 import { GridOverlay3D } from "./GridOverlay";
 import { InstancedPlantField, instancedPlantIds } from "./InstancedPlantField";
-import { PlantModel } from "./plants/PlantModel";
 import { RainParticles } from "./RainParticles";
 import { SatelliteGround } from "./SatelliteGround";
-import { ScenePostProcessing, PixelRatioLimiter } from "./ScenePostProcessing";
+import { PixelRatioLimiter, ScenePostProcessing } from "./ScenePostProcessing";
 import { StructureMesh } from "./StructureMesh";
 import { SunlightSceneOverlay } from "./SunlightSimulation3D";
 import { SwayingPlant } from "./SwayingPlant";
 import { TexturedGround } from "./TexturedGround";
 import { WalkMode } from "./WalkMode";
+import { PlantModel } from "./plants/PlantModel";
 
 type Props = {
   design: GardenDesign;
@@ -73,7 +80,12 @@ type Props = {
   onPointerMove: (x: number, y: number) => void;
   onPlace: () => void;
   onClearSelection: () => void;
-  onMoveItem: (id: number, type: "plant" | "structure", x: number, y: number) => void;
+  onMoveItem: (
+    id: number,
+    type: "plant" | "structure",
+    x: number,
+    y: number,
+  ) => void;
   onDeleteItem: (id: number, type: "plant" | "structure") => void;
 };
 
@@ -148,24 +160,28 @@ function Scene({
         ? monthSkyTint(simulationMonth).hour
         : timeOfDayHour;
   const sun = useSunPosition(sunLat, sunLng, effectiveHour);
-  const monthTint = simulationMonth != null ? monthSkyTint(simulationMonth) : null;
+  const monthTint =
+    simulationMonth != null ? monthSkyTint(simulationMonth) : null;
   const skyColor =
     tempTint === "warm"
       ? "#ffd4a8"
       : tempTint === "cool"
         ? "#a8c8e8"
-        : monthTint?.fogColor ?? sun.skyColor;
+        : (monthTint?.fogColor ?? sun.skyColor);
   const [atmospheric, setAtmospheric] = useState(false);
 
   const visiblePlants = useMemo(() => {
     let plants = design.plants;
-    if (revealedPlantIds) plants = plants.filter((p) => revealedPlantIds.has(p.id));
+    if (revealedPlantIds)
+      plants = plants.filter((p) => revealedPlantIds.has(p.id));
     return plants;
   }, [design.plants, revealedPlantIds]);
 
   useEffect(() => {
     if (window.innerWidth < 1024) return;
-    const id = requestIdleCallback?.(() => setAtmospheric(true)) ?? setTimeout(() => setAtmospheric(true), 800);
+    const id =
+      requestIdleCallback?.(() => setAtmospheric(true)) ??
+      setTimeout(() => setAtmospheric(true), 800);
     return () => {
       if (typeof id === "number") clearTimeout(id);
     };
@@ -179,11 +195,20 @@ function Scene({
     return m;
   }, [varieties]);
 
-  const instancedIds = useMemo(() => instancedPlantIds(visiblePlants), [visiblePlants]);
+  const instancedIds = useMemo(
+    () => instancedPlantIds(visiblePlants),
+    [visiblePlants],
+  );
   const selectedPlant =
-    selectedType === "plant" ? visiblePlants.find((p) => p.id === selectedId) ?? design.plants.find((p) => p.id === selectedId) ?? null : null;
+    selectedType === "plant"
+      ? (visiblePlants.find((p) => p.id === selectedId) ??
+        design.plants.find((p) => p.id === selectedId) ??
+        null)
+      : null;
   const selectedStructure =
-    selectedType === "structure" ? design.structures.find((s) => s.id === selectedId) ?? null : null;
+    selectedType === "structure"
+      ? (design.structures.find((s) => s.id === selectedId) ?? null)
+      : null;
 
   const handleGround = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
@@ -207,12 +232,18 @@ function Scene({
   const renderPlant = (p: PlantPlacement, selected: boolean) => {
     if (layers && !layers.plants) return null;
     if (instancedIds.has(p.id)) return null;
-    const seasonal = simulationMonth != null ? getSeasonalState(p, simulationMonth) : null;
+    const seasonal =
+      simulationMonth != null ? getSeasonalState(p, simulationMonth) : null;
     const maturity = seasonal?.maturity ?? growthStage;
-    const label = p.varietyId != null ? scovilleByVariety.get(p.varietyId) ?? null : null;
+    const label =
+      p.varietyId != null ? (scovilleByVariety.get(p.varietyId) ?? null) : null;
     const mesh = useProcedural ? (
       <EzTreePlant
-        placement={{ ...p, color: seasonal?.color ?? p.color, scale: seasonal?.scale ?? p.scale }}
+        placement={{
+          ...p,
+          color: seasonal?.color ?? p.color,
+          scale: seasonal?.scale ?? p.scale,
+        }}
         growthStage={maturity}
         selected={selected}
         scovilleLabel={label}
@@ -222,7 +253,11 @@ function Scene({
       />
     ) : (
       <PlantModel
-        placement={{ ...p, color: seasonal?.color ?? p.color, scale: seasonal?.scale ?? p.scale }}
+        placement={{
+          ...p,
+          color: seasonal?.color ?? p.color,
+          scale: seasonal?.scale ?? p.scale,
+        }}
         selected={selected}
         scovilleLabel={label}
         maturity={maturity}
@@ -241,7 +276,11 @@ function Scene({
   const renderStructure = (s: StructurePlacement, selected: boolean) => {
     if (layers && !layers.structures) return null;
     return (
-      <StructureMesh placement={s} selected={selected} onSelect={() => onSelectStructure(s.id)} />
+      <StructureMesh
+        placement={s}
+        selected={selected}
+        onSelect={() => onSelectStructure(s.id)}
+      />
     );
   };
 
@@ -255,7 +294,11 @@ function Scene({
   return (
     <>
       {cameraPreset !== "walk" && (
-        <CameraPresetController preset={cameraPreset} plotCenter={[cx, 0, cz]} plotSize={plotSize} />
+        <CameraPresetController
+          preset={cameraPreset}
+          plotCenter={[cx, 0, cz]}
+          plotSize={plotSize}
+        />
       )}
       <Sky
         sunPosition={sun.position}
@@ -282,7 +325,13 @@ function Scene({
       />
       <Environment preset="sunset" background={false} />
       {showShadows && (
-        <ContactShadows position={[cx, 0, cz]} scale={plotSize + 4} blur={2} far={4} opacity={0.4} />
+        <ContactShadows
+          position={[cx, 0, cz]}
+          scale={plotSize + 4}
+          blur={2}
+          far={4}
+          opacity={0.4}
+        />
       )}
 
       {satelliteEnabled && layers?.satellite !== false ? (
@@ -314,8 +363,14 @@ function Scene({
         <planeGeometry args={[design.widthMeters, design.depthMeters]} />
         <meshStandardMaterial transparent opacity={0} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[cx, -0.001, cz]} onClick={() => onClearSelection()}>
-        <planeGeometry args={[design.widthMeters + 4, design.depthMeters + 4]} />
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[cx, -0.001, cz]}
+        onClick={() => onClearSelection()}
+      >
+        <planeGeometry
+          args={[design.widthMeters + 4, design.depthMeters + 4]}
+        />
         <meshBasicMaterial visible={false} />
       </mesh>
 
@@ -332,7 +387,9 @@ function Scene({
       {design.structures
         .filter((s) => s.id !== selectedStructure?.id)
         .map((s) => (
-          <AnimatedPlacement key={`s-${s.id}`}>{renderStructure(s, false)}</AnimatedPlacement>
+          <AnimatedPlacement key={`s-${s.id}`}>
+            {renderStructure(s, false)}
+          </AnimatedPlacement>
         ))}
       {visiblePlants
         .filter((p) => p.id !== selectedPlant?.id)
@@ -341,22 +398,41 @@ function Scene({
         ))}
 
       {!readOnly && selectedPlant && selectedId != null && (
-        <TransformableItem selectedId={selectedId} selectedType="plant" onMoveItem={onMoveItem}>
+        <TransformableItem
+          selectedId={selectedId}
+          selectedType="plant"
+          onMoveItem={onMoveItem}
+        >
           {renderPlant(selectedPlant, true)}
         </TransformableItem>
       )}
       {!readOnly && selectedStructure && selectedId != null && (
-        <TransformableItem selectedId={selectedId} selectedType="structure" onMoveItem={onMoveItem}>
+        <TransformableItem
+          selectedId={selectedId}
+          selectedType="structure"
+          onMoveItem={onMoveItem}
+        >
           {renderStructure(selectedStructure, true)}
         </TransformableItem>
       )}
       {readOnly && selectedPlant && (
-        <group key={`ro-p-${selectedPlant.id}`}>{renderPlant(selectedPlant, true)}</group>
+        <group key={`ro-p-${selectedPlant.id}`}>
+          {renderPlant(selectedPlant, true)}
+        </group>
       )}
       {readOnly && selectedStructure && (
-        <group key={`ro-s-${selectedStructure.id}`}>{renderStructure(selectedStructure, true)}</group>
+        <group key={`ro-s-${selectedStructure.id}`}>
+          {renderStructure(selectedStructure, true)}
+        </group>
       )}
-      {ghost && pending && <GhostPreview3D x={ghost.x} y={ghost.y} pending={pending} maturity={growthStage} />}
+      {ghost && pending && (
+        <GhostPreview3D
+          x={ghost.x}
+          y={ghost.y}
+          pending={pending}
+          maturity={growthStage}
+        />
+      )}
       {showSun && (
         <SunlightSceneOverlay
           azimuthDeg={sunPos.azimuthDeg}
@@ -371,19 +447,15 @@ function Scene({
         plotDepth={design.depthMeters}
       />
       {isRaining && (
-        <RainParticles
-          active
-          bounds={plotSize}
-          centerX={cx}
-          centerZ={cz}
-        />
+        <RainParticles active bounds={plotSize} centerX={cx} centerZ={cz} />
       )}
     </>
   );
 }
 
 export function GardenCanvas3D(props: Props) {
-  const cam = Math.max(props.design.widthMeters, props.design.depthMeters) * 0.85;
+  const cam =
+    Math.max(props.design.widthMeters, props.design.depthMeters) * 0.85;
   const cx = props.design.widthMeters / 2;
   const cz = props.design.depthMeters / 2;
   const [desktopFx, setDesktopFx] = useState(true);
@@ -403,8 +475,9 @@ export function GardenCanvas3D(props: Props) {
         ref={(el) => {
           internalRef.current = el as unknown as HTMLCanvasElement;
           if (props.canvasRef && el) {
-            (props.canvasRef as React.MutableRefObject<HTMLCanvasElement | null>).current =
-              el as unknown as HTMLCanvasElement;
+            (
+              props.canvasRef as React.MutableRefObject<HTMLCanvasElement | null>
+            ).current = el as unknown as HTMLCanvasElement;
           }
         }}
         dpr={[1, 2]}

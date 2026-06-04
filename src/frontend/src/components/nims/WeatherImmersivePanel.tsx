@@ -4,11 +4,11 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
-import type { WeatherData } from "../../hooks/useWeather";
 import type { LocationPreference } from "../../hooks/useNimsLocation";
+import type { WeatherData } from "../../hooks/useWeather";
 import {
-  getPlantingRecommendations,
   PLANTING_ZONE_LABEL,
+  getPlantingRecommendations,
 } from "../../lib/planting-almanac";
 import {
   aqiRingColor,
@@ -51,7 +51,11 @@ function GlassCard({
   );
 }
 
-function ThermometerFill({ temp, high, low }: { temp: number; high: number; low: number }) {
+function ThermometerFill({
+  temp,
+  high,
+  low,
+}: { temp: number; high: number; low: number }) {
   const span = Math.max(high - low, 1);
   const pct = Math.min(100, Math.max(0, ((temp - low) / span) * 100));
   return (
@@ -69,7 +73,10 @@ function ThermometerFill({ temp, high, low }: { temp: number; high: number; low:
 function RainDrops({ active }: { active: boolean }) {
   if (!active) return null;
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      aria-hidden
+    >
       {Array.from({ length: 8 }).map((_, i) => (
         <span
           key={i}
@@ -117,7 +124,9 @@ function AqiRing({ aqi, level }: { aqi: number; level: string }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-2xl font-bold tabular-nums">{aqi}</span>
+        <span className="font-display text-2xl font-bold tabular-nums">
+          {aqi}
+        </span>
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
           {level}
         </span>
@@ -126,7 +135,10 @@ function AqiRing({ aqi, level }: { aqi: number; level: string }) {
   );
 }
 
-function MoonGlow({ emoji, illumination }: { emoji: string; illumination: number }) {
+function MoonGlow({
+  emoji,
+  illumination,
+}: { emoji: string; illumination: number }) {
   return (
     <div className="relative flex flex-col items-center">
       <motion.span
@@ -138,7 +150,11 @@ function MoonGlow({ emoji, illumination }: { emoji: string; illumination: number
             "drop-shadow(0 0 8px rgba(251,191,36,0.4))",
           ],
         }}
-        transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+        transition={{
+          repeat: Number.POSITIVE_INFINITY,
+          duration: 3,
+          ease: "easeInOut",
+        }}
         aria-hidden
       >
         {emoji}
@@ -166,7 +182,10 @@ function formatHm(iso: string): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return d.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 export function WeatherImmersivePanel({
@@ -259,7 +278,7 @@ export function WeatherImmersivePanel({
           <div className="flex items-center gap-3">
             <motion.div
               animate={hasRain ? { y: [0, -4, 0] } : {}}
-              transition={{ repeat: Infinity, duration: 2 }}
+              transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
             >
               <Droplets className="size-10 text-cyan-400" aria-hidden />
             </motion.div>
@@ -287,7 +306,7 @@ export function WeatherImmersivePanel({
                   uvClass,
                 )}
                 animate={uv >= 6 ? { scale: [1, 1.06, 1] } : {}}
-                transition={{ repeat: Infinity, duration: 2 }}
+                transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
               >
                 UV {uv}
               </motion.span>
@@ -334,7 +353,10 @@ export function WeatherImmersivePanel({
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-indigo-300/90">
             Moon Phase
           </p>
-          <MoonGlow emoji={data.moon.emoji} illumination={data.moon.illumination} />
+          <MoonGlow
+            emoji={data.moon.emoji}
+            illumination={data.moon.illumination}
+          />
           <p className="mt-2 text-center font-medium text-foreground">
             {data.moon.phase}
           </p>

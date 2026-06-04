@@ -1,6 +1,6 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
-import type { IDL } from "@dfinity/candid";
 import { AuthClient } from "@dfinity/auth-client";
+import type { IDL } from "@dfinity/candid";
 
 export const SPICY_AI_CANISTER_ID =
   (process.env.CANISTER_ID_SPICY_AI_CANISTER ?? "").trim() ||

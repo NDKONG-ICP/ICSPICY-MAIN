@@ -23,7 +23,8 @@ export function YieldEstimator({ estimate }: Props) {
             {fmt(estimate.estimatedLbsMin)}–{fmt(estimate.estimatedLbsMax)} lbs
           </p>
           <p className="text-xs text-muted-foreground">
-            {estimate.totalPlantCount} plant{estimate.totalPlantCount !== 1 ? "s" : ""} · {estimate.notes}
+            {estimate.totalPlantCount} plant
+            {estimate.totalPlantCount !== 1 ? "s" : ""} · {estimate.notes}
           </p>
           <div className="flex flex-wrap gap-1">
             {estimate.companionBonusPct > 0 && (

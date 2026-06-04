@@ -1,3 +1,5 @@
+import { fetchRavenPriceUSD } from "./raven-price-service";
+
 const COINGECKO_IDS: Record<string, string> = {
   ICP: "internet-computer",
   ckBTC: "bitcoin",
@@ -29,9 +31,14 @@ export async function fetchTokenPricesUsd(): Promise<Record<string, number>> {
   const ids = [...new Set(Object.values(COINGECKO_IDS))].join(",");
   const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`;
 
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`CoinGecko API error: ${res.status}`);
-  const data = (await res.json()) as Record<string, { usd?: number }>;
+  // Fetch CoinGecko prices and RAVEN price (ICPSwap) in parallel.
+  const [geckoRes, ravenPrice] = await Promise.all([
+    fetch(url),
+    fetchRavenPriceUSD().catch(() => null),
+  ]);
+
+  if (!geckoRes.ok) throw new Error(`CoinGecko API error: ${geckoRes.status}`);
+  const data = (await geckoRes.json()) as Record<string, { usd?: number }>;
 
   const prices: Record<string, number> = {};
   for (const [symbol, geckoId] of Object.entries(COINGECKO_IDS)) {
@@ -41,6 +48,13 @@ export async function fetchTokenPricesUsd(): Promise<Record<string, number>> {
       priceCache[symbol] = { usd, lastUpdated: now };
     }
   }
+
+  // RAVEN price from ICPSwap on-chain query.
+  if (ravenPrice != null && ravenPrice > 0) {
+    prices["RAVEN"] = ravenPrice;
+    priceCache["RAVEN"] = { usd: ravenPrice, lastUpdated: now };
+  }
+
   lastFetch = now;
   return prices;
 }

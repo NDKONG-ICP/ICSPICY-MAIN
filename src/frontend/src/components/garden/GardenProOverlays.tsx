@@ -1,14 +1,17 @@
-import { useMemo, type ReactElement } from "react";
+import {
+  getCompanionLinks,
+  getPlantPlacementHalos,
+} from "@/lib/garden-companion-viz";
+import { PLANT_CATALOG, getPlantById } from "@/lib/garden-plant-catalog";
+import { buildSunShadeGrid, sunShadeColor } from "@/lib/garden-sun-shade";
+import { distanceMeters, polygonAreaM2 } from "@/lib/garden-tool-state";
 import type {
   GardenDesign,
   GardenMeasurement,
   GardenToolExtras,
   LayerVisibility,
 } from "@/lib/garden-types";
-import { PLANT_CATALOG, getPlantById } from "@/lib/garden-plant-catalog";
-import { getCompanionLinks } from "@/lib/garden-companion-viz";
-import { buildSunShadeGrid, sunShadeColor } from "@/lib/garden-sun-shade";
-import { distanceMeters, polygonAreaM2 } from "@/lib/garden-tool-state";
+import { type ReactElement, useMemo } from "react";
 
 const PX = 50;
 
@@ -47,27 +50,40 @@ export function GardenProOverlays({
   const h = design.depthMeters * pxPerM;
 
   const companionLinks = useMemo(
-    () => (layers.companions ? getCompanionLinks(design.plants, PLANT_CATALOG) : []),
+    () =>
+      layers.companions ? getCompanionLinks(design.plants, PLANT_CATALOG) : [],
     [design.plants, layers.companions],
   );
+
+  const placementHalos = useMemo(
+    () =>
+      layers.companions
+        ? getPlantPlacementHalos(design.plants, PLANT_CATALOG)
+        : [],
+    [design.plants, layers.companions],
+  );
+
+  const pendingCat = pendingCatalogId ? getPlantById(pendingCatalogId) : null;
+
+  const spacingWarning = useMemo(() => {
+    if (!layers.spacing || !ghost || !pendingCatalogId || !pendingCat)
+      return null;
+    const need = pendingCat.spacing;
+    for (const p of design.plants) {
+      const other = p.catalogId ? getPlantById(p.catalogId) : null;
+      const minDist = Math.max(need, other?.spacing ?? 0.6) * 0.85;
+      const d = distanceMeters(ghost, { x: p.x, y: p.y });
+      if (d < minDist) {
+        return `Too close to ${p.label} (needs ${mToFt(minDist).toFixed(1)}ft clearance)`;
+      }
+    }
+    return null;
+  }, [design.plants, ghost, layers.spacing, pendingCatalogId, pendingCat]);
 
   const sunGrid = useMemo(() => {
     if (!layers.sunShade) return null;
     return buildSunShadeGrid(design, sunLat, sunLng, timeOfDayHour, 24, 24);
   }, [design, layers.sunShade, sunLat, sunLng, timeOfDayHour]);
-
-  const spacingWarning = useMemo(() => {
-    if (!layers.spacing || !ghost || !pendingCatalogId) return null;
-    for (const p of design.plants) {
-      const cat = p.catalogId ? getPlantById(p.catalogId) : null;
-      const need = (cat?.spacing ?? 0.6) * (p.scale ?? 1);
-      const d = distanceMeters(ghost, { x: p.x, y: p.y });
-      if (d < need * 0.85) {
-        return `Too close to ${p.label} (needs ${mToFt(need).toFixed(1)}ft)`;
-      }
-    }
-    return null;
-  }, [design.plants, ghost, layers.spacing, pendingCatalogId]);
 
   const els: ReactElement[] = [];
 
@@ -163,6 +179,23 @@ export function GardenProOverlays({
   }
 
   if (layers.companions) {
+    for (const halo of placementHalos) {
+      const p = design.plants.find((pl) => pl.id === halo.plantId);
+      if (!p) continue;
+      const r = 14 * (p.scale ?? 1);
+      els.push(
+        <circle
+          key={`halo-${p.id}`}
+          cx={p.x * pxPerM}
+          cy={p.y * pxPerM}
+          r={r + 6}
+          fill="none"
+          stroke={halo.kind === "good" ? "#eab308" : "#ef4444"}
+          strokeWidth={2}
+          opacity={0.75}
+        />,
+      );
+    }
     for (const link of companionLinks) {
       els.push(
         <line
@@ -201,6 +234,41 @@ export function GardenProOverlays({
           />,
         );
       }
+      for (const p of design.plants) {
+        const near = pts.some(
+          (pt) => distanceMeters(pt, { x: p.x, y: p.y }) < 0.3,
+        );
+        if (near) {
+          els.push(
+            <circle
+              key={`emitter-${line.id}-${p.id}`}
+              cx={p.x * pxPerM}
+              cy={p.y * pxPerM}
+              r={4}
+              fill="#60a5fa"
+              opacity={0.9}
+            />,
+          );
+        }
+      }
+    }
+    const emitterCount =
+      extras.irrigationLines.length * design.plants.length > 0
+        ? design.plants.filter((p) =>
+            extras.irrigationLines.some((line) =>
+              line.points.some(
+                (pt) => distanceMeters(pt, { x: p.x, y: p.y }) < 0.3,
+              ),
+            ),
+          ).length
+        : 0;
+    if (emitterCount > 0) {
+      els.push(
+        <text x={8} y={16} fill="#60a5fa" fontSize={11}>
+          Irrigation: ~{(emitterCount * 0.5).toFixed(1)} GPH ({emitterCount}{" "}
+          emitters)
+        </text>,
+      );
     }
   }
 
@@ -233,13 +301,31 @@ export function GardenProOverlays({
       }
       if (m.type === "area" && m.points.length >= 3) {
         const area = polygonAreaM2(m.points);
-        const d = m.points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x * pxPerM} ${p.y * pxPerM}`).join(" ") + " Z";
+        const d =
+          m.points
+            .map(
+              (p, i) =>
+                `${i === 0 ? "M" : "L"} ${p.x * pxPerM} ${p.y * pxPerM}`,
+            )
+            .join(" ") + " Z";
         els.push(
           <g key={`area-${m.id}`}>
-            <path d={d} fill="#fbbf24" fillOpacity={0.2} stroke="#fbbf24" strokeWidth={1.5} />
+            <path
+              d={d}
+              fill="#fbbf24"
+              fillOpacity={0.2}
+              stroke="#fbbf24"
+              strokeWidth={1.5}
+            />
             <text
-              x={(m.points.reduce((s, p) => s + p.x, 0) / m.points.length) * pxPerM}
-              y={(m.points.reduce((s, p) => s + p.y, 0) / m.points.length) * pxPerM}
+              x={
+                (m.points.reduce((s, p) => s + p.x, 0) / m.points.length) *
+                pxPerM
+              }
+              y={
+                (m.points.reduce((s, p) => s + p.y, 0) / m.points.length) *
+                pxPerM
+              }
               fill="#fbbf24"
               fontSize={11}
               textAnchor="middle"
@@ -255,7 +341,10 @@ export function GardenProOverlays({
   if (layers.annotations) {
     for (const n of extras.annotations) {
       els.push(
-        <g key={`note-${n.id}`} transform={`translate(${n.x * pxPerM}, ${n.y * pxPerM})`}>
+        <g
+          key={`note-${n.id}`}
+          transform={`translate(${n.x * pxPerM}, ${n.y * pxPerM})`}
+        >
           <circle r={8} fill="#f59e0b" stroke="#fff" strokeWidth={1} />
           <text textAnchor="middle" dy={3} fontSize={10} fill="#000">
             📝
@@ -266,6 +355,20 @@ export function GardenProOverlays({
         </g>,
       );
     }
+  }
+
+  if (spacingWarning && ghost) {
+    els.push(
+      <text
+        x={ghost.x * pxPerM}
+        y={ghost.y * pxPerM - 18}
+        fill="#ef4444"
+        fontSize={10}
+        textAnchor="middle"
+      >
+        {spacingWarning}
+      </text>,
+    );
   }
 
   if (extras.sectionCutY != null && layers.dimensions) {

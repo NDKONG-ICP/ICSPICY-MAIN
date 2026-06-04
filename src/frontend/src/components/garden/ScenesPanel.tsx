@@ -10,7 +10,13 @@ type Props = {
   onRemove: (id: string) => void;
 };
 
-export function ScenesPanel({ scenes, cameraPreset, onAdd, onGo, onRemove }: Props) {
+export function ScenesPanel({
+  scenes,
+  cameraPreset,
+  onAdd,
+  onGo,
+  onRemove,
+}: Props) {
   return (
     <div className="rounded-xl border border-white/10 bg-card/80 p-3 text-xs space-y-2">
       <div className="flex items-center justify-between">
@@ -25,7 +31,11 @@ export function ScenesPanel({ scenes, cameraPreset, onAdd, onGo, onRemove }: Pro
         </Button>
       </div>
       <ul className="space-y-1">
-        {scenes.length === 0 && <li className="text-muted-foreground">Save camera positions for quick jumps.</li>}
+        {scenes.length === 0 && (
+          <li className="text-muted-foreground">
+            Save camera positions for quick jumps.
+          </li>
+        )}
         {scenes.map((s, i) => (
           <li key={s.id} className="flex items-center gap-2">
             <button
@@ -35,7 +45,12 @@ export function ScenesPanel({ scenes, cameraPreset, onAdd, onGo, onRemove }: Pro
             >
               [{i + 1}] {s.name}
             </button>
-            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onRemove(s.id)}>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              onClick={() => onRemove(s.id)}
+            >
               <Trash2 className="h-3 w-3" />
             </Button>
           </li>

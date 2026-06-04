@@ -1,4 +1,3 @@
-import { useActor } from "./useActor";
 import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createActor } from "../backend";
@@ -8,6 +7,7 @@ import type {
   PostId,
   SaveProfileInput,
 } from "../backend";
+import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
 

@@ -37,7 +37,10 @@ export function ActivityFeed({
         Nursery activity
       </div>
       {entries.length === 0 ? (
-        <p data-ocid="nims-activity-feed-empty" className="px-4 py-6 text-center text-sm text-muted-foreground">
+        <p
+          data-ocid="nims-activity-feed-empty"
+          className="px-4 py-6 text-center text-sm text-muted-foreground"
+        >
           {emptyLabel}
         </p>
       ) : (
@@ -50,7 +53,9 @@ export function ActivityFeed({
             <div className="flex items-baseline justify-between gap-3">
               <time
                 className="font-mono text-[11px] text-muted-foreground"
-                dateTime={new Date(Number(e.timestamp / 1_000_000n)).toISOString()}
+                dateTime={new Date(
+                  Number(e.timestamp / 1_000_000n),
+                ).toISOString()}
               >
                 {formatTs(e.timestamp)}
               </time>
@@ -58,7 +63,9 @@ export function ActivityFeed({
                 {e.actionType}
               </span>
             </div>
-            <p className="truncate font-medium text-foreground">{e.plantName}</p>
+            <p className="truncate font-medium text-foreground">
+              {e.plantName}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">{e.detail}</p>
           </article>
         ))

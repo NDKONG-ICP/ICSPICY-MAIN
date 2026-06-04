@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/select";
 import {
   DEFAULT_ENVIRONMENT,
-  saveEnvironment,
   type GardenEnvironment,
+  saveEnvironment,
 } from "@/lib/garden-plant-catalog";
 
 type Props = {
@@ -27,7 +27,12 @@ type Props = {
   onChange: (e: GardenEnvironment) => void;
 };
 
-export function GardenEnvironmentDialog({ open, onOpenChange, environment, onChange }: Props) {
+export function GardenEnvironmentDialog({
+  open,
+  onOpenChange,
+  environment,
+  onChange,
+}: Props) {
   const apply = () => {
     saveEnvironment(environment);
     onOpenChange(false);
@@ -48,13 +53,20 @@ export function GardenEnvironmentDialog({ open, onOpenChange, environment, onCha
             <Select
               value={environment.usdaZone}
               onValueChange={(v) =>
-                onChange({ ...environment, usdaZone: v as GardenEnvironment["usdaZone"] })
+                onChange({
+                  ...environment,
+                  usdaZone: v as GardenEnvironment["usdaZone"],
+                })
               }
             >
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {(["9b", "10a", "10b", "11a"] as const).map((z) => (
-                  <SelectItem key={z} value={z}>{z}</SelectItem>
+                  <SelectItem key={z} value={z}>
+                    {z}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -64,10 +76,15 @@ export function GardenEnvironmentDialog({ open, onOpenChange, environment, onCha
             <Select
               value={environment.soilType}
               onValueChange={(v) =>
-                onChange({ ...environment, soilType: v as GardenEnvironment["soilType"] })
+                onChange({
+                  ...environment,
+                  soilType: v as GardenEnvironment["soilType"],
+                })
               }
             >
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="sandy">Sandy</SelectItem>
                 <SelectItem value="clay">Clay</SelectItem>
@@ -81,10 +98,15 @@ export function GardenEnvironmentDialog({ open, onOpenChange, environment, onCha
             <Select
               value={environment.gardenStyle}
               onValueChange={(v) =>
-                onChange({ ...environment, gardenStyle: v as GardenEnvironment["gardenStyle"] })
+                onChange({
+                  ...environment,
+                  gardenStyle: v as GardenEnvironment["gardenStyle"],
+                })
               }
             >
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="food_forest">Food Forest</SelectItem>
                 <SelectItem value="permaculture">Permaculture</SelectItem>
@@ -97,7 +119,9 @@ export function GardenEnvironmentDialog({ open, onOpenChange, environment, onCha
           </label>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onChange(DEFAULT_ENVIRONMENT)}>Reset</Button>
+          <Button variant="ghost" onClick={() => onChange(DEFAULT_ENVIRONMENT)}>
+            Reset
+          </Button>
           <Button onClick={apply}>Apply</Button>
         </DialogFooter>
       </DialogContent>

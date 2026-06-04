@@ -89,10 +89,13 @@ const OrdersPage = lazy(() => import("./pages/Orders"));
 const WalletPage = lazy(() => import("./pages/Wallet"));
 const NIMSPage = lazy(() => import("./pages/NIMS"));
 const CookBookPage = lazy(() => import("./pages/CookBook"));
-const CookbookRecipeDetailPage = lazy(() => import("./pages/CookbookRecipeDetail"));
+const CookbookRecipeDetailPage = lazy(
+  () => import("./pages/CookbookRecipeDetail"),
+);
 const ScheduleBuilderPage = lazy(() => import("./pages/ScheduleBuilder"));
 const GardenDesignerPage = lazy(() => import("./pages/GardenDesigner"));
 const GardenGalleryPage = lazy(() => import("./pages/GardenGallery"));
+const TiersPage = lazy(() => import("./pages/Tiers"));
 const ClaimPage = lazy(() => import("./pages/Claim"));
 const NFTDetailPage = lazy(() => import("./pages/NFTDetail"));
 
@@ -397,6 +400,12 @@ const claimRoute = createRoute({
   component: ClaimPage,
 });
 
+const tiersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/tiers",
+  component: TiersPage,
+});
+
 // Phase 3.6 — single-NFT detail page. Path matches the external_url
 // pattern in the metadata blob (https://www.icspicy.app/nft/<id>) so links
 // minted on-chain resolve directly to this route.
@@ -435,6 +444,7 @@ const routeTree = rootRoute.addChildren([
   gardenGalleryRoute,
   claimRoute,
   nftDetailRoute,
+  tiersRoute,
 ]);
 
 const router = createRouter({ routeTree });

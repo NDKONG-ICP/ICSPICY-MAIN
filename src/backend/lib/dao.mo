@@ -16,6 +16,11 @@ module {
     Nat.toText(proposalId) # ":" # Principal.toText(voter);
   };
 
+  /// Key for the token-vote dedup map: "proposalId:tokenId"
+  func tokenVoteKey(proposalId : Common.ProposalId, tokenId : Nat) : Text {
+    Nat.toText(proposalId) # ":tok:" # Nat.toText(tokenId);
+  };
+
   func validateTitle(title : Text) {
     if (title.size() == 0 or title.size() > 200) {
       Runtime.trap("Title must be 1–200 characters");
@@ -102,6 +107,25 @@ module {
     switch (icrc7Balances.get(caller)) {
       case (?set) set.size();
       case null 0;
+    };
+  };
+
+  /// Check if caller (or any of their linked wallets) holds an IC SPICY NFT.
+  public func hasNftAccessAcrossWallets(
+    icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
+    linkedWallets : Map.Map<Principal, [Principal]>,
+    caller : Principal,
+  ) : Bool {
+    if (callerNftCount(icrc7Balances, caller) > 0) return true;
+    switch (linkedWallets.get(caller)) {
+      case null false;
+      case (?wallets) {
+        var found = false;
+        for (wallet in wallets.vals()) {
+          if (callerNftCount(icrc7Balances, wallet) > 0) found := true;
+        };
+        found;
+      };
     };
   };
 
@@ -270,21 +294,46 @@ module {
     };
   };
 
-  /// One vote per principal per proposal. Holding multiple NFTs does not grant extra votes.
+  /// Find the first NFT (from caller's own wallet, then linked wallets) that has NOT
+  /// yet been used to vote on `proposalId`. Returns null if no eligible token exists.
+  public func findEligibleToken(
+    icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
+    linkedWallets : Map.Map<Principal, [Principal]>,
+    daoTokenVotes : Map.Map<Text, Bool>,
+    caller : Principal,
+    proposalId : Common.ProposalId,
+  ) : ?Nat {
+    let ownTokens = callerNftTokens(icrc7Balances, caller);
+    for (tid in ownTokens.vals()) {
+      if (daoTokenVotes.get(tokenVoteKey(proposalId, tid)) == null) return ?tid;
+    };
+    switch (linkedWallets.get(caller)) {
+      case null {};
+      case (?wallets) {
+        for (wallet in wallets.vals()) {
+          let wt = callerNftTokens(icrc7Balances, wallet);
+          for (tid in wt.vals()) {
+            if (daoTokenVotes.get(tokenVoteKey(proposalId, tid)) == null) return ?tid;
+          };
+        };
+      };
+    };
+    null;
+  };
+
+  /// One vote per principal AND one vote per NFT token ID per proposal.
+  /// Sybil protection: even if the NFT is transferred after voting, the token ID
+  /// stays recorded and cannot vote again on the same proposal.
   public func castVote(
     proposals : Map.Map<Common.ProposalId, Types.Proposal>,
     votes : Map.Map<Text, Types.VoteRecord>,
     icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
+    linkedWallets : Map.Map<Principal, [Principal]>,
+    daoTokenVotes : Map.Map<Text, Bool>,
     caller : Principal,
     proposal_id : Common.ProposalId,
     option_id : Nat,
   ) : Bool {
-    // 1. Caller must hold at least one IC SPICY NFT.
-    let tokens = callerNftTokens(icrc7Balances, caller);
-    if (tokens.size() == 0) {
-      Runtime.trap("You need at least one IC SPICY NFT to vote");
-    };
-
     switch (refreshProposal(proposals, proposal_id)) {
       case (?proposal) {
         if (proposal.status != #Active) {
@@ -295,10 +344,21 @@ module {
           Runtime.trap("Outside voting window");
         };
 
-        // 2. One vote per (proposal, caller) — not per NFT.
+        // 1. One vote per (proposal, caller) principal.
         switch (getVote(votes, proposal_id, caller)) {
           case (?_) { Runtime.trap("You have already voted on this proposal") };
           case null {};
+        };
+
+        // 2. Find an eligible NFT: owned (or via linked wallet) AND not yet used on this proposal.
+        let tokenId = findEligibleToken(icrc7Balances, linkedWallets, daoTokenVotes, caller, proposal_id);
+        let tid = switch (tokenId) {
+          case null {
+            Runtime.trap(
+              "No eligible NFT found. You need an IC SPICY NFT that hasn't already voted on this proposal."
+            )
+          };
+          case (?t) t;
         };
 
         var found = false;
@@ -317,8 +377,9 @@ module {
           Runtime.trap("Invalid option id");
         };
 
-        // 3. Record one vote; store any held token ID as eligibility proof.
-        recordVote(votes, proposal_id, caller, option_id, tokens[0], now);
+        // 3. Record vote (principal-keyed) + token dedup entry.
+        recordVote(votes, proposal_id, caller, option_id, tid, now);
+        daoTokenVotes.add(tokenVoteKey(proposal_id, tid), true);
         proposals.add(proposal_id, {
           proposal with
           options = updatedOptions;

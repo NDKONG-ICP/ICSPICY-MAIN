@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Backend } from "../backend";
 import type {
   ActivityEntry,
   ContainerSize,
@@ -25,7 +26,6 @@ import {
 import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
-import type { Backend } from "../backend";
 
 function useNimsOpsActor() {
   const { actor } = useActor<Backend>();
@@ -207,7 +207,9 @@ export function useRevivePlant() {
       return callRevivePlant(identity, plantId);
     },
     onSuccess: (_, plantId) => {
-      qc.invalidateQueries({ queryKey: ["plantLifecycle", plantId.toString()] });
+      qc.invalidateQueries({
+        queryKey: ["plantLifecycle", plantId.toString()],
+      });
       qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
       qc.invalidateQueries({ queryKey: ["nimsActivity"] });
       qc.invalidateQueries({ queryKey: ["nimsDashboardStats"] });
@@ -235,7 +237,9 @@ export function useMarkPlantDead() {
       );
     },
     onSuccess: (_, { plantId }) => {
-      qc.invalidateQueries({ queryKey: ["plantLifecycle", plantId.toString()] });
+      qc.invalidateQueries({
+        queryKey: ["plantLifecycle", plantId.toString()],
+      });
       qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
       qc.invalidateQueries({ queryKey: ["nimsActivity"] });
     },
@@ -257,7 +261,9 @@ export function useAddWeatherSnapshot() {
       return callAddWeatherSnapshot(identity, plantId, snapshot);
     },
     onSuccess: (_, { plantId }) => {
-      qc.invalidateQueries({ queryKey: ["plantLifecycle", plantId.toString()] });
+      qc.invalidateQueries({
+        queryKey: ["plantLifecycle", plantId.toString()],
+      });
       qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
     },
   });
@@ -284,7 +290,9 @@ export function useLogWatering() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["nimsActivity"] });
       qc.invalidateQueries({ queryKey: ["plantHealth"] });
-      qc.invalidateQueries({ queryKey: ["plantLifecycle", vars.plantId.toString()] });
+      qc.invalidateQueries({
+        queryKey: ["plantLifecycle", vars.plantId.toString()],
+      });
     },
   });
 }
@@ -311,7 +319,9 @@ export function useLogFeeding() {
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["nimsActivity"] });
-      qc.invalidateQueries({ queryKey: ["plantLifecycle", vars.plantId.toString()] });
+      qc.invalidateQueries({
+        queryKey: ["plantLifecycle", vars.plantId.toString()],
+      });
     },
   });
 }
@@ -338,7 +348,9 @@ export function useLogPest() {
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["nimsActivity"] });
-      qc.invalidateQueries({ queryKey: ["plantLifecycle", vars.plantId.toString()] });
+      qc.invalidateQueries({
+        queryKey: ["plantLifecycle", vars.plantId.toString()],
+      });
     },
   });
 }
@@ -360,7 +372,9 @@ export function useAddNimsPlantPhoto() {
       );
     },
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["plantLifecycle", vars.plantId.toString()] });
+      qc.invalidateQueries({
+        queryKey: ["plantLifecycle", vars.plantId.toString()],
+      });
       qc.invalidateQueries({ queryKey: ["nimsActivity"] });
       qc.invalidateQueries({ queryKey: ["nimsPhoto"] });
     },

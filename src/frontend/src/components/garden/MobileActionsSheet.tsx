@@ -1,6 +1,15 @@
+import { LayersPanel } from "@/components/garden/LayersPanel";
+import { SmartDataPanel } from "@/components/garden/SmartDataPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PRESET_PROMPTS, generateGardenLayout, layoutToDesign, surprisePrompt } from "@/lib/garden-ai";
+import {
+  PRESET_PROMPTS,
+  generateGardenLayout,
+  layoutToDesign,
+  surprisePrompt,
+} from "@/lib/garden-ai";
+import type { YieldEstimate } from "@/lib/garden-rules";
+import type { GardenDesign, LayerVisibility } from "@/lib/garden-types";
 import { cn } from "@/lib/utils";
 import { Sparkles, X } from "lucide-react";
 import { useState } from "react";
@@ -13,11 +22,16 @@ type Props = {
   zone: string;
   generating: boolean;
   onGeneratingChange: (v: boolean) => void;
-  onGenerate: (design: ReturnType<typeof layoutToDesign>, explanation: string, prompt: string) => void;
+  onGenerate: (
+    design: ReturnType<typeof layoutToDesign>,
+    explanation: string,
+    prompt: string,
+  ) => void;
   onLocation: () => void;
   onPreview: () => void;
   onWalk: () => void;
   onSave: () => void;
+  onLoad?: () => void;
   onShare: () => void;
   onScreenshot: () => void;
   onWeather: () => void;
@@ -25,6 +39,10 @@ type Props = {
   onGallery: () => void;
   onExportSvg?: () => void;
   onNewPlot?: () => void;
+  design?: GardenDesign;
+  yieldEst?: YieldEstimate;
+  layers?: LayerVisibility;
+  onLayersChange?: (l: LayerVisibility) => void;
   weatherOn: boolean;
   isAuthenticated: boolean;
 };
@@ -42,6 +60,7 @@ export function MobileActionsSheet({
   onPreview,
   onWalk,
   onSave,
+  onLoad,
   onShare,
   onScreenshot,
   onWeather,
@@ -49,6 +68,10 @@ export function MobileActionsSheet({
   onGallery,
   onExportSvg,
   onNewPlot,
+  design,
+  yieldEst,
+  layers,
+  onLayersChange,
   weatherOn,
   isAuthenticated,
 }: Props) {
@@ -58,7 +81,12 @@ export function MobileActionsSheet({
     if (!text.trim() || generating) return;
     onGeneratingChange(true);
     try {
-      const layout = await generateGardenLayout(text, plotWidth, plotDepth, zone);
+      const layout = await generateGardenLayout(
+        text,
+        plotWidth,
+        plotDepth,
+        zone,
+      );
       onGenerate(layoutToDesign(layout), layout.explanation, text);
       onClose();
     } finally {
@@ -70,7 +98,12 @@ export function MobileActionsSheet({
 
   return (
     <div className="sm:hidden fixed inset-0 z-[70]">
-      <button type="button" className="absolute inset-0 bg-black/60" onClick={onClose} aria-label="Close menu" />
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/60"
+        onClick={onClose}
+        aria-label="Close menu"
+      />
       <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-auto rounded-t-2xl border border-white/10 bg-card p-4 pb-8 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold">Garden actions</h3>
@@ -89,7 +122,10 @@ export function MobileActionsSheet({
               className="flex-1"
               disabled={generating}
             />
-            <Button disabled={generating || !prompt.trim()} onClick={() => void runAi(prompt)}>
+            <Button
+              disabled={generating || !prompt.trim()}
+              onClick={() => void runAi(prompt)}
+            >
               <Sparkles className="h-4 w-4" />
             </Button>
           </div>
@@ -117,50 +153,148 @@ export function MobileActionsSheet({
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-sm">
-          <Button variant="outline" className="justify-start" onClick={() => { onLocation(); onClose(); }}>
+          <Button
+            variant="outline"
+            className="justify-start"
+            onClick={() => {
+              onLocation();
+              onClose();
+            }}
+          >
             📍 Set Location
           </Button>
           {onNewPlot && (
-            <Button variant="outline" className="justify-start" onClick={() => { onNewPlot(); onClose(); }}>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => {
+                onNewPlot();
+                onClose();
+              }}
+            >
               📐 New blank plot
             </Button>
           )}
-          <Button variant="outline" className="justify-start" onClick={() => { onPreview(); onClose(); }}>
+          <Button
+            variant="outline"
+            className="justify-start"
+            onClick={() => {
+              onPreview();
+              onClose();
+            }}
+          >
             ▶ Preview
           </Button>
-          <Button variant="outline" className="justify-start" onClick={() => { onWalk(); onClose(); }}>
+          <Button
+            variant="outline"
+            className="justify-start"
+            onClick={() => {
+              onWalk();
+              onClose();
+            }}
+          >
             🚶 Walk
           </Button>
           {isAuthenticated && (
-            <Button variant="outline" className="justify-start" onClick={() => { onSave(); onClose(); }}>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => {
+                onSave();
+                onClose();
+              }}
+            >
               💾 Save
             </Button>
           )}
-          <Button variant="outline" className="justify-start" onClick={() => { onShare(); onClose(); }}>
+          {onLoad && (
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => {
+                onLoad();
+                onClose();
+              }}
+            >
+              📂 Load
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            className="justify-start"
+            onClick={() => {
+              onShare();
+              onClose();
+            }}
+          >
             📤 Share
           </Button>
-          <Button variant="outline" className="justify-start" onClick={() => { onScreenshot(); onClose(); }}>
+          <Button
+            variant="outline"
+            className="justify-start"
+            onClick={() => {
+              onScreenshot();
+              onClose();
+            }}
+          >
             🖼️ Export PNG
           </Button>
           {onExportSvg && (
-            <Button variant="outline" className="justify-start" onClick={() => { onExportSvg(); onClose(); }}>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => {
+                onExportSvg();
+                onClose();
+              }}
+            >
               📐 Export SVG
             </Button>
           )}
           <Button
             variant={weatherOn ? "default" : "outline"}
             className="justify-start"
-            onClick={() => { onWeather(); onClose(); }}
+            onClick={() => {
+              onWeather();
+              onClose();
+            }}
           >
             🌤️ Live Weather
           </Button>
-          <Button variant="outline" className="justify-start" onClick={() => { onEnvironment(); onClose(); }}>
+          <Button
+            variant="outline"
+            className="justify-start"
+            onClick={() => {
+              onEnvironment();
+              onClose();
+            }}
+          >
             ⚙️ Environment
           </Button>
-          <Button variant="outline" className={cn("justify-start col-span-2")} onClick={() => { onGallery(); onClose(); }}>
+          <Button
+            variant="outline"
+            className={cn("justify-start col-span-2")}
+            onClick={() => {
+              onGallery();
+              onClose();
+            }}
+          >
             🌿 Community Gallery
           </Button>
         </div>
+
+        {layers && onLayersChange && (
+          <div className="mt-4 border-t border-white/10 pt-4">
+            <p className="text-xs font-semibold mb-2">👁️ Layers</p>
+            <LayersPanel layers={layers} onChange={onLayersChange} compact />
+          </div>
+        )}
+
+        {design && yieldEst && (
+          <div className="mt-4">
+            <SmartDataPanel design={design} yieldEst={yieldEst} compact />
+          </div>
+        )}
       </div>
     </div>
   );

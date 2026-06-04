@@ -1,7 +1,9 @@
 import type { QueryClient } from "@tanstack/react-query";
 
 /** Canonical React Query key for a tray grid fetch. */
-export function trayGridQueryKey(trayId: bigint | null | undefined): readonly [string, string] {
+export function trayGridQueryKey(
+  trayId: bigint | null | undefined,
+): readonly [string, string] {
   return ["trayGrid", trayId?.toString() ?? "none"];
 }
 
@@ -24,6 +26,8 @@ export async function refreshAllTrayGrids(qc: QueryClient): Promise<void> {
   await qc.refetchQueries({ queryKey: ["trayGrid"], type: "active" });
 }
 
-export async function refreshNimsDashboardStats(qc: QueryClient): Promise<void> {
+export async function refreshNimsDashboardStats(
+  qc: QueryClient,
+): Promise<void> {
   await qc.invalidateQueries({ queryKey: ["nimsDashboardStats"] });
 }

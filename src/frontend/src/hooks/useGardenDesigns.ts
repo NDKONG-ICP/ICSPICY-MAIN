@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ActorSubclass } from "@dfinity/agent";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import type { Backend } from "../backend";
 import type { _SERVICE } from "../declarations/backend.did";

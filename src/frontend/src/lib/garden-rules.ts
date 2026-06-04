@@ -1,5 +1,5 @@
-import type { GardenDesign, PlantPlacement } from "./garden-types";
 import type { VarietyPublic } from "../declarations/backend.did";
+import type { GardenDesign, PlantPlacement } from "./garden-types";
 
 export type ValidationSeverity = "Info" | "Warning" | "Error";
 
@@ -38,7 +38,10 @@ function scovilleForPlant(
   return v ? Number(v.scovilleMax) : 100_000;
 }
 
-function speciesText(plant: PlantPlacement, varieties: VarietyPublic[]): string {
+function speciesText(
+  plant: PlantPlacement,
+  varieties: VarietyPublic[],
+): string {
   if (plant.varietyId == null) return plant.label;
   const v = varieties.find((x) => Number(x.id) === plant.varietyId);
   return v ? `${v.species} ${v.name}` : plant.label;
@@ -93,7 +96,12 @@ export function validateGardenLocally(
   const { plants } = design;
 
   for (const p of plants) {
-    if (p.x < 0 || p.y < 0 || p.x > design.widthMeters || p.y > design.depthMeters) {
+    if (
+      p.x < 0 ||
+      p.y < 0 ||
+      p.x > design.widthMeters ||
+      p.y > design.depthMeters
+    ) {
       warnings.push({
         code: "out_of_bounds",
         message: `Plant "${p.label}" is outside the plot boundary`,
@@ -144,7 +152,10 @@ export function validateGardenLocally(
           });
         }
       }
-      if ((isPepper(sa) && isMarigold(sb)) || (isPepper(sb) && isMarigold(sa))) {
+      if (
+        (isPepper(sa) && isMarigold(sb)) ||
+        (isPepper(sb) && isMarigold(sa))
+      ) {
         if (dist <= 1.0) {
           warnings.push({
             code: "companion_good",

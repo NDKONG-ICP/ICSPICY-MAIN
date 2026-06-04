@@ -68,7 +68,12 @@ export function createMulchTexture(): THREE.CanvasTexture {
   ctx.fillRect(0, 0, 256, 256);
   for (let i = 0; i < 600; i += 1) {
     ctx.fillStyle = `rgb(${70 + Math.random() * 40}, ${45 + Math.random() * 30}, ${25 + Math.random() * 20})`;
-    ctx.fillRect(Math.random() * 256, Math.random() * 256, 4 + Math.random() * 10, 2 + Math.random() * 4);
+    ctx.fillRect(
+      Math.random() * 256,
+      Math.random() * 256,
+      4 + Math.random() * 10,
+      2 + Math.random() * 4,
+    );
   }
   mulchTex = new THREE.CanvasTexture(canvas);
   mulchTex.wrapS = mulchTex.wrapT = THREE.RepeatWrapping;
@@ -87,7 +92,13 @@ export function createGravelTexture(): THREE.CanvasTexture {
     const g = 120 + Math.random() * 60;
     ctx.fillStyle = `rgb(${g}, ${g - 10}, ${g - 20})`;
     ctx.beginPath();
-    ctx.arc(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 3, 0, Math.PI * 2);
+    ctx.arc(
+      Math.random() * 256,
+      Math.random() * 256,
+      1 + Math.random() * 3,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
   gravelTex = new THREE.CanvasTexture(canvas);

@@ -23,6 +23,7 @@ import {
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { RecipePublic } from "../declarations/backend.did";
+import { useSeedDefaultRecipes } from "../hooks/useBackend";
 import {
   difficultyLabel,
   recipeCategoryLabel,
@@ -30,7 +31,6 @@ import {
   useListRecipesAdmin,
   usePublishRecipe,
 } from "../hooks/useCookbook";
-import { useSeedDefaultRecipes } from "../hooks/useBackend";
 
 export default function AdminCookBookTab() {
   const { data: recipes, isPending } = useListRecipesAdmin();
@@ -42,8 +42,8 @@ export default function AdminCookBookTab() {
 
   const sorted = useMemo(() => {
     const list = recipes ?? [];
-    return [...list].sort((a, b) =>
-      Number(a.display_order) - Number(b.display_order),
+    return [...list].sort(
+      (a, b) => Number(a.display_order) - Number(b.display_order),
     );
   }, [recipes]);
 
@@ -76,7 +76,9 @@ export default function AdminCookBookTab() {
   async function seed() {
     try {
       await seedDefaults.mutateAsync();
-      toast.success("Recipe seed invoked (skipped if catalog already populated).");
+      toast.success(
+        "Recipe seed invoked (skipped if catalog already populated).",
+      );
     } catch {
       toast.error("Seed defaults failed.");
     }
@@ -91,8 +93,8 @@ export default function AdminCookBookTab() {
             CookBook recipes
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5 max-w-xl">
-            List includes drafts plus published entries. Toggle publish hides or reveals
-            public cookbook routes. Deletes are soft (audited on-chain).
+            List includes drafts plus published entries. Toggle publish hides or
+            reveals public cookbook routes. Deletes are soft (audited on-chain).
           </p>
         </div>
         <div className="flex gap-2">
@@ -121,7 +123,9 @@ export default function AdminCookBookTab() {
       ) : sorted.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-2xl">
           <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-25" />
-          <p className="text-sm text-foreground font-medium mb-4">No recipes yet</p>
+          <p className="text-sm text-foreground font-medium mb-4">
+            No recipes yet
+          </p>
           <Button
             size="sm"
             variant="outline"
@@ -163,12 +167,15 @@ export default function AdminCookBookTab() {
               Delete &quot;{deleteTarget?.title}&quot;?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground text-sm">
-              This marks the recipe as deleted in the cookbook registry. Prefer unpublish first
-              if you only need to hide content from storefront visitors.
+              This marks the recipe as deleted in the cookbook registry. Prefer
+              unpublish first if you only need to hide content from storefront
+              visitors.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-border">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="border-border">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void confirmDelete()}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -202,7 +209,9 @@ function RecipeAdminRow({
         </div>
         <div className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-2 mt-1">
           <code className="text-primary/85">/{recipe.slug}</code>
-          <span className="text-muted-foreground/60">{recipe.tags.slice(0, 3).join(" · ") || "no tags"}</span>
+          <span className="text-muted-foreground/60">
+            {recipe.tags.slice(0, 3).join(" · ") || "no tags"}
+          </span>
           <Link
             to="/cookbook/$slug"
             params={{ slug: recipe.slug }}
@@ -216,7 +225,10 @@ function RecipeAdminRow({
       </div>
 
       <div>
-        <Badge variant="outline" className="text-[10px] border-border whitespace-nowrap">
+        <Badge
+          variant="outline"
+          className="text-[10px] border-border whitespace-nowrap"
+        >
           {recipeCategoryLabel(recipe.category)}
         </Badge>
       </div>
@@ -254,7 +266,9 @@ function RecipeAdminRow({
           ) : (
             <Eye className="w-3.5 h-3.5" />
           )}
-          <span className="ml-1">{recipe.is_published ? "Unpublish" : "Publish"}</span>
+          <span className="ml-1">
+            {recipe.is_published ? "Unpublish" : "Publish"}
+          </span>
         </Button>
         <Button
           size="sm"

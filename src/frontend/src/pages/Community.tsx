@@ -1,3 +1,5 @@
+import { FeedSkeleton, PostCard, PostComposer } from "@/components/community";
+import { AvatarUpload } from "@/components/community/AvatarUpload";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,12 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  FeedSkeleton,
-  PostCard,
-  PostComposer,
-} from "@/components/community";
-import { AvatarUpload } from "@/components/community/AvatarUpload";
+import { useAuth } from "@/hooks/useAuth";
 import type { FeedMode } from "@/hooks/useCommunityFeed";
 import {
   flattenCommunityFeedPages,
@@ -24,7 +21,6 @@ import {
   useMyCommunityProfile,
   useSaveCommunityProfile,
 } from "@/hooks/useProfile";
-import { useAuth } from "@/hooks/useAuth";
 import { Plus, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";

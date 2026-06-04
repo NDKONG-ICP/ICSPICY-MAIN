@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Backend } from "../backend";
 import type {
   BreedingCrossPublic,
+  PlantId,
   SeedBankStats,
   SeedLotPublic,
   SeedSource,
   SeedVendorPublic,
-  PlantId,
 } from "../declarations/backend.did";
-import type { Backend } from "../backend";
 import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
@@ -174,7 +174,11 @@ export function useAddVendor() {
       notes?: string;
     }) => {
       if (!actor) throw new Error("Not connected");
-      return actor.addVendor(args.name, args.website ?? null, args.notes ?? null);
+      return actor.addVendor(
+        args.name,
+        args.website ?? null,
+        args.notes ?? null,
+      );
     },
     onSuccess: () => invalidateSeedBank(qc),
   });

@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { motion } from "motion/react";
-import type { GardenDesign, GardenToolExtras, LayerVisibility } from "@/lib/garden-types";
-import { SATELLITE_ZOOM } from "@/lib/satellite-tiles";
-import { preloadSatelliteTileUrl } from "@/lib/satellite-texture-cache";
+import type {
+  GardenDesign,
+  GardenToolExtras,
+  LayerVisibility,
+} from "@/lib/garden-types";
 import { snapToGrid } from "@/lib/garden-utils";
-import { GhostPreview2D } from "./GhostPreview";
+import { preloadSatelliteTileUrl } from "@/lib/satellite-texture-cache";
+import { SATELLITE_ZOOM } from "@/lib/satellite-tiles";
+import { motion } from "motion/react";
+import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { GardenProOverlays } from "./GardenProOverlays";
+import { GhostPreview2D } from "./GhostPreview";
 
 const PX_PER_M = 50;
 
@@ -29,7 +33,12 @@ type Props = {
   onToolClick?: (x: number, y: number) => void;
   onSelectPlant: (id: number) => void;
   onSelectStructure: (id: number) => void;
-  onMove: (id: number, type: "plant" | "structure", x: number, y: number) => void;
+  onMove: (
+    id: number,
+    type: "plant" | "structure",
+    x: number,
+    y: number,
+  ) => void;
   onPointerMove: (x: number, y: number) => void;
   onPlace: () => void;
   onClearSelection: () => void;
@@ -78,7 +87,12 @@ export function GardenTopDown({
   const h = design.depthMeters * PX_PER_M;
 
   useEffect(() => {
-    if (!satelliteEnabled || gardenLat == null || gardenLng == null || layers?.satellite === false) {
+    if (
+      !satelliteEnabled ||
+      gardenLat == null ||
+      gardenLng == null ||
+      layers?.satellite === false
+    ) {
       setSatelliteUrl(null);
       setSatelliteUrlPrev(null);
       return;
@@ -97,7 +111,13 @@ export function GardenTopDown({
     return () => {
       cancelled = true;
     };
-  }, [satelliteEnabled, gardenLat, gardenLng, satelliteZoom, layers?.satellite]);
+  }, [
+    satelliteEnabled,
+    gardenLat,
+    gardenLng,
+    satelliteZoom,
+    layers?.satellite,
+  ]);
 
   const gridLines = useMemo(() => {
     const lines: ReactElement[] = [];
@@ -143,10 +163,7 @@ export function GardenTopDown({
     };
   };
 
-  const bindLongPress = (
-    id: number,
-    type: "plant" | "structure",
-  ) => ({
+  const bindLongPress = (id: number, type: "plant" | "structure") => ({
     onTouchStart: () => {
       if (readOnly || !onDeleteItem) return;
       longPressRef.current = setTimeout(() => onDeleteItem(id, type), 600);
@@ -176,7 +193,11 @@ export function GardenTopDown({
         onMouseLeave={() => setDrag(null)}
         onClick={(e) => {
           const m = toMeters(e.clientX, e.clientY);
-          if (toolExtras?.activeTool && toolExtras.activeTool !== "none" && onToolClick) {
+          if (
+            toolExtras?.activeTool &&
+            toolExtras.activeTool !== "none" &&
+            onToolClick
+          ) {
             onToolClick(m.x, m.y);
             return;
           }
@@ -215,34 +236,40 @@ export function GardenTopDown({
             <rect width={w} height={h} fill="#3d6b25" opacity={0.65} />
           </>
         ) : null}
-        <rect width={w} height={h} fill="none" stroke="#1e293b" strokeWidth={2} />
+        <rect
+          width={w}
+          height={h}
+          fill="none"
+          stroke="#1e293b"
+          strokeWidth={2}
+        />
         {(layers?.grid ?? true) && gridLines}
         {(layers?.structures ?? true) &&
-        design.structures.map((s) => {
-          const sel = selectedType === "structure" && selectedId === s.id;
-          return (
-            <g
-              key={`s-${s.id}`}
-              transform={`translate(${s.x * PX_PER_M}, ${s.y * PX_PER_M}) rotate(${s.rotation}, ${(s.width * PX_PER_M) / 2}, ${(s.depth * PX_PER_M) / 2})`}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                if (readOnly) return;
-                onSelectStructure(s.id);
-                setDrag({ id: s.id, type: "structure" });
-              }}
-            >
-              <rect
-                width={s.width * PX_PER_M}
-                height={s.depth * PX_PER_M}
-                fill={s.color}
-                opacity={0.72}
-                stroke={sel ? "#f59e0b" : "#fff"}
-                strokeWidth={sel ? 2 : 1}
-                rx={2}
-              />
-            </g>
-          );
-        })}
+          design.structures.map((s) => {
+            const sel = selectedType === "structure" && selectedId === s.id;
+            return (
+              <g
+                key={`s-${s.id}`}
+                transform={`translate(${s.x * PX_PER_M}, ${s.y * PX_PER_M}) rotate(${s.rotation}, ${(s.width * PX_PER_M) / 2}, ${(s.depth * PX_PER_M) / 2})`}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  if (readOnly) return;
+                  onSelectStructure(s.id);
+                  setDrag({ id: s.id, type: "structure" });
+                }}
+              >
+                <rect
+                  width={s.width * PX_PER_M}
+                  height={s.depth * PX_PER_M}
+                  fill={s.color}
+                  opacity={0.72}
+                  stroke={sel ? "#f59e0b" : "#fff"}
+                  strokeWidth={sel ? 2 : 1}
+                  rx={2}
+                />
+              </g>
+            );
+          })}
         {toolExtras && layers && (
           <GardenProOverlays
             design={design}
@@ -256,43 +283,57 @@ export function GardenTopDown({
           />
         )}
         {(layers?.plants ?? true) &&
-        design.plants.map((p) => {
-          const sel = selectedType === "plant" && selectedId === p.id;
-          const r = 12 * p.scale;
-          return (
-            <motion.g
-              key={`p-${p.id}`}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 18 }}
-              transform={`translate(${p.x * PX_PER_M}, ${p.y * PX_PER_M})`}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                if (readOnly) return;
-                onSelectPlant(p.id);
-                setDrag({ id: p.id, type: "plant" });
-              }}
-              {...bindLongPress(p.id, "plant")}
-            >
-              <circle
-                r={r}
-                fill={p.color}
-                stroke={sel ? "#f59e0b" : "#fff"}
-                strokeWidth={sel ? 2 : 1}
-                filter={sel ? "url(#glow)" : undefined}
-              />
-              <text textAnchor="middle" dy={4} fill="#fff" fontSize={10} pointerEvents="none">
-                {(layers?.labels ?? true) ? (p.label[0]?.toUpperCase() ?? "?") : ""}
-              </text>
-            </motion.g>
-          );
-        })}
+          design.plants.map((p) => {
+            const sel = selectedType === "plant" && selectedId === p.id;
+            const r = 12 * p.scale;
+            return (
+              <motion.g
+                key={`p-${p.id}`}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                transform={`translate(${p.x * PX_PER_M}, ${p.y * PX_PER_M})`}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  if (readOnly) return;
+                  onSelectPlant(p.id);
+                  setDrag({ id: p.id, type: "plant" });
+                }}
+                {...bindLongPress(p.id, "plant")}
+              >
+                <circle
+                  r={r}
+                  fill={p.color}
+                  stroke={sel ? "#f59e0b" : "#fff"}
+                  strokeWidth={sel ? 2 : 1}
+                  filter={sel ? "url(#glow)" : undefined}
+                />
+                <text
+                  textAnchor="middle"
+                  dy={4}
+                  fill="#fff"
+                  fontSize={10}
+                  pointerEvents="none"
+                >
+                  {(layers?.labels ?? true)
+                    ? (p.label[0]?.toUpperCase() ?? "?")
+                    : ""}
+                </text>
+              </motion.g>
+            );
+          })}
         {ghost && hasPending && (
           <GhostPreview2D x={ghost.x} y={ghost.y} scalePx={PX_PER_M} />
         )}
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#f59e0b" floodOpacity="0.8" />
+            <feDropShadow
+              dx="0"
+              dy="0"
+              stdDeviation="3"
+              floodColor="#f59e0b"
+              floodOpacity="0.8"
+            />
           </filter>
         </defs>
       </svg>

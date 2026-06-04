@@ -1,12 +1,19 @@
-import type { GardenDesign } from "./garden-types";
 import { getPlantById } from "./garden-plant-catalog";
+import type { GardenDesign } from "./garden-types";
 
 const SCALE = 12; // px per meter for print
 
-export function exportLandscapePlanSvg(design: GardenDesign, zone = "10a"): string {
+export function exportLandscapePlanSvg(
+  design: GardenDesign,
+  zone = "10a",
+): string {
   const w = design.widthMeters * SCALE;
   const h = design.depthMeters * SCALE;
-  const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const date = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   const abbrev = (name: string) =>
     name
@@ -15,21 +22,33 @@ export function exportLandscapePlanSvg(design: GardenDesign, zone = "10a"): stri
       .join("")
       .slice(0, 3);
 
-  const legendMap = new Map<string, { name: string; qty: number; spacing: string }>();
+  const legendMap = new Map<
+    string,
+    { name: string; qty: number; spacing: string }
+  >();
   for (const p of design.plants) {
     const cat = p.catalogId ? getPlantById(p.catalogId) : null;
     const ab = abbrev(p.label);
     const prev = legendMap.get(ab);
     if (prev) prev.qty += 1;
-    else legendMap.set(ab, { name: p.label, qty: 1, spacing: cat ? `${Math.round(cat.spacing * 39.37)}"` : "24\"" });
+    else
+      legendMap.set(ab, {
+        name: p.label,
+        qty: 1,
+        spacing: cat ? `${Math.round(cat.spacing * 39.37)}"` : '24"',
+      });
   }
 
   const grid: string[] = [];
   for (let x = 0; x <= design.widthMeters; x += design.gridSizeMeters) {
-    grid.push(`<line x1="${x * SCALE}" y1="0" x2="${x * SCALE}" y2="${h}" stroke="#ccc" stroke-width="0.5"/>`);
+    grid.push(
+      `<line x1="${x * SCALE}" y1="0" x2="${x * SCALE}" y2="${h}" stroke="#ccc" stroke-width="0.5"/>`,
+    );
   }
   for (let y = 0; y <= design.depthMeters; y += design.gridSizeMeters) {
-    grid.push(`<line x1="0" y1="${y * SCALE}" x2="${w}" y2="${y * SCALE}" stroke="#ccc" stroke-width="0.5"/>`);
+    grid.push(
+      `<line x1="0" y1="${y * SCALE}" x2="${w}" y2="${y * SCALE}" stroke="#ccc" stroke-width="0.5"/>`,
+    );
   }
 
   const structures = design.structures

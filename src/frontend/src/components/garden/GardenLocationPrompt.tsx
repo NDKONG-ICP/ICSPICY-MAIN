@@ -1,5 +1,3 @@
-import { MapPin, Search, SkipForward } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,6 +8,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { MapPin, Search, SkipForward } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 type Props = {
@@ -55,8 +55,8 @@ export function GardenLocationPrompt({
             Set your garden location
           </DialogTitle>
           <DialogDescription>
-            Satellite imagery works best with a precise plot location. Choose GPS, enter an
-            address, or skip for a stylized ground plane.
+            Satellite imagery works best with a precise plot location. Choose
+            GPS, enter an address, or skip for a stylized ground plane.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">

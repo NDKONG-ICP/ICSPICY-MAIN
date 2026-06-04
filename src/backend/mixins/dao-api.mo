@@ -16,6 +16,8 @@ mixin (
   proposals : Map.Map<Common.ProposalId, DAOTypes.Proposal>,
   daoVotes : Map.Map<Text, DAOTypes.VoteRecord>,
   icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
+  linkedWallets : Map.Map<Principal, [Principal]>,
+  daoTokenVotes : Map.Map<Text, Bool>,
   nextProposalId : { var value : Nat },
 ) {
   // ── Public queries ─────────────────────────────────────────────────────────
@@ -42,7 +44,7 @@ mixin (
   };
 
   public query ({ caller }) func hasDAOAccess() : async Bool {
-    DAOLib.hasDAOAccess(icrc7Balances, caller);
+    DAOLib.hasNftAccessAcrossWallets(icrc7Balances, linkedWallets, caller);
   };
 
   public query ({ caller }) func getCallerDaoNftCount() : async Nat {
@@ -72,12 +74,12 @@ mixin (
   public shared ({ caller }) func castVote(proposalId : Common.ProposalId, optionId : Nat) : async Bool {
     AccessControl.requireAuthenticated(caller);
     RateLimit.trapIfLimited(rateLimits.vote, caller, "Rate limited. Try again in a minute.");
-    DAOLib.castVote(proposals, daoVotes, icrc7Balances, caller, proposalId, optionId);
+    DAOLib.castVote(proposals, daoVotes, icrc7Balances, linkedWallets, daoTokenVotes, caller, proposalId, optionId);
   };
 
   public shared ({ caller }) func voteOnProposal(proposal_id : Common.ProposalId, option_index : Nat) : async () {
     AccessControl.requireAuthenticated(caller);
-    ignore DAOLib.castVote(proposals, daoVotes, icrc7Balances, caller, proposal_id, option_index);
+    ignore DAOLib.castVote(proposals, daoVotes, icrc7Balances, linkedWallets, daoTokenVotes, caller, proposal_id, option_index);
   };
 
   // ── Admin proposal management ──────────────────────────────────────────────

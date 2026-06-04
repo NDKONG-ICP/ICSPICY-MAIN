@@ -1,5 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -11,7 +18,6 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { exportSeedLotsCsv } from "../../lib/nims-export-mappers";
 import { Loader2, Plus, Sprout } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -27,13 +33,7 @@ import {
   useRecordCross,
   useSeedBankStats,
 } from "../../hooks/useSeedBank";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { exportSeedLotsCsv } from "../../lib/nims-export-mappers";
 
 function fmtMonth(ts: bigint): string {
   return new Date(Number(ts / 1_000_000n)).toLocaleDateString(undefined, {
@@ -57,7 +57,10 @@ export type SeedBankPanelProps = {
   onPlantFromLot: (varietyId: bigint) => void;
 };
 
-export function SeedBankPanel({ varieties, onPlantFromLot }: SeedBankPanelProps) {
+export function SeedBankPanel({
+  varieties,
+  onPlantFromLot,
+}: SeedBankPanelProps) {
   const [view, setView] = useState<SeedBankView>("collection");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [activeOnly, setActiveOnly] = useState(true);
@@ -85,7 +88,10 @@ export function SeedBankPanel({ varieties, onPlantFromLot }: SeedBankPanelProps)
   const filteredLots = useMemo(() => {
     return lots.filter((lot) => {
       if (activeOnly && !lot.isActive) return false;
-      if (varietyFilter !== "all" && lot.varietyId.toString() !== varietyFilter) {
+      if (
+        varietyFilter !== "all" &&
+        lot.varietyId.toString() !== varietyFilter
+      ) {
         return false;
       }
       if (sourceFilter === "all") return true;
@@ -189,7 +195,11 @@ export function SeedBankPanel({ varieties, onPlantFromLot }: SeedBankPanelProps)
             >
               {activeOnly ? "Active only" : "Include depleted"}
             </Button>
-            <Button size="sm" className="ml-auto" onClick={() => setAddSeedsOpen(true)}>
+            <Button
+              size="sm"
+              className="ml-auto"
+              onClick={() => setAddSeedsOpen(true)}
+            >
               <Plus className="size-4 mr-1" /> Add seeds
             </Button>
           </div>
@@ -209,7 +219,7 @@ export function SeedBankPanel({ varieties, onPlantFromLot }: SeedBankPanelProps)
                 const vid = unwrapOpt(lot.vendorId);
                 const sourceBadge =
                   "Vendor" in lot.source && vid != null
-                    ? vendorName(vid) ?? "Vendor"
+                    ? (vendorName(vid) ?? "Vendor")
                     : seedSourceLabel(lot.source);
                 return (
                   <div
@@ -218,7 +228,9 @@ export function SeedBankPanel({ varieties, onPlantFromLot }: SeedBankPanelProps)
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="font-semibold">🌶️ {varietyName(lot.varietyId)}</p>
+                        <p className="font-semibold">
+                          🌶️ {varietyName(lot.varietyId)}
+                        </p>
                         <Badge variant="outline" className="mt-1 text-[10px]">
                           {sourceBadge}
                         </Badge>
@@ -230,7 +242,9 @@ export function SeedBankPanel({ varieties, onPlantFromLot }: SeedBankPanelProps)
                       )}
                     </div>
                     {qty != null && (
-                      <p className="text-muted-foreground">~{qty.toString()} seeds</p>
+                      <p className="text-muted-foreground">
+                        ~{qty.toString()} seeds
+                      </p>
                     )}
                     {gen && <p>Generation: {gen}</p>}
                     {rate != null && <p>Germination: {rate.toString()}%</p>}
@@ -279,11 +293,14 @@ export function SeedBankPanel({ varieties, onPlantFromLot }: SeedBankPanelProps)
                 >
                   <p className="font-semibold">{cross.name}</p>
                   <p className="text-muted-foreground">
-                    {varietyName(cross.motherVarietyId)} × {varietyName(cross.fatherVarietyId)}
+                    {varietyName(cross.motherVarietyId)} ×{" "}
+                    {varietyName(cross.fatherVarietyId)}
                   </p>
                   <p>Generation: {cross.generation}</p>
                   {unwrapOpt(cross.expectedTraits) && (
-                    <p className="text-xs">Expected: {unwrapOpt(cross.expectedTraits)}</p>
+                    <p className="text-xs">
+                      Expected: {unwrapOpt(cross.expectedTraits)}
+                    </p>
                   )}
                   {unwrapOpt(cross.seedLotId) && (
                     <p className="text-xs text-primary">
@@ -322,10 +339,14 @@ export function SeedBankPanel({ varieties, onPlantFromLot }: SeedBankPanelProps)
                 >
                   <p className="font-medium">{v.name}</p>
                   {unwrapOpt(v.website) && (
-                    <p className="text-xs text-primary">{unwrapOpt(v.website)}</p>
+                    <p className="text-xs text-primary">
+                      {unwrapOpt(v.website)}
+                    </p>
                   )}
                   {unwrapOpt(v.notes) && (
-                    <p className="text-xs text-muted-foreground">{unwrapOpt(v.notes)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {unwrapOpt(v.notes)}
+                    </p>
                   )}
                 </li>
               ))}
@@ -411,7 +432,9 @@ function AddSeedsDialog({
   const [vendorId, setVendorId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
-  const source = SOURCE_OPTIONS[Number(sourceIdx)]?.value ?? { OwnHarvest: null };
+  const source = SOURCE_OPTIONS[Number(sourceIdx)]?.value ?? {
+    OwnHarvest: null,
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -477,7 +500,11 @@ function AddSeedsDialog({
           </div>
           <div className="space-y-1">
             <Label>Notes</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+            />
           </div>
         </div>
         <DialogFooter>
@@ -526,7 +553,9 @@ function RecordCrossDialog({
 }) {
   const [name, setName] = useState("");
   const [motherId, setMotherId] = useState(varieties[0]?.id.toString() ?? "");
-  const [fatherId, setFatherId] = useState(varieties[1]?.id.toString() ?? varieties[0]?.id.toString() ?? "");
+  const [fatherId, setFatherId] = useState(
+    varieties[1]?.id.toString() ?? varieties[0]?.id.toString() ?? "",
+  );
   const [generation, setGeneration] = useState("F1");
   const [expectedTraits, setExpectedTraits] = useState("");
   const [notes, setNotes] = useState("");
@@ -580,7 +609,10 @@ function RecordCrossDialog({
           </div>
           <div className="space-y-1">
             <Label>Generation</Label>
-            <Input value={generation} onChange={(e) => setGeneration(e.target.value)} />
+            <Input
+              value={generation}
+              onChange={(e) => setGeneration(e.target.value)}
+            />
           </div>
           <div className="space-y-1">
             <Label>Expected traits</Label>
@@ -591,7 +623,11 @@ function RecordCrossDialog({
           </div>
           <div className="space-y-1">
             <Label>Notes</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+            />
           </div>
         </div>
         <DialogFooter>
@@ -611,7 +647,11 @@ function RecordCrossDialog({
               })
             }
           >
-            {isPending ? <Loader2 className="size-4 animate-spin" /> : "Save cross"}
+            {isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              "Save cross"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -628,7 +668,11 @@ function AddVendorDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   isPending?: boolean;
-  onSubmit: (p: { name: string; website?: string; notes?: string }) => void | Promise<void>;
+  onSubmit: (p: {
+    name: string;
+    website?: string;
+    notes?: string;
+  }) => void | Promise<void>;
 }) {
   const [name, setName] = useState("");
   const [website, setWebsite] = useState("");
@@ -651,11 +695,18 @@ function AddVendorDialog({
           </div>
           <div className="space-y-1">
             <Label>Website</Label>
-            <Input value={website} onChange={(e) => setWebsite(e.target.value)} />
+            <Input
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+            />
           </div>
           <div className="space-y-1">
             <Label>Notes</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+            />
           </div>
         </div>
         <DialogFooter>

@@ -23,7 +23,10 @@ export function HarvestSeedsModal({
   onOpenChange: (open: boolean) => void;
   plantLabel?: string;
   isPending?: boolean;
-  onSubmit: (payload: { quantity?: bigint; notes?: string }) => void | Promise<void>;
+  onSubmit: (payload: {
+    quantity?: bigint;
+    notes?: string;
+  }) => void | Promise<void>;
 }) {
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");

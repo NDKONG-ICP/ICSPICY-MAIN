@@ -37,14 +37,17 @@ import {
   XCircle,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Offer, ResaleListingPublic } from "../backend";
+import { OfferStatus, ProductCategory, RarityTier } from "../backend";
+import { NftResaleSection } from "../components/NftResaleSection";
+import { ShopListingImage } from "../components/ShopListingImage";
+import { ShopPlantsSection } from "../components/ShopPlantsSection";
 import {
-  OfferStatus,
-  ProductCategory,
-  RarityTier,
-} from "../backend";
+  TokenPaymentPanel,
+  useTokenPaymentState,
+} from "../components/TokenPaymentPanel";
 import { useAuth } from "../hooks/useAuth";
 import {
   useAcceptOffer,
@@ -59,17 +62,23 @@ import {
   useRejectOffer,
   useSubmitOffer,
 } from "../hooks/useBackend";
-import { useTokenPrices } from "../hooks/useTokenPrices";
-import {
-  TokenPaymentPanel,
-  useTokenPaymentState,
-} from "../components/TokenPaymentPanel";
 import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
-import { ShopPlantsSection } from "../components/ShopPlantsSection";
-import { ShopListingImage } from "../components/ShopListingImage";
-import { NftResaleSection } from "../components/NftResaleSection";
-import { lineIdForProduct, lineTotalCents, formatLinePrice, toNatBigInt, toOptionalNatBigInt } from "../lib/cart-utils";
+import { usePageTitle } from "../hooks/usePageTitle";
+import { useTokenPrices } from "../hooks/useTokenPrices";
+import { useUsageTracking } from "../hooks/useUsageTracking";
+import {
+  offerStatusLabel,
+  productCategoryLabel,
+  variantToString,
+} from "../lib/candid-display";
+import {
+  formatLinePrice,
+  lineIdForProduct,
+  lineTotalCents,
+  toNatBigInt,
+  toOptionalNatBigInt,
+} from "../lib/cart-utils";
 import {
   discountAmountCents,
   discountedSubtotalCents,
@@ -79,22 +88,18 @@ import {
 import {
   CATALOG_CATEGORY_TABS,
   CATEGORY_DISPLAY,
+  type ShopProduct,
   filterActiveShopProducts,
   filterNonPlantProducts,
   getProductImageKeys,
   maxPurchasableQuantity,
   productToCartItem,
   productUnitPrice,
-  type ShopProduct,
 } from "../lib/shop-products";
-import {
-  offerStatusLabel,
-  productCategoryLabel,
-  variantToString,
-} from "../lib/candid-display";
+import { OisyConnectButton } from "../components/OisyConnectButton";
+import { useOisyWallet } from "../providers/OisyWalletProvider";
 import { OFFER_TOKENS, TOKEN_DECIMALS, TOKEN_DISPLAY } from "../types/index";
 import type { OfferTokenSymbol, Product } from "../types/index";
-import { usePageTitle } from "../hooks/usePageTitle";
 
 // ─── Category config ──────────────────────────────────────────────────────────
 
@@ -225,7 +230,8 @@ function truncatePrincipal(p: string) {
 function getProductEmoji(category: unknown) {
   const key = variantToString(category);
   if (key === ProductCategory.Spice || key === "Spice") return "🧂";
-  if (key === ProductCategory.GardenInputs || key === "GardenInputs") return "🌿";
+  if (key === ProductCategory.GardenInputs || key === "GardenInputs")
+    return "🌿";
   return "🌶️";
 }
 
@@ -299,9 +305,7 @@ const STATUS_STYLE: Record<OfferStatus, string> = {
 
 function OfferStatusBadge({ status }: { status: unknown }) {
   const key = variantToString(status) as OfferStatus;
-  const style =
-    STATUS_STYLE[key] ??
-    STATUS_STYLE[OfferStatus.Pending];
+  const style = STATUS_STYLE[key] ?? STATUS_STYLE[OfferStatus.Pending];
   const label = offerStatusLabel(status);
   return (
     <span
@@ -309,8 +313,9 @@ function OfferStatusBadge({ status }: { status: unknown }) {
     >
       {key === OfferStatus.Pending && <Clock className="w-3 h-3" />}
       {key === OfferStatus.Accepted && <CheckCircle2 className="w-3 h-3" />}
-      {(key === OfferStatus.Rejected ||
-        key === OfferStatus.Cancelled) && <XCircle className="w-3 h-3" />}
+      {(key === OfferStatus.Rejected || key === OfferStatus.Cancelled) && (
+        <XCircle className="w-3 h-3" />
+      )}
       {label}
     </span>
   );
@@ -1230,7 +1235,9 @@ function CartFloat({ discountPercent }: { discountPercent: number }) {
                         {item.variety}
                       </p>
                     )}
-                    <p className="text-[10px] text-primary/80">🎫 NFT included</p>
+                    <p className="text-[10px] text-primary/80">
+                      🎫 NFT included
+                    </p>
                     <p className="text-xs text-primary font-bold mt-0.5">
                       {hasDiscount
                         ? formatPrice(
@@ -1240,10 +1247,7 @@ function CartFloat({ discountPercent }: { discountPercent: number }) {
                             ),
                             discountPercent,
                           )
-                        : formatLinePrice(
-                            item.unit_price_cents,
-                            item.quantity,
-                          )}
+                        : formatLinePrice(item.unit_price_cents, item.quantity)}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
@@ -1350,6 +1354,7 @@ function PepperHeadShopCard() {
   const { isAuthenticated, login } = useAuth();
   const purchaseDirect = usePurchasePepperHeadDirect();
   const [payingToken, setPayingToken] = useTokenPaymentState();
+  const { isOisyConnected, oisyAgent, oisyBackendActor } = useOisyWallet();
   const { dataUpdatedAt } = useTokenPrices();
   const [purchasedId, setPurchasedId] = useState<bigint | null>(null);
 
@@ -1390,16 +1395,12 @@ function PepperHeadShopCard() {
       </div>
       <p className="text-sm text-muted-foreground">
         PepperHead NFTs grant exclusive member benefits — lifetime discounts,
-        early access, and provenance rights. Pay with any supported token via
-        Internet Identity.
+        early access, and provenance rights. Pay with Internet Identity or OISY
+        to custody your NFT directly in OISY.
       </p>
 
-      {!isAuthenticated ? (
-        <Button className="w-full" onClick={login} data-ocid="pepperhead-shop-login">
-          <Crown className="w-4 h-4" />
-          Sign in to Purchase
-        </Button>
-      ) : (
+      {/* II payment — only when signed in */}
+      {isAuthenticated && (
         <TokenPaymentPanel
           usdCents={PEPPERHEAD_PRICE_CENTS}
           payingToken={payingToken}
@@ -1417,6 +1418,62 @@ function PepperHeadShopCard() {
           dataOcid="pepperhead-shop-payment"
         />
       )}
+
+      {/* II sign-in prompt — only when not signed in */}
+      {!isAuthenticated && (
+        <Button
+          className="w-full"
+          onClick={login}
+          data-ocid="pepperhead-shop-login"
+        >
+          <Crown className="w-4 h-4" />
+          Sign in with Internet Identity
+        </Button>
+      )}
+
+      {/* OISY payment — always visible, independent of II auth */}
+      <div
+        className="space-y-3 pt-3 border-t border-border"
+        data-ocid="oisy-payment-section"
+      >
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Pay with OISY (NFT custodied in OISY)
+          </p>
+          {!isOisyConnected && (
+            <OisyConnectButton size="sm" variant="outline" label="Connect OISY" />
+          )}
+        </div>
+        {isOisyConnected && (
+          <>
+            <TokenPaymentPanel
+              usdCents={PEPPERHEAD_PRICE_CENTS}
+              payingToken={payingToken}
+              setPayingToken={setPayingToken}
+              onPay={async () => { /* no-op: II path not used here */ }}
+              onOisyPay={async ({ ledgerCanisterId, amount }) => {
+                if (!isOisyConnected || !oisyAgent || !oisyBackendActor) {
+                  toast.error("Connect your OISY wallet first");
+                  return;
+                }
+                const result = await oisyBackendActor.purchasePepperHeadDirect(
+                  ledgerCanisterId,
+                  amount,
+                );
+                if (!result.success) throw new Error(result.message);
+                if (result.tokenId.length > 0 && result.tokenId[0] != null) {
+                  setPurchasedId(result.tokenId[0]);
+                }
+                toast.success("PepperHead purchased! NFT custodied in OISY.");
+              }}
+              dataOcid="pepperhead-oisy-payment"
+            />
+            <p className="text-xs text-muted-foreground/60">
+              OISY purchases require ~2 approval popups (approve + settle). Your NFT will be custodied in your OISY wallet.
+            </p>
+          </>
+        )}
+      </div>
 
       {priceUpdated && (
         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -1542,7 +1599,10 @@ function ProductModal({
     onClose();
   };
 
-  const displayPriceCents = discountedUnitPriceCents(unitPrice, discountPercent);
+  const displayPriceCents = discountedUnitPriceCents(
+    unitPrice,
+    discountPercent,
+  );
   const hasDiscount = discountPercent > 0;
   const displayPrice = Number(displayPriceCents) / 100;
   const listPrice = Number(unitPrice) / 100;
@@ -1587,11 +1647,12 @@ function ProductModal({
               🎫 NFT #{product.nft_token_id.toString()}
             </Badge>
           )}
-          {product.inventory_remaining !== undefined && !product.weight_based && (
-            <Badge variant="outline" className="text-xs">
-              {product.inventory_remaining.toString()} in stock
-            </Badge>
-          )}
+          {product.inventory_remaining !== undefined &&
+            !product.weight_based && (
+              <Badge variant="outline" className="text-xs">
+                {product.inventory_remaining.toString()} in stock
+              </Badge>
+            )}
           {product.shippable ? (
             <Badge variant="secondary" className="text-xs">
               Ships USPS Flat Rate
@@ -1647,15 +1708,15 @@ function ProductModal({
             </button>
             <span className="w-8 text-center font-bold text-foreground">
               {qty}
-              {product.weight_based && product.unit_label ? ` ${product.unit_label}` : ""}
+              {product.weight_based && product.unit_label
+                ? ` ${product.unit_label}`
+                : ""}
             </span>
             <button
               type="button"
               onClick={() =>
                 setQty(
-                  stockMax === null
-                    ? qty + 1
-                    : Math.min(stockMax, qty + 1),
+                  stockMax === null ? qty + 1 : Math.min(stockMax, qty + 1),
                 )
               }
               disabled={
@@ -1706,7 +1767,10 @@ function ProductCard({
     toast.success(`Added ${product.name} to cart`);
   };
 
-  const displayPriceCents = discountedUnitPriceCents(unitPrice, discountPercent);
+  const displayPriceCents = discountedUnitPriceCents(
+    unitPrice,
+    discountPercent,
+  );
   const hasDiscount = discountPercent > 0;
   const displayPrice = Number(displayPriceCents) / 100;
   const listPrice = Number(unitPrice) / 100;
@@ -1920,9 +1984,16 @@ function ProductGrid({ count = 8 }: { count?: number }) {
 
 export default function MarketplacePage() {
   usePageTitle("Shop");
+  const { track, USAGE } = useUsageTracking();
+
+  useEffect(() => {
+    track(USAGE.SHOP.VIEW.feature, USAGE.SHOP.VIEW.action, "shop:open");
+  }, [track, USAGE.SHOP.VIEW]);
 
   const [shopTab, setShopTab] = useState<ShopTab>("plants");
-  const [selectedProduct, setSelectedProduct] = useState<ShopProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ShopProduct | null>(
+    null,
+  );
 
   const isResaleTab = shopTab === "nft-resale";
   const isProductsTab = shopTab === "products";

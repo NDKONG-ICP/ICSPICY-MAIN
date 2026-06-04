@@ -1,17 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGardenDesignLoader, usePublicGardenDesigns } from "@/hooks/useGardenDesigns";
-import { calculateYieldLocally } from "@/lib/garden-rules";
-import { getForkCount, getLikeCount, getThumbnail, hasLiked, incrementForkCount, toggleLike } from "@/lib/garden-social";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  useGardenDesignLoader,
+  usePublicGardenDesigns,
+} from "@/hooks/useGardenDesigns";
+import { useGardenDesignMutations } from "@/hooks/useGardenDesigns";
 import { useVarieties } from "@/hooks/useNims";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { useAuth } from "@/hooks/useAuth";
-import { useGardenDesignMutations } from "@/hooks/useGardenDesigns";
 import { designToInput } from "@/lib/garden-candid";
+import { calculateYieldLocally } from "@/lib/garden-rules";
+import {
+  getForkCount,
+  getLikeCount,
+  getThumbnail,
+  hasLiked,
+  incrementForkCount,
+  toggleLike,
+} from "@/lib/garden-social";
 import type { GardenDesign } from "@/lib/garden-types";
 import { cloneDesign } from "@/lib/garden-utils";
-import { Heart, GitFork, Eye } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { Eye, GitFork, Heart } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -28,7 +38,11 @@ export default function GardenGalleryPage() {
 
   const filtered = useMemo(() => {
     if (filter === "all") return designs;
-    return designs.filter((d) => d.name.toLowerCase().includes(filter) || d.description?.toLowerCase().includes(filter));
+    return designs.filter(
+      (d) =>
+        d.name.toLowerCase().includes(filter) ||
+        d.description?.toLowerCase().includes(filter),
+    );
   }, [designs, filter]);
 
   const forkDesign = async (d: GardenDesign) => {
@@ -60,7 +74,9 @@ export default function GardenGalleryPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">🌿 Community Garden Designs</h1>
-          <p className="text-muted-foreground text-sm">Browse, like, and fork public layouts</p>
+          <p className="text-muted-foreground text-sm">
+            Browse, like, and fork public layouts
+          </p>
         </div>
         <Button asChild variant="outline">
           <Link to="/garden">Open Designer</Link>
@@ -68,7 +84,12 @@ export default function GardenGalleryPage() {
       </div>
       <div className="flex flex-wrap gap-2">
         {["all", "food forest", "pepper", "native", "permaculture"].map((f) => (
-          <Button key={f} size="sm" variant={filter === f ? "default" : "outline"} onClick={() => setFilter(f)}>
+          <Button
+            key={f}
+            size="sm"
+            variant={filter === f ? "default" : "outline"}
+            onClick={() => setFilter(f)}
+          >
             {f === "all" ? "All" : f.replace(/\b\w/g, (c) => c.toUpperCase())}
           </Button>
         ))}
@@ -80,7 +101,9 @@ export default function GardenGalleryPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <p className="text-muted-foreground">No public designs yet. Be the first to share!</p>
+        <p className="text-muted-foreground">
+          No public designs yet. Be the first to share!
+        </p>
       ) : (
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
           {filtered.map((d) => {
@@ -94,7 +117,11 @@ export default function GardenGalleryPage() {
               >
                 <div className="h-36 bg-gradient-to-br from-green-900 to-green-950 flex items-center justify-center overflow-hidden">
                   {thumb ? (
-                    <img src={thumb} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={thumb}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <span className="text-4xl">🌳</span>
                   )}
@@ -102,9 +129,12 @@ export default function GardenGalleryPage() {
                 <div className="p-4 space-y-2">
                   <h2 className="font-semibold">{d.name}</h2>
                   <p className="text-xs text-muted-foreground">
-                    {d.plants.length} plants · {d.structures.length} structures · {d.widthMeters}×{d.depthMeters}m
+                    {d.plants.length} plants · {d.structures.length} structures
+                    · {d.widthMeters}×{d.depthMeters}m
                   </p>
-                  <p className="text-xs">Est. yield: {yieldEst.estimatedLbsMax.toFixed(0)} lbs/yr</p>
+                  <p className="text-xs">
+                    Est. yield: {yieldEst.estimatedLbsMax.toFixed(0)} lbs/yr
+                  </p>
                   <div className="flex items-center gap-3 text-sm">
                     <button
                       type="button"
@@ -114,18 +144,27 @@ export default function GardenGalleryPage() {
                         tick((t) => t + 1);
                       }}
                     >
-                      <Heart className={`h-4 w-4 ${id && hasLiked(id) ? "fill-red-500 text-red-500" : ""}`} />
+                      <Heart
+                        className={`h-4 w-4 ${id && hasLiked(id) ? "fill-red-500 text-red-500" : ""}`}
+                      />
                       {id ? getLikeCount(id) : 0}
                     </button>
                     <span className="flex items-center gap-1 text-muted-foreground">
-                      <GitFork className="h-4 w-4" /> {id ? getForkCount(id) : 0}
+                      <GitFork className="h-4 w-4" />{" "}
+                      {id ? getForkCount(id) : 0}
                     </span>
                   </div>
                   <div className="flex gap-2 pt-1">
                     <Button size="sm" variant="secondary" asChild>
-                      <Link to="/garden" search={{ design: id }}><Eye className="h-4 w-4 mr-1" /> View</Link>
+                      <Link to="/garden" search={{ design: id }}>
+                        <Eye className="h-4 w-4 mr-1" /> View
+                      </Link>
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => void forkDesign(d)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void forkDesign(d)}
+                    >
                       <GitFork className="h-4 w-4 mr-1" /> Fork
                     </Button>
                   </div>

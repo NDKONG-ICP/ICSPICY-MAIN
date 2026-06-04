@@ -1,7 +1,7 @@
-import { Droplets, FlaskConical, Leaf, Skull, Sprout } from "lucide-react";
-import type { PlantLifecycle } from "../../declarations/backend.did";
 import { findDeathRecord } from "@/lib/plant-lifecycle-utils";
 import { cn } from "@/lib/utils";
+import { Droplets, FlaskConical, Leaf, Skull, Sprout } from "lucide-react";
+import type { PlantLifecycle } from "../../declarations/backend.did";
 
 function fmtTs(ts: bigint): string {
   return new Date(Number(ts / 1_000_000n)).toLocaleDateString("en-US", {
@@ -37,7 +37,10 @@ function buildEvents(lc: PlantLifecycle): TimelineEvent[] {
       id: "germinated",
       ts: p.germination_date[0]!,
       label: "Germinated",
-      detail: lc.nftTokenId.length > 0 ? `NFT #${lc.nftTokenId[0]!.toString()}` : undefined,
+      detail:
+        lc.nftTokenId.length > 0
+          ? `NFT #${lc.nftTokenId[0]!.toString()}`
+          : undefined,
       icon: Leaf,
       tone: "success",
     });
@@ -97,7 +100,10 @@ export function PlantTimeline({ lifecycle }: { lifecycle: PlantLifecycle }) {
 
   return (
     <div data-ocid="nims-plant-timeline" className="relative pl-6">
-      <div className="absolute left-2 top-2 bottom-2 w-px bg-border" aria-hidden />
+      <div
+        className="absolute left-2 top-2 bottom-2 w-px bg-border"
+        aria-hidden
+      />
       <ul className="space-y-4">
         {events.map((ev) => {
           const Icon = ev.icon;
@@ -106,7 +112,8 @@ export function PlantTimeline({ lifecycle }: { lifecycle: PlantLifecycle }) {
               <span
                 className={cn(
                   "absolute -left-6 flex size-8 items-center justify-center rounded-full border border-border bg-card",
-                  ev.tone === "success" && "border-emerald-500/50 text-emerald-400",
+                  ev.tone === "success" &&
+                    "border-emerald-500/50 text-emerald-400",
                   ev.tone === "danger" && "border-red-500/50 text-red-400",
                   ev.tone === "warn" && "border-amber-500/50 text-amber-400",
                 )}
@@ -114,9 +121,13 @@ export function PlantTimeline({ lifecycle }: { lifecycle: PlantLifecycle }) {
                 <Icon className="size-4" aria-hidden />
               </span>
               <div className="min-w-0 flex-1 pb-1">
-                <p className="text-sm font-medium text-foreground">{ev.label}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {ev.label}
+                </p>
                 {ev.detail && (
-                  <p className="text-xs text-muted-foreground truncate">{ev.detail}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {ev.detail}
+                  </p>
                 )}
                 <p className="text-[10px] text-muted-foreground/80 mt-0.5">
                   {fmtTs(ev.ts)}

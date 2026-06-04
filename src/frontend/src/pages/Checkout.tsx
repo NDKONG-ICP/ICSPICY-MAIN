@@ -1,8 +1,13 @@
+import type {
+  CreateOrderInput as CandidOrderInput,
+  ShippingAddress as CandidShipping,
+} from "../declarations/backend.did";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { variantToString } from "@/lib/candid-display";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -19,8 +24,14 @@ import {
   Trash2,
 } from "lucide-react";
 import { motion } from "motion/react";
-import React, { useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { PlantCheckoutPanel } from "../components/PlantCheckoutPanel";
+import {
+  TokenPaymentPanel,
+  useTokenPaymentState,
+} from "../components/TokenPaymentPanel";
 import { useAuth } from "../hooks/useAuth";
 import {
   useConfirmOrderPaymentDirect,
@@ -28,25 +39,24 @@ import {
 } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
-import { PlantCheckoutPanel } from "../components/PlantCheckoutPanel";
+import { usePageTitle } from "../hooks/usePageTitle";
+import { useUsageTracking } from "../hooks/useUsageTracking";
 import {
-  TokenPaymentPanel,
-  useTokenPaymentState,
-} from "../components/TokenPaymentPanel";
-import {
-  formatLinePrice,
   PICKUP_ADDRESS,
+  USPS_SMALL_FLAT_RATE_CENTS,
+  formatLinePrice,
   toNatBigInt,
   toOptionalNatBigInt,
-  USPS_SMALL_FLAT_RATE_CENTS,
 } from "../lib/cart-utils";
-import type { CartItem } from "../types";
+import { discountAmountCents, formatRarityLabel } from "../lib/discount-utils";
+import { oisyIcrc2Approve, oisyPaymentAmount } from "../lib/oisy-payment";
 import {
-  discountAmountCents,
-  formatRarityLabel,
-} from "../lib/discount-utils";
-import { usePageTitle } from "../hooks/usePageTitle";
-import { variantToString } from "@/lib/candid-display";
+  PAYMENT_LEDGERS,
+  VOLATILE_APPROVE_BUFFER_BPS,
+  isStablePaymentToken,
+} from "../lib/token-payment";
+import { useOisyWallet } from "../providers/OisyWalletProvider";
+import type { CartItem } from "../types";
 
 // ─── Discount line ────────────────────────────────────────────────────────────
 
@@ -140,9 +150,9 @@ function ShippingNoticeBox() {
     >
       <p className="font-semibold text-amber-200">📦 Shipping Notice</p>
       <p className="mt-1.5 text-amber-100/90 leading-relaxed">
-        Please allow 2–3 business days for your order to be processed and shipped
-        to ensure the freshest possible delivery. All plants are carefully packaged
-        to survive transit.
+        Please allow 2–3 business days for your order to be processed and
+        shipped to ensure the freshest possible delivery. All plants are
+        carefully packaged to survive transit.
       </p>
     </div>
   );
@@ -282,22 +292,44 @@ function EmptyCart() {
 
 // ─── Payment step ─────────────────────────────────────────────────────────────
 
+type OisyOrderInput = {
+  pickup: boolean;
+  shipping?: {
+    full_name: string;
+    street_line1: string;
+    street_line2?: string;
+    city: string;
+    state: string;
+    zip: string;
+    phone: string;
+  };
+  items: Array<{
+    product_id: bigint;
+    plant_id: [] | [bigint];
+    price_cents: bigint;
+    quantity: bigint;
+  }>;
+};
+
 function PaymentStep({
   orderId,
   finalTotal,
   isPickup,
   orderItems,
+  oisyOrderInput,
 }: {
   orderId: bigint;
   finalTotal: bigint;
   isPickup: boolean;
   orderItems: CartItem[];
+  oisyOrderInput: OisyOrderInput;
 }) {
   const { isAuthenticated, login, principal } = useAuth();
   const clearCart = useCart((s) => s.clearCart);
   const confirmDirect = useConfirmOrderPaymentDirect();
   const navigate = useNavigate();
   const [payingToken, setPayingToken] = useTokenPaymentState();
+  const { isOisyConnected, oisyAgent, oisyBackendActor } = useOisyWallet();
 
   const [purchasedItems] = useState(() => [...orderItems]);
   const [claimTokens, setClaimTokens] = useState<string[]>([]);
@@ -324,6 +356,67 @@ function PaymentStep({
     clearCart();
     setPaid(true);
     toast.success("Purchase complete!");
+  };
+
+  const handleOisyPay = async ({
+    token,
+    ledgerCanisterId,
+    amount,
+  }: {
+    token: import("../lib/token-payment").PaymentTokenSymbol;
+    ledgerCanisterId: string;
+    amount: bigint;
+  }) => {
+    if (!isOisyConnected || !oisyAgent || !oisyBackendActor) {
+      toast.error("Connect your OISY wallet first");
+      return;
+    }
+    // Re-place the order under the OISY identity so buyer = OISY principal.
+    // Convert to Candid-style CreateOrderInput ([] | [T] for optionals).
+    const shippingCandid: [] | [CandidShipping] = oisyOrderInput.shipping
+      ? [
+          {
+            full_name: oisyOrderInput.shipping.full_name,
+            street_line1: oisyOrderInput.shipping.street_line1,
+            street_line2: oisyOrderInput.shipping.street_line2
+              ? ([oisyOrderInput.shipping.street_line2] as [string])
+              : ([] as []),
+            city: oisyOrderInput.shipping.city,
+            state: oisyOrderInput.shipping.state,
+            zip: oisyOrderInput.shipping.zip,
+            phone: oisyOrderInput.shipping.phone,
+          },
+        ]
+      : [];
+
+    const candidOrderInput: CandidOrderInput = {
+      pickup: oisyOrderInput.pickup,
+      shipping: shippingCandid,
+      items: oisyOrderInput.items,
+    };
+
+    const oisyOrder = await oisyBackendActor.placeOrder(candidOrderInput);
+    if (!oisyOrder?.id) throw new Error("OISY placeOrder failed");
+
+    const bufferBps = isStablePaymentToken(token)
+      ? 0
+      : VOLATILE_APPROVE_BUFFER_BPS;
+    await oisyIcrc2Approve(oisyAgent, ledgerCanisterId, amount, undefined, {
+      bufferBps,
+    });
+
+    const result = await oisyBackendActor.confirmOrderPaymentDirect(
+      oisyOrder.id,
+      ledgerCanisterId,
+      amount,
+    );
+    if (!result.success) throw new Error(result.message);
+
+    setClaimTokens(result.claim_tokens);
+    setNftTokenIds(result.nft_token_ids);
+    clearCart();
+    setPaid(true);
+    toast.success("OISY purchase complete! NFT custodied in OISY.");
   };
 
   const handleContinueShopping = () => {
@@ -405,12 +498,20 @@ function PaymentStep({
                         to="/nft/$tokenId"
                         params={{ tokenId: nftId.toString() }}
                       >
-                        <Button size="sm" variant="outline" className="h-7 text-xs">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                        >
                           View NFT
                         </Button>
                       </Link>
                       <Link to="/wallet">
-                        <Button size="sm" variant="outline" className="h-7 text-xs">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                        >
                           View in Wallet
                         </Button>
                       </Link>
@@ -532,6 +633,7 @@ function PaymentStep({
         <TokenPaymentPanel
           usdCents={finalTotal}
           onPay={handlePay}
+          onOisyPay={handleOisyPay}
           payingToken={payingToken}
           setPayingToken={setPayingToken}
         />
@@ -544,6 +646,15 @@ function PaymentStep({
 
 export default function CheckoutPage() {
   usePageTitle("Checkout");
+  const { track, USAGE } = useUsageTracking();
+
+  useEffect(() => {
+    track(
+      USAGE.SHOP.CHECKOUT.feature,
+      USAGE.SHOP.CHECKOUT.action,
+      "shop:checkout",
+    );
+  }, [track, USAGE.SHOP.CHECKOUT]);
 
   const plantIdParam =
     typeof window !== "undefined"
@@ -569,6 +680,8 @@ export default function CheckoutPage() {
   const [submitted, setSubmitted] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<bigint | null>(null);
   const [finalTotalForPayment, setFinalTotalForPayment] = useState<bigint>(0n);
+  const [pendingOisyOrderInput, setPendingOisyOrderInput] =
+    useState<OisyOrderInput>({ pickup: true, items: [] });
 
   const wantsShipping = fulfillment === "ship";
 
@@ -601,19 +714,38 @@ export default function CheckoutPage() {
     if (!isFormValid) return;
 
     try {
+      const shippingData = wantsShipping
+        ? {
+            full_name: form.fullName.trim(),
+            street_line1: form.address1.trim(),
+            street_line2: form.address2.trim() || undefined,
+            city: form.city.trim(),
+            state: form.state.trim(),
+            zip: form.zip.trim(),
+            phone: form.phone.trim(),
+          }
+        : undefined;
+
+      // OISY uses Candid-style [] | [T] optionals; store for OISY re-placement
+      const oisyInput: OisyOrderInput = {
+        pickup: !wantsShipping,
+        shipping: shippingData,
+        items: items.map((item) => ({
+          product_id: toNatBigInt(item.product_id),
+          plant_id:
+            item.plant_id != null
+              ? ([toNatBigInt(item.plant_id)] as [bigint])
+              : ([] as []),
+          price_cents: BigInt(item.unit_price_cents),
+          quantity: BigInt(item.quantity),
+        })),
+      };
+      setPendingOisyOrderInput(oisyInput);
+
+      // II placeOrder uses the hook's friendly format
       const orderInput = {
         pickup: !wantsShipping,
-        shipping: wantsShipping
-          ? {
-              full_name: form.fullName.trim(),
-              street_line1: form.address1.trim(),
-              street_line2: form.address2.trim() || undefined,
-              city: form.city.trim(),
-              state: form.state.trim(),
-              zip: form.zip.trim(),
-              phone: form.phone.trim(),
-            }
-          : undefined,
+        shipping: shippingData,
         items: items.map((item) => ({
           product_id: toNatBigInt(item.product_id),
           plant_id: toOptionalNatBigInt(item.plant_id),
@@ -656,6 +788,7 @@ export default function CheckoutPage() {
           finalTotal={finalTotalForPayment}
           isPickup={fulfillment === "pickup"}
           orderItems={items}
+          oisyOrderInput={pendingOisyOrderInput}
         />
       </div>
     );

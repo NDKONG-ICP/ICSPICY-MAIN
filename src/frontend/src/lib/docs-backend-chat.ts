@@ -39,11 +39,21 @@ const docsChatIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
 
 type ChatResponseCandid =
   | { ok: { response: string; docsReferenced: string[] } }
-  | { err: { rateLimited?: { resetInSeconds: bigint }; blocked?: null; llmError?: string; noContent?: null } };
+  | {
+      err: {
+        rateLimited?: { resetInSeconds: bigint };
+        blocked?: null;
+        llmError?: string;
+        noContent?: null;
+      };
+    };
 
 interface DocsChatActor {
   askSpicyAi(req: {
-    messages: Array<{ role: { user: null } | { assistant: null }; content: string }>;
+    messages: Array<{
+      role: { user: null } | { assistant: null };
+      content: string;
+    }>;
   }): Promise<ChatResponseCandid>;
 }
 
@@ -89,7 +99,10 @@ export function getDocsBackendChatActor(): DocsChatActor | null {
 
 export function toDocsChatMessage(m: SpicyChatTurn) {
   return {
-    role: m.role === "user" ? ({ user: null } as const) : ({ assistant: null } as const),
+    role:
+      m.role === "user"
+        ? ({ user: null } as const)
+        : ({ assistant: null } as const),
     content: m.content,
   };
 }
@@ -113,13 +126,19 @@ export function fromDocsChatResponse(c: ChatResponseCandid): DocsChatResult {
     };
   }
   if (c.err.blocked != null) {
-    return { ok: false, error: { type: "blocked", message: "Message blocked. Please rephrase." } };
+    return {
+      ok: false,
+      error: { type: "blocked", message: "Message blocked. Please rephrase." },
+    };
   }
   if (c.err.llmError) {
     return { ok: false, error: { type: "llmError", message: c.err.llmError } };
   }
   return {
     ok: false,
-    error: { type: "noContent", message: "SpicyAI is temporarily unavailable." },
+    error: {
+      type: "noContent",
+      message: "SpicyAI is temporarily unavailable.",
+    },
   };
 }

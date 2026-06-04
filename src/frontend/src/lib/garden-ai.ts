@@ -1,12 +1,20 @@
-import { getSpicyAiActor, toSpicyAiMessage, chatErrorToString } from "./spicyai-idl";
+import { generateLayoutFallback } from "./garden-ai-fallback";
 import {
-  getPlantById,
-  getStructureById,
   PLANT_CATALOG,
   STRUCTURE_CATALOG,
+  getPlantById,
+  getStructureById,
 } from "./garden-plant-catalog";
-import type { GardenDesign, PlantPlacement, StructurePlacement } from "./garden-types";
-import { generateLayoutFallback } from "./garden-ai-fallback";
+import type {
+  GardenDesign,
+  PlantPlacement,
+  StructurePlacement,
+} from "./garden-types";
+import {
+  chatErrorToString,
+  getSpicyAiActor,
+  toSpicyAiMessage,
+} from "./spicyai-idl";
 
 export type GeneratedLayoutPlant = {
   catalogId: string;
@@ -63,7 +71,9 @@ function availablePlantsList(max = 50): string {
 }
 
 function structureSnippet(): string {
-  return STRUCTURE_CATALOG.map((s) => `${s.id}|${s.name}|${s.defaultWidth}x${s.defaultDepth}`).join("\n");
+  return STRUCTURE_CATALOG.map(
+    (s) => `${s.id}|${s.name}|${s.defaultWidth}x${s.defaultDepth}`,
+  ).join("\n");
 }
 
 export function extractJson(text: string): GeneratedLayout | null {
@@ -97,7 +107,11 @@ export function extractJson(text: string): GeneratedLayout | null {
   return null;
 }
 
-function validateLayout(raw: GeneratedLayout, plotW: number, plotD: number): GeneratedLayout {
+function validateLayout(
+  raw: GeneratedLayout,
+  plotW: number,
+  plotD: number,
+): GeneratedLayout {
   const plants = (raw.plants ?? [])
     .filter((p) => getPlantById(p.catalogId))
     .map((p) => ({
@@ -128,7 +142,8 @@ function validateLayout(raw: GeneratedLayout, plotW: number, plotD: number): Gen
     depthMeters: Math.min(100, Math.max(2, raw.depthMeters || plotD)),
     plants,
     structures,
-    explanation: raw.explanation || "AI-generated layout for your Florida garden.",
+    explanation:
+      raw.explanation || "AI-generated layout for your Florida garden.",
   };
 }
 
@@ -203,7 +218,10 @@ Plot: ${plotWidth}m × ${plotDepth}m, Zone ${zone}`;
     try {
       const res = await actor.chatWithLlm({
         messages: [
-          toSpicyAiMessage({ role: "user", content: `${SYSTEM_PROMPT}\n\n${userMessage}` }),
+          toSpicyAiMessage({
+            role: "user",
+            content: `${SYSTEM_PROMPT}\n\n${userMessage}`,
+          }),
         ],
       });
       if (res.ok?.response) {
@@ -211,7 +229,10 @@ Plot: ${plotWidth}m × ${plotDepth}m, Zone ${zone}`;
         if (parsed && parsed.plants?.length) {
           return validateLayout(parsed, plotWidth, plotDepth);
         }
-        console.warn("SpicyAI garden: parsed JSON missing plants", res.ok.response.slice(0, 200));
+        console.warn(
+          "SpicyAI garden: parsed JSON missing plants",
+          res.ok.response.slice(0, 200),
+        );
       }
       if (res.err) {
         console.warn("SpicyAI garden layout:", chatErrorToString(res.err));
@@ -225,12 +246,48 @@ Plot: ${plotWidth}m × ${plotDepth}m, Zone ${zone}`;
 }
 
 export const PRESET_PROMPTS = [
-  { id: "pepper", emoji: "🌶️", label: "Pepper paradise", prompt: "All the hottest pepper varieties with companion basil and marigolds in raised beds" },
-  { id: "forest", emoji: "🌳", label: "Tropical food forest", prompt: "Food forest with mango, avocado canopy, citrus understory, moringa, pigeon pea nitrogen fixers" },
-  { id: "pollinator", emoji: "🦋", label: "Pollinator garden", prompt: "Florida native pollinator garden with milkweed, scorpion tail, blanket flower, native shrubs" },
-  { id: "homestead", emoji: "🐔", label: "Backyard homestead", prompt: "Homestead with chicken coop, veggie raised beds, fruit trees, drip irrigation, compost" },
-  { id: "herbs", emoji: "🌿", label: "Medicinal herb spiral", prompt: "Herb spiral with basil, rosemary, lemongrass, turmeric, moringa, culantro" },
-  { id: "oasis", emoji: "🏝️", label: "Tropical oasis", prompt: "Tropical oasis with palms, bird of paradise, pond, shade sail, ornamental paths" },
+  {
+    id: "pepper",
+    emoji: "🌶️",
+    label: "Pepper paradise",
+    prompt:
+      "All the hottest pepper varieties with companion basil and marigolds in raised beds",
+  },
+  {
+    id: "forest",
+    emoji: "🌳",
+    label: "Tropical food forest",
+    prompt:
+      "Food forest with mango, avocado canopy, citrus understory, moringa, pigeon pea nitrogen fixers",
+  },
+  {
+    id: "pollinator",
+    emoji: "🦋",
+    label: "Pollinator garden",
+    prompt:
+      "Florida native pollinator garden with milkweed, scorpion tail, blanket flower, native shrubs",
+  },
+  {
+    id: "homestead",
+    emoji: "🐔",
+    label: "Backyard homestead",
+    prompt:
+      "Homestead with chicken coop, veggie raised beds, fruit trees, drip irrigation, compost",
+  },
+  {
+    id: "herbs",
+    emoji: "🌿",
+    label: "Medicinal herb spiral",
+    prompt:
+      "Herb spiral with basil, rosemary, lemongrass, turmeric, moringa, culantro",
+  },
+  {
+    id: "oasis",
+    emoji: "🏝️",
+    label: "Tropical oasis",
+    prompt:
+      "Tropical oasis with palms, bird of paradise, pond, shade sail, ornamental paths",
+  },
 ] as const;
 
 export function surprisePrompt(): string {

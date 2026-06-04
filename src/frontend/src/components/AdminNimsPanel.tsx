@@ -30,8 +30,8 @@ export function AdminNimsPanel() {
         <h3 className="text-lg font-semibold mb-2">NFT Plant Pool</h3>
         {pool ? (
           <p className="text-sm text-muted-foreground">
-            {pool.available.toString()} / {pool.total.toString()} non-PepperHead NFTs
-            available for plant assignment
+            {pool.available.toString()} / {pool.total.toString()} non-PepperHead
+            NFTs available for plant assignment
           </p>
         ) : (
           <Skeleton className="h-6 w-48" />
@@ -122,7 +122,9 @@ export function AdminNimsPanel() {
             });
           }}
         >
-          {addVariety.isPending && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+          {addVariety.isPending && (
+            <Loader2 className="w-4 h-4 animate-spin mr-1" />
+          )}
           Add Variety
         </Button>
       </div>

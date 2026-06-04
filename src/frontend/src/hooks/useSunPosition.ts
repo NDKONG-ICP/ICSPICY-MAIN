@@ -11,7 +11,11 @@ export type SunLighting = {
   hour: number;
 };
 
-export function useSunPosition(lat: number, lng: number, hour: number): SunLighting {
+export function useSunPosition(
+  lat: number,
+  lng: number,
+  hour: number,
+): SunLighting {
   return useMemo(() => {
     const date = new Date();
     date.setHours(hour, 0, 0, 0);

@@ -60,23 +60,36 @@ export function NfcTagLinkModal({
         <div className="space-y-4">
           <div className="rounded-lg border border-border bg-muted/40 p-3 text-center">
             {qrDataUrl ? (
-              <img src={qrDataUrl} alt="Plant tag QR code" className="mx-auto" />
+              <img
+                src={qrDataUrl}
+                alt="Plant tag QR code"
+                className="mx-auto"
+              />
             ) : (
-              <div className="py-8 text-sm text-muted-foreground">Generating QR…</div>
+              <div className="py-8 text-sm text-muted-foreground">
+                Generating QR…
+              </div>
             )}
           </div>
 
-          <p className="break-all rounded-md bg-muted px-3 py-2 font-mono text-xs">{url}</p>
+          <p className="break-all rounded-md bg-muted px-3 py-2 font-mono text-xs">
+            {url}
+          </p>
 
           <p className="text-xs text-muted-foreground">
-            Write this URL to an NFC tag (NFC215 recommended) to create a smart plant tag.
-            iPhone Safari opens NFC URL records automatically; Android Chrome Web NFC write
-            support is planned when tags are available for testing.
+            Write this URL to an NFC tag (NFC215 recommended) to create a smart
+            plant tag. iPhone Safari opens NFC URL records automatically;
+            Android Chrome Web NFC write support is planned when tags are
+            available for testing.
           </p>
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Close
           </Button>
           <Button type="button" onClick={() => void copyUrl()}>

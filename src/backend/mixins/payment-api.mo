@@ -474,13 +474,15 @@ mixin (
     else null;
   };
 
-  func oracleTokenFromPayment(token : IcrcPayment.PaymentToken) : PriceOracleTypes.OracleToken {
+  // Returns null for tokens without oracle price support (e.g. RAVEN — client validates price via ICPSwap).
+  func oracleTokenFromPayment(token : IcrcPayment.PaymentToken) : ?PriceOracleTypes.OracleToken {
     switch (token) {
-      case (#ICP) #ICP;
-      case (#ckBTC) #ckBTC;
-      case (#ckETH) #ckETH;
-      case (#ckUSDC) #ckUSDC;
-      case (#ckUSDT) #ckUSDT;
+      case (#ICP) ?#ICP;
+      case (#ckBTC) ?#ckBTC;
+      case (#ckETH) ?#ckETH;
+      case (#ckUSDC) ?#ckUSDC;
+      case (#ckUSDT) ?#ckUSDT;
+      case (#RAVEN) null;
     };
   };
 
@@ -514,27 +516,31 @@ mixin (
       };
       case (?t) t;
     };
-    let oracleToken = oracleTokenFromPayment(token);
-    if (
-      not PriceOracleLib.isPaymentAmountSufficient(
-        priceOracleState, oracleToken, order.total_cents, amount,
-      )
-    ) {
-      let expected = PriceOracleLib.usdCentsToTokenBase(
-        priceOracleState, oracleToken, order.total_cents,
-      );
-      let msg = if (IcrcPayment.isStableLedgerId(ledgerCanisterId)) {
-        "Payment amount mismatch: expected exactly " # Nat.toText(expected);
-      } else {
-        "Payment amount insufficient: expected at least " #
-        Nat.toText((expected * 95) / 100);
+    switch (oracleTokenFromPayment(token)) {
+      case (?oracleToken) {
+        if (
+          not PriceOracleLib.isPaymentAmountSufficient(
+            priceOracleState, oracleToken, order.total_cents, amount,
+          )
+        ) {
+          let expected = PriceOracleLib.usdCentsToTokenBase(
+            priceOracleState, oracleToken, order.total_cents,
+          );
+          let msg = if (IcrcPayment.isStableLedgerId(ledgerCanisterId)) {
+            "Payment amount mismatch: expected exactly " # Nat.toText(expected);
+          } else {
+            "Payment amount insufficient: expected at least " #
+            Nat.toText((expected * 95) / 100);
+          };
+          return {
+            success = false;
+            message = msg;
+            claim_tokens = [];
+            nft_token_ids = [];
+          };
+        };
       };
-      return {
-        success = false;
-        message = msg;
-        claim_tokens = [];
-        nft_token_ids = [];
-      };
+      case null {}; // RAVEN: no oracle price tracked — client validated amount via ICPSwap + 2% buffer
     };
     let canister = selfPrincipal();
     switch (
@@ -659,7 +665,7 @@ mixin (
       return {
         success = false;
         blockIndex = null;
-        message = "Unsupported ledger — must be ICP, ckBTC, ckETH, ckUSDC, or ckUSDT";
+        message = "Unsupported ledger — must be ICP, ckBTC, ckETH, ckUSDC, ckUSDT, or RAVEN";
       };
     };
     if (amount == 0) {
@@ -836,26 +842,30 @@ mixin (
       case null return { success = false; tokenId = null; message = "Unsupported ledger" };
       case (?t) t;
     };
-    let oracleToken = oracleTokenFromPayment(token);
-    if (
-      not PriceOracleLib.isPaymentAmountSufficient(
-        priceOracleState, oracleToken, PH_PRICE_CENTS, amount,
-      )
-    ) {
-      let expected = PriceOracleLib.usdCentsToTokenBase(
-        priceOracleState, oracleToken, PH_PRICE_CENTS,
-      );
-      let msg = if (IcrcPayment.isStableLedgerId(ledgerCanisterId)) {
-        "Payment amount mismatch: expected exactly " # Nat.toText(expected);
-      } else {
-        "Payment amount insufficient: expected at least " #
-        Nat.toText((expected * 95) / 100);
+    switch (oracleTokenFromPayment(token)) {
+      case (?oracleToken) {
+        if (
+          not PriceOracleLib.isPaymentAmountSufficient(
+            priceOracleState, oracleToken, PH_PRICE_CENTS, amount,
+          )
+        ) {
+          let expected = PriceOracleLib.usdCentsToTokenBase(
+            priceOracleState, oracleToken, PH_PRICE_CENTS,
+          );
+          let msg = if (IcrcPayment.isStableLedgerId(ledgerCanisterId)) {
+            "Payment amount mismatch: expected exactly " # Nat.toText(expected);
+          } else {
+            "Payment amount insufficient: expected at least " #
+            Nat.toText((expected * 95) / 100);
+          };
+          return {
+            success = false;
+            tokenId = null;
+            message = msg;
+          };
+        };
       };
-      return {
-        success = false;
-        tokenId = null;
-        message = msg;
-      };
+      case null {}; // RAVEN: no oracle price tracked — client validated amount via ICPSwap + 2% buffer
     };
     let canister = selfPrincipal();
     switch (

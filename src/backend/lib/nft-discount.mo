@@ -50,14 +50,33 @@ module {
     { discountPercent = bestPct; rarity = bestRarity; tokenId = bestId };
   };
 
+  func callerDiscountSingle(
+    balances : Map.Map<Principal, Set.Set<Nat>>,
+    p : Principal,
+  ) : CallerDiscount {
+    let account : ICRC7.Account = { owner = p; subaccount = null };
+    let tokens = IcrcLib.tokensOf(balances, account, null, null);
+    if (tokens.size() == 0) empty() else bestFromTokenIds(tokens);
+  };
+
+  /// Best discount across caller's own principal AND all linked wallets.
   public func callerDiscountFromBalances(
     balances : Map.Map<Principal, Set.Set<Nat>>,
+    linkedWallets : Map.Map<Principal, [Principal]>,
     caller : Principal,
   ) : CallerDiscount {
     if (Principal.isAnonymous(caller)) return empty();
-    let account : ICRC7.Account = { owner = caller; subaccount = null };
-    let tokens = IcrcLib.tokensOf(balances, account, null, null);
-    if (tokens.size() == 0) empty() else bestFromTokenIds(tokens);
+    var best = callerDiscountSingle(balances, caller);
+    switch (linkedWallets.get(caller)) {
+      case null {};
+      case (?wallets) {
+        for (wallet in wallets.vals()) {
+          let d = callerDiscountSingle(balances, wallet);
+          if (d.discountPercent > best.discountPercent) best := d;
+        };
+      };
+    };
+    best;
   };
 
   /// Round discount to nearest cent: subtotal * pct / 100.

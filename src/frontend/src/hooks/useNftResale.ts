@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Backend } from "../backend";
 import type {
   BuyListedNftResult,
   NftListingPublic,
@@ -7,7 +8,6 @@ import type {
 import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
-import type { Backend } from "../backend";
 
 function useBackendActor() {
   const { actor } = useActor<Backend>();

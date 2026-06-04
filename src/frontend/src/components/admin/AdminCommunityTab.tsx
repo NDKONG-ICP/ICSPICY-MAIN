@@ -2,7 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { timeAgoNanos } from "@/lib/community-utils";
 import {
   ADMIN_COMMUNITY_PAGE_SIZE,
   useAdminCommunityPosts,
@@ -11,6 +10,7 @@ import {
   useIsUserBanned,
   useUnbanUser,
 } from "@/hooks/useCommunityAdmin";
+import { timeAgoNanos } from "@/lib/community-utils";
 import { Principal } from "@icp-sdk/core/principal";
 import { Shield, Trash2, UserX } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -143,8 +143,7 @@ export function AdminCommunityTab() {
               <p className="text-sm break-words">{post.content}</p>
               <p className="text-xs text-muted-foreground">
                 ❤️ {post.like_count.toString()} · 💬{" "}
-                {post.comment_count.toString()} · 🌶️{" "}
-                {post.tip_count.toString()}
+                {post.comment_count.toString()} · 🌶️ {post.tip_count.toString()}
               </p>
             </div>
           ))
@@ -170,7 +169,9 @@ export function AdminCommunityTab() {
           <Button
             size="sm"
             variant="outline"
-            disabled={!posts || posts.length < Number(ADMIN_COMMUNITY_PAGE_SIZE)}
+            disabled={
+              !posts || posts.length < Number(ADMIN_COMMUNITY_PAGE_SIZE)
+            }
             onClick={() => setOffset(offset + ADMIN_COMMUNITY_PAGE_SIZE)}
           >
             Next

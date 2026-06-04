@@ -1,10 +1,6 @@
 [
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -12,14 +8,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Carolina Reaper",
     "latinName": "Capsicum chinense",
@@ -37,11 +27,7 @@
     "id": "carolina-reaper"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -49,14 +35,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Trinidad Moruga Scorpion",
     "latinName": "Capsicum chinense",
@@ -74,11 +54,7 @@
     "id": "trinidad-moruga-scorpion"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -86,14 +62,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "7 Pot Primo",
     "latinName": "Capsicum chinense",
@@ -111,11 +81,7 @@
     "id": "7-pot-primo"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -123,14 +89,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Chocolate Bhutlah",
     "latinName": "Capsicum chinense",
@@ -148,11 +108,7 @@
     "id": "chocolate-bhutlah"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -160,14 +116,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Peach Ghost Scorpion",
     "latinName": "Capsicum chinense",
@@ -185,11 +135,7 @@
     "id": "peach-ghost-scorpion"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -197,14 +143,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Ghost Pepper",
     "latinName": "Capsicum chinense",
@@ -222,11 +162,7 @@
     "id": "ghost-pepper"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -234,14 +170,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Red Habanero",
     "latinName": "Capsicum chinense",
@@ -259,11 +189,7 @@
     "id": "red-habanero"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -271,14 +197,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Orange Habanero",
     "latinName": "Capsicum chinense",
@@ -296,11 +216,7 @@
     "id": "orange-habanero"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -308,14 +224,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Chocolate Habanero",
     "latinName": "Capsicum chinense",
@@ -333,11 +243,7 @@
     "id": "chocolate-habanero"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -345,14 +251,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Scotch Bonnet",
     "latinName": "Capsicum chinense",
@@ -370,11 +270,7 @@
     "id": "scotch-bonnet"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -382,14 +278,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Fatalii",
     "latinName": "Capsicum chinense",
@@ -407,11 +297,7 @@
     "id": "fatalii"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -419,14 +305,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Datil Pepper",
     "latinName": "Capsicum chinense",
@@ -444,11 +324,7 @@
     "id": "datil-pepper"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -456,14 +332,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Aji Amarillo",
     "latinName": "Capsicum baccatum",
@@ -481,11 +351,7 @@
     "id": "aji-amarillo"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -493,14 +359,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Aji Lemon Drop",
     "latinName": "Capsicum baccatum",
@@ -518,11 +378,7 @@
     "id": "aji-lemon-drop"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -530,14 +386,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Aji Fantasy",
     "latinName": "Capsicum baccatum",
@@ -555,11 +405,7 @@
     "id": "aji-fantasy"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -567,14 +413,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Bishop's Crown",
     "latinName": "Capsicum baccatum",
@@ -592,11 +432,7 @@
     "id": "bishop-s-crown"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -604,14 +440,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Tabasco",
     "latinName": "Capsicum frutescens",
@@ -629,11 +459,7 @@
     "id": "tabasco"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -641,14 +467,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Malagueta",
     "latinName": "Capsicum frutescens",
@@ -666,11 +486,7 @@
     "id": "malagueta"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -678,14 +494,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Thai Bird's Eye",
     "latinName": "Capsicum frutescens",
@@ -703,11 +513,7 @@
     "id": "thai-bird-s-eye"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -715,14 +521,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Piri Piri",
     "latinName": "Capsicum frutescens",
@@ -740,11 +540,7 @@
     "id": "piri-piri"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -752,14 +548,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Jalapeño",
     "latinName": "Capsicum annuum",
@@ -777,11 +567,7 @@
     "id": "jalape-o"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -789,14 +575,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Serrano",
     "latinName": "Capsicum annuum",
@@ -814,11 +594,7 @@
     "id": "serrano"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -826,14 +602,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Cayenne",
     "latinName": "Capsicum annuum",
@@ -851,11 +621,7 @@
     "id": "cayenne"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -863,14 +629,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Anaheim",
     "latinName": "Capsicum annuum",
@@ -888,11 +648,7 @@
     "id": "anaheim"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -900,14 +656,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Poblano",
     "latinName": "Capsicum annuum",
@@ -925,11 +675,7 @@
     "id": "poblano"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -937,14 +683,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Bell Pepper",
     "latinName": "Capsicum annuum",
@@ -962,11 +702,7 @@
     "id": "bell-pepper"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -974,14 +710,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Banana Pepper",
     "latinName": "Capsicum annuum",
@@ -999,11 +729,7 @@
     "id": "banana-pepper"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -1011,14 +737,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Hungarian Wax",
     "latinName": "Capsicum annuum",
@@ -1036,11 +756,7 @@
     "id": "hungarian-wax"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -1048,14 +764,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Cherry Bomb",
     "latinName": "Capsicum annuum",
@@ -1073,11 +783,7 @@
     "id": "cherry-bomb"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -1085,14 +791,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Fresno",
     "latinName": "Capsicum annuum",
@@ -1110,11 +810,7 @@
     "id": "fresno"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -1122,14 +818,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Shishito",
     "latinName": "Capsicum annuum",
@@ -1147,11 +837,7 @@
     "id": "shishito"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -1159,14 +845,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Padron",
     "latinName": "Capsicum annuum",
@@ -1184,11 +864,7 @@
     "id": "padron"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -1196,14 +872,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "NuMex Big Jim",
     "latinName": "Capsicum annuum",
@@ -1221,11 +891,7 @@
     "id": "numex-big-jim"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -1233,14 +899,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Fish Pepper",
     "latinName": "Capsicum annuum",
@@ -1258,11 +918,7 @@
     "id": "fish-pepper"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -1270,14 +926,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Pequin",
     "latinName": "Capsicum annuum",
@@ -1295,11 +945,7 @@
     "id": "pequin"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -1307,14 +953,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Chiltepin",
     "latinName": "Capsicum annuum",
@@ -1332,11 +972,7 @@
     "id": "chiltepin"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -1344,14 +980,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Trinidad Scorpion Butch T",
     "latinName": "Capsicum chinense",
@@ -1369,11 +999,7 @@
     "id": "trinidad-scorpion-butch-t"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -1381,14 +1007,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Brain Strain",
     "latinName": "Capsicum chinense",
@@ -1406,11 +1026,7 @@
     "id": "brain-strain"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -1418,14 +1034,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Apocalypse Scorpion",
     "latinName": "Capsicum chinense",
@@ -1443,11 +1053,7 @@
     "id": "apocalypse-scorpion"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -1455,14 +1061,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "7 Pot Douglah",
     "latinName": "Capsicum chinense",
@@ -1480,11 +1080,7 @@
     "id": "7-pot-douglah"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -1492,14 +1088,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Naga Viper",
     "latinName": "Capsicum chinense",
@@ -1517,11 +1107,7 @@
     "id": "naga-viper"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -1529,14 +1115,8 @@
     "perennial": false,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Komodo Dragon",
     "latinName": "Capsicum annuum",
@@ -1554,11 +1134,7 @@
     "id": "komodo-dragon"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -1566,14 +1142,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Trinidad 7 Pot",
     "latinName": "Capsicum chinense",
@@ -1591,11 +1161,7 @@
     "id": "trinidad-7-pot"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -1603,14 +1169,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Red Savina Habanero",
     "latinName": "Capsicum chinense",
@@ -1628,11 +1188,7 @@
     "id": "red-savina-habanero"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.54,
@@ -1640,14 +1196,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Madame Jeanette",
     "latinName": "Capsicum chinense",
@@ -1665,11 +1215,7 @@
     "id": "madame-jeanette"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -1677,14 +1223,8 @@
     "perennial": true,
     "nativeFlorida": false,
     "edible": true,
-    "companions": [
-      "basil",
-      "marigold",
-      "onion"
-    ],
-    "antagonists": [
-      "fennel"
-    ],
+    "companions": ["basil", "marigold", "onion"],
+    "antagonists": ["fennel"],
     "fruitColor": "red",
     "name": "Aji Charapita",
     "latinName": "Capsicum baccatum",
@@ -1702,11 +1242,7 @@
     "id": "aji-charapita"
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 6,
@@ -1731,11 +1267,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 5,
@@ -1760,11 +1292,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 2,
@@ -1789,11 +1317,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 2,
@@ -1818,11 +1342,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 2,
@@ -1847,11 +1367,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 3.6,
@@ -1876,11 +1392,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 4,
@@ -1905,11 +1417,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 5,
@@ -1934,11 +1442,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 5,
@@ -1963,11 +1467,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 4,
@@ -1992,11 +1492,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 6,
@@ -2021,11 +1517,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 5,
@@ -2050,11 +1542,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 8,
@@ -2079,11 +1567,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 8,
@@ -2108,11 +1592,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 4,
@@ -2137,11 +1617,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 3.6,
@@ -2166,11 +1642,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 4,
@@ -2195,11 +1667,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 2.7,
@@ -2224,11 +1692,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 1,
@@ -2253,11 +1717,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 0.8,
@@ -2282,11 +1742,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 2.7,
@@ -2311,11 +1767,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 3,
@@ -2340,11 +1792,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 4,
@@ -2369,11 +1817,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 5,
@@ -2398,11 +1842,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 1.5,
@@ -2427,11 +1867,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 3.6,
@@ -2456,11 +1892,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 6,
@@ -2485,11 +1917,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 5,
@@ -2514,11 +1942,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 4,
@@ -2543,11 +1967,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "high",
     "spacing": 4,
@@ -2572,11 +1992,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2.5,
@@ -2601,11 +2017,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -2630,11 +2042,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2.5,
@@ -2659,11 +2067,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -2688,11 +2092,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 4,
@@ -2717,11 +2117,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 4,
@@ -2746,11 +2142,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 4,
@@ -2775,11 +2167,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 4,
@@ -2804,11 +2192,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 5,
@@ -2833,11 +2217,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -2862,11 +2242,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -2891,11 +2267,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -2920,11 +2292,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2,
@@ -2949,11 +2317,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2,
@@ -2978,11 +2342,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 5,
@@ -3007,11 +2367,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -3036,11 +2392,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -3065,11 +2417,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -3094,11 +2442,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -3123,11 +2467,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2,
@@ -3152,11 +2492,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2.5,
@@ -3181,11 +2517,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.5,
@@ -3210,11 +2542,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -3239,11 +2567,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 4,
@@ -3268,11 +2592,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.3,
@@ -3297,11 +2617,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.2,
@@ -3326,11 +2642,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.5,
@@ -3355,11 +2667,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.5,
@@ -3384,11 +2692,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3.6,
@@ -3413,11 +2717,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -3442,11 +2742,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2.7,
@@ -3471,11 +2767,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -3500,11 +2792,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2.5,
@@ -3529,11 +2817,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2.5,
@@ -3558,11 +2842,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2,
@@ -3587,11 +2867,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -3616,11 +2892,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2,
@@ -3645,11 +2917,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.4,
@@ -3674,11 +2942,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.2,
@@ -3703,11 +2967,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.2,
@@ -3732,11 +2992,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.5,
@@ -3761,11 +3017,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3,
@@ -3790,11 +3042,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -3819,11 +3067,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -3848,11 +3092,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -3877,11 +3117,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -3906,11 +3142,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -3935,11 +3167,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -3964,11 +3192,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -3993,11 +3217,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4022,11 +3242,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4051,11 +3267,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4080,11 +3292,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4109,11 +3317,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4138,11 +3342,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4167,11 +3367,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4196,11 +3392,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4225,11 +3417,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4254,11 +3442,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4283,11 +3467,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4312,11 +3492,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4341,11 +3517,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4370,11 +3542,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4399,11 +3567,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4428,11 +3592,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4457,11 +3617,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4486,11 +3642,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4515,11 +3667,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4544,11 +3692,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4573,11 +3717,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4602,11 +3742,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4631,11 +3767,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4660,11 +3792,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4689,11 +3817,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4718,11 +3842,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.54,
@@ -4747,11 +3867,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -4776,11 +3892,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -4805,11 +3917,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -4834,11 +3942,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -4863,11 +3967,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -4892,11 +3992,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -4921,11 +4017,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -4950,11 +4042,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -4979,11 +4067,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5008,11 +4092,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5037,11 +4117,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5066,11 +4142,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5095,11 +4167,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5124,11 +4192,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5153,11 +4217,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5182,11 +4242,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5211,11 +4267,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5240,11 +4292,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5269,11 +4317,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5298,11 +4342,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5327,11 +4367,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5356,11 +4392,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5385,11 +4417,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5414,11 +4442,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5443,11 +4467,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5472,11 +4492,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5501,11 +4517,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5530,11 +4542,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5559,11 +4567,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5588,11 +4592,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5617,11 +4617,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5646,11 +4642,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5675,11 +4667,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5704,11 +4692,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5733,11 +4717,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -5762,11 +4742,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -5791,11 +4767,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -5820,11 +4792,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -5849,11 +4817,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -5878,11 +4842,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -5907,11 +4867,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -5936,11 +4892,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -5965,11 +4917,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -5994,11 +4942,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -6023,11 +4967,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -6052,11 +4992,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -6081,11 +5017,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -6110,11 +5042,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -6139,11 +5067,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -6168,11 +5092,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -6197,11 +5117,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -6226,11 +5142,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "partial",
     "waterNeed": "medium",
     "spacing": 0.32,
@@ -6255,11 +5167,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6284,11 +5192,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6313,11 +5217,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6342,11 +5242,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6371,11 +5267,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6400,11 +5292,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6429,11 +5317,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6458,11 +5342,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6487,11 +5367,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6516,11 +5392,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6545,11 +5417,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6574,11 +5442,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6603,11 +5467,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6632,11 +5492,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6661,11 +5517,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.27,
@@ -6690,11 +5542,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -6719,11 +5567,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -6748,11 +5592,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -6777,11 +5617,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -6806,11 +5642,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -6835,11 +5667,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -6864,11 +5692,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -6893,11 +5717,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -6922,11 +5742,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -6951,11 +5767,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -6980,11 +5792,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -7009,11 +5817,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -7038,11 +5842,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -7067,11 +5867,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -7096,11 +5892,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -7125,11 +5917,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -7154,11 +5942,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -7183,11 +5967,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -7212,11 +5992,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -7241,11 +6017,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -7270,11 +6042,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 18,
@@ -7299,11 +6067,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 12,
@@ -7328,11 +6092,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 7.2,
@@ -7357,11 +6117,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 10,
@@ -7386,11 +6142,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 10,
@@ -7415,11 +6167,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 8,
@@ -7444,11 +6192,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 8,
@@ -7473,11 +6217,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 8,
@@ -7502,11 +6242,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 7.2,
@@ -7531,11 +6267,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 7.2,
@@ -7560,11 +6292,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 8,
@@ -7589,11 +6317,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 7.2,
@@ -7618,11 +6342,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 7.2,
@@ -7647,11 +6367,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3.6,
@@ -7676,11 +6392,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3.6,
@@ -7705,11 +6417,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 5,
@@ -7734,11 +6442,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 8,
@@ -7763,11 +6467,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 7.2,
@@ -7792,11 +6492,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 8,
@@ -7821,11 +6517,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 5,
@@ -7850,11 +6542,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 10,
@@ -7879,11 +6567,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 7.2,
@@ -7908,11 +6592,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 4,
@@ -7937,11 +6617,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3.6,
@@ -7966,11 +6642,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 5,
@@ -7995,11 +6667,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3.6,
@@ -8024,11 +6692,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8053,11 +6717,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8082,11 +6742,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8111,11 +6767,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8140,11 +6792,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8169,11 +6817,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8198,11 +6842,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8227,11 +6867,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8256,11 +6892,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8285,11 +6917,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8314,11 +6942,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8343,11 +6967,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8372,11 +6992,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8401,11 +7017,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8430,11 +7042,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8459,11 +7067,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8488,11 +7092,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8517,11 +7117,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8546,11 +7142,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8575,11 +7167,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8604,11 +7192,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8633,11 +7217,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8662,11 +7242,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8691,11 +7267,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8720,11 +7292,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8749,11 +7317,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.8,
@@ -8778,11 +7342,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -8807,11 +7367,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -8836,11 +7392,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -8865,11 +7417,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -8894,11 +7442,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -8923,11 +7467,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -8952,11 +7492,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -8981,11 +7517,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -9010,11 +7542,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -9039,11 +7567,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -9068,11 +7592,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -9097,11 +7617,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -9126,11 +7642,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -9155,11 +7667,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -9184,11 +7692,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.72,
@@ -9213,11 +7717,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 7.2,
@@ -9242,11 +7742,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 8,
@@ -9271,11 +7767,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 5,
@@ -9300,11 +7792,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3.6,
@@ -9329,11 +7817,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2,
@@ -9358,11 +7842,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 8,
@@ -9387,11 +7867,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 7.2,
@@ -9416,11 +7892,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 5,
@@ -9445,11 +7917,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 12,
@@ -9474,11 +7942,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 5,
@@ -9503,11 +7967,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3.6,
@@ -9532,11 +7992,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2.5,
@@ -9561,11 +8017,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 3.6,
@@ -9590,11 +8042,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2.5,
@@ -9619,11 +8067,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2,
@@ -9648,11 +8092,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 7.2,
@@ -9677,11 +8117,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 2,
@@ -9706,11 +8142,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -9735,11 +8167,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -9764,11 +8192,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -9793,11 +8217,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -9822,11 +8242,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -9851,11 +8267,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -9880,11 +8292,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -9909,11 +8317,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -9938,11 +8342,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -9967,11 +8367,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -9996,11 +8392,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -10025,11 +8417,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -10054,11 +8442,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10083,11 +8467,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10112,11 +8492,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10141,11 +8517,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10170,11 +8542,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10199,11 +8567,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10228,11 +8592,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10257,11 +8617,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10286,11 +8642,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10315,11 +8667,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10344,11 +8692,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10373,11 +8717,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10402,11 +8742,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10431,11 +8767,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10460,11 +8792,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10489,11 +8817,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10518,11 +8842,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10547,11 +8867,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.63,
@@ -10576,11 +8892,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10605,11 +8917,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10634,11 +8942,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10663,11 +8967,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10692,11 +8992,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10721,11 +9017,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10750,11 +9042,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10779,11 +9067,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10808,11 +9092,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10837,11 +9117,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10866,11 +9142,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10895,11 +9167,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 0.36,
@@ -10924,11 +9192,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -10953,11 +9217,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -10982,11 +9242,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11011,11 +9267,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11040,11 +9292,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11069,11 +9317,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11098,11 +9342,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11127,11 +9367,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11156,11 +9392,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11185,11 +9417,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11214,11 +9442,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11243,11 +9467,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11272,11 +9492,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11301,11 +9517,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11330,11 +9542,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11359,11 +9567,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11388,11 +9592,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11417,11 +9617,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11446,11 +9642,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11475,11 +9667,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,
@@ -11504,11 +9692,7 @@
     "funFact": "Florida's frost-free lower peninsula extends the growing season for many species."
   },
   {
-    "usdaZones": [
-      "10a",
-      "10b",
-      "11"
-    ],
+    "usdaZones": ["10a", "10b", "11"],
     "sunRequirement": "full",
     "waterNeed": "medium",
     "spacing": 1.35,

@@ -60,7 +60,8 @@ export function buildWeatherHistory(
     const row = ensure(snap.date);
     const parsed = parseWeatherSource(snap.source);
     row.highF = Math.max(row.highF, snap.tempHighF);
-    row.lowF = row.lowF === 0 ? snap.tempLowF : Math.min(row.lowF, snap.tempLowF);
+    row.lowF =
+      row.lowF === 0 ? snap.tempLowF : Math.min(row.lowF, snap.tempLowF);
     row.humidity = snap.humidity;
     row.rainInches = Math.max(row.rainInches, snap.rainfallInches);
     row.uvIndex = Math.max(row.uvIndex, snap.uvIndex);

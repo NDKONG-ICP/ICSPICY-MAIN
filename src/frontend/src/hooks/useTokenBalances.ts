@@ -79,7 +79,7 @@ export const TOKEN_LEDGER_CONFIG = [
     canisterId: "ss2fx-dyaaa-aaaar-qacoq-cai",
     decimals: 18,
     fractionDigits: 4,
-    fee: 2_000_000_000_000_000n,
+    fee: 2_000_000_000_000n,
   },
   {
     symbol: "ckUSDC",
@@ -95,13 +95,23 @@ export const TOKEN_LEDGER_CONFIG = [
     fractionDigits: 2,
     fee: 10_000n,
   },
+  {
+    symbol: "RAVEN",
+    canisterId: "4k7jk-vyaaa-aaaam-qcyaa-cai",
+    decimals: 8,
+    fractionDigits: 2,
+    fee: 10_000n,
+  },
 ] as const;
 
 /** Format ledger base units as a human-readable decimal string. */
 export function formatTokenAmount(base: bigint, decimals: number): string {
   const scale = 10n ** BigInt(decimals);
   const whole = base / scale;
-  const frac = (base % scale).toString().padStart(decimals, "0").replace(/0+$/, "");
+  const frac = (base % scale)
+    .toString()
+    .padStart(decimals, "0")
+    .replace(/0+$/, "");
   return frac.length > 0 ? `${whole}.${frac}` : whole.toString();
 }
 
@@ -134,7 +144,10 @@ function formatBalance(
   const base = 10n ** BigInt(decimals);
   const whole = raw / base;
   const frac = raw % base;
-  const fracStr = frac.toString().padStart(decimals, "0").slice(0, fractionDigits);
+  const fracStr = frac
+    .toString()
+    .padStart(decimals, "0")
+    .slice(0, fractionDigits);
   return `${whole.toString()}.${fracStr}`;
 }
 
@@ -143,8 +156,7 @@ export function useTokenBalances() {
 
   return useQuery({
     queryKey: ["tokenBalances", principal?.toText() ?? "anon"],
-    enabled:
-      isAuthenticated && !!principal && !principal.isAnonymous(),
+    enabled: isAuthenticated && !!principal && !principal.isAnonymous(),
     refetchInterval: 30_000,
     queryFn: async () => {
       if (!principal) return [];

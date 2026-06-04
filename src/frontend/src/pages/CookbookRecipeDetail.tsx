@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Link, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Bot,
@@ -11,7 +12,6 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { Link, useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import type { Ingredient } from "../declarations/backend.did";
@@ -19,13 +19,13 @@ import { useAuth } from "../hooks/useAuth";
 import {
   difficultyLabel,
   recipeCategoryLabel,
-  useRecipesByIds,
   useRecipeBySlug,
+  useRecipesByIds,
   useToggleFavorite,
 } from "../hooks/useCookbook";
 
 function IngredientLine({ ing }: { ing: Ingredient }) {
-  const note = ing.notes.length ? ing.notes[0] ?? "" : "";
+  const note = ing.notes.length ? (ing.notes[0] ?? "") : "";
   return (
     <li className="text-sm leading-relaxed flex gap-2">
       <span className="text-primary font-semibold whitespace-nowrap">
@@ -37,7 +37,9 @@ function IngredientLine({ ing }: { ing: Ingredient }) {
           <span className="text-muted-foreground text-xs ml-1">(optional)</span>
         ) : null}
         {note ? (
-          <span className="block text-muted-foreground text-xs mt-0.5">{note}</span>
+          <span className="block text-muted-foreground text-xs mt-0.5">
+            {note}
+          </span>
         ) : null}
       </span>
     </li>
@@ -111,7 +113,9 @@ export default function CookbookRecipeDetailPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-24 text-center">
         <ShieldAlert className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-70" />
-        <h1 className="font-display font-bold text-2xl mb-3">Recipe not found</h1>
+        <h1 className="font-display font-bold text-2xl mb-3">
+          Recipe not found
+        </h1>
         <p className="text-muted-foreground text-sm mb-6">
           Slug &quot;{slugDecoded}&quot; doesn&apos;t match a published recipe.
         </p>
@@ -144,7 +148,12 @@ export default function CookbookRecipeDetailPage() {
       <div className="max-w-4xl mx-auto px-4 pb-20 print:hidden">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="flex flex-wrap items-center gap-3 mb-6 mt-6">
-            <Button asChild variant="ghost" size="sm" className="text-muted-foreground -ml-2">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground -ml-2"
+            >
               <Link to="/cookbook" className="inline-flex items-center gap-2">
                 <ArrowLeft className="w-4 h-4" />
                 Cookbook
@@ -168,14 +177,23 @@ export default function CookbookRecipeDetailPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-95" />
               <div className="absolute inset-x-0 bottom-0 p-6 md:p-8 space-y-2">
                 <div className="flex flex-wrap gap-2 items-center">
-                  <Badge variant="outline" className="border-primary/40 text-primary text-[10px]">
+                  <Badge
+                    variant="outline"
+                    className="border-primary/40 text-primary text-[10px]"
+                  >
                     {recipeCategoryLabel(recipe.category)}
                   </Badge>
-                  <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-400 bg-emerald-500/10">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] border-emerald-500/40 text-emerald-400 bg-emerald-500/10"
+                  >
                     {difficultyLabel(recipe.difficulty)}
                   </Badge>
                   {recipe.favorite_count > 0n ? (
-                    <Badge variant="outline" className="text-[10px] border-border">
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] border-border"
+                    >
                       ♥ {recipe.favorite_count.toString()} saves
                     </Badge>
                   ) : null}
@@ -205,7 +223,9 @@ export default function CookbookRecipeDetailPage() {
                     <dt className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
                       Fermentation
                     </dt>
-                    <dd className="font-medium">{recipe.fermentation_time[0]}</dd>
+                    <dd className="font-medium">
+                      {recipe.fermentation_time[0]}
+                    </dd>
                   </div>
                 ) : null}
                 {recipe.total_time.length ? (
@@ -221,7 +241,9 @@ export default function CookbookRecipeDetailPage() {
                     <dt className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
                       Application rate
                     </dt>
-                    <dd className="font-medium">{recipe.application_rate[0]}</dd>
+                    <dd className="font-medium">
+                      {recipe.application_rate[0]}
+                    </dd>
                   </div>
                 ) : null}
                 {recipe.application_frequency.length ? (
@@ -229,17 +251,25 @@ export default function CookbookRecipeDetailPage() {
                     <dt className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
                       Frequency
                     </dt>
-                    <dd className="font-medium">{recipe.application_frequency[0]}</dd>
+                    <dd className="font-medium">
+                      {recipe.application_frequency[0]}
+                    </dd>
                   </div>
                 ) : null}
               </dl>
 
               {recipe.best_for.length ? (
                 <section>
-                  <h2 className="font-display font-bold text-lg mb-2">Best for</h2>
+                  <h2 className="font-display font-bold text-lg mb-2">
+                    Best for
+                  </h2>
                   <div className="flex flex-wrap gap-2">
                     {recipe.best_for.map((b) => (
-                      <Badge key={b} variant="secondary" className="border border-border">
+                      <Badge
+                        key={b}
+                        variant="secondary"
+                        className="border border-border"
+                      >
                         {b}
                       </Badge>
                     ))}
@@ -260,11 +290,21 @@ export default function CookbookRecipeDetailPage() {
                   />
                   {recipe.caller_favorited ? "Saved" : "Save"}
                 </Button>
-                <Button size="sm" variant="outline" className="border-border" onClick={() => void handleShare()}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-border"
+                  onClick={() => void handleShare()}
+                >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </Button>
-                <Button size="sm" variant="outline" className="border-border" onClick={printRecipe}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-border"
+                  onClick={printRecipe}
+                >
                   <Printer className="w-4 h-4 mr-2" />
                   Print
                 </Button>
@@ -289,7 +329,10 @@ export default function CookbookRecipeDetailPage() {
                   </h2>
                   <ul className="space-y-3">
                     {recipe.ingredients.map((ing, idx) => (
-                      <IngredientLine key={`${recipe.id}-${String(idx)}`} ing={ing} />
+                      <IngredientLine
+                        key={`${recipe.id}-${String(idx)}`}
+                        ing={ing}
+                      />
                     ))}
                   </ul>
                 </div>
@@ -300,7 +343,9 @@ export default function CookbookRecipeDetailPage() {
                   <ol className="space-y-5">
                     {sortedSteps.map((step, idx) => {
                       const tip = step.tips.length ? step.tips[0] : "";
-                      const duration = step.duration.length ? step.duration[0] : "";
+                      const duration = step.duration.length
+                        ? step.duration[0]
+                        : "";
                       const stepKey = `${recipe.slug}-step-${String(step.step_number ?? idx)}`;
                       return (
                         <li
@@ -312,7 +357,10 @@ export default function CookbookRecipeDetailPage() {
                               {step.step_number.toString()}.
                             </span>
                             {duration ? (
-                              <Badge variant="outline" className="text-[10px] border-border">
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] border-border"
+                              >
                                 {duration}
                               </Badge>
                             ) : null}
@@ -409,9 +457,12 @@ export default function CookbookRecipeDetailPage() {
             <div className="text-[11px] tracking-[3px] text-red-800 font-bold uppercase">
               IC SPICY — Natural Farming CookBook
             </div>
-            <h1 className="text-4xl font-black mt-2 text-neutral-950">{recipe.title}</h1>
+            <h1 className="text-4xl font-black mt-2 text-neutral-950">
+              {recipe.title}
+            </h1>
             <p className="text-sm mt-2 text-neutral-700">
-              {recipeCategoryLabel(recipe.category)} · {difficultyLabel(recipe.difficulty)}
+              {recipeCategoryLabel(recipe.category)} ·{" "}
+              {difficultyLabel(recipe.difficulty)}
             </p>
           </div>
           <p className="text-sm text-neutral-800">{recipe.description}</p>
@@ -434,7 +485,9 @@ export default function CookbookRecipeDetailPage() {
               </h3>
               <ol className="text-xs space-y-2 list-decimal pl-5">
                 {sortedSteps.map((step, idx) => (
-                  <li key={`ps-${recipe.id}-${String(step.step_number ?? idx)}`}>
+                  <li
+                    key={`ps-${recipe.id}-${String(step.step_number ?? idx)}`}
+                  >
                     {step.instruction}
                   </li>
                 ))}

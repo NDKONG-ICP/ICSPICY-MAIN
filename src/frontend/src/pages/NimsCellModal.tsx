@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { variantToString } from "@/lib/candid-display";
 import {
   Camera,
   Flame,
@@ -38,7 +39,6 @@ import type {
   TrayPublic,
 } from "../backend";
 import { PlantStage } from "../backend";
-import { variantToString } from "@/lib/candid-display";
 import {
   useAddPlantPhoto,
   useGetUpgradeHistory,
@@ -116,7 +116,8 @@ function UpgradeHistoryTimeline({ plantId }: { plantId: bigint }) {
           </div>
           <div className="pb-2 flex-1 min-w-0">
             <p className="font-medium text-foreground">
-              {variantToString(evt.old_stage)} → {variantToString(evt.new_stage)}
+              {variantToString(evt.old_stage)} →{" "}
+              {variantToString(evt.new_stage)}
             </p>
             <div className="text-muted-foreground space-y-0.5 mt-0.5">
               {evt.old_nft_id && (

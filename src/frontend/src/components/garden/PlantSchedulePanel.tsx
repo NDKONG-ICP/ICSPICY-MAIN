@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
-import type { GardenDesign } from "@/lib/garden-types";
-import { exportPlantScheduleCsv } from "@/lib/garden-smart-data";
-import { getPlantById, STRUCTURE_CATALOG } from "@/lib/garden-plant-catalog";
+import { STRUCTURE_CATALOG, getPlantById } from "@/lib/garden-plant-catalog";
 import { estimateStructureCost } from "@/lib/garden-seasonal";
+import { exportPlantScheduleCsv } from "@/lib/garden-smart-data";
+import type { GardenDesign } from "@/lib/garden-types";
 import { Download } from "lucide-react";
 import { useMemo } from "react";
 
@@ -12,7 +12,17 @@ type Props = {
 
 export function PlantSchedulePanel({ design }: Props) {
   const plantRows = useMemo(() => {
-    const groups = new Map<string, { name: string; latin: string; qty: number; spacing: string; sun: string; water: string }>();
+    const groups = new Map<
+      string,
+      {
+        name: string;
+        latin: string;
+        qty: number;
+        spacing: string;
+        sun: string;
+        water: string;
+      }
+    >();
     for (const p of design.plants) {
       const key = p.catalogId ?? p.label;
       const cat = p.catalogId ? getPlantById(p.catalogId) : null;
@@ -33,7 +43,10 @@ export function PlantSchedulePanel({ design }: Props) {
   }, [design.plants]);
 
   const structureRows = useMemo(() => {
-    const groups = new Map<string, { name: string; size: string; qty: number; cost: number }>();
+    const groups = new Map<
+      string,
+      { name: string; size: string; qty: number; cost: number }
+    >();
     for (const s of design.structures) {
       const cat = STRUCTURE_CATALOG.find((c) => c.id === s.structureType);
       const key = s.structureType;
@@ -67,7 +80,12 @@ export function PlantSchedulePanel({ design }: Props) {
     <div className="rounded-xl border border-white/10 bg-card/80 p-3 text-xs space-y-3 max-h-64 overflow-auto">
       <div className="flex items-center justify-between">
         <p className="font-semibold">Plant Schedule</p>
-        <Button size="sm" variant="outline" className="h-7" onClick={downloadCsv}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7"
+          onClick={downloadCsv}
+        >
           <Download className="h-3 w-3 mr-1" /> CSV
         </Button>
       </div>
@@ -107,7 +125,9 @@ export function PlantSchedulePanel({ design }: Props) {
                 <tr key={r.name} className="border-b border-white/5">
                   <td className="py-1">{r.name}</td>
                   <td className="text-center">{r.qty}</td>
-                  <td className="text-center">${(r.cost * r.qty).toFixed(0)}</td>
+                  <td className="text-center">
+                    ${(r.cost * r.qty).toFixed(0)}
+                  </td>
                 </tr>
               ))}
             </tbody>

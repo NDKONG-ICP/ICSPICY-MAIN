@@ -35,17 +35,18 @@ import {
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "../hooks/useAuth";
-import { useIsAdmin } from "../hooks/useBackend";
 import type {
   CreateProposalInput,
   ProposalCategory,
   ProposalPublic,
 } from "../declarations/backend.did";
+import { useAuth } from "../hooks/useAuth";
+import { useIsAdmin } from "../hooks/useBackend";
 import {
   useCreateProposal,
   useDAOStats,
   useHasDAOAccess,
+  useHasVoted,
   useProposals,
   useVoteOnProposal,
 } from "../hooks/useDAO";
@@ -54,10 +55,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 
 type FilterType = "all" | string;
 
-const CATEGORY_CONFIG: Record<
-  string,
-  { label: string; className: string }
-> = {
+const CATEGORY_CONFIG: Record<string, { label: string; className: string }> = {
   VarietyVote: {
     label: "🌶️ Variety Vote",
     className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
@@ -106,7 +104,9 @@ function getWinningOption(proposal: ProposalPublic): number | null {
   if (proposal.options.length === 0) return null;
   let maxIdx = 0;
   for (let i = 1; i < proposal.options.length; i++) {
-    if (proposal.options[i]!.vote_count > proposal.options[maxIdx]!.vote_count) {
+    if (
+      proposal.options[i]!.vote_count > proposal.options[maxIdx]!.vote_count
+    ) {
       maxIdx = i;
     }
   }
@@ -121,6 +121,7 @@ function ProposalCard({
 }: { proposal: ProposalPublic; canVote: boolean }) {
   const vote = useVoteOnProposal();
   const { isAuthenticated } = useAuth();
+  const { data: voteInfo } = useHasVoted(proposal.id);
 
   const totalVotes = proposal.total_votes;
   const isExpired =
@@ -128,6 +129,7 @@ function ProposalCard({
     "Cancelled" in proposal.status ||
     Date.now() > Number(proposal.voting_ends_at) / 1_000_000;
   const hasVoted = proposal.caller_vote.length === 1;
+  const nftUsedForVote = voteInfo?.nft_token_id;
   const winningIdx = isExpired ? getWinningOption(proposal) : null;
   const catKey = categoryKey(proposal.category);
   const typeConfig =
@@ -149,8 +151,25 @@ function ProposalCard({
         optionIndex: optionId,
       });
       toast.success("Your vote has been cast ✅");
-    } catch {
-      toast.error("Failed to cast vote. Try again.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("already voted")) {
+        toast.error("You have already voted on this proposal.");
+      } else if (msg.includes("already been used")) {
+        // Extract NFT ID from the backend error message if present.
+        const m = msg.match(/#(\d+)/);
+        toast.error(
+          m
+            ? `NFT #${m[1]} has already been used to vote on this proposal.`
+            : "This NFT has already been used to vote on this proposal.",
+        );
+      } else if (msg.includes("No eligible NFT")) {
+        toast.error(
+          "No eligible NFT found. You need an IC SPICY NFT that hasn't already voted.",
+        );
+      } else {
+        toast.error("Failed to cast vote. Try again.");
+      }
     }
   };
 
@@ -207,7 +226,9 @@ function ProposalCard({
         {hasVoted && (
           <span className="flex items-center gap-1.5 text-primary font-medium">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            Your vote has been cast ✅
+            {nftUsedForVote !== undefined
+              ? `Voted with NFT #${nftUsedForVote.toString()} ✅`
+              : "Your vote has been cast ✅"}
           </span>
         )}
       </div>
@@ -216,10 +237,8 @@ function ProposalCard({
       <div className="space-y-3">
         {proposal.options.map((opt, i) => {
           const votes = opt.vote_count;
-          const pct =
-            totalVotes > 0n ? Number((votes * 100n) / totalVotes) : 0;
-          const isMyVote =
-            hasVoted && proposal.caller_vote[0] === opt.id;
+          const pct = totalVotes > 0n ? Number((votes * 100n) / totalVotes) : 0;
+          const isMyVote = hasVoted && proposal.caller_vote[0] === opt.id;
           const isWinner = winningIdx === i;
           const showVoteBtn = !isExpired && !hasVoted && canVote;
 
@@ -287,7 +306,8 @@ function ProposalCard({
             <span className="font-semibold text-foreground">
               {proposal.options[winningIdx]?.option_label}
             </span>{" "}
-            won with {proposal.options[winningIdx]?.vote_count.toString() ?? "0"} votes
+            won with{" "}
+            {proposal.options[winningIdx]?.vote_count.toString() ?? "0"} votes
           </p>
         </div>
       )}
@@ -304,9 +324,8 @@ function CreateProposalModal({
   const createProposal = useCreateProposal();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [categoryKeyState, setCategoryKeyState] = useState<string>(
-    "CommunityDecision",
-  );
+  const [categoryKeyState, setCategoryKeyState] =
+    useState<string>("CommunityDecision");
   const [options, setOptions] = useState<Array<{ id: string; value: string }>>([
     { id: "opt-0", value: "" },
     { id: "opt-1", value: "" },
@@ -448,7 +467,9 @@ function CreateProposalModal({
                 <SelectItem value="VarietyVote">🌶️ Variety Vote</SelectItem>
                 <SelectItem value="ProductVote">🧂 Product Vote</SelectItem>
                 <SelectItem value="CommunityDecision">📋 General</SelectItem>
-                <SelectItem value="FeatureRequest">✨ Feature Request</SelectItem>
+                <SelectItem value="FeatureRequest">
+                  ✨ Feature Request
+                </SelectItem>
                 <SelectItem value="TreasurySpend">💰 Treasury Spend</SelectItem>
               </SelectContent>
             </Select>
@@ -756,9 +777,7 @@ export default function DAOPage() {
       {!canVote && !accessLoading && <NoAccessBanner />}
 
       {/* Eligibility */}
-      {canVote && (
-        <DAOEligibilityBanner nftCount={myNftIds?.length ?? 0} />
-      )}
+      {canVote && <DAOEligibilityBanner nftCount={myNftIds?.length ?? 0} />}
 
       {/* Filter tabs */}
       <div

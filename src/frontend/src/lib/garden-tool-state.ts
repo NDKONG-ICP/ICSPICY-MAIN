@@ -13,11 +13,17 @@ export function loadToolExtras(designId: number | null): GardenToolExtras {
   return { ...DEFAULT_TOOL_EXTRAS };
 }
 
-export function saveToolExtras(designId: number | null, extras: GardenToolExtras) {
+export function saveToolExtras(
+  designId: number | null,
+  extras: GardenToolExtras,
+) {
   localStorage.setItem(`${KEY}-${designId ?? "draft"}`, JSON.stringify(extras));
 }
 
-export function distanceMeters(a: { x: number; y: number }, b: { x: number; y: number }) {
+export function distanceMeters(
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+) {
   return Math.hypot(b.x - a.x, b.y - a.y);
 }
 
@@ -37,7 +43,9 @@ export function nearestPlantSpacingWarning(
   y: number,
   catalogId?: string | null,
 ): string | null {
-  const cat = catalogId ? design.plants.find((p) => p.catalogId === catalogId) : null;
+  const cat = catalogId
+    ? design.plants.find((p) => p.catalogId === catalogId)
+    : null;
   const spacing = 0.6;
   for (const p of design.plants) {
     const d = distanceMeters({ x, y }, { x: p.x, y: p.y });

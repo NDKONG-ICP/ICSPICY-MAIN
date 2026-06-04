@@ -1,5 +1,8 @@
 import type { PlantCategory, StructureCategory } from "./garden-plant-catalog";
-import { CATEGORY_LABELS, STRUCTURE_CATEGORY_LABELS } from "./garden-plant-catalog";
+import {
+  CATEGORY_LABELS,
+  STRUCTURE_CATEGORY_LABELS,
+} from "./garden-plant-catalog";
 
 export const PLANT_CATEGORY_ORDER: { id: PlantCategory; emoji: string }[] = [
   { id: "pepper", emoji: "🌶️" },
@@ -21,7 +24,10 @@ export const PLANT_CATEGORY_ORDER: { id: PlantCategory; emoji: string }[] = [
   { id: "ornamental", emoji: "🏵️" },
 ];
 
-export const STRUCTURE_CATEGORY_ORDER: { id: StructureCategory; emoji: string }[] = [
+export const STRUCTURE_CATEGORY_ORDER: {
+  id: StructureCategory;
+  emoji: string;
+}[] = [
   { id: "beds", emoji: "🏗️" },
   { id: "irrigation", emoji: "💧" },
   { id: "composting", emoji: "♻️" },

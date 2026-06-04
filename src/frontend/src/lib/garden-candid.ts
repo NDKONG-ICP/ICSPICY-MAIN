@@ -1,16 +1,23 @@
 import type { Principal } from "@icp-sdk/core/principal";
 import type {
-  CreateGardenDesignResult,
   GardenDesign as CandidGardenDesign,
-  GardenDesignInput,
   PlantPlacement as CandidPlant,
   StructurePlacement as CandidStructure,
+  CreateGardenDesignResult,
+  GardenDesignInput,
 } from "../declarations/backend.did";
-import type { GardenDesign, PlantPlacement, StructurePlacement } from "./garden-types";
+import type {
+  GardenDesign,
+  PlantPlacement,
+  StructurePlacement,
+} from "./garden-types";
 
 const CATALOG_MARKER = "\u00A7";
 
-function decodePlantLabel(plantLabel: string): { catalogId: string | null; label: string } {
+function decodePlantLabel(plantLabel: string): {
+  catalogId: string | null;
+  label: string;
+} {
   if (!plantLabel.startsWith(CATALOG_MARKER)) {
     return { catalogId: null, label: plantLabel };
   }
@@ -24,7 +31,8 @@ function decodePlantLabel(plantLabel: string): { catalogId: string | null; label
 }
 
 function encodePlantLabel(p: PlantPlacement): string {
-  if (p.catalogId) return `${CATALOG_MARKER}${p.catalogId}${CATALOG_MARKER}${p.label}`;
+  if (p.catalogId)
+    return `${CATALOG_MARKER}${p.catalogId}${CATALOG_MARKER}${p.label}`;
   return p.label;
 }
 

@@ -68,7 +68,10 @@ export { ConfirmMarkDeadDialog } from "./ConfirmMarkDeadDialog";
 export type { ConfirmMarkDeadDialogProps } from "./ConfirmMarkDeadDialog";
 
 export { AdoptPlantPrompt } from "./AdoptPlantPrompt";
-export type { AdoptPlantPromptProps, AdoptPlantSubmit } from "./AdoptPlantPrompt";
+export type {
+  AdoptPlantPromptProps,
+  AdoptPlantSubmit,
+} from "./AdoptPlantPrompt";
 
 export { NimsLocationPrompt } from "./NimsLocationPrompt";
 export { NimsLocationSelector } from "./NimsLocationSelector";

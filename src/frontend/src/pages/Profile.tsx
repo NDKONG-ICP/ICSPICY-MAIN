@@ -1,3 +1,5 @@
+import { AvatarUpload } from "@/components/community/AvatarUpload";
+import { CommunityAvatar } from "@/components/community/CommunityAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,9 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@tanstack/react-router";
-import { ConnectButton } from "../components/ConnectButton";
-import { AvatarUpload } from "@/components/community/AvatarUpload";
-import { CommunityAvatar } from "@/components/community/CommunityAvatar";
 import {
   Copy,
   Flame,
@@ -27,11 +26,12 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useMembership, useProfile, useSaveProfile } from "../hooks/useBackend";
+import { ConnectButton } from "../components/ConnectButton";
 import { useAuth } from "../hooks/useAuth";
+import { useMembership, useProfile, useSaveProfile } from "../hooks/useBackend";
 import { useMyNftTokenIds } from "../hooks/useMyNftIds";
-import { getNftImageUrl } from "../lib/nft-config";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { getNftImageUrl } from "../lib/nft-config";
 
 function truncatePid(p: string, head = 6, tail = 6) {
   if (p.length <= head + tail + 3) return p;
@@ -70,9 +70,9 @@ export default function ProfilePage() {
 
   function copyPid() {
     if (!pidText) return;
-    void navigator.clipboard.writeText(pidText).then(() =>
-      toast.success("Principal copied"),
-    );
+    void navigator.clipboard
+      .writeText(pidText)
+      .then(() => toast.success("Principal copied"));
   }
 
   async function handleSave() {
@@ -151,7 +151,9 @@ export default function ProfilePage() {
           {profile?.created_at != null && (
             <p className="text-xs text-muted-foreground">
               Member since{" "}
-              {new Date(Number(profile.created_at) / 1_000_000).toLocaleDateString()}
+              {new Date(
+                Number(profile.created_at) / 1_000_000,
+              ).toLocaleDateString()}
             </p>
           )}
         </div>

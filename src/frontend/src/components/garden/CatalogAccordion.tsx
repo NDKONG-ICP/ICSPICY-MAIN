@@ -1,25 +1,25 @@
 import type { VarietyPublic } from "@/declarations/backend.did";
 import {
-  filterPlants,
-  filterStructures,
-  PLANT_CATALOG,
-  STRUCTURE_CATALOG,
-  type CatalogPlant,
-  type CatalogStructure,
-  type PlantCategory,
-  type StructureCategory,
-} from "@/lib/garden-plant-catalog";
-import {
   PLANT_CATEGORY_ORDER,
-  plantCategoryLabel,
   STRUCTURE_CATEGORY_ORDER,
+  plantCategoryLabel,
   structureCategoryLabel,
 } from "@/lib/garden-catalog-groups";
-import { formatScoville, varietyColor, varietyIcon } from "@/lib/garden-utils";
-import { ChevronDown, Search, Sun, CloudSun, Cloud } from "lucide-react";
-import { useMemo, useState } from "react";
-import { cn } from "@/lib/utils";
+import {
+  type CatalogPlant,
+  type CatalogStructure,
+  PLANT_CATALOG,
+  type PlantCategory,
+  STRUCTURE_CATALOG,
+  type StructureCategory,
+  filterPlants,
+  filterStructures,
+} from "@/lib/garden-plant-catalog";
 import type { PendingPlacement } from "@/lib/garden-types";
+import { formatScoville, varietyColor, varietyIcon } from "@/lib/garden-utils";
+import { cn } from "@/lib/utils";
+import { ChevronDown, Cloud, CloudSun, Search, Sun } from "lucide-react";
+import { useMemo, useState } from "react";
 
 type Props = {
   readOnly?: boolean;
@@ -62,13 +62,15 @@ export function CatalogAccordion({
 
   const plantCounts = useMemo(() => {
     const m = new Map<PlantCategory, number>();
-    for (const p of PLANT_CATALOG) m.set(p.category, (m.get(p.category) ?? 0) + 1);
+    for (const p of PLANT_CATALOG)
+      m.set(p.category, (m.get(p.category) ?? 0) + 1);
     return m;
   }, []);
 
   const structureCounts = useMemo(() => {
     const m = new Map<StructureCategory, number>();
-    for (const s of STRUCTURE_CATALOG) m.set(s.category, (m.get(s.category) ?? 0) + 1);
+    for (const s of STRUCTURE_CATALOG)
+      m.set(s.category, (m.get(s.category) ?? 0) + 1);
     return m;
   }, []);
 
@@ -98,7 +100,8 @@ export function CatalogAccordion({
     });
   };
 
-  const toggle = (key: string) => setOpenKey((prev) => (prev === key ? null : key));
+  const toggle = (key: string) =>
+    setOpenKey((prev) => (prev === key ? null : key));
 
   const renderPlantRow = (p: CatalogPlant) => (
     <button
@@ -123,7 +126,9 @@ export function CatalogAccordion({
               <span className="text-sm font-medium truncate">{p.name}</span>
               <SunIcon req={p.sunRequirement} />
             </div>
-            <p className="text-[10px] text-muted-foreground truncate">{p.latinName}</p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              {p.latinName}
+            </p>
           </div>
         </div>
       )}
@@ -141,7 +146,12 @@ export function CatalogAccordion({
       )}
     >
       <span className="text-lg">{s.iconEmoji}</span>
-      <span className={cn("font-medium", compact ? "text-[10px] text-center line-clamp-2" : "text-sm")}>
+      <span
+        className={cn(
+          "font-medium",
+          compact ? "text-[10px] text-center line-clamp-2" : "text-sm",
+        )}
+      >
         {s.name}
       </span>
     </button>
@@ -149,11 +159,17 @@ export function CatalogAccordion({
 
   if (q.trim()) {
     const items = (
-      <div className={cn(compact ? "flex gap-2 overflow-x-auto pb-2" : "space-y-1")}>
+      <div
+        className={cn(
+          compact ? "flex gap-2 overflow-x-auto pb-2" : "space-y-1",
+        )}
+      >
         {searchPlants.map(renderPlantRow)}
         {searchStructures.map(renderStructureRow)}
         {searchPlants.length === 0 && searchStructures.length === 0 && (
-          <p className="text-xs text-muted-foreground p-2">No matches for "{q}"</p>
+          <p className="text-xs text-muted-foreground p-2">
+            No matches for "{q}"
+          </p>
         )}
       </div>
     );
@@ -191,7 +207,9 @@ export function CatalogAccordion({
 
       {varieties.length > 0 && onIcPlant && (
         <details className="rounded-lg border border-white/10 bg-white/5 mb-2">
-          <summary className="cursor-pointer px-3 py-2 text-sm font-medium">🌶️ IC SPICY Shop ({varieties.length})</summary>
+          <summary className="cursor-pointer px-3 py-2 text-sm font-medium">
+            🌶️ IC SPICY Shop ({varieties.length})
+          </summary>
           <div className="px-2 pb-2 space-y-1 max-h-40 overflow-auto">
             {varieties.slice(0, 30).map((v) => (
               <button
@@ -214,7 +232,10 @@ export function CatalogAccordion({
         const open = openKey === key;
         const plants = filterPlants({ category: id });
         return (
-          <div key={key} className="rounded-lg border border-white/10 overflow-hidden">
+          <div
+            key={key}
+            className="rounded-lg border border-white/10 overflow-hidden"
+          >
             <button
               type="button"
               onClick={() => toggle(key)}
@@ -223,10 +244,20 @@ export function CatalogAccordion({
               <span>
                 {emoji} {plantCategoryLabel(id)} ({count})
               </span>
-              <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 transition-transform",
+                  open && "rotate-180",
+                )}
+              />
             </button>
             {open && (
-              <div className={cn("px-2 pb-2 max-h-64 overflow-auto", compact && "flex gap-2 overflow-x-auto max-h-none")}>
+              <div
+                className={cn(
+                  "px-2 pb-2 max-h-64 overflow-auto",
+                  compact && "flex gap-2 overflow-x-auto max-h-none",
+                )}
+              >
                 {plants.map(renderPlantRow)}
               </div>
             )}
@@ -234,7 +265,9 @@ export function CatalogAccordion({
         );
       })}
 
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide px-1 pt-2">Structures</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide px-1 pt-2">
+        Structures
+      </p>
 
       {STRUCTURE_CATEGORY_ORDER.map(({ id, emoji }) => {
         const count = structureCounts.get(id) ?? 0;
@@ -243,7 +276,10 @@ export function CatalogAccordion({
         const open = openKey === key;
         const structs = STRUCTURE_CATALOG.filter((s) => s.category === id);
         return (
-          <div key={key} className="rounded-lg border border-white/10 overflow-hidden">
+          <div
+            key={key}
+            className="rounded-lg border border-white/10 overflow-hidden"
+          >
             <button
               type="button"
               onClick={() => toggle(key)}
@@ -252,10 +288,20 @@ export function CatalogAccordion({
               <span>
                 {emoji} {structureCategoryLabel(id)} ({count})
               </span>
-              <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 transition-transform",
+                  open && "rotate-180",
+                )}
+              />
             </button>
             {open && (
-              <div className={cn("px-2 pb-2 max-h-48 overflow-auto", compact && "flex gap-2 overflow-x-auto")}>
+              <div
+                className={cn(
+                  "px-2 pb-2 max-h-48 overflow-auto",
+                  compact && "flex gap-2 overflow-x-auto",
+                )}
+              >
                 {structs.map(renderStructureRow)}
               </div>
             )}

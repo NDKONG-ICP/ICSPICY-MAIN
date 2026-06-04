@@ -1,8 +1,8 @@
-import { Billboard, Text } from "@react-three/drei";
-import { memo, useMemo, useRef, useState } from "react";
-import { Html } from "@react-three/drei";
 import type { PlantPlacement } from "@/lib/garden-types";
 import { darkenColor, isHotPepper } from "@/lib/garden-utils";
+import { Billboard, Text } from "@react-three/drei";
+import { Html } from "@react-three/drei";
+import { memo, useMemo, useRef, useState } from "react";
 
 type Props = {
   placement: PlantPlacement;
@@ -36,9 +36,18 @@ const PepperFruits = memo(function PepperFruits({
   return (
     <group position={position}>
       {pepperPositions.map((p, i) => (
-        <mesh key={i} position={[p.x, p.y, p.z]} rotation={[0, 0, p.rotZ]} castShadow>
+        <mesh
+          key={i}
+          position={[p.x, p.y, p.z]}
+          rotation={[0, 0, p.rotZ]}
+          castShadow
+        >
           <capsuleGeometry args={[0.012, 0.04, 4, 8]} />
-          <meshStandardMaterial color="#dc2626" roughness={0.4} metalness={0.1} />
+          <meshStandardMaterial
+            color="#dc2626"
+            roughness={0.4}
+            metalness={0.1}
+          />
         </mesh>
       ))}
     </group>
@@ -67,7 +76,12 @@ const FlowerBuds = memo(function FlowerBuds({
       {buds.map((b, i) => (
         <mesh key={i} position={[b.x, b.y, b.z]} castShadow>
           <sphereGeometry args={[0.025 * scale, 8, 8]} />
-          <meshStandardMaterial color="#fef08a" roughness={0.5} emissive="#fef08a" emissiveIntensity={0.15} />
+          <meshStandardMaterial
+            color="#fef08a"
+            roughness={0.5}
+            emissive="#fef08a"
+            emissiveIntensity={0.15}
+          />
         </mesh>
       ))}
     </group>
@@ -130,17 +144,30 @@ export const EnhancedPlantMesh = memo(function EnhancedPlantMesh({
       </mesh>
       <mesh position={[0, height * 0.75, 0.02]} castShadow>
         <sphereGeometry args={[0.12 * placement.scale, 10, 10]} />
-        <meshStandardMaterial color={darkenColor(color, 0.15)} roughness={0.6} />
+        <meshStandardMaterial
+          color={darkenColor(color, 0.15)}
+          roughness={0.6}
+        />
       </mesh>
       {isHotPepper(placement) && (
-        <PepperFruits position={[0, height * 0.5, 0]} scale={placement.scale} seed={seed} />
+        <PepperFruits
+          position={[0, height * 0.5, 0]}
+          scale={placement.scale}
+          seed={seed}
+        />
       )}
       {flowering && (
-        <FlowerBuds position={[0, height * 0.65, 0]} scale={placement.scale} seed={seed} />
+        <FlowerBuds
+          position={[0, height * 0.65, 0]}
+          scale={placement.scale}
+          seed={seed}
+        />
       )}
       {selected && (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-          <ringGeometry args={[0.2 * placement.scale, 0.25 * placement.scale, 32]} />
+          <ringGeometry
+            args={[0.2 * placement.scale, 0.25 * placement.scale, 32]}
+          />
           <meshBasicMaterial color="#f59e0b" transparent opacity={0.8} />
         </mesh>
       )}

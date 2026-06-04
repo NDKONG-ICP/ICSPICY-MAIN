@@ -64,10 +64,16 @@ export function containerSizeRank(size: ContainerSize): number {
   return SIZE_RANK[tag] ?? 0;
 }
 
-export function isContainerUpgrade(from: ContainerSize, to: ContainerSize): boolean {
+export function isContainerUpgrade(
+  from: ContainerSize,
+  to: ContainerSize,
+): boolean {
   const fromRank = containerSizeRank(from);
   const toRank = containerSizeRank(to);
-  return toRank > fromRank || (toRank === fromRank && containerSizeKey(from) !== containerSizeKey(to));
+  return (
+    toRank > fromRank ||
+    (toRank === fromRank && containerSizeKey(from) !== containerSizeKey(to))
+  );
 }
 
 export const TRANSPLANT_SIZE_OPTIONS: ReadonlyArray<{

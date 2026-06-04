@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { variantToString } from "@/lib/candid-display";
 import { Link, useParams } from "@tanstack/react-router";
 import {
   AlertCircle,
@@ -14,16 +15,15 @@ import {
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import type { Value } from "../declarations/backend.did";
 import { useAuth } from "../hooks/useAuth";
 import {
   useGetClaimInfo,
   useRedeemClaim,
   useTokenMetadata,
 } from "../hooks/useBackend";
-import type { Value } from "../declarations/backend.did";
-import { getNftImageUrl } from "../lib/nft-config";
-import { variantToString } from "@/lib/candid-display";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { getNftImageUrl } from "../lib/nft-config";
 
 function PlantPreview({
   variety,
@@ -95,7 +95,8 @@ const RARITY_COLORS: Record<string, string> = {
 
 function RarityBadge({ rarity }: { rarity: string | null }) {
   if (!rarity) return null;
-  const cls = RARITY_COLORS[rarity] ?? "bg-zinc-100 text-zinc-700 border-zinc-300";
+  const cls =
+    RARITY_COLORS[rarity] ?? "bg-zinc-100 text-zinc-700 border-zinc-300";
   return (
     <Badge variant="outline" className={cls}>
       {rarity}
@@ -119,16 +120,22 @@ function Confetti() {
   }));
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {particles.map(({ id, left, hue, lum, duration, delay, yEnd, xDrift, rotate }) => (
-        <motion.div
-          key={id}
-          className="absolute w-2.5 h-2.5 rounded-sm"
-          style={{ left, top: "-10px", background: `oklch(${lum} 0.25 ${hue})` }}
-          initial={{ y: 0, opacity: 1, rotate: 0, x: 0 }}
-          animate={{ y: yEnd, opacity: [1, 1, 0], rotate, x: xDrift }}
-          transition={{ duration, delay, ease: "easeIn" }}
-        />
-      ))}
+      {particles.map(
+        ({ id, left, hue, lum, duration, delay, yEnd, xDrift, rotate }) => (
+          <motion.div
+            key={id}
+            className="absolute w-2.5 h-2.5 rounded-sm"
+            style={{
+              left,
+              top: "-10px",
+              background: `oklch(${lum} 0.25 ${hue})`,
+            }}
+            initial={{ y: 0, opacity: 1, rotate: 0, x: 0 }}
+            animate={{ y: yEnd, opacity: [1, 1, 0], rotate, x: xDrift }}
+            transition={{ duration, delay, ease: "easeIn" }}
+          />
+        ),
+      )}
     </div>
   );
 }
@@ -165,7 +172,9 @@ function PageShell({ children }: { children: React.ReactNode }) {
         <span className="font-display text-xl font-bold tracking-tight text-foreground">
           IC SPICY
         </span>
-        <p className="text-xs text-muted-foreground mt-0.5">On-Chain NFT Collection</p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          On-Chain NFT Collection
+        </p>
       </div>
       <div className="w-full max-w-sm">{children}</div>
     </div>

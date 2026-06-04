@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
 import { Sprout } from "lucide-react";
+import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -63,7 +63,10 @@ export function AdoptPlantPrompt({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-ocid="nims-adopt-dialog" className="gap-6 sm:max-w-md">
+      <DialogContent
+        data-ocid="nims-adopt-dialog"
+        className="gap-6 sm:max-w-md"
+      >
         <DialogHeader className="space-y-3 text-center sm:text-center">
           <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary/15 text-primary">
             <Sprout className="size-7" aria-hidden />
@@ -84,8 +87,8 @@ export function AdoptPlantPrompt({
               NFT #{tokenId.toString()}
             </span>
             <span className="mt-2 block text-sm">
-              Choose where you are growing it to unlock timelines, weather overlays,
-              and stewardship logs.
+              Choose where you are growing it to unlock timelines, weather
+              overlays, and stewardship logs.
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -110,7 +113,9 @@ export function AdoptPlantPrompt({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="nims-adopt-location">Location notes (optional)</Label>
+            <Label htmlFor="nims-adopt-location">
+              Location notes (optional)
+            </Label>
             <Input
               id="nims-adopt-location"
               data-ocid="nims-adopt-location"

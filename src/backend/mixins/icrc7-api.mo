@@ -72,6 +72,7 @@ mixin (
   recentTxCursor         : { var oldest : Nat; var next : Nat },
   icrc37Approvals        : Map.Map<Nat, Map.Map<Principal, ICRC37.ApprovalInfo>>,
   certStore              : Cert.Store,
+  linkedWallets          : Map.Map<Principal, [Principal]>,
 ) {
 
   // ── Admin: bulk-load static metadata ──────────────────────────────────────
@@ -764,9 +765,9 @@ mixin (
     };
   };
 
-  /// Storewide NFT holder discount for the calling principal (highest tier wins).
+  /// Storewide NFT holder discount — checks caller's principal AND all linked wallets.
   public query ({ caller }) func getCallerDiscount() : async NftDiscount.CallerDiscount {
-    NftDiscount.callerDiscountFromBalances(icrc7Balances, caller);
+    NftDiscount.callerDiscountFromBalances(icrc7Balances, linkedWallets, caller);
   };
 
   public shared({caller}) func adminReturnToPool(

@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { variantToString } from "@/lib/candid-display";
 import { Link } from "@tanstack/react-router";
 import {
   BookOpen,
@@ -23,6 +24,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { SavedSchedule, ScheduleEntry } from "../backend";
+import { PlantingCalendarPanel } from "../components/PlantingCalendarPanel";
 import { useAuth } from "../hooks/useAuth";
 import {
   useGetMySchedules,
@@ -30,9 +32,7 @@ import {
   useGetScheduleData,
   useSaveSchedule,
 } from "../hooks/useBackend";
-import { variantToString } from "@/lib/candid-display";
 import { usePageTitle } from "../hooks/usePageTitle";
-import { PlantingCalendarPanel } from "../components/PlantingCalendarPanel";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -842,7 +842,9 @@ export default function ScheduleBuilderPage() {
       setSelectedStage(sharedSchedule.stage);
       setSelectedInputs(sharedSchedule.inputs);
       setHasBuilt(true);
-      toast.success(`Loaded shared schedule: ${variantToString(sharedSchedule.stage)} stage`);
+      toast.success(
+        `Loaded shared schedule: ${variantToString(sharedSchedule.stage)} stage`,
+      );
     }
   }, [sharedSchedule]);
 
@@ -1030,428 +1032,430 @@ export default function ScheduleBuilderPage() {
         {pageTab === "planting" ? (
           <PlantingCalendarPanel />
         ) : (
-        <>
-        {/* ── Two-column layout (sidebar + main) ──────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
-          {/* ── Left Panel ─────────────────────────────────────────────── */}
-          <aside className="space-y-4" data-ocid="schedule-sidebar">
-            {/* Step 1 — Growth Stage */}
-            <MobileSection
-              title="Growth Stage"
-              stepNum={1}
-              icon={<Sprout className="w-4 h-4 text-muted-foreground" />}
-              isComplete={!!selectedStage}
-              defaultOpen
-            >
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                {GROWTH_STAGES.map((stage) => {
-                  const isActive = selectedStage === stage.value;
-                  return (
-                    <button
-                      key={stage.value}
-                      type="button"
-                      onClick={() => {
-                        setSelectedStage(stage.value);
-                        setHasBuilt(false);
-                      }}
-                      className={`p-3 rounded-xl border bg-gradient-to-br text-left transition-all duration-200 ${
-                        isActive ? stage.activeColor : stage.color
-                      } hover:brightness-110`}
-                      data-ocid={`stage-btn-${stage.value.toLowerCase()}`}
-                    >
-                      <span className="text-lg block mb-0.5">
-                        {stage.emoji}
-                      </span>
-                      <p
-                        className={`font-bold text-xs leading-tight ${isActive ? stage.textColor : "text-foreground"}`}
-                      >
-                        {stage.label}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
-                        {stage.desc}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            </MobileSection>
-
-            {/* Step 2 — KNF Inputs */}
-            <MobileSection
-              title="KNF Inputs"
-              stepNum={2}
-              icon={<FlaskConical className="w-4 h-4 text-muted-foreground" />}
-              isComplete={selectedInputs.length > 0}
-              defaultOpen
-            >
-              {selectedInputs.length > 0 && (
-                <div className="flex items-center justify-between mb-3 pt-1">
-                  <span className="text-xs text-muted-foreground">
-                    {selectedInputs.length} selected
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedInputs([]);
-                      setHasBuilt(false);
-                    }}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    data-ocid="clear-inputs-btn"
-                  >
-                    Clear all
-                  </button>
-                </div>
-              )}
-              <div className="space-y-2 pt-1">
-                {KNF_INPUTS.map((input) => {
-                  const isSelected = selectedInputs.includes(input.id);
-                  return (
-                    <button
-                      key={input.id}
-                      type="button"
-                      onClick={() => toggleInput(input.id)}
-                      className={`relative w-full p-3 rounded-xl border text-left transition-all duration-200 flex items-start gap-2.5 ${
-                        isSelected
-                          ? `${input.color} ring-2 ${input.activeRing}`
-                          : "bg-muted/10 border-border text-muted-foreground hover:border-primary/30 hover:bg-muted/20"
-                      }`}
-                      data-ocid={`input-btn-${input.id.toLowerCase()}`}
-                    >
-                      <div
-                        className={`w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black border mt-0.5 ${isSelected ? input.color : "bg-muted/30 text-muted-foreground border-border"}`}
-                      >
-                        {input.id.slice(0, 3)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className={`font-bold text-xs ${isSelected ? "" : "text-foreground"}`}
-                        >
-                          {input.id}
-                        </p>
-                        <p className="text-[10px] line-clamp-2 mt-0.5 opacity-80">
-                          {input.short}
-                        </p>
-                      </div>
-                      {isSelected && (
-                        <Check className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </MobileSection>
-
-            {/* Build button */}
-            <Button
-              onClick={handleBuild}
-              disabled={!canBuild}
-              className="w-full bg-primary text-primary-foreground h-11 font-semibold"
-              data-ocid="build-schedule-btn"
-            >
-              <CalendarDays className="w-4 h-4 mr-2" />
-              {hasBuilt ? "Rebuild Schedule" : "Build Schedule"}
-            </Button>
-
-            {/* Tips */}
-            <div className="rounded-xl bg-muted/20 border border-border/50 p-4 space-y-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                Quick Tips
-              </p>
-              {[
-                "Start with OHN + FPJ for a complete base formula",
-                "Add WCA during flowering to prevent blossom end rot",
-                "IMO2 + LAB are powerful soil-health pair for seedlings",
-                "FFA shines in fruiting stage for brix & flavor",
-              ].map((tip) => (
-                <div key={tip} className="flex gap-2 items-start">
-                  <span className="text-primary text-xs mt-0.5 flex-shrink-0">
-                    ·
-                  </span>
-                  <p className="text-xs text-muted-foreground">{tip}</p>
-                </div>
-              ))}
-            </div>
-          </aside>
-
-          {/* ── Right main content ──────────────────────────────────────── */}
-          <main className="space-y-6" data-ocid="schedule-main">
-            {/* Empty state before build */}
-            {!hasBuilt && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="rounded-2xl bg-card border border-dashed border-border/60 flex flex-col items-center justify-center py-20 px-8 text-center"
-                data-ocid="schedule-empty-prompt"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
-                  <FlaskConical className="w-7 h-7 text-primary" />
-                </div>
-                <h3 className="font-display font-bold text-lg text-foreground mb-2">
-                  Build Your Custom Schedule
-                </h3>
-                <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
-                  Select a growth stage and KNF inputs from the panel, then
-                  click{" "}
-                  <span className="text-primary font-medium">
-                    Build Schedule
-                  </span>{" "}
-                  to generate your personalized application guide.
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center mt-6">
-                  {KNF_INPUTS.slice(0, 4).map((k) => (
-                    <span
-                      key={k.id}
-                      className={`text-[10px] px-2.5 py-1 rounded-full border font-medium ${k.color}`}
-                    >
-                      {k.id}
-                    </span>
-                  ))}
-                  <span className="text-[10px] px-2.5 py-1 rounded-full border border-border text-muted-foreground">
-                    +4 more
-                  </span>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Results */}
-            {hasBuilt && (
-              <div ref={resultsRef} className="space-y-5">
-                {/* Results header */}
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-card border border-border px-5 py-4"
-                  data-ocid="schedule-results-header"
+          <>
+            {/* ── Two-column layout (sidebar + main) ──────────────────────────── */}
+            <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
+              {/* ── Left Panel ─────────────────────────────────────────────── */}
+              <aside className="space-y-4" data-ocid="schedule-sidebar">
+                {/* Step 1 — Growth Stage */}
+                <MobileSection
+                  title="Growth Stage"
+                  stepNum={1}
+                  icon={<Sprout className="w-4 h-4 text-muted-foreground" />}
+                  isComplete={!!selectedStage}
+                  defaultOpen
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-9 h-9 rounded-xl bg-gradient-to-br ${stageMeta?.activeColor ?? "from-primary/30 to-primary/10 border-primary/50"} border flex items-center justify-center text-lg flex-shrink-0`}
-                    >
-                      {stageMeta?.emoji ?? "🌿"}
-                    </div>
-                    <div>
-                      <p className="font-display font-bold text-foreground text-sm">
-                        {selectedStage} Stage — Application Schedule
-                      </p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {selectedInputs.map((id) => {
-                          const meta = KNF_INPUTS.find((k) => k.id === id);
-                          return (
-                            <span
-                              key={id}
-                              className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${meta?.color ?? "bg-muted text-muted-foreground border-border"}`}
-                            >
-                              {id}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    {GROWTH_STAGES.map((stage) => {
+                      const isActive = selectedStage === stage.value;
+                      return (
+                        <button
+                          key={stage.value}
+                          type="button"
+                          onClick={() => {
+                            setSelectedStage(stage.value);
+                            setHasBuilt(false);
+                          }}
+                          className={`p-3 rounded-xl border bg-gradient-to-br text-left transition-all duration-200 ${
+                            isActive ? stage.activeColor : stage.color
+                          } hover:brightness-110`}
+                          data-ocid={`stage-btn-${stage.value.toLowerCase()}`}
+                        >
+                          <span className="text-lg block mb-0.5">
+                            {stage.emoji}
+                          </span>
+                          <p
+                            className={`font-bold text-xs leading-tight ${isActive ? stage.textColor : "text-foreground"}`}
+                          >
+                            {stage.label}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
+                            {stage.desc}
+                          </p>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handlePrint}
-                      className="h-8 text-xs border-border"
-                      data-ocid="print-schedule-btn"
-                    >
-                      <Printer className="w-3.5 h-3.5 mr-1" />
-                      Print
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleShare}
-                      disabled={saveSchedule.isPending}
-                      className="h-8 text-xs border-border"
-                      data-ocid="share-schedule-btn"
-                    >
-                      <Share2 className="w-3.5 h-3.5 mr-1" />
-                      {saveSchedule.isPending ? "Saving…" : "Share"}
-                    </Button>
-                    {isAuthenticated ? (
-                      <Button
-                        size="sm"
-                        onClick={handleSave}
-                        disabled={saveSchedule.isPending}
-                        className="h-8 text-xs bg-primary"
-                        data-ocid="save-schedule-btn"
-                      >
-                        <Star className="w-3.5 h-3.5 mr-1" />
-                        Save
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={login}
-                        className="h-8 text-xs border-primary/40 text-primary"
-                        data-ocid="sign-in-to-save-btn"
-                      >
-                        Sign in to save
-                      </Button>
-                    )}
-                  </div>
-                </motion.div>
+                </MobileSection>
 
-                {/* Loading skeletons */}
-                {isLoading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[1, 2, 3, 4].map((k) => (
-                      <div
-                        key={k}
-                        className="rounded-xl border border-border p-4 space-y-3"
+                {/* Step 2 — KNF Inputs */}
+                <MobileSection
+                  title="KNF Inputs"
+                  stepNum={2}
+                  icon={
+                    <FlaskConical className="w-4 h-4 text-muted-foreground" />
+                  }
+                  isComplete={selectedInputs.length > 0}
+                  defaultOpen
+                >
+                  {selectedInputs.length > 0 && (
+                    <div className="flex items-center justify-between mb-3 pt-1">
+                      <span className="text-xs text-muted-foreground">
+                        {selectedInputs.length} selected
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedInputs([]);
+                          setHasBuilt(false);
+                        }}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        data-ocid="clear-inputs-btn"
                       >
-                        <div className="flex items-center gap-3">
-                          <Skeleton className="w-11 h-11 rounded-xl" />
-                          <div className="flex-1 space-y-1.5">
-                            <Skeleton className="h-3.5 w-1/3" />
-                            <Skeleton className="h-3 w-2/3" />
+                        Clear all
+                      </button>
+                    </div>
+                  )}
+                  <div className="space-y-2 pt-1">
+                    {KNF_INPUTS.map((input) => {
+                      const isSelected = selectedInputs.includes(input.id);
+                      return (
+                        <button
+                          key={input.id}
+                          type="button"
+                          onClick={() => toggleInput(input.id)}
+                          className={`relative w-full p-3 rounded-xl border text-left transition-all duration-200 flex items-start gap-2.5 ${
+                            isSelected
+                              ? `${input.color} ring-2 ${input.activeRing}`
+                              : "bg-muted/10 border-border text-muted-foreground hover:border-primary/30 hover:bg-muted/20"
+                          }`}
+                          data-ocid={`input-btn-${input.id.toLowerCase()}`}
+                        >
+                          <div
+                            className={`w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black border mt-0.5 ${isSelected ? input.color : "bg-muted/30 text-muted-foreground border-border"}`}
+                          >
+                            {input.id.slice(0, 3)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`font-bold text-xs ${isSelected ? "" : "text-foreground"}`}
+                            >
+                              {input.id}
+                            </p>
+                            <p className="text-[10px] line-clamp-2 mt-0.5 opacity-80">
+                              {input.short}
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <Check className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </MobileSection>
+
+                {/* Build button */}
+                <Button
+                  onClick={handleBuild}
+                  disabled={!canBuild}
+                  className="w-full bg-primary text-primary-foreground h-11 font-semibold"
+                  data-ocid="build-schedule-btn"
+                >
+                  <CalendarDays className="w-4 h-4 mr-2" />
+                  {hasBuilt ? "Rebuild Schedule" : "Build Schedule"}
+                </Button>
+
+                {/* Tips */}
+                <div className="rounded-xl bg-muted/20 border border-border/50 p-4 space-y-2">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                    Quick Tips
+                  </p>
+                  {[
+                    "Start with OHN + FPJ for a complete base formula",
+                    "Add WCA during flowering to prevent blossom end rot",
+                    "IMO2 + LAB are powerful soil-health pair for seedlings",
+                    "FFA shines in fruiting stage for brix & flavor",
+                  ].map((tip) => (
+                    <div key={tip} className="flex gap-2 items-start">
+                      <span className="text-primary text-xs mt-0.5 flex-shrink-0">
+                        ·
+                      </span>
+                      <p className="text-xs text-muted-foreground">{tip}</p>
+                    </div>
+                  ))}
+                </div>
+              </aside>
+
+              {/* ── Right main content ──────────────────────────────────────── */}
+              <main className="space-y-6" data-ocid="schedule-main">
+                {/* Empty state before build */}
+                {!hasBuilt && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="rounded-2xl bg-card border border-dashed border-border/60 flex flex-col items-center justify-center py-20 px-8 text-center"
+                    data-ocid="schedule-empty-prompt"
+                  >
+                    <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
+                      <FlaskConical className="w-7 h-7 text-primary" />
+                    </div>
+                    <h3 className="font-display font-bold text-lg text-foreground mb-2">
+                      Build Your Custom Schedule
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
+                      Select a growth stage and KNF inputs from the panel, then
+                      click{" "}
+                      <span className="text-primary font-medium">
+                        Build Schedule
+                      </span>{" "}
+                      to generate your personalized application guide.
+                    </p>
+                    <div className="flex flex-wrap gap-2 justify-center mt-6">
+                      {KNF_INPUTS.slice(0, 4).map((k) => (
+                        <span
+                          key={k.id}
+                          className={`text-[10px] px-2.5 py-1 rounded-full border font-medium ${k.color}`}
+                        >
+                          {k.id}
+                        </span>
+                      ))}
+                      <span className="text-[10px] px-2.5 py-1 rounded-full border border-border text-muted-foreground">
+                        +4 more
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Results */}
+                {hasBuilt && (
+                  <div ref={resultsRef} className="space-y-5">
+                    {/* Results header */}
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-card border border-border px-5 py-4"
+                      data-ocid="schedule-results-header"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-9 h-9 rounded-xl bg-gradient-to-br ${stageMeta?.activeColor ?? "from-primary/30 to-primary/10 border-primary/50"} border flex items-center justify-center text-lg flex-shrink-0`}
+                        >
+                          {stageMeta?.emoji ?? "🌿"}
+                        </div>
+                        <div>
+                          <p className="font-display font-bold text-foreground text-sm">
+                            {selectedStage} Stage — Application Schedule
+                          </p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {selectedInputs.map((id) => {
+                              const meta = KNF_INPUTS.find((k) => k.id === id);
+                              return (
+                                <span
+                                  key={id}
+                                  className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${meta?.color ?? "bg-muted text-muted-foreground border-border"}`}
+                                >
+                                  {id}
+                                </span>
+                              );
+                            })}
                           </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <Skeleton className="h-14 rounded-lg" />
-                          <Skeleton className="h-14 rounded-lg" />
-                          <Skeleton className="h-14 rounded-lg" />
-                        </div>
                       </div>
-                    ))}
-                  </div>
-                ) : scheduleEntries && scheduleEntries.length > 0 ? (
-                  <>
-                    {/* Entry cards grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {scheduleEntries.map((entry, i) => (
-                        <ScheduleEntryCard
-                          key={entry.input_name}
-                          entry={entry}
-                          index={i}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handlePrint}
+                          className="h-8 text-xs border-border"
+                          data-ocid="print-schedule-btn"
+                        >
+                          <Printer className="w-3.5 h-3.5 mr-1" />
+                          Print
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleShare}
+                          disabled={saveSchedule.isPending}
+                          className="h-8 text-xs border-border"
+                          data-ocid="share-schedule-btn"
+                        >
+                          <Share2 className="w-3.5 h-3.5 mr-1" />
+                          {saveSchedule.isPending ? "Saving…" : "Share"}
+                        </Button>
+                        {isAuthenticated ? (
+                          <Button
+                            size="sm"
+                            onClick={handleSave}
+                            disabled={saveSchedule.isPending}
+                            className="h-8 text-xs bg-primary"
+                            data-ocid="save-schedule-btn"
+                          >
+                            <Star className="w-3.5 h-3.5 mr-1" />
+                            Save
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={login}
+                            className="h-8 text-xs border-primary/40 text-primary"
+                            data-ocid="sign-in-to-save-btn"
+                          >
+                            Sign in to save
+                          </Button>
+                        )}
+                      </div>
+                    </motion.div>
+
+                    {/* Loading skeletons */}
+                    {isLoading ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {[1, 2, 3, 4].map((k) => (
+                          <div
+                            key={k}
+                            className="rounded-xl border border-border p-4 space-y-3"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Skeleton className="w-11 h-11 rounded-xl" />
+                              <div className="flex-1 space-y-1.5">
+                                <Skeleton className="h-3.5 w-1/3" />
+                                <Skeleton className="h-3 w-2/3" />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <Skeleton className="h-14 rounded-lg" />
+                              <Skeleton className="h-14 rounded-lg" />
+                              <Skeleton className="h-14 rounded-lg" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : scheduleEntries && scheduleEntries.length > 0 ? (
+                      <>
+                        {/* Entry cards grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {scheduleEntries.map((entry, i) => (
+                            <ScheduleEntryCard
+                              key={entry.input_name}
+                              entry={entry}
+                              index={i}
+                            />
+                          ))}
+                        </div>
+
+                        {/* 7-day grid */}
+                        <WeeklyGrid entries={scheduleEntries} />
+
+                        {/* Print-only version */}
+                        <PrintScheduleView
+                          stage={selectedStage}
+                          inputs={selectedInputs}
+                          entries={scheduleEntries}
                         />
-                      ))}
-                    </div>
-
-                    {/* 7-day grid */}
-                    <WeeklyGrid entries={scheduleEntries} />
-
-                    {/* Print-only version */}
-                    <PrintScheduleView
-                      stage={selectedStage}
-                      inputs={selectedInputs}
-                      entries={scheduleEntries}
-                    />
-                  </>
-                ) : (
-                  <div
-                    className="text-center py-16 rounded-2xl bg-card border border-border"
-                    data-ocid="schedule-no-data"
-                  >
-                    <Sprout className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                    <p className="font-medium text-foreground mb-2">
-                      No schedule data for this combination
-                    </p>
-                    <p className="text-sm text-muted-foreground mb-5">
-                      Try a different growth stage or input selection.
-                    </p>
-                    <Link to="/cookbook">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-border text-xs h-8"
+                      </>
+                    ) : (
+                      <div
+                        className="text-center py-16 rounded-2xl bg-card border border-border"
+                        data-ocid="schedule-no-data"
                       >
-                        <BookOpen className="w-3.5 h-3.5 mr-1.5" />
-                        View CookBook Recipes
-                      </Button>
-                    </Link>
+                        <Sprout className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                        <p className="font-medium text-foreground mb-2">
+                          No schedule data for this combination
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-5">
+                          Try a different growth stage or input selection.
+                        </p>
+                        <Link to="/cookbook">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-border text-xs h-8"
+                          >
+                            <BookOpen className="w-3.5 h-3.5 mr-1.5" />
+                            View CookBook Recipes
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
-            )}
-          </main>
-        </div>
+              </main>
+            </div>
 
-        {/* ── My Saved Schedules ───────────────────────────────────────── */}
-        <div className="mt-12" data-ocid="my-schedules-section">
-          <div className="flex items-center gap-2 mb-5">
-            <BookOpen className="w-4 h-4 text-muted-foreground" />
-            <h2 className="font-display font-bold text-lg text-foreground">
-              My Saved Schedules
-            </h2>
-            <div className="flex-1 h-px bg-border/40 ml-2" />
-          </div>
+            {/* ── My Saved Schedules ───────────────────────────────────────── */}
+            <div className="mt-12" data-ocid="my-schedules-section">
+              <div className="flex items-center gap-2 mb-5">
+                <BookOpen className="w-4 h-4 text-muted-foreground" />
+                <h2 className="font-display font-bold text-lg text-foreground">
+                  My Saved Schedules
+                </h2>
+                <div className="flex-1 h-px bg-border/40 ml-2" />
+              </div>
 
-          {isAuthenticated ? (
-            mySchedules && mySchedules.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {mySchedules.map((sched) => (
-                  <SavedScheduleCard
-                    key={sched.id}
-                    sched={sched}
-                    onLoad={handleLoadSaved}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div
-                className="text-center py-12 rounded-2xl bg-card border border-dashed border-border/60"
-                data-ocid="saved-schedules-empty"
-              >
-                <Star className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-sm font-medium text-foreground mb-1">
-                  No saved schedules yet
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Build a schedule and click Save to keep it here for quick
-                  access.
-                </p>
-              </div>
-            )
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="rounded-2xl bg-gradient-to-br from-card to-muted/20 border border-border p-8 text-center"
-              data-ocid="saved-schedules-cta"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
-                <Leaf className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-display font-bold text-lg text-foreground mb-2">
-                Save & Share Your Schedules
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">
-                Create a free IC SPICY account to save unlimited schedules,
-                generate share links, access your plant NFT lifecycle, and earn
-                a{" "}
-                <span className="text-primary font-medium">
-                  lifetime storewide discount
-                </span>
-                .
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Button
-                  onClick={login}
-                  className="bg-primary text-primary-foreground px-6"
-                  data-ocid="cta-sign-in-btn"
-                >
-                  <Zap className="w-4 h-4 mr-2" />
-                  Connect Internet Identity
-                </Button>
-                <a href="/cookbook">
-                  <Button
-                    variant="outline"
-                    className="border-border text-muted-foreground px-6"
+              {isAuthenticated ? (
+                mySchedules && mySchedules.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {mySchedules.map((sched) => (
+                      <SavedScheduleCard
+                        key={sched.id}
+                        sched={sched}
+                        onLoad={handleLoadSaved}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    className="text-center py-12 rounded-2xl bg-card border border-dashed border-border/60"
+                    data-ocid="saved-schedules-empty"
                   >
-                    <BookOpen className="w-4 h-4 mr-2" />
-                    Browse CookBook
-                  </Button>
-                </a>
-              </div>
-            </motion.div>
-          )}
-        </div>
-        </>
+                    <Star className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-sm font-medium text-foreground mb-1">
+                      No saved schedules yet
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Build a schedule and click Save to keep it here for quick
+                      access.
+                    </p>
+                  </div>
+                )
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="rounded-2xl bg-gradient-to-br from-card to-muted/20 border border-border p-8 text-center"
+                  data-ocid="saved-schedules-cta"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
+                    <Leaf className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="font-display font-bold text-lg text-foreground mb-2">
+                    Save & Share Your Schedules
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">
+                    Create a free IC SPICY account to save unlimited schedules,
+                    generate share links, access your plant NFT lifecycle, and
+                    earn a{" "}
+                    <span className="text-primary font-medium">
+                      lifetime storewide discount
+                    </span>
+                    .
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <Button
+                      onClick={login}
+                      className="bg-primary text-primary-foreground px-6"
+                      data-ocid="cta-sign-in-btn"
+                    >
+                      <Zap className="w-4 h-4 mr-2" />
+                      Connect Internet Identity
+                    </Button>
+                    <a href="/cookbook">
+                      <Button
+                        variant="outline"
+                        className="border-border text-muted-foreground px-6"
+                      >
+                        <BookOpen className="w-4 h-4 mr-2" />
+                        Browse CookBook
+                      </Button>
+                    </a>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </>

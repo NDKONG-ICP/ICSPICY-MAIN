@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import {
-  clampSatelliteZoom,
   DEFAULT_SATELLITE_ZOOM,
   MAX_SATELLITE_ZOOM,
   MIN_SATELLITE_ZOOM,
+  clampSatelliteZoom,
 } from "@/lib/satellite-tiles";
 import { Minus, Plus } from "lucide-react";
 import { useCallback, useRef } from "react";
@@ -14,7 +14,11 @@ type Props = {
   visible?: boolean;
 };
 
-export function SatelliteZoomControls({ zoom, onZoomChange, visible = true }: Props) {
+export function SatelliteZoomControls({
+  zoom,
+  onZoomChange,
+  visible = true,
+}: Props) {
   const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const step = useCallback(
@@ -40,7 +44,9 @@ export function SatelliteZoomControls({ zoom, onZoomChange, visible = true }: Pr
 
   return (
     <div className="absolute bottom-3 left-3 z-20 flex flex-col gap-2 rounded-lg border border-white/10 bg-black/70 backdrop-blur px-2 py-2 text-white text-xs shadow-lg sm:flex-row sm:items-center sm:gap-1">
-      <span className="hidden sm:inline text-zinc-400 mr-1 shrink-0">Satellite</span>
+      <span className="hidden sm:inline text-zinc-400 mr-1 shrink-0">
+        Satellite
+      </span>
       <div className="flex items-center gap-1">
         <Button
           type="button"
@@ -80,7 +86,9 @@ export function SatelliteZoomControls({ zoom, onZoomChange, visible = true }: Pr
         max={MAX_SATELLITE_ZOOM}
         step={1}
         value={zoom}
-        onChange={(e) => onZoomChange(clampSatelliteZoom(Number(e.target.value)))}
+        onChange={(e) =>
+          onZoomChange(clampSatelliteZoom(Number(e.target.value)))
+        }
         className="w-full sm:w-24 accent-primary"
         aria-label="Satellite zoom level"
       />

@@ -1,55 +1,68 @@
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { AiExplanationPanel } from "@/components/garden/AiExplanationPanel";
 import { AiGardenPromptBar } from "@/components/garden/AiGardenPromptBar";
-import { BadgeToast, GardenOnboardingTour } from "@/components/garden/GardenOnboardingTour";
-import { CostCalculatorPanel } from "@/components/garden/CostCalculatorPanel";
-import { SeasonalGrowthPanel } from "@/components/garden/SeasonalGrowthPanel";
 import { BottomSheetCatalog } from "@/components/garden/BottomSheetCatalog";
+import { CatalogSidebar } from "@/components/garden/CatalogSidebar";
+import { CompanionSuggestions } from "@/components/garden/CompanionSuggestions";
+import { CostCalculatorPanel } from "@/components/garden/CostCalculatorPanel";
+import { DesignerStatusBar } from "@/components/garden/DesignerStatusBar";
+import { DesignerToolbar } from "@/components/garden/DesignerToolbar";
+import { GardenBetaBanner } from "@/components/garden/GardenBetaBanner";
+import { GardenCanvas3D } from "@/components/garden/GardenCanvas3D";
+import { GardenEnvironmentDialog } from "@/components/garden/GardenEnvironmentDialog";
+import { GardenLocationPicker } from "@/components/garden/GardenLocationPicker";
+import {
+  BadgeToast,
+  GardenOnboardingTour,
+} from "@/components/garden/GardenOnboardingTour";
+import { GardenTopDown } from "@/components/garden/GardenTopDown";
+import { LoadDesignDialog } from "@/components/garden/LoadDesignDialog";
 import { MobileActionsSheet } from "@/components/garden/MobileActionsSheet";
 import { MobileBottomToolStrip } from "@/components/garden/MobileBottomToolStrip";
 import { MobileGardenToolbar } from "@/components/garden/MobileGardenToolbar";
-import { ProfessionalToolsBar } from "@/components/garden/ProfessionalToolsBar";
+import {
+  NewGardenPlotDialog,
+  type NewPlotConfig,
+} from "@/components/garden/NewGardenPlotDialog";
 import { PlantSchedulePanel } from "@/components/garden/PlantSchedulePanel";
+import { PreviewPanel } from "@/components/garden/PreviewPanel";
+import { ProfessionalToolsBar } from "@/components/garden/ProfessionalToolsBar";
+import { PropertiesPanel } from "@/components/garden/PropertiesPanel";
+import { SatelliteZoomControls } from "@/components/garden/SatelliteZoomControls";
 import { ScenesPanel } from "@/components/garden/ScenesPanel";
+import { SeasonalGrowthPanel } from "@/components/garden/SeasonalGrowthPanel";
 import { SectionCutPanel } from "@/components/garden/SectionCutPanel";
 import { SmartDataPanel } from "@/components/garden/SmartDataPanel";
 import { TimelinePanel } from "@/components/garden/TimelinePanel";
-import { SatelliteZoomControls } from "@/components/garden/SatelliteZoomControls";
-import { CatalogSidebar } from "@/components/garden/CatalogSidebar";
-import { DesignerToolbar } from "@/components/garden/DesignerToolbar";
-import { GardenCanvas3D } from "@/components/garden/GardenCanvas3D";
-import { CompanionSuggestions } from "@/components/garden/CompanionSuggestions";
-import { DesignerStatusBar } from "@/components/garden/DesignerStatusBar";
-import { GardenEnvironmentDialog } from "@/components/garden/GardenEnvironmentDialog";
-import { GardenLocationPicker } from "@/components/garden/GardenLocationPicker";
-import { NewGardenPlotDialog, type NewPlotConfig } from "@/components/garden/NewGardenPlotDialog";
-import { GardenTopDown } from "@/components/garden/GardenTopDown";
-import { LoadDesignDialog } from "@/components/garden/LoadDesignDialog";
-import { PreviewPanel } from "@/components/garden/PreviewPanel";
-import { PropertiesPanel } from "@/components/garden/PropertiesPanel";
 import { ValidationPanel } from "@/components/garden/ValidationPanel";
 import { YieldEstimator } from "@/components/garden/YieldEstimator";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { useGardenDesigner } from "@/hooks/useGardenDesigner";
-import { useGardenLocation } from "@/hooks/useGardenLocation";
 import {
   useGardenDesignLoader,
   useGardenDesignMutations,
   useMyGardenDesigns,
   usePublicGardenDesigns,
 } from "@/hooks/useGardenDesigns";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { useGardenLocation } from "@/hooks/useGardenLocation";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useVarieties } from "@/hooks/useNims";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { useWeather } from "@/hooks/useWeather";
-import { useProducts } from "@/hooks/useBackend";
-import { useCart } from "@/hooks/useCart";
-import type { CameraPresetId, DesignerMode, GardenDesign, GardenToolExtras, LayerVisibility, MeasurePoint } from "@/lib/garden-types";
-import { DEFAULT_LAYERS as DEFAULT_LAYER_STATE } from "@/lib/garden-types";
+import { generateGardenLayout, layoutToDesign } from "@/lib/garden-ai";
 import {
-  getCompanionSuggestions,
+  type Badge,
+  checkNewBadges,
+  loadBadgeStats,
+  loadEarnedBadges,
+  saveBadgeStats,
+  saveEarnedBadges,
+} from "@/lib/garden-badges";
+import {
   type CompanionSuggestion,
+  getCompanionSuggestions,
 } from "@/lib/garden-companions";
 import {
   captureCanvasScreenshot,
@@ -57,44 +70,45 @@ import {
   exportDesignSvg,
 } from "@/lib/garden-export";
 import {
-  checkNewBadges,
-  loadBadgeStats,
-  loadEarnedBadges,
-  saveBadgeStats,
-  saveEarnedBadges,
-  type Badge,
-} from "@/lib/garden-badges";
-import { calculateGardenCost } from "@/lib/garden-cost";
-import { layoutToDesign, generateGardenLayout } from "@/lib/garden-ai";
-import {
   downloadLandscapePlan,
   downloadShareCard,
   renderShareCard,
 } from "@/lib/garden-plan-export";
-import { matchPepperProducts } from "@/lib/garden-shop";
-import { storeThumbnail } from "@/lib/garden-social";
-import { productToCartItem } from "@/lib/shop-products";
 import {
+  type GardenEnvironment,
+  PLANT_CATALOG,
   getPlantById,
   loadEnvironment,
-  PLANT_CATALOG,
-  type GardenEnvironment,
 } from "@/lib/garden-plant-catalog";
-import { NURSERY_LAT, NURSERY_LNG } from "@/lib/weather-service";
-import { DEFAULT_SATELLITE_ZOOM, clampSatelliteZoom } from "@/lib/satellite-tiles";
-import { preloadSatelliteTileUrl } from "@/lib/satellite-texture-cache";
-import { loadToolExtras, saveToolExtras } from "@/lib/garden-tool-state";
-import { cn } from "@/lib/utils";
-import { createEmptyDesign, snapToGrid } from "@/lib/garden-utils";
 import {
-  calculateYieldLocally,
   DEFAULT_NURSERY_COORDS,
+  calculateYieldLocally,
   validateGardenLocally,
 } from "@/lib/garden-rules";
+import { storeThumbnail } from "@/lib/garden-social";
+import { loadToolExtras, saveToolExtras } from "@/lib/garden-tool-state";
+import type {
+  CameraPresetId,
+  DesignerMode,
+  GardenDesign,
+  GardenToolExtras,
+  LayerVisibility,
+  MeasurePoint,
+} from "@/lib/garden-types";
+import { DEFAULT_LAYERS as DEFAULT_LAYER_STATE } from "@/lib/garden-types";
+import { createEmptyDesign, snapToGrid } from "@/lib/garden-utils";
+import { preloadSatelliteTileUrl } from "@/lib/satellite-texture-cache";
+import {
+  DEFAULT_SATELLITE_ZOOM,
+  clampSatelliteZoom,
+} from "@/lib/satellite-tiles";
+import { cn } from "@/lib/utils";
+import { NURSERY_LAT, NURSERY_LNG } from "@/lib/weather-service";
+import { useNavigate } from "@tanstack/react-router";
 import { Leaf } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { useRavenPerks } from "../hooks/useRavenPerks";
 
 function designIdFromUrl(): number | null {
   const p = new URLSearchParams(window.location.search);
@@ -106,11 +120,13 @@ function designIdFromUrl(): number | null {
 
 export default function GardenDesignerPage() {
   usePageTitle("Garden Designer");
+  const { track, USAGE } = useUsageTracking();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const ravenPerks = useRavenPerks();
+  const FREE_PLANT_LIMIT = 20;
+  const MEMBER_PLANT_LIMIT = 100;
   const { data: varieties = [], isLoading: varietiesLoading } = useVarieties();
-  const { data: products = [] } = useProducts();
-  const addCartItem = useCart((s) => s.addItem);
   const { data: myDesigns = [], refetch: refetchMine } = useMyGardenDesigns();
   const { data: publicDesigns = [] } = usePublicGardenDesigns();
   const loadDesignById = useGardenDesignLoader();
@@ -120,7 +136,9 @@ export default function GardenDesignerPage() {
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
   const [mobileCatalogOpen, setMobileCatalogOpen] = useState(false);
   const [satelliteZoom, setSatelliteZoom] = useState(DEFAULT_SATELLITE_ZOOM);
-  const [toolExtras, setToolExtras] = useState<GardenToolExtras>(() => loadToolExtras(null));
+  const [toolExtras, setToolExtras] = useState<GardenToolExtras>(() =>
+    loadToolExtras(null),
+  );
   const [measureDraft, setMeasureDraft] = useState<MeasurePoint[]>([]);
   const [irrigationDraft, setIrrigationDraft] = useState<MeasurePoint[]>([]);
   const toolIdRef = useRef(1);
@@ -134,10 +152,14 @@ export default function GardenDesignerPage() {
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
   const [newPlotOpen, setNewPlotOpen] = useState(false);
   const [envOpen, setEnvOpen] = useState(false);
-  const [environment, setEnvironment] = useState<GardenEnvironment>(() => loadEnvironment());
+  const [environment, setEnvironment] = useState<GardenEnvironment>(() =>
+    loadEnvironment(),
+  );
   const [layers, setLayers] = useState<LayerVisibility>(DEFAULT_LAYER_STATE);
   const [timeOfDayHour, setTimeOfDayHour] = useState(14);
-  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
+  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
   const [companions, setCompanions] = useState<CompanionSuggestion[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [aiGenerating, setAiGenerating] = useState(false);
@@ -147,7 +169,9 @@ export default function GardenDesignerPage() {
   const [simulationMonth, setSimulationMonth] = useState<number | null>(null);
   const [growthPanelOpen, setGrowthPanelOpen] = useState(false);
   const [weatherOverlay, setWeatherOverlay] = useState(false);
-  const [revealedPlantIds, setRevealedPlantIds] = useState<Set<number> | null>(null);
+  const [revealedPlantIds, setRevealedPlantIds] = useState<Set<number> | null>(
+    null,
+  );
   const [badgeToast, setBadgeToast] = useState<Badge | null>(null);
   const badgeStatsRef = useRef(loadBadgeStats());
   const earnedBadgesRef = useRef(loadEarnedBadges());
@@ -158,9 +182,11 @@ export default function GardenDesignerPage() {
         toast.message("Sign in to save designs.");
         throw new Error("Not authenticated");
       }
-      return saveMutation.mutateAsync(design);
+      const result = await saveMutation.mutateAsync(design);
+      track(USAGE.GARDEN.SAVE.feature, USAGE.GARDEN.SAVE.action);
+      return result;
     },
-    [isAuthenticated, saveMutation],
+    [isAuthenticated, saveMutation, track, USAGE.GARDEN.SAVE],
   );
 
   const designer = useGardenDesigner({
@@ -193,19 +219,26 @@ export default function GardenDesignerPage() {
     weatherOverlay ? gardenLng : undefined,
   );
 
-  const awardBadges = useCallback((patch?: Partial<typeof badgeStatsRef.current>) => {
-    if (patch) {
-      badgeStatsRef.current = { ...badgeStatsRef.current, ...patch };
-      saveBadgeStats(badgeStatsRef.current);
-    }
-    const fresh = checkNewBadges(design, badgeStatsRef.current, earnedBadgesRef.current);
-    if (fresh.length > 0) {
-      for (const b of fresh) earnedBadgesRef.current.add(b.id);
-      saveEarnedBadges(earnedBadgesRef.current);
-      setBadgeToast(fresh[0]!);
-      window.setTimeout(() => setBadgeToast(null), 3500);
-    }
-  }, [design]);
+  const awardBadges = useCallback(
+    (patch?: Partial<typeof badgeStatsRef.current>) => {
+      if (patch) {
+        badgeStatsRef.current = { ...badgeStatsRef.current, ...patch };
+        saveBadgeStats(badgeStatsRef.current);
+      }
+      const fresh = checkNewBadges(
+        design,
+        badgeStatsRef.current,
+        earnedBadgesRef.current,
+      );
+      if (fresh.length > 0) {
+        for (const b of fresh) earnedBadgesRef.current.add(b.id);
+        saveEarnedBadges(earnedBadgesRef.current);
+        setBadgeToast(fresh[0]!);
+        window.setTimeout(() => setBadgeToast(null), 3500);
+      }
+    },
+    [design],
+  );
 
   const applyAiLayout = useCallback(
     (fullDesign: GardenDesign, explanation: string) => {
@@ -230,19 +263,29 @@ export default function GardenDesignerPage() {
   );
 
   const handleAiGenerate = useCallback(
-    (generated: ReturnType<typeof layoutToDesign>, explanation: string, prompt: string) => {
+    (
+      generated: ReturnType<typeof layoutToDesign>,
+      explanation: string,
+      prompt: string,
+    ) => {
+      if (!ravenPerks.hasAiGeneration) {
+        toast.error("AI Garden Generation requires Raven Pro (500K $RAVEN). Get $RAVEN on ICPSwap!");
+        return;
+      }
       setLastAiPrompt(prompt);
       applyAiLayout(generated, explanation);
+      track(USAGE.GARDEN.AI_GENERATE.feature, USAGE.GARDEN.AI_GENERATE.action);
       toast.success(`AI placed ${generated.plants.length} plants`);
     },
-    [applyAiLayout],
+    [applyAiLayout, ravenPerks.hasAiGeneration, track, USAGE.GARDEN.AI_GENERATE],
   );
 
-  const liveWeatherHour = weatherData
-    ? new Date().getHours()
-    : null;
-  const isRaining = weatherOverlay && (weatherData?.current.precipitationInches ?? 0) > 0.01;
-  const windDirection = weatherOverlay ? (weatherData?.current.windDirectionDeg ?? 0) / 360 : 0;
+  const liveWeatherHour = weatherData ? new Date().getHours() : null;
+  const isRaining =
+    weatherOverlay && (weatherData?.current.precipitationInches ?? 0) > 0.01;
+  const windDirection = weatherOverlay
+    ? (weatherData?.current.windDirectionDeg ?? 0) / 360
+    : 0;
   const tempTint: "warm" | "cool" | "neutral" =
     weatherOverlay && weatherData
       ? weatherData.current.tempF > 85
@@ -252,9 +295,20 @@ export default function GardenDesignerPage() {
           : "neutral"
       : "neutral";
 
-  const weatherLabel = weatherOverlay && weatherData
-    ? `${Math.round(weatherData.current.tempF)}°F · ${weatherData.current.weatherDescription}`
-    : "Live Weather";
+  const weatherLabel =
+    weatherOverlay && weatherData
+      ? `${Math.round(weatherData.current.tempF)}°F · ${weatherData.current.weatherDescription}`
+      : "Live Weather";
+
+  useEffect(() => {
+    track(USAGE.GARDEN.OPEN.feature, USAGE.GARDEN.OPEN.action, "garden:open");
+  }, [track, USAGE.GARDEN.OPEN]);
+
+  useEffect(() => {
+    if (pending?.kind === "plant") {
+      setLayers((l) => ({ ...l, spacing: true }));
+    }
+  }, [pending]);
 
   useEffect(() => {
     if (gardenLocation.needsPrompt) setNewPlotOpen(true);
@@ -292,7 +346,9 @@ export default function GardenDesignerPage() {
       gardenLocation.dismissPrompt();
       if (config.ground === "blank") {
         gardenLocation.chooseSkip();
-        toast.success(`Blank ${config.widthMeters}×${config.depthMeters}m plot ready.`);
+        toast.success(
+          `Blank ${config.widthMeters}×${config.depthMeters}m plot ready.`,
+        );
       } else {
         setLocationPickerOpen(true);
         toast.message("Position your plot on satellite imagery.");
@@ -303,7 +359,10 @@ export default function GardenDesignerPage() {
 
   useEffect(() => {
     if (gardenLocation.location && gardenLocation.location.mode !== "skip") {
-      setSunCoords({ lat: gardenLocation.location.lat, lng: gardenLocation.location.lng });
+      setSunCoords({
+        lat: gardenLocation.location.lat,
+        lng: gardenLocation.location.lng,
+      });
     }
   }, [gardenLocation.location]);
 
@@ -353,7 +412,10 @@ export default function GardenDesignerPage() {
     awardBadges();
     if (design.id != null) {
       try {
-        storeThumbnail(design.id, canvasRef.current.toDataURL("image/png", 0.7));
+        storeThumbnail(
+          design.id,
+          canvasRef.current.toDataURL("image/png", 0.7),
+        );
       } catch {
         /* ignore */
       }
@@ -367,27 +429,32 @@ export default function GardenDesignerPage() {
     toast.success("Share card downloaded");
   }, [design, yieldEst.estimatedLbsMax]);
 
-  const handleAddPeppersToCart = useCallback(() => {
-    const cost = calculateGardenCost(design, yieldEst.estimatedLbsMax);
-    const matches = matchPepperProducts(cost.plants, products);
-    if (matches.length === 0) {
-      toast.message("No matching IC SPICY shop products found for these peppers.");
-      return;
-    }
-    for (const { product, qty } of matches) {
-      addCartItem(productToCartItem(product, qty));
-    }
-    toast.success(`Added ${matches.length} pepper product(s) to cart`);
-  }, [addCartItem, design, products, yieldEst.estimatedLbsMax]);
-
   const handlePlace = useCallback(() => {
     if (!pending || !ghost) return;
+    // Enforce RAVEN tier plant limits (structures don't count toward limit).
+    if (pending.kind === "plant") {
+      const plantCount = design.plants.length;
+      if (!ravenPerks.hasUnlimitedGarden && !ravenPerks.hasExpandedGarden && plantCount >= FREE_PLANT_LIMIT) {
+        toast.error(`Free tier is limited to ${FREE_PLANT_LIMIT} plants. Hold 100K $RAVEN to unlock up to 100!`);
+        return;
+      }
+      if (ravenPerks.hasExpandedGarden && !ravenPerks.hasUnlimitedGarden && plantCount >= MEMBER_PLANT_LIMIT) {
+        toast.error(`Raven Member is limited to ${MEMBER_PLANT_LIMIT} plants. Hold 500K $RAVEN for unlimited!`);
+        return;
+      }
+    }
     const catalogId = pending.kind === "plant" ? pending.catalogId : undefined;
     const cat = catalogId ? getPlantById(catalogId) : undefined;
     placeAtGhost();
     if (catalogId && cat) {
       setCompanions(
-        getCompanionSuggestions(catalogId, design.plants, ghost, PLANT_CATALOG, cat.spacing),
+        getCompanionSuggestions(
+          catalogId,
+          design.plants,
+          ghost,
+          PLANT_CATALOG,
+          cat.spacing,
+        ),
       );
     }
   }, [ghost, pending, placeAtGhost, design.plants]);
@@ -460,7 +527,10 @@ export default function GardenDesignerPage() {
         if (text?.trim()) {
           setToolExtras((e) => ({
             ...e,
-            annotations: [...e.annotations, { id, x: gx, y: gy, text: text.trim() }],
+            annotations: [
+              ...e.annotations,
+              { id, x: gx, y: gy, text: text.trim() },
+            ],
           }));
         }
         return;
@@ -485,7 +555,13 @@ export default function GardenDesignerPage() {
         setLayers((l) => ({ ...l, dimensions: true }));
       }
     },
-    [design.gridSizeMeters, gridSnap, irrigationDraft, measureDraft, toolExtras.activeTool],
+    [
+      design.gridSizeMeters,
+      gridSnap,
+      irrigationDraft,
+      measureDraft,
+      toolExtras.activeTool,
+    ],
   );
 
   const handlePhotoUpload = useCallback(() => {
@@ -513,11 +589,18 @@ export default function GardenDesignerPage() {
         setActiveTool("none");
         setMeasureDraft([]);
       }
-      if (e.key === "Enter" && toolExtras.activeTool === "area" && measureDraft.length >= 3) {
+      if (
+        e.key === "Enter" &&
+        toolExtras.activeTool === "area" &&
+        measureDraft.length >= 3
+      ) {
         const id = toolIdRef.current++;
         setToolExtras((ex) => ({
           ...ex,
-          measurements: [...ex.measurements, { id, type: "area", points: measureDraft }],
+          measurements: [
+            ...ex.measurements,
+            { id, type: "area", points: measureDraft },
+          ],
         }));
         setMeasureDraft([]);
         setLayers((l) => ({ ...l, dimensions: true }));
@@ -525,7 +608,13 @@ export default function GardenDesignerPage() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [measureDraft, setActiveTool, setPending, toolExtras.activeTool, walkMode]);
+  }, [
+    measureDraft,
+    setActiveTool,
+    setPending,
+    toolExtras.activeTool,
+    walkMode,
+  ]);
 
   const openLoad = () => {
     void refetchMine();
@@ -535,7 +624,15 @@ export default function GardenDesignerPage() {
   const zoneLabel = environment.usdaZone ?? "10a";
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-background">
+    <div
+      className={cn(
+        "flex flex-col bg-background",
+        isMobile
+          ? "h-[calc(100vh-4rem)] overflow-hidden"
+          : "min-h-[calc(100vh-4rem)]",
+      )}
+    >
+      <GardenBetaBanner />
       {!isMobile && (
         <div data-tour="ai-bar">
           <AiGardenPromptBar
@@ -556,63 +653,67 @@ export default function GardenDesignerPage() {
         />
       ) : (
         <DesignerToolbar
-        designer={designer}
-        mode={mode}
-        onModeChange={setMode}
-        onLoadClick={openLoad}
-        isAuthenticated={isAuthenticated}
-        previewOpen={previewOpen}
-        onPreviewToggle={() => setPreviewOpen((v) => !v)}
-        cameraPreset={cameraPreset}
-        onCameraPreset={(p) => {
-          setWalkMode(false);
-          setCameraPreset(p);
-        }}
-        walkModeActive={walkMode}
-        onWalkMode={() => {
-          if (viewMode !== "3d") {
-            toast.message("Switch to 3D view for walk mode.");
-            return;
+          designer={designer}
+          mode={mode}
+          onModeChange={setMode}
+          onLoadClick={openLoad}
+          isAuthenticated={isAuthenticated}
+          previewOpen={previewOpen}
+          onPreviewToggle={() => setPreviewOpen((v) => !v)}
+          cameraPreset={cameraPreset}
+          onCameraPreset={(p) => {
+            setWalkMode(false);
+            setCameraPreset(p);
+          }}
+          walkModeActive={walkMode}
+          onWalkMode={() => {
+            if (viewMode !== "3d") {
+              toast.message("Switch to 3D view for walk mode.");
+              return;
+            }
+            setWalkMode(true);
+            setCameraPreset("walk");
+            badgeStatsRef.current = { ...badgeStatsRef.current, walked: true };
+            saveBadgeStats(badgeStatsRef.current);
+            awardBadges();
+          }}
+          yieldEstimate={yieldEst}
+          locationLabel={
+            gardenLocation.location?.mode === "skip"
+              ? "Plain ground"
+              : gardenLocation.location
+                ? "Reposition satellite"
+                : null
           }
-          setWalkMode(true);
-          setCameraPreset("walk");
-          badgeStatsRef.current = { ...badgeStatsRef.current, walked: true };
-          saveBadgeStats(badgeStatsRef.current);
-          awardBadges();
-        }}
-        yieldEstimate={yieldEst}
-        locationLabel={
-          gardenLocation.location?.mode === "skip"
-            ? "Plain ground"
-            : gardenLocation.location
-              ? "Reposition satellite"
-              : null
-        }
-        onLocationClick={() => setLocationPickerOpen(true)}
-        timeOfDayHour={timeOfDayHour}
-        onTimeOfDayChange={setTimeOfDayHour}
-        onEnvironmentClick={() => setEnvOpen(true)}
-        onScreenshot={handleScreenshot}
-        onExportSvg={handleExportSvg}
-        satelliteZoom={satelliteZoom}
-        onSatelliteZoomChange={handleSatelliteZoomChange}
-        satelliteEnabled={gardenLocation.satelliteEnabled}
-        activeTool={toolExtras.activeTool}
-        onToolChange={setActiveTool}
-        onPhotoUpload={handlePhotoUpload}
-        onExportPlan={() => downloadLandscapePlan(design, zoneLabel)}
-        onShareCard={() => void handleShareCard()}
-        onGalleryClick={() => void navigate({ to: "/garden/gallery" })}
-        weatherOverlay={weatherOverlay}
-        onWeatherToggle={() => setWeatherOverlay((v) => !v)}
-        weatherLabel={weatherLabel}
+          onLocationClick={() => setLocationPickerOpen(true)}
+          timeOfDayHour={timeOfDayHour}
+          onTimeOfDayChange={setTimeOfDayHour}
+          onEnvironmentClick={() => setEnvOpen(true)}
+          onScreenshot={handleScreenshot}
+          onExportSvg={handleExportSvg}
+          satelliteZoom={satelliteZoom}
+          onSatelliteZoomChange={handleSatelliteZoomChange}
+          satelliteEnabled={gardenLocation.satelliteEnabled}
+          activeTool={toolExtras.activeTool}
+          onToolChange={setActiveTool}
+          onPhotoUpload={handlePhotoUpload}
+          onExportPlan={() => downloadLandscapePlan(design, zoneLabel)}
+          onShareCard={() => void handleShareCard()}
+          onGalleryClick={() => void navigate({ to: "/garden/gallery" })}
+          weatherOverlay={weatherOverlay}
+          onWeatherToggle={() => setWeatherOverlay((v) => !v)}
+          weatherLabel={weatherLabel}
         />
       )}
 
       {isMobile && pending && (
         <div className="fixed top-14 left-0 right-0 z-50 bg-red-600/95 text-white text-center py-2 text-sm shadow-lg">
           Tap the canvas to place {pendingLabel ?? "item"} ·{" "}
-          <button type="button" className="underline font-medium" onClick={() => setPending(null)}>
+          <button
+            type="button"
+            className="underline font-medium"
+            onClick={() => setPending(null)}
+          >
             Cancel
           </button>
         </div>
@@ -638,9 +739,14 @@ export default function GardenDesignerPage() {
           setCameraPreset("walk");
         }}
         onSave={() => void designer.saveDesign()}
+        onLoad={openLoad}
         onShare={() => {
-          if (design.id == null) toast.message("Save your design before sharing.");
-          else void navigator.clipboard.writeText(`${window.location.origin}/garden?design=${design.id}`);
+          if (design.id == null)
+            toast.message("Save your design before sharing.");
+          else
+            void navigator.clipboard.writeText(
+              `${window.location.origin}/garden?design=${design.id}`,
+            );
         }}
         onScreenshot={handleScreenshot}
         onWeather={() => setWeatherOverlay((v) => !v)}
@@ -648,6 +754,10 @@ export default function GardenDesignerPage() {
         onGallery={() => void navigate({ to: "/garden/gallery" })}
         onExportSvg={handleExportSvg}
         onNewPlot={() => setNewPlotOpen(true)}
+        design={design}
+        yieldEst={yieldEst}
+        layers={layers}
+        onLayersChange={setLayers}
         weatherOn={weatherOverlay}
         isAuthenticated={isAuthenticated}
       />
@@ -659,14 +769,27 @@ export default function GardenDesignerPage() {
           onRegenerate={() => {
             if (!lastAiPrompt) return;
             setAiGenerating(true);
-            void generateGardenLayout(lastAiPrompt, design.widthMeters, design.depthMeters, zoneLabel)
-              .then((layout) => handleAiGenerate(layoutToDesign(layout, design), layout.explanation, lastAiPrompt))
+            void generateGardenLayout(
+              lastAiPrompt,
+              design.widthMeters,
+              design.depthMeters,
+              zoneLabel,
+            )
+              .then((layout) =>
+                handleAiGenerate(
+                  layoutToDesign(layout, design),
+                  layout.explanation,
+                  lastAiPrompt,
+                ),
+              )
               .finally(() => setAiGenerating(false));
           }}
         />
       )}
 
-      {badgeToast && <BadgeToast emoji={badgeToast.emoji} title={badgeToast.title} />}
+      {badgeToast && (
+        <BadgeToast emoji={badgeToast.emoji} title={badgeToast.title} />
+      )}
       <GardenOnboardingTour onComplete={() => {}} />
 
       <GardenEnvironmentDialog
@@ -687,8 +810,12 @@ export default function GardenDesignerPage() {
 
       <GardenLocationPicker
         open={locationPickerOpen}
-        initialLat={gardenLocation.location?.lat ?? sunCoords.lat ?? NURSERY_LAT}
-        initialLng={gardenLocation.location?.lng ?? sunCoords.lng ?? NURSERY_LNG}
+        initialLat={
+          gardenLocation.location?.lat ?? sunCoords.lat ?? NURSERY_LAT
+        }
+        initialLng={
+          gardenLocation.location?.lng ?? sunCoords.lng ?? NURSERY_LNG
+        }
         widthMeters={design.widthMeters}
         depthMeters={design.depthMeters}
         onConfirm={(loc) => {
@@ -713,7 +840,8 @@ export default function GardenDesignerPage() {
 
       {!previewOpen && validation.some((w) => w.severity === "Error") && (
         <div className="px-3 py-1 bg-destructive/10 border-b border-destructive/30 text-xs text-destructive">
-          {validation.filter((w) => w.severity === "Error").length} layout error(s) — open Preview for details
+          {validation.filter((w) => w.severity === "Error").length} layout
+          error(s) — open Preview for details
         </div>
       )}
 
@@ -731,7 +859,9 @@ export default function GardenDesignerPage() {
       {mode === "view" && (
         <div className="border-b border-border px-4 py-2 flex flex-wrap gap-2">
           {browseList.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No public designs yet.</p>
+            <p className="text-sm text-muted-foreground">
+              No public designs yet.
+            </p>
           ) : (
             browseList.map((d) => (
               <Button
@@ -762,86 +892,101 @@ export default function GardenDesignerPage() {
           />
         )}
 
-        <main className={cn("flex flex-1 flex-col min-w-0 relative min-h-0", isMobile ? "pb-14" : "p-2 sm:p-3")}>
+        <main
+          className={cn(
+            "flex flex-1 flex-col min-w-0 relative min-h-0",
+            isMobile ? "pb-14 flex-1" : "p-2 sm:p-3",
+          )}
+        >
           {varietiesLoading ? (
-            <Skeleton className="flex-1 min-h-[320px]" />
+            <Skeleton className="flex-1 min-h-0" />
           ) : viewMode === "3d" ? (
-            <GardenCanvas3D
-              design={design}
-              varieties={varieties}
-              selectedId={designer.selectedId}
-              selectedType={designer.selectedType}
-              ghost={ghost}
-              pending={pending}
-              pendingLabel={pendingLabel}
-              readOnly={mode === "view" || previewOpen}
-              useProcedural={previewOpen}
-              growthStage={growthStage}
-              sunLat={sunCoords.lat}
-              sunLng={sunCoords.lng}
-              showSun={previewOpen}
-              satelliteEnabled={gardenLocation.satelliteEnabled}
-              gardenLat={gardenLocation.location?.lat}
-              gardenLng={gardenLocation.location?.lng}
-              satelliteZoom={satelliteZoom}
-              cameraPreset={cameraPreset}
-              timeOfDayHour={timeOfDayHour}
-              layers={layers}
-              canvasRef={canvasRef}
-              walkMode={walkMode}
-              onExitWalk={() => setWalkMode(false)}
-              simulationMonth={simulationMonth}
-              revealedPlantIds={revealedPlantIds}
-              weatherOverlay={weatherOverlay}
-              isRaining={isRaining}
-              windDirection={windDirection}
-              liveWeatherHour={liveWeatherHour}
-              tempTint={tempTint}
-              onSelectPlant={(id) => selectItem(id, "plant")}
-              onSelectStructure={(id) => selectItem(id, "structure")}
-              onPointerMove={handlePointer}
-              onPlace={handlePlace}
-              onClearSelection={() => selectItem(null, null)}
-              onMoveItem={moveItem}
-              onDeleteItem={handleDelete}
-            />
+            <div className="flex-1 min-h-0 w-full">
+              <GardenCanvas3D
+                design={design}
+                varieties={varieties}
+                selectedId={designer.selectedId}
+                selectedType={designer.selectedType}
+                ghost={ghost}
+                pending={pending}
+                pendingLabel={pendingLabel}
+                readOnly={mode === "view" || previewOpen}
+                useProcedural={previewOpen}
+                growthStage={growthStage}
+                sunLat={sunCoords.lat}
+                sunLng={sunCoords.lng}
+                showSun={previewOpen}
+                satelliteEnabled={gardenLocation.satelliteEnabled}
+                gardenLat={gardenLocation.location?.lat}
+                gardenLng={gardenLocation.location?.lng}
+                satelliteZoom={satelliteZoom}
+                cameraPreset={cameraPreset}
+                timeOfDayHour={timeOfDayHour}
+                layers={layers}
+                canvasRef={canvasRef}
+                walkMode={walkMode}
+                onExitWalk={() => setWalkMode(false)}
+                simulationMonth={simulationMonth}
+                revealedPlantIds={revealedPlantIds}
+                weatherOverlay={weatherOverlay}
+                isRaining={isRaining}
+                windDirection={windDirection}
+                liveWeatherHour={liveWeatherHour}
+                tempTint={tempTint}
+                onSelectPlant={(id) => selectItem(id, "plant")}
+                onSelectStructure={(id) => selectItem(id, "structure")}
+                onPointerMove={handlePointer}
+                onPlace={handlePlace}
+                onClearSelection={() => selectItem(null, null)}
+                onMoveItem={moveItem}
+                onDeleteItem={handleDelete}
+              />
+            </div>
           ) : (
-            <GardenTopDown
-              design={design}
-              selectedId={designer.selectedId}
-              selectedType={designer.selectedType}
-              ghost={ghost}
-              gridSnap={gridSnap}
-              readOnly={mode === "view"}
-              satelliteEnabled={gardenLocation.satelliteEnabled}
-              gardenLat={gardenLocation.location?.lat}
-              gardenLng={gardenLocation.location?.lng}
-              satelliteZoom={satelliteZoom}
-              layers={layers}
-              toolExtras={toolExtras}
-              sunLat={sunCoords.lat}
-              sunLng={sunCoords.lng}
-              timeOfDayHour={timeOfDayHour}
-              pendingCatalogId={pending?.kind === "plant" ? pending.catalogId : null}
-              onToolClick={handleToolClick}
-              onSelectPlant={(id) => selectItem(id, "plant")}
-              onSelectStructure={(id) => selectItem(id, "structure")}
-              onMove={moveItem}
-              onPointerMove={handlePointer}
-              onPlace={handlePlace}
-              onClearSelection={() => selectItem(null, null)}
-              hasPending={!!pending}
-              onDeleteItem={handleDelete}
-            />
+            <div className="flex-1 min-h-0 w-full overflow-auto">
+              <GardenTopDown
+                design={design}
+                selectedId={designer.selectedId}
+                selectedType={designer.selectedType}
+                ghost={ghost}
+                gridSnap={gridSnap}
+                readOnly={mode === "view"}
+                satelliteEnabled={gardenLocation.satelliteEnabled}
+                gardenLat={gardenLocation.location?.lat}
+                gardenLng={gardenLocation.location?.lng}
+                satelliteZoom={satelliteZoom}
+                layers={layers}
+                toolExtras={toolExtras}
+                sunLat={sunCoords.lat}
+                sunLng={sunCoords.lng}
+                timeOfDayHour={timeOfDayHour}
+                pendingCatalogId={
+                  pending?.kind === "plant" ? pending.catalogId : null
+                }
+                onToolClick={handleToolClick}
+                onSelectPlant={(id) => selectItem(id, "plant")}
+                onSelectStructure={(id) => selectItem(id, "structure")}
+                onMove={moveItem}
+                onPointerMove={handlePointer}
+                onPlace={handlePlace}
+                onClearSelection={() => selectItem(null, null)}
+                hasPending={!!pending}
+                onDeleteItem={handleDelete}
+              />
+            </div>
           )}
           <SatelliteZoomControls
             zoom={satelliteZoom}
             onZoomChange={handleSatelliteZoomChange}
-            visible={gardenLocation.satelliteEnabled && (viewMode === "3d" || viewMode === "2d")}
+            visible={
+              gardenLocation.satelliteEnabled &&
+              (viewMode === "3d" || viewMode === "2d")
+            }
           />
           {!isMobile && pending && (
             <p className="text-center text-xs text-muted-foreground mt-2">
-              Click the plot to place · Shift disables grid snap · Esc clears placement
+              Click the plot to place · Shift disables grid snap · Esc clears
+              placement
             </p>
           )}
         </main>
@@ -868,10 +1013,11 @@ export default function GardenDesignerPage() {
               open={growthPanelOpen}
               onOpenChange={(open) => {
                 setGrowthPanelOpen(open);
-                if (open && simulationMonth == null) setSimulationMonth(new Date().getMonth() + 1);
+                if (open && simulationMonth == null)
+                  setSimulationMonth(new Date().getMonth() + 1);
               }}
             />
-            <SmartDataPanel design={design} yieldEst={yieldEst} onBuyPlants={handleAddPeppersToCart} />
+            <SmartDataPanel design={design} yieldEst={yieldEst} />
             <PlantSchedulePanel design={design} />
             <TimelinePanel design={design} />
             <ScenesPanel
@@ -880,7 +1026,10 @@ export default function GardenDesignerPage() {
               onAdd={(name, preset) =>
                 setToolExtras((e) => ({
                   ...e,
-                  scenes: [...e.scenes, { id: `scene-${Date.now()}`, name, preset }],
+                  scenes: [
+                    ...e.scenes,
+                    { id: `scene-${Date.now()}`, name, preset },
+                  ],
                 }))
               }
               onGo={(preset) => {
@@ -888,19 +1037,23 @@ export default function GardenDesignerPage() {
                 setCameraPreset(preset);
               }}
               onRemove={(id) =>
-                setToolExtras((e) => ({ ...e, scenes: e.scenes.filter((s) => s.id !== id) }))
+                setToolExtras((e) => ({
+                  ...e,
+                  scenes: e.scenes.filter((s) => s.id !== id),
+                }))
               }
             />
             <SectionCutPanel
               design={design}
               cutY={toolExtras.sectionCutY}
-              onCutYChange={(y) => setToolExtras((e) => ({ ...e, sectionCutY: y }))}
+              onCutYChange={(y) =>
+                setToolExtras((e) => ({ ...e, sectionCutY: y }))
+              }
             />
             <YieldEstimator estimate={yieldEst} />
             <CostCalculatorPanel
               design={design}
               yieldLbsMax={yieldEst.estimatedLbsMax}
-              onAddPeppersToCart={handleAddPeppersToCart}
             />
             <ValidationPanel warnings={validation} />
           </aside>
@@ -931,7 +1084,11 @@ export default function GardenDesignerPage() {
       </div>
 
       {!isMobile && (
-        <DesignerStatusBar design={design} yieldEstimate={yieldEst} cursor={cursorPos} />
+        <DesignerStatusBar
+          design={design}
+          yieldEstimate={yieldEst}
+          cursor={cursorPos}
+        />
       )}
 
       {isMobile && (

@@ -18,9 +18,7 @@ export function exportRowsToCsv(
   const headers = Object.keys(rows[0]!);
   const lines = [
     headers.join(","),
-    ...rows.map((row) =>
-      headers.map((h) => escapeCsvCell(row[h])).join(","),
-    ),
+    ...rows.map((row) => headers.map((h) => escapeCsvCell(row[h])).join(",")),
   ];
   const blob = new Blob([lines.join("\n")], { type: "text/csv" });
   triggerDownload(blob, filename);

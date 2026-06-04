@@ -1,14 +1,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CartItem } from "../types/index.ts";
 import {
+  USPS_SMALL_FLAT_RATE_CENTS,
   cartHasShippable,
   lineTotalCents,
   priceCentsToNumber,
   toNatBigInt,
   toOptionalNatBigInt,
-  USPS_SMALL_FLAT_RATE_CENTS,
 } from "../lib/cart-utils";
+import type { CartItem } from "../types/index.ts";
 
 function normalizeCartItem(item: CartItem): CartItem {
   return {

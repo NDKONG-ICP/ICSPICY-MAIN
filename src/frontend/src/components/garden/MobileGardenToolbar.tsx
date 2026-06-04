@@ -14,8 +14,14 @@ export function MobileGardenToolbar({ designer, mode, onMenuOpen }: Props) {
   const { design, viewMode, setViewMode, setName, undo, readOnly } = designer;
 
   return (
-    <div className="sm:hidden flex items-center gap-2 border-b border-white/10 bg-card/95 backdrop-blur px-2 py-2 shrink-0">
-      <Button type="button" size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={onMenuOpen}>
+    <div className="sm:hidden flex items-center gap-2 border-b border-white/10 bg-card/95 backdrop-blur px-2 h-12 shrink-0">
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        className="h-9 w-9 shrink-0"
+        onClick={onMenuOpen}
+      >
         <Menu className="h-5 w-5" />
       </Button>
       <Input
@@ -45,7 +51,13 @@ export function MobileGardenToolbar({ designer, mode, onMenuOpen }: Props) {
         </Button>
       </div>
       {!readOnly && mode === "edit" && (
-        <Button type="button" size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={undo}>
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="h-9 w-9 shrink-0"
+          onClick={undo}
+        >
           <Undo2 className="h-4 w-4" />
         </Button>
       )}

@@ -1052,6 +1052,9 @@ export interface backendInterface {
     addSeedLot(varietyId: bigint, source: import("./declarations/backend.did").SeedSource, quantity: bigint | null, vendorId: bigint | null, notes: string | null): Promise<bigint>;
     updateSeedLot(id: bigint, quantity: bigint | null, harvestDate: bigint | null, generation: string | null, germinationRate: bigint | null, notes: string | null, isActive: boolean | null, vendorId: bigint | null): Promise<boolean>;
     recordCross(name: string, motherVarietyId: bigint, fatherVarietyId: bigint, motherPlantId: PlantId | null, fatherPlantId: PlantId | null, crossDate: bigint | null, notes: string | null, expectedTraits: string | null, generation: string | null): Promise<bigint>;
+    recordUsageEvent(feature: string, action: string): Promise<void>;
+    getUsageRollups(days: bigint): Promise<Array<{ day: bigint; feature: string; action: string; count: bigint; uniqueUsers: bigint }>>;
+    pruneUsageData(): Promise<void>;
     addVendor(name: string, website: string | null, notes: string | null): Promise<bigint>;
     harvestSeeds(plantId: PlantId, quantity: bigint | null, notes: string | null): Promise<bigint>;
     addPlantNote(plantId: PlantId, text: string): Promise<boolean>;
@@ -1093,6 +1096,11 @@ export interface backendInterface {
     isPepperHeadAvailable(): Promise<bigint>;
     issueMembership(owner: Principal, tier: MembershipTier, nft_standard: NFTStandard): Promise<MembershipNFTPublic>;
     likePost(post_id: PostId): Promise<bigint>;
+    linkWallet(walletPrincipal: Principal): Promise<boolean>;
+    getLinkedWallets(): Promise<Array<Principal>>;
+    unlinkWallet(walletPrincipal: Principal): Promise<boolean>;
+    refreshRavenBalance(): Promise<undefined>;
+    getRavenDiscountPercent(): Promise<bigint>;
     listArtworkFiles(): Promise<Array<[string, bigint]>>;
     listArtworkLayers(): Promise<Array<ArtworkLayer>>;
     listCommentsByPost(post_id: PostId): Promise<Array<CommentPublic>>;
@@ -2527,6 +2535,21 @@ export class Backend implements backendInterface {
             try { return await this.actor.recordCross(arg0, arg1, arg2, arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : [], arg5 != null ? [arg5] : [], arg6 != null ? [arg6] : [], arg7 != null ? [arg7] : [], arg8 != null ? [arg8] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.recordCross(arg0, arg1, arg2, arg3 != null ? [arg3] : [], arg4 != null ? [arg4] : [], arg5 != null ? [arg5] : [], arg6 != null ? [arg6] : [], arg7 != null ? [arg7] : [], arg8 != null ? [arg8] : []); }
     }
+    async recordUsageEvent(feature: string, action: string): Promise<void> {
+        if (this.processError) {
+            try { await this.actor.recordUsageEvent(feature, action); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { await this.actor.recordUsageEvent(feature, action); }
+    }
+    async getUsageRollups(days: bigint): Promise<Array<{ day: bigint; feature: string; action: string; count: bigint; uniqueUsers: bigint }>> {
+        if (this.processError) {
+            try { return await this.actor.getUsageRollups(days); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getUsageRollups(days); }
+    }
+    async pruneUsageData(): Promise<void> {
+        if (this.processError) {
+            try { await this.actor.pruneUsageData(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { await this.actor.pruneUsageData(); }
+    }
     async addVendor(arg0: string, arg1: string | null, arg2: string | null): Promise<bigint> {
         if (this.processError) {
             try { return await this.actor.addVendor(arg0, arg1 != null ? [arg1] : [], arg2 != null ? [arg2] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
@@ -2971,6 +2994,66 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.likePost(arg0);
             return result;
+        }
+    }
+    async linkWallet(arg0: Principal): Promise<boolean> {
+        if (this.processError) {
+            try {
+                return await this.actor.linkWallet(arg0);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            return await this.actor.linkWallet(arg0);
+        }
+    }
+    async getLinkedWallets(): Promise<Array<Principal>> {
+        if (this.processError) {
+            try {
+                return await this.actor.getLinkedWallets();
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            return await this.actor.getLinkedWallets();
+        }
+    }
+    async unlinkWallet(arg0: Principal): Promise<boolean> {
+        if (this.processError) {
+            try {
+                return await this.actor.unlinkWallet(arg0);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            return await this.actor.unlinkWallet(arg0);
+        }
+    }
+    async refreshRavenBalance(): Promise<undefined> {
+        if (this.processError) {
+            try {
+                return await this.actor.refreshRavenBalance();
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            return await this.actor.refreshRavenBalance();
+        }
+    }
+    async getRavenDiscountPercent(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                return await this.actor.getRavenDiscountPercent();
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            return await this.actor.getRavenDiscountPercent();
         }
     }
     async listArtworkFiles(): Promise<Array<[string, bigint]>> {

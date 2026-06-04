@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { NimsDemoStep, type DemoStepConfig } from "./NimsDemoStep";
+import { type DemoStepConfig, NimsDemoStep } from "./NimsDemoStep";
 
 const STEPS: DemoStepConfig[] = [
   {
@@ -18,8 +18,7 @@ const STEPS: DemoStepConfig[] = [
   {
     title: "Log Everything",
     icon: "📋",
-    caption:
-      "Water, feed, pest observations, photos, notes — all in one tap.",
+    caption: "Water, feed, pest observations, photos, notes — all in one tap.",
   },
   {
     title: "Weather Tracked Automatically",
@@ -81,7 +80,9 @@ export function NimsDemo() {
             aria-label={`Demo step ${i + 1}`}
             onClick={() => setStep(i)}
             className={`h-2 rounded-full transition-all ${
-              i === step ? "w-6 bg-red-500" : "w-2 bg-zinc-600 hover:bg-zinc-500"
+              i === step
+                ? "w-6 bg-red-500"
+                : "w-2 bg-zinc-600 hover:bg-zinc-500"
             }`}
           />
         ))}

@@ -1,8 +1,8 @@
-import { useEffect, useRef } from "react";
-import type { PlantLifecycle } from "../declarations/backend.did";
+import { isPlantMarkedDead } from "@/lib/plant-lifecycle-utils";
 import type { WeatherData } from "@/lib/weather-service";
 import { weatherDataToSnapshot } from "@/lib/weather-snapshot";
-import { isPlantMarkedDead } from "@/lib/plant-lifecycle-utils";
+import { useEffect, useRef } from "react";
+import type { PlantLifecycle } from "../declarations/backend.did";
 import { useAddWeatherSnapshot } from "./useNimsDashboard";
 
 function todayIsoDate(): string {

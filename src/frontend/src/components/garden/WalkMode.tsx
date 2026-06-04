@@ -1,11 +1,11 @@
+import type { GardenDesign } from "@/lib/garden-types";
 import { Html, PointerLockControls } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import type { GardenDesign } from "@/lib/garden-types";
-import { PlantModel } from "./plants/PlantModel";
-import { StructureMesh } from "./StructureMesh";
 import { AmbientSounds } from "./AmbientSounds";
+import { StructureMesh } from "./StructureMesh";
+import { PlantModel } from "./plants/PlantModel";
 
 type Props = {
   design: GardenDesign;
@@ -49,8 +49,14 @@ export function WalkMode({ design, onExit }: Props) {
     direction.current.normalize();
     velocity.current.x = direction.current.x * speed;
     velocity.current.z = direction.current.z * speed;
-    camera.position.x = Math.max(0, Math.min(design.widthMeters, camera.position.x + velocity.current.x));
-    camera.position.z = Math.max(0, Math.min(design.depthMeters, camera.position.z + velocity.current.z));
+    camera.position.x = Math.max(
+      0,
+      Math.min(design.widthMeters, camera.position.x + velocity.current.x),
+    );
+    camera.position.z = Math.max(
+      0,
+      Math.min(design.depthMeters, camera.position.z + velocity.current.z),
+    );
     camera.position.y = 1.7;
   });
 

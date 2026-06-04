@@ -120,14 +120,21 @@ export function cloneDesign(d: GardenDesign): GardenDesign {
   };
 }
 
-export function nextItemId(plants: PlantPlacement[], structures: StructurePlacement[]): number {
+export function nextItemId(
+  plants: PlantPlacement[],
+  structures: StructurePlacement[],
+): number {
   let max = 0;
   for (const p of plants) max = Math.max(max, p.id);
   for (const s of structures) max = Math.max(max, s.id);
   return max + 1;
 }
 
-export function snapToGrid(value: number, grid: number, enabled: boolean): number {
+export function snapToGrid(
+  value: number,
+  grid: number,
+  enabled: boolean,
+): number {
   if (!enabled || grid <= 0) return value;
   return Math.round(value / grid) * grid;
 }

@@ -8,7 +8,15 @@ type Props = {
 };
 
 export function MobileFloatingActions({ designer, readOnly }: Props) {
-  const { selectedId, selectedType, selectedPlant, rotateItem, scaleItem, duplicateItem, deleteItem } = designer;
+  const {
+    selectedId,
+    selectedType,
+    selectedPlant,
+    rotateItem,
+    scaleItem,
+    duplicateItem,
+    deleteItem,
+  } = designer;
 
   if (readOnly || selectedId == null || !selectedType) return null;
 
@@ -47,7 +55,9 @@ export function MobileFloatingActions({ designer, readOnly }: Props) {
         size="icon"
         variant="destructive"
         className="h-11 w-11 rounded-full shadow-lg"
-        onClick={() => deleteItem(selectedId, selectedType, selectedType === "structure")}
+        onClick={() =>
+          deleteItem(selectedId, selectedType, selectedType === "structure")
+        }
         aria-label="Delete"
       >
         <Trash2 className="h-5 w-5" />

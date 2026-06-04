@@ -14,8 +14,8 @@ import { useMemo, useState } from "react";
 import { PlantStage } from "../backend";
 import { StageBadge } from "../components/ui/StageBadge";
 import { usePlants } from "../hooks/useBackend";
-import type { Plant } from "../types";
 import { usePageTitle } from "../hooks/usePageTitle";
+import type { Plant } from "../types";
 
 type FilterValue = "all" | PlantStage;
 

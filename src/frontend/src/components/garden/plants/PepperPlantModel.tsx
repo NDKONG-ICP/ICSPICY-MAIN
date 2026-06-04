@@ -1,3 +1,4 @@
+import type { PepperProfile } from "@/lib/garden-plant-catalog";
 import { memo, useMemo } from "react";
 import * as THREE from "three";
 import {
@@ -5,7 +6,6 @@ import {
   leafColor,
   pepperColor,
 } from "./plant-structure";
-import type { PepperProfile } from "@/lib/garden-plant-catalog";
 
 type Vec3 = [number, number, number];
 
@@ -50,7 +50,11 @@ const LeafCluster = memo(function LeafCluster({
     for (let i = 0; i < count; i += 1) {
       const a = (i / count) * Math.PI * 2 + seed * 0.1;
       out.push({
-        pos: [Math.cos(a) * size * 0.8, Math.sin(a * 0.5) * size * 0.3, Math.sin(a) * size * 0.8],
+        pos: [
+          Math.cos(a) * size * 0.8,
+          Math.sin(a * 0.5) * size * 0.3,
+          Math.sin(a) * size * 0.8,
+        ],
         rot: [0.4 + i * 0.2, a, 0.2],
         s: size * (0.8 + (i % 3) * 0.1),
       });
@@ -61,9 +65,19 @@ const LeafCluster = memo(function LeafCluster({
   return (
     <group position={position}>
       {leaves.map((l, i) => (
-        <mesh key={i} position={l.pos} rotation={l.rot} scale={[1.8, 0.35, 0.9]} castShadow>
+        <mesh
+          key={i}
+          position={l.pos}
+          rotation={l.rot}
+          scale={[1.8, 0.35, 0.9]}
+          castShadow
+        >
           <sphereGeometry args={[l.s, 8, 4]} />
-          <meshStandardMaterial color={color} roughness={0.6} side={THREE.DoubleSide} />
+          <meshStandardMaterial
+            color={color}
+            roughness={0.6}
+            side={THREE.DoubleSide}
+          />
         </mesh>
       ))}
     </group>
@@ -111,7 +125,11 @@ const FlowerCluster = memo(function FlowerCluster({
       {flowers.map((f, i) => (
         <mesh key={i} position={[f.x, f.y, f.z]}>
           <sphereGeometry args={[0.018 * scale, 6, 6]} />
-          <meshStandardMaterial color="#fef08a" emissive="#fef08a" emissiveIntensity={0.2} />
+          <meshStandardMaterial
+            color="#fef08a"
+            emissive="#fef08a"
+            emissiveIntensity={0.2}
+          />
         </mesh>
       ))}
     </group>
@@ -155,13 +173,23 @@ export const PepperPlantModel = memo(function PepperPlantModel({
   return (
     <group>
       <mesh position={[0, 0.02, 0]} receiveShadow>
-        <sphereGeometry args={[0.08 * scale, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <sphereGeometry
+          args={[0.08 * scale, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2]}
+        />
         <meshStandardMaterial color="#3d2817" roughness={1} />
       </mesh>
-      <StemMesh points={structure.stemPoints} radius={0.012 * scale} color="#4a3728" />
+      <StemMesh
+        points={structure.stemPoints}
+        radius={0.012 * scale}
+        color="#4a3728"
+      />
       {structure.branches.map((branch, i) => (
         <group key={i}>
-          <StemMesh points={branch.points} radius={0.006 * scale} color="#5a4738" />
+          <StemMesh
+            points={branch.points}
+            radius={0.006 * scale}
+            color="#5a4738"
+          />
           <LeafCluster
             position={branch.tipPosition}
             count={branch.leafCount}
@@ -180,7 +208,11 @@ export const PepperPlantModel = memo(function PepperPlantModel({
         </group>
       ))}
       {maturity > 0.3 && maturity < 0.7 && (
-        <FlowerCluster position={[0, structure.height * 0.6, 0]} count={5} scale={scale} />
+        <FlowerCluster
+          position={[0, structure.height * 0.6, 0]}
+          count={5}
+          scale={scale}
+        />
       )}
       {isSelected && (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>

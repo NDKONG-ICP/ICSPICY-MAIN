@@ -58,7 +58,11 @@ export function MobileBottomToolStrip({
         <Button
           type="button"
           size="sm"
-          variant={activeTool === "measure" || activeTool === "area" ? "default" : "ghost"}
+          variant={
+            activeTool === "measure" || activeTool === "area"
+              ? "default"
+              : "ghost"
+          }
           className="h-10 px-2"
           onClick={() => onTool(activeTool === "measure" ? "none" : "measure")}
           aria-label="Measure"
@@ -66,7 +70,14 @@ export function MobileBottomToolStrip({
           <Ruler className="h-4 w-4" />
         </Button>
         {!readOnly && (
-          <Button type="button" size="sm" variant="ghost" className="h-10 px-2" onClick={onSave} aria-label="Save">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-10 px-2"
+            onClick={onSave}
+            aria-label="Save"
+          >
             <Save className="h-4 w-4" />
           </Button>
         )}
@@ -75,10 +86,18 @@ export function MobileBottomToolStrip({
         type="button"
         size="sm"
         variant={catalogOpen ? "default" : "outline"}
-        className={cn("h-9 gap-1", catalogOpen && "shadow-[0_0_12px_rgba(249,115,22,0.35)]")}
+        className={cn(
+          "h-9 gap-1",
+          catalogOpen && "shadow-[0_0_12px_rgba(249,115,22,0.35)]",
+        )}
         onClick={onOpenCatalog}
       >
-        <ChevronUp className={cn("h-4 w-4 transition-transform", catalogOpen && "rotate-180")} />
+        <ChevronUp
+          className={cn(
+            "h-4 w-4 transition-transform",
+            catalogOpen && "rotate-180",
+          )}
+        />
         Catalog
       </Button>
     </div>

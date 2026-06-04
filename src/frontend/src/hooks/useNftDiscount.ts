@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useActor } from "./useActor";
 import { createActor } from "../backend";
+import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
 

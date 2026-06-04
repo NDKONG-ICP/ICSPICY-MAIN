@@ -1,8 +1,8 @@
 import { Principal as DfinityPrincipal } from "@dfinity/principal";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "./useAuth";
-import { useActorReady } from "./useActorReady";
 import { useIcrc7Actor } from "../lib/icrc7-actor";
+import { useActorReady } from "./useActorReady";
+import { useAuth } from "./useAuth";
 
 /** ICRC-7 token IDs owned by the connected principal (query). */
 export function useMyNftTokenIds() {

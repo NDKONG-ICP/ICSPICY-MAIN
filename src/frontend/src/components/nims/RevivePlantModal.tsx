@@ -39,22 +39,28 @@ export function RevivePlantModal({
         onOpenChange(next);
       }}
     >
-      <DialogContent data-ocid="nims-modal-revive-plant" className="max-w-md gap-6">
+      <DialogContent
+        data-ocid="nims-modal-revive-plant"
+        className="max-w-md gap-6"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-emerald-400">
             <Sprout className="size-5" aria-hidden />
             Revive plant
           </DialogTitle>
           <DialogDescription>
-            {plantLabel ?? "This plant"} will be restored to active growing status.
+            {plantLabel ?? "This plant"} will be restored to active growing
+            status.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 rounded-lg border border-emerald-500/30 bg-emerald-950/20 p-3 text-sm text-muted-foreground">
-          <p>This will restore the plant record and remove the death log entry.</p>
+          <p>
+            This will restore the plant record and remove the death log entry.
+          </p>
           {nftMayBeLost && (
             <p className="text-amber-400/90">
-              If the NFT was burned on death, it cannot be recovered automatically. The
-              plant record can still be revived.
+              If the NFT was burned on death, it cannot be recovered
+              automatically. The plant record can still be revived.
             </p>
           )}
           <label className="flex cursor-pointer items-center gap-2 text-foreground">
@@ -68,7 +74,11 @@ export function RevivePlantModal({
           </label>
         </div>
         <DialogFooter className="gap-2">
-          <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button

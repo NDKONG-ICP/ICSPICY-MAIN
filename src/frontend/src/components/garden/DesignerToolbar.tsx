@@ -8,16 +8,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { CameraPresetId, DesignerMode, GardenToolExtras } from "@/lib/garden-types";
 import type { GardenDesignerState } from "@/hooks/useGardenDesigner";
 import type { YieldEstimate } from "@/lib/garden-rules";
+import type {
+  CameraPresetId,
+  DesignerMode,
+  GardenToolExtras,
+} from "@/lib/garden-types";
 import { plantSummary } from "@/lib/garden-utils";
 import {
-  clampSatelliteZoom,
   MAX_SATELLITE_ZOOM,
   MIN_SATELLITE_ZOOM,
+  clampSatelliteZoom,
 } from "@/lib/satellite-tiles";
-import { ProfessionalToolsBar } from "./ProfessionalToolsBar";
+import { cn } from "@/lib/utils";
 import {
   Bird,
   Box,
@@ -26,18 +30,18 @@ import {
   FileImage,
   Layers,
   MapPin,
+  Mountain,
+  Play,
   Redo2,
   Save,
   Settings2,
   Share2,
   Undo2,
   Upload,
-  Play,
   User,
-  Mountain,
 } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { ProfessionalToolsBar } from "./ProfessionalToolsBar";
 
 type Props = {
   designer: GardenDesignerState;
@@ -73,7 +77,11 @@ type Props = {
   onPhotoUpload?: () => void;
 };
 
-const CAMERA_BUTTONS: { id: CameraPresetId; label: string; icon: typeof Box }[] = [
+const CAMERA_BUTTONS: {
+  id: CameraPresetId;
+  label: string;
+  icon: typeof Box;
+}[] = [
   { id: "sims", label: "Corner", icon: Box },
   { id: "top", label: "Top", icon: Layers },
   { id: "walk", label: "Walk", icon: User },
@@ -192,7 +200,10 @@ export function DesignerToolbar({
           <Button
             size="sm"
             variant={viewMode === "3d" ? "default" : "ghost"}
-            className={cn("rounded-none", viewMode === "3d" && "shadow-[0_0_12px_rgba(249,115,22,0.35)]")}
+            className={cn(
+              "rounded-none",
+              viewMode === "3d" && "shadow-[0_0_12px_rgba(249,115,22,0.35)]",
+            )}
             onClick={() => setViewMode("3d")}
           >
             <Box className="h-4 w-4 mr-1" /> 3D
@@ -200,7 +211,10 @@ export function DesignerToolbar({
           <Button
             size="sm"
             variant={viewMode === "2d" ? "default" : "ghost"}
-            className={cn("rounded-none", viewMode === "2d" && "shadow-[0_0_12px_rgba(249,115,22,0.35)]")}
+            className={cn(
+              "rounded-none",
+              viewMode === "2d" && "shadow-[0_0_12px_rgba(249,115,22,0.35)]",
+            )}
             onClick={() => setViewMode("2d")}
           >
             <Layers className="h-4 w-4 mr-1" /> 2D
@@ -212,10 +226,15 @@ export function DesignerToolbar({
               <Button
                 key={id}
                 size="sm"
-                variant={cameraPreset === id || (id === "walk" && walkModeActive) ? "default" : "ghost"}
+                variant={
+                  cameraPreset === id || (id === "walk" && walkModeActive)
+                    ? "default"
+                    : "ghost"
+                }
                 className={cn(
                   "rounded-none text-xs px-2",
-                  (cameraPreset === id || (id === "walk" && walkModeActive)) && "shadow-[0_0_10px_rgba(249,115,22,0.3)]",
+                  (cameraPreset === id || (id === "walk" && walkModeActive)) &&
+                    "shadow-[0_0_10px_rgba(249,115,22,0.3)]",
                 )}
                 onClick={() => {
                   if (id === "walk" && onWalkMode) onWalkMode();
@@ -231,10 +250,20 @@ export function DesignerToolbar({
         )}
         {!readOnly && (
           <>
-            <Button size="sm" variant="outline" className="border-white/10 bg-white/5" onClick={undo}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-white/10 bg-white/5"
+              onClick={undo}
+            >
               <Undo2 className="h-4 w-4" />
             </Button>
-            <Button size="sm" variant="outline" className="border-white/10 bg-white/5" onClick={redo}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-white/10 bg-white/5"
+              onClick={redo}
+            >
               <Redo2 className="h-4 w-4" />
             </Button>
           </>
@@ -261,50 +290,93 @@ export function DesignerToolbar({
       <div className="flex flex-wrap items-center gap-2">
         {!readOnly && isAuthenticated && (
           <>
-            <Button size="sm" onClick={() => void saveDesign()} disabled={isSaving} data-tour="save">
+            <Button
+              size="sm"
+              onClick={() => void saveDesign()}
+              disabled={isSaving}
+              data-tour="save"
+            >
               <Save className="h-4 w-4 mr-1" />
               {isSaving ? "Saving…" : isDirty ? "Save*" : "Save"}
             </Button>
-            <Button size="sm" variant="outline" className="border-white/10 bg-white/5" onClick={onLoadClick}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-white/10 bg-white/5"
+              onClick={onLoadClick}
+            >
               <Upload className="h-4 w-4 mr-1" /> Load
             </Button>
           </>
         )}
-        <Button size="sm" variant="outline" className="border-white/10 bg-white/5" onClick={() => void share()}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="border-white/10 bg-white/5"
+          onClick={() => void share()}
+        >
           <Share2 className="h-4 w-4 mr-1" /> Share
         </Button>
         {onPreviewToggle && (
           <Button
             size="sm"
             variant={previewOpen ? "default" : "outline"}
-            className={cn(!previewOpen && "border-white/10 bg-white/5", previewOpen && "shadow-[0_0_12px_rgba(249,115,22,0.35)]")}
+            className={cn(
+              !previewOpen && "border-white/10 bg-white/5",
+              previewOpen && "shadow-[0_0_12px_rgba(249,115,22,0.35)]",
+            )}
             onClick={onPreviewToggle}
           >
             <Play className="h-4 w-4 mr-1" /> Preview
           </Button>
         )}
         {onScreenshot && (
-          <Button size="sm" variant="outline" className="border-white/10 bg-white/5 hidden md:inline-flex" onClick={onScreenshot}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-white/10 bg-white/5 hidden md:inline-flex"
+            onClick={onScreenshot}
+          >
             <Camera className="h-4 w-4 mr-1" /> PNG
           </Button>
         )}
         {onExportSvg && (
-          <Button size="sm" variant="outline" className="border-white/10 bg-white/5 hidden md:inline-flex" onClick={onExportSvg}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-white/10 bg-white/5 hidden md:inline-flex"
+            onClick={onExportSvg}
+          >
             <FileImage className="h-4 w-4 mr-1" /> SVG
           </Button>
         )}
         {onExportPlan && (
-          <Button size="sm" variant="outline" className="border-white/10 bg-white/5 hidden lg:inline-flex" onClick={onExportPlan}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-white/10 bg-white/5 hidden lg:inline-flex"
+            onClick={onExportPlan}
+          >
             <FileImage className="h-4 w-4 mr-1" /> Plan
           </Button>
         )}
         {onShareCard && (
-          <Button size="sm" variant="outline" className="border-white/10 bg-white/5 hidden lg:inline-flex" onClick={onShareCard}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-white/10 bg-white/5 hidden lg:inline-flex"
+            onClick={onShareCard}
+          >
             <Share2 className="h-4 w-4 mr-1" /> Card
           </Button>
         )}
         {onGalleryClick && (
-          <Button size="sm" variant="outline" className="border-white/10 bg-white/5" onClick={onGalleryClick}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-white/10 bg-white/5"
+            onClick={onGalleryClick}
+          >
             🌿 Gallery
           </Button>
         )}
@@ -319,7 +391,12 @@ export function DesignerToolbar({
           </Button>
         )}
         {onEnvironmentClick && (
-          <Button size="sm" variant="outline" className="border-white/10 bg-white/5" onClick={onEnvironmentClick}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-white/10 bg-white/5"
+            onClick={onEnvironmentClick}
+          >
             <Settings2 className="h-4 w-4 mr-1" /> Env
           </Button>
         )}
@@ -341,17 +418,23 @@ export function DesignerToolbar({
               variant="ghost"
               className="h-8 px-2"
               disabled={satelliteZoom <= MIN_SATELLITE_ZOOM}
-              onClick={() => onSatelliteZoomChange(clampSatelliteZoom(satelliteZoom - 1))}
+              onClick={() =>
+                onSatelliteZoomChange(clampSatelliteZoom(satelliteZoom - 1))
+              }
             >
               −
             </Button>
-            <span className="text-xs tabular-nums w-8 text-center">🛰️{satelliteZoom}</span>
+            <span className="text-xs tabular-nums w-8 text-center">
+              🛰️{satelliteZoom}
+            </span>
             <Button
               size="sm"
               variant="ghost"
               className="h-8 px-2"
               disabled={satelliteZoom >= MAX_SATELLITE_ZOOM}
-              onClick={() => onSatelliteZoomChange(clampSatelliteZoom(satelliteZoom + 1))}
+              onClick={() =>
+                onSatelliteZoomChange(clampSatelliteZoom(satelliteZoom + 1))
+              }
             >
               +
             </Button>
@@ -366,7 +449,10 @@ export function DesignerToolbar({
           />
           Public
         </label>
-        <Badge variant="secondary" className="ml-auto bg-white/10 border-white/10">
+        <Badge
+          variant="secondary"
+          className="ml-auto bg-white/10 border-white/10"
+        >
           {plantSummary(design)}
         </Badge>
       </div>
@@ -401,13 +487,16 @@ export function DesignerToolbar({
           <span>
             Est. yield{" "}
             <strong>
-              {yieldEstimate.estimatedLbsMin.toFixed(1)}–{yieldEstimate.estimatedLbsMax.toFixed(1)} lbs
+              {yieldEstimate.estimatedLbsMin.toFixed(1)}–
+              {yieldEstimate.estimatedLbsMax.toFixed(1)} lbs
             </strong>
           </span>
           {yieldEstimate.companionBonusPct > 0 && (
             <>
               <span className="text-muted-foreground">·</span>
-              <span className="text-green-400">+{yieldEstimate.companionBonusPct}% companions</span>
+              <span className="text-green-400">
+                +{yieldEstimate.companionBonusPct}% companions
+              </span>
             </>
           )}
         </div>

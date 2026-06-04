@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  fetchWeatherData,
   NURSERY_LAT,
   NURSERY_LNG,
   type WeatherData,
+  fetchWeatherData,
 } from "../lib/weather-service";
 
 export function useWeather(lat?: number, lng?: number) {
@@ -20,4 +20,8 @@ export function useWeather(lat?: number, lng?: number) {
 }
 
 export type { WeatherData, WeatherContext } from "../lib/weather-service";
-export { weatherToContext, NURSERY_LAT, NURSERY_LNG } from "../lib/weather-service";
+export {
+  weatherToContext,
+  NURSERY_LAT,
+  NURSERY_LNG,
+} from "../lib/weather-service";

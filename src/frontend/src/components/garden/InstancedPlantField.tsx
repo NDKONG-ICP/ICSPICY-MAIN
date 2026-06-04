@@ -1,6 +1,6 @@
+import type { PlantPlacement } from "@/lib/garden-types";
 import { memo, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import type { PlantPlacement } from "@/lib/garden-types";
 
 const MAX_INSTANCED = 10;
 
@@ -12,7 +12,10 @@ function InstancedVarietyGroup({
   color: string;
 }) {
   const ref = useRef<THREE.InstancedMesh>(null);
-  const geometry = useMemo(() => new THREE.CylinderGeometry(0.06, 0.1, 0.35, 6), []);
+  const geometry = useMemo(
+    () => new THREE.CylinderGeometry(0.06, 0.1, 0.35, 6),
+    [],
+  );
   const material = useMemo(
     () => new THREE.MeshStandardMaterial({ color, roughness: 0.75 }),
     [color],
@@ -33,11 +36,18 @@ function InstancedVarietyGroup({
   }, [plants]);
 
   return (
-    <instancedMesh ref={ref} args={[geometry, material, plants.length]} castShadow receiveShadow />
+    <instancedMesh
+      ref={ref}
+      args={[geometry, material, plants.length]}
+      castShadow
+      receiveShadow
+    />
   );
 }
 
-export const InstancedPlantField = memo(function InstancedPlantField({ plants }: { plants: PlantPlacement[] }) {
+export const InstancedPlantField = memo(function InstancedPlantField({
+  plants,
+}: { plants: PlantPlacement[] }) {
   const groups = useMemo(() => {
     const byKey = new Map<string, PlantPlacement[]>();
     for (const p of plants) {
@@ -46,7 +56,11 @@ export const InstancedPlantField = memo(function InstancedPlantField({ plants }:
       list.push(p);
       byKey.set(key, list);
     }
-    const instanced: { key: string; plants: PlantPlacement[]; color: string }[] = [];
+    const instanced: {
+      key: string;
+      plants: PlantPlacement[];
+      color: string;
+    }[] = [];
     for (const [key, list] of byKey) {
       if (list.length > MAX_INSTANCED) {
         instanced.push({ key, plants: list, color: list[0].color });

@@ -1,20 +1,20 @@
+import { OrderStatus } from "@/backend";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  type AdminOrderPublic,
+  type AdminOrderStatusFilter,
   adminFilterKey,
   useAdminOrderCounts,
   useAdminOrders,
   useMarkOrdersSeenAdmin,
   useNewOrderCountAdmin,
   useUpdateOrderStatusAdmin,
-  type AdminOrderPublic,
-  type AdminOrderStatusFilter,
 } from "@/hooks/useAdminShop";
-import { OrderStatus } from "@/backend";
 import { formatCents } from "@/hooks/useNims";
-import { exportAdminOrdersCsv } from "@/lib/nims-export-mappers";
 import { candidOpt } from "@/lib/candid-opt";
+import { exportAdminOrdersCsv } from "@/lib/nims-export-mappers";
 import { Download, Package } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -96,7 +96,9 @@ function ShippingAddressPanel({ order }: { order: AdminOrderPublic }) {
           <p className="font-medium text-foreground">{structured.full_name}</p>
           <p className="text-foreground/90">{structured.street_line1}</p>
           {candidOpt(structured.street_line2) && (
-            <p className="text-foreground/90">{candidOpt(structured.street_line2)}</p>
+            <p className="text-foreground/90">
+              {candidOpt(structured.street_line2)}
+            </p>
           )}
           <p className="text-foreground/90">
             {structured.city}, {structured.state} {structured.zip}
@@ -119,7 +121,10 @@ export function AdminOrdersTab() {
   const markSeen = useMarkOrdersSeenAdmin();
 
   const maxOrderId = useMemo(
-    () => (orders.length > 0 ? orders.reduce((max, o) => (o.id > max ? o.id : max), 0n) : 0n),
+    () =>
+      orders.length > 0
+        ? orders.reduce((max, o) => (o.id > max ? o.id : max), 0n)
+        : 0n,
     [orders],
   );
 
@@ -147,35 +152,40 @@ export function AdminOrdersTab() {
           className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100"
           data-ocid="admin-new-orders-banner"
         >
-          <span className="font-semibold">🔴 {newOrderCount} new order{newOrderCount === 1 ? "" : "s"}</span>
-          <span className="text-red-200/80 ml-2">since you last reviewed orders</span>
+          <span className="font-semibold">
+            🔴 {newOrderCount} new order{newOrderCount === 1 ? "" : "s"}
+          </span>
+          <span className="text-red-200/80 ml-2">
+            since you last reviewed orders
+          </span>
         </div>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
-        {FILTER_TABS.map((tab) => {
-          const selected = adminFilterKey(filter) === adminFilterKey(tab.filter);
-          return (
-            <Button
-              key={tab.label}
-              type="button"
-              size="sm"
-              variant={selected ? "default" : "outline"}
-              className="h-8 text-xs gap-1.5"
-              onClick={() => setFilter(tab.filter)}
-              data-ocid={`admin-orders-filter-${adminFilterKey(tab.filter)}`}
-            >
-              {tab.label}
-              <Badge
-                variant="secondary"
-                className="text-[10px] px-1.5 py-0 h-5 font-normal"
+          {FILTER_TABS.map((tab) => {
+            const selected =
+              adminFilterKey(filter) === adminFilterKey(tab.filter);
+            return (
+              <Button
+                key={tab.label}
+                type="button"
+                size="sm"
+                variant={selected ? "default" : "outline"}
+                className="h-8 text-xs gap-1.5"
+                onClick={() => setFilter(tab.filter)}
+                data-ocid={`admin-orders-filter-${adminFilterKey(tab.filter)}`}
               >
-                {counts[tab.countKey]}
-              </Badge>
-            </Button>
-          );
-        })}
+                {tab.label}
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] px-1.5 py-0 h-5 font-normal"
+                >
+                  {counts[tab.countKey]}
+                </Badge>
+              </Button>
+            );
+          })}
         </div>
         <Button
           size="sm"
@@ -224,8 +234,7 @@ export function AdminOrdersTab() {
                       ).toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground font-mono mt-0.5 break-all">
-                      Buyer:{" "}
-                      {truncatePrincipal(order.buyer.toText())}
+                      Buyer: {truncatePrincipal(order.buyer.toText())}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {order.pickup ? (
@@ -271,24 +280,27 @@ export function AdminOrdersTab() {
 
                 {order.line_nft_token_ids.length > 0 && (
                   <div className="text-xs">
-                    <span className="text-muted-foreground">NFT token IDs: </span>
+                    <span className="text-muted-foreground">
+                      NFT token IDs:{" "}
+                    </span>
                     <span className="font-mono text-foreground/90 break-all">
-                      {order.line_nft_token_ids.map((t) => t.toString()).join(", ")}
+                      {order.line_nft_token_ids
+                        .map((t) => t.toString())
+                        .join(", ")}
                     </span>
                   </div>
                 )}
 
-                {order.pickup &&
-                  order.pickup_claim_tokens.length > 0 && (
-                    <div className="text-xs space-y-0.5">
-                      <span className="text-muted-foreground">
-                        Pickup claim tokens
-                      </span>
-                      <div className="font-mono text-[11px] break-all text-foreground/90 bg-muted/30 rounded-md px-2 py-1 border border-border/60">
-                        {order.pickup_claim_tokens.join(", ")}
-                      </div>
+                {order.pickup && order.pickup_claim_tokens.length > 0 && (
+                  <div className="text-xs space-y-0.5">
+                    <span className="text-muted-foreground">
+                      Pickup claim tokens
+                    </span>
+                    <div className="font-mono text-[11px] break-all text-foreground/90 bg-muted/30 rounded-md px-2 py-1 border border-border/60">
+                      {order.pickup_claim_tokens.join(", ")}
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {(canFulfill(order) || canCancel(order)) && (
                   <div className="flex flex-wrap gap-2 pt-1">

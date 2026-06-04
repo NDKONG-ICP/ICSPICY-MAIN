@@ -51,10 +51,13 @@ export function TransplantModal({
         : currentContainer;
   const availableOptions = useMemo(() => {
     if (!inventoryMode || !current) return TRANSPLANT_SIZE_OPTIONS;
-    return TRANSPLANT_SIZE_OPTIONS.filter((row) => isContainerUpgrade(current, row.size));
+    return TRANSPLANT_SIZE_OPTIONS.filter((row) =>
+      isContainerUpgrade(current, row.size),
+    );
   }, [current, inventoryMode]);
 
-  const defaultKey = availableOptions[0]?.value ?? TRANSPLANT_SIZE_OPTIONS[0]?.value ?? "gal1";
+  const defaultKey =
+    availableOptions[0]?.value ?? TRANSPLANT_SIZE_OPTIONS[0]?.value ?? "gal1";
   const [selected, setSelected] = useState<string>(defaultKey);
   const [otherLabel, setOtherLabel] = useState("custom container");
   const [locationNotes, setLocationNotes] = useState("");
@@ -86,120 +89,132 @@ export function TransplantModal({
           onMarkDead?.();
         }}
       />
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-ocid="nims-modal-transplant" className="max-w-md gap-6">
-        <DialogHeader>
-          <DialogTitle>{inventoryMode ? "Repot plant" : "Record transplant"}</DialogTitle>
-          <DialogDescription>
-            {inventoryMode
-              ? `${plantLabel ?? "Plant"} — choose a larger or different container.`
-              : (plantLabel ?? "Choose the downstream container NFT provenance inherits.")}
-          </DialogDescription>
-        </DialogHeader>
-        {inventoryMode && current && (
-          <p className="text-sm text-muted-foreground">
-            Current container:{" "}
-            <span className="font-medium text-foreground">
-              {containerSizeLabel(currentContainer)}
-            </span>
-          </p>
-        )}
-        <div className="space-y-5">
-          <div className="space-y-2">
-            <Label>{inventoryMode ? "New container" : "Container"}</Label>
-            {availableOptions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No larger containers available for this plant.
-              </p>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {availableOptions.map((r) => (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent
+          data-ocid="nims-modal-transplant"
+          className="max-w-md gap-6"
+        >
+          <DialogHeader>
+            <DialogTitle>
+              {inventoryMode ? "Repot plant" : "Record transplant"}
+            </DialogTitle>
+            <DialogDescription>
+              {inventoryMode
+                ? `${plantLabel ?? "Plant"} — choose a larger or different container.`
+                : (plantLabel ??
+                  "Choose the downstream container NFT provenance inherits.")}
+            </DialogDescription>
+          </DialogHeader>
+          {inventoryMode && current && (
+            <p className="text-sm text-muted-foreground">
+              Current container:{" "}
+              <span className="font-medium text-foreground">
+                {containerSizeLabel(currentContainer)}
+              </span>
+            </p>
+          )}
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label>{inventoryMode ? "New container" : "Container"}</Label>
+              {availableOptions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No larger containers available for this plant.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {availableOptions.map((r) => (
+                    <Button
+                      key={r.value}
+                      size="sm"
+                      type="button"
+                      variant={selected === r.value ? "default" : "outline"}
+                      data-ocid={`nims-transplant-${r.value}`}
+                      className="h-auto whitespace-normal px-3 py-2 text-xs"
+                      onClick={() => setSelected(r.value)}
+                    >
+                      {r.label}
+                    </Button>
+                  ))}
                   <Button
-                    key={r.value}
                     size="sm"
                     type="button"
-                    variant={selected === r.value ? "default" : "outline"}
-                    data-ocid={`nims-transplant-${r.value}`}
-                    className="h-auto whitespace-normal px-3 py-2 text-xs"
-                    onClick={() => setSelected(r.value)}
+                    variant={selected === "other" ? "default" : "outline"}
+                    data-ocid="nims-transplant-other"
+                    className="h-auto text-xs"
+                    onClick={() => setSelected("other")}
                   >
-                    {r.label}
+                    Other
                   </Button>
-                ))}
-                <Button
-                  size="sm"
-                  type="button"
-                  variant={selected === "other" ? "default" : "outline"}
-                  data-ocid="nims-transplant-other"
-                  className="h-auto text-xs"
-                  onClick={() => setSelected("other")}
-                >
-                  Other
-                </Button>
+                </div>
+              )}
+            </div>
+            {selected === "other" && (
+              <div className="space-y-2">
+                <Label htmlFor="nims-transplant-other-txt">Custom label</Label>
+                <Input
+                  id="nims-transplant-other-txt"
+                  data-ocid="nims-transplant-custom-label"
+                  value={otherLabel}
+                  onChange={(e) => setOtherLabel(e.target.value)}
+                />
+              </div>
+            )}
+            {inventoryMode && (
+              <div className="space-y-2">
+                <Label htmlFor="nims-transplant-location">
+                  Location notes (optional)
+                </Label>
+                <Input
+                  id="nims-transplant-location"
+                  value={locationNotes}
+                  onChange={(e) => setLocationNotes(e.target.value)}
+                  placeholder="Greenhouse bench B, south row…"
+                />
               </div>
             )}
           </div>
-          {selected === "other" && (
-            <div className="space-y-2">
-              <Label htmlFor="nims-transplant-other-txt">Custom label</Label>
-              <Input
-                id="nims-transplant-other-txt"
-                data-ocid="nims-transplant-custom-label"
-                value={otherLabel}
-                onChange={(e) => setOtherLabel(e.target.value)}
-              />
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+            {onMarkDead ? (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                data-ocid="nims-transplant-mark-dead"
+                onClick={() => setConfirmDeadOpen(true)}
+              >
+                Mark dead
+              </Button>
+            ) : (
+              <span />
+            )}
+            <div className="flex gap-2 sm:ml-auto">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                data-ocid="nims-transplant-submit"
+                disabled={resolved === null || availableOptions.length === 0}
+                onClick={() => {
+                  if (resolved) {
+                    void onSubmit({
+                      container_size: resolved,
+                      location_notes: locationNotes.trim() || undefined,
+                    });
+                  }
+                  onOpenChange(false);
+                }}
+              >
+                {inventoryMode ? "Update container" : "Save transplant"}
+              </Button>
             </div>
-          )}
-          {inventoryMode && (
-            <div className="space-y-2">
-              <Label htmlFor="nims-transplant-location">Location notes (optional)</Label>
-              <Input
-                id="nims-transplant-location"
-                value={locationNotes}
-                onChange={(e) => setLocationNotes(e.target.value)}
-                placeholder="Greenhouse bench B, south row…"
-              />
-            </div>
-          )}
-        </div>
-        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
-          {onMarkDead ? (
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              data-ocid="nims-transplant-mark-dead"
-              onClick={() => setConfirmDeadOpen(true)}
-            >
-              Mark dead
-            </Button>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-2 sm:ml-auto">
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              data-ocid="nims-transplant-submit"
-              disabled={resolved === null || availableOptions.length === 0}
-              onClick={() => {
-                if (resolved) {
-                  void onSubmit({
-                    container_size: resolved,
-                    location_notes: locationNotes.trim() || undefined,
-                  });
-                }
-                onOpenChange(false);
-              }}
-            >
-              {inventoryMode ? "Update container" : "Save transplant"}
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -6,56 +6,45 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
-import type { PlantStage as BackendPlantStage, TransplantInput } from "../backend";
-import { StageBadge } from "../components/ui/StageBadge";
-import { NftPlantFlipCard } from "../components/NftPlantFlipCard";
-import { uploadsUrl } from "@/lib/uploads-canister";
-import type { DeathCause } from "../declarations/backend.did";
-import {
-  LogFeedingModal,
-  LogPestModal,
-  LogWateringModal,
-  HarvestSeedsModal,
-  MarkDeadModal,
-  NfcTagLinkModal,
-  PlantQuickActions,
-  PlantTimeline,
-  RemovePlantModal,
-  RevivePlantModal,
-  TransplantModal,
-  WeatherBar,
-  WeatherHistoryCharts,
-  NimsStoredPhoto,
-  type QuickPlantAction,
-} from "../components/nims";
-import { useAuth } from "../hooks/useAuth";
-import { useIsAdmin, useTransplantCell } from "../hooks/useBackend";
-import {
-  useAddNimsPlantPhoto,
-  useAddWeatherSnapshot,
-  useLogFeeding,
-  useLogPest,
-  useLogWatering,
-  useMarkCellDead,
-  useMarkPlantDead,
-  usePlantHealth,
-  useRevivePlant,
-} from "../hooks/useNimsDashboard";
-import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
-import { useWeather } from "../hooks/useWeather";
-import { useAutoWeatherCapture } from "../hooks/useAutoWeatherCapture";
-import { weatherDataToSnapshot } from "@/lib/weather-snapshot";
+import { pestSeverityLabel } from "@/lib/candid-display";
 import {
   findDeathRecord,
   isPlantMarkedDead,
   nftLikelyLostOnDeath,
 } from "@/lib/plant-lifecycle-utils";
-import { useNimsLocation } from "../hooks/useNimsLocation";
-import { useHarvestSeeds } from "../hooks/useSeedBank";
+import { uploadsUrl } from "@/lib/uploads-canister";
+import { weatherDataToSnapshot } from "@/lib/weather-snapshot";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
+import type {
+  PlantStage as BackendPlantStage,
+  TransplantInput,
+} from "../backend";
+import { NftPlantFlipCard } from "../components/NftPlantFlipCard";
+import {
+  HarvestSeedsModal,
+  LogFeedingModal,
+  LogPestModal,
+  LogWateringModal,
+  MarkDeadModal,
+  NfcTagLinkModal,
+  NimsStoredPhoto,
+  PlantQuickActions,
+  PlantTimeline,
+  type QuickPlantAction,
+  RemovePlantModal,
+  RevivePlantModal,
+  TransplantModal,
+  WeatherBar,
+  WeatherHistoryCharts,
+} from "../components/nims";
+import { StageBadge } from "../components/ui/StageBadge";
+import type { DeathCause } from "../declarations/backend.did";
+import { useAuth } from "../hooks/useAuth";
+import { useAutoWeatherCapture } from "../hooks/useAutoWeatherCapture";
+import { useIsAdmin, useTransplantCell } from "../hooks/useBackend";
 import {
   formatCents,
   stageLabel,
@@ -67,8 +56,22 @@ import {
   useTransplantPlant,
   useVarieties,
 } from "../hooks/useNims";
-import { pestSeverityLabel } from "@/lib/candid-display";
+import {
+  useAddNimsPlantPhoto,
+  useAddWeatherSnapshot,
+  useLogFeeding,
+  useLogPest,
+  useLogWatering,
+  useMarkCellDead,
+  useMarkPlantDead,
+  usePlantHealth,
+  useRevivePlant,
+} from "../hooks/useNimsDashboard";
+import { useNimsLocation } from "../hooks/useNimsLocation";
+import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { useHarvestSeeds } from "../hooks/useSeedBank";
+import { useWeather } from "../hooks/useWeather";
 
 function fmtTs(ts: bigint | undefined): string {
   if (ts === undefined) return "—";
@@ -169,8 +172,9 @@ export default function PlantDetailPage() {
     unwrapOpt(plant.sold_to)?.toText() === callerText;
   const canEdit = isOwner;
   const inTray = !plant.is_transplanted && plant.tray_id !== 0n;
-  const inInventory = (plant.container_size?.length ?? 0) > 0 && !plant.is_transplanted;
-  const latestPhoto = lc.photos.reduce<typeof lc.photos[number] | null>(
+  const inInventory =
+    (plant.container_size?.length ?? 0) > 0 && !plant.is_transplanted;
+  const latestPhoto = lc.photos.reduce<(typeof lc.photos)[number] | null>(
     (best, photo) => (!best || photo.timestamp > best.timestamp ? photo : best),
     null,
   );
@@ -348,7 +352,8 @@ export default function PlantDetailPage() {
             <div>
               <p className="font-medium">Verified on-chain provenance</p>
               <p className="text-muted-foreground text-xs">
-                Lifecycle data stored on the Internet Computer. NFT travels with ownership.
+                Lifecycle data stored on the Internet Computer. NFT travels with
+                ownership.
               </p>
             </div>
           </div>
@@ -358,12 +363,18 @@ export default function PlantDetailPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="feeding">Feeding ({lc.feedingLog.length})</TabsTrigger>
-          <TabsTrigger value="watering">Watering ({lc.wateringLog.length})</TabsTrigger>
+          <TabsTrigger value="feeding">
+            Feeding ({lc.feedingLog.length})
+          </TabsTrigger>
+          <TabsTrigger value="watering">
+            Watering ({lc.wateringLog.length})
+          </TabsTrigger>
           <TabsTrigger value="pests">Pests ({lc.pestLog.length})</TabsTrigger>
           <TabsTrigger value="photos">Photos ({lc.photos.length})</TabsTrigger>
           <TabsTrigger value="notes">Notes ({lc.notes.length})</TabsTrigger>
-          <TabsTrigger value="weather">Weather ({lc.weatherSnapshots.length})</TabsTrigger>
+          <TabsTrigger value="weather">
+            Weather ({lc.weatherSnapshots.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-2 text-sm">
@@ -374,7 +385,8 @@ export default function PlantDetailPage() {
           {variety && (
             <>
               <p>
-                Heat: {variety.scovilleMin.toString()}–{variety.scovilleMax.toString()} SHU
+                Heat: {variety.scovilleMin.toString()}–
+                {variety.scovilleMax.toString()} SHU
               </p>
               <p>{variety.description}</p>
             </>
@@ -396,12 +408,18 @@ export default function PlantDetailPage() {
 
         <TabsContent value="feeding" className="mt-4">
           {lc.feedingLog.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No feeding entries yet.</p>
+            <p className="text-muted-foreground text-sm">
+              No feeding entries yet.
+            </p>
           ) : (
             <ul className="space-y-2 text-sm">
               {lc.feedingLog.map((f) => (
-                <li key={f.id.toString()} className="border-b border-border pb-2">
-                  {fmtTs(f.date)} — {f.product_name} ({f.nutrient_type}) {f.dosage_amount}
+                <li
+                  key={f.id.toString()}
+                  className="border-b border-border pb-2"
+                >
+                  {fmtTs(f.date)} — {f.product_name} ({f.nutrient_type}){" "}
+                  {f.dosage_amount}
                 </li>
               ))}
             </ul>
@@ -410,7 +428,9 @@ export default function PlantDetailPage() {
 
         <TabsContent value="watering" className="mt-4">
           {lc.wateringLog.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No watering entries.</p>
+            <p className="text-muted-foreground text-sm">
+              No watering entries.
+            </p>
           ) : (
             <ul className="space-y-2 text-sm">
               {lc.wateringLog.map((w, i) => (
@@ -424,12 +444,15 @@ export default function PlantDetailPage() {
 
         <TabsContent value="pests" className="mt-4">
           {lc.pestLog.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No pest issues logged.</p>
+            <p className="text-muted-foreground text-sm">
+              No pest issues logged.
+            </p>
           ) : (
             <ul className="space-y-2 text-sm">
               {lc.pestLog.map((p, i) => (
                 <li key={i} className="border-b border-border pb-2">
-                  {fmtTs(p.timestamp)} — {p.pestName} ({pestSeverityLabel(p.severity)})
+                  {fmtTs(p.timestamp)} — {p.pestName} (
+                  {pestSeverityLabel(p.severity)})
                 </li>
               ))}
             </ul>
@@ -442,7 +465,10 @@ export default function PlantDetailPage() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {lc.photos.map((p, i) => (
-                <div key={i} className="rounded-lg overflow-hidden aspect-square border border-border">
+                <div
+                  key={i}
+                  className="rounded-lg overflow-hidden aspect-square border border-border"
+                >
                   <NimsStoredPhoto
                     path={p.url}
                     alt={unwrapOpt(p.caption) ?? "Plant photo"}
@@ -457,14 +483,19 @@ export default function PlantDetailPage() {
         <TabsContent value="notes" className="mt-4 space-y-4">
           {lc.notes.map((n, i) => (
             <div key={i} className="text-sm border-l-2 border-primary pl-3">
-              <p className="text-muted-foreground text-xs">{fmtTs(n.timestamp)}</p>
+              <p className="text-muted-foreground text-xs">
+                {fmtTs(n.timestamp)}
+              </p>
               <p>{n.text}</p>
             </div>
           ))}
           {canEdit && (
             <div className="space-y-2 pt-4 border-t border-border">
               <Label>Add note</Label>
-              <Textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} />
+              <Textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+              />
               <Button
                 size="sm"
                 disabled={!noteText.trim() || addNote.isPending}
@@ -495,13 +526,20 @@ export default function PlantDetailPage() {
             capture="environment"
             className="sr-only"
             data-ocid="nims-plant-photo-input"
-            disabled={uploadPhoto.isPending || addPlantPhoto.isPending || plant.is_cooked}
+            disabled={
+              uploadPhoto.isPending ||
+              addPlantPhoto.isPending ||
+              plant.is_cooked
+            }
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (!file) return;
               void (async () => {
                 try {
-                  const path = await uploadPhoto.mutateAsync({ plantId: id, file });
+                  const path = await uploadPhoto.mutateAsync({
+                    plantId: id,
+                    file,
+                  });
                   await addPlantPhoto.mutateAsync({
                     plantId: id,
                     path,
@@ -509,7 +547,9 @@ export default function PlantDetailPage() {
                   });
                   toast.success("Photo uploaded");
                 } catch (err) {
-                  toast.error(err instanceof Error ? err.message : "Upload failed");
+                  toast.error(
+                    err instanceof Error ? err.message : "Upload failed",
+                  );
                 } finally {
                   if (photoInputRef.current) photoInputRef.current.value = "";
                 }
@@ -524,7 +564,12 @@ export default function PlantDetailPage() {
               ...(canEdit ? [] : (["harvest_seeds", "nfc_tag"] as const)),
               ...(isAdmin
                 ? []
-                : (["list_sale", "mark_dead", "revive_plant", "remove_plant"] as const)),
+                : ([
+                    "list_sale",
+                    "mark_dead",
+                    "revive_plant",
+                    "remove_plant",
+                  ] as const)),
             ]}
             disabled={
               plantIsDead
@@ -537,7 +582,9 @@ export default function PlantDetailPage() {
             open={deadOpen}
             onOpenChange={setDeadOpen}
             plantLabel={plant.variety}
-            onUploadPhoto={(file) => uploadPhoto.mutateAsync({ plantId: id, file })}
+            onUploadPhoto={(file) =>
+              uploadPhoto.mutateAsync({ plantId: id, file })
+            }
             onConfirm={async ({ reason, photoPath }) => {
               const cause: DeathCause = { Unknown: null };
               try {
@@ -605,7 +652,12 @@ export default function PlantDetailPage() {
             open={feedOpen}
             onOpenChange={setFeedOpen}
             plantLabel={plant.variety}
-            onSubmit={async ({ productName, nutrientType, dosageAmount, notes }) => {
+            onSubmit={async ({
+              productName,
+              nutrientType,
+              dosageAmount,
+              notes,
+            }) => {
               try {
                 await logFeed.mutateAsync({
                   plantId: id,
@@ -626,10 +678,17 @@ export default function PlantDetailPage() {
             open={pestOpen}
             onOpenChange={setPestOpen}
             plantLabel={plant.variety}
-            onUploadPhoto={(file) => uploadPhoto.mutateAsync({ plantId: id, file })}
+            onUploadPhoto={(file) =>
+              uploadPhoto.mutateAsync({ plantId: id, file })
+            }
             onSubmit={async ({ pestName, severity, notes, photoPath }) => {
               try {
-                await logPest.mutateAsync({ plantId: id, pestName, severity, notes });
+                await logPest.mutateAsync({
+                  plantId: id,
+                  pestName,
+                  severity,
+                  notes,
+                });
                 if (photoPath) {
                   await addPlantPhoto.mutateAsync({
                     plantId: id,
@@ -654,12 +713,15 @@ export default function PlantDetailPage() {
                 try {
                   await transplantCell.mutateAsync({
                     plant_id: id,
-                    container_size: container_size as unknown as TransplantInput["container_size"],
+                    container_size:
+                      container_size as unknown as TransplantInput["container_size"],
                   });
                   toast.success("Transplanted to inventory");
                   void navigate({ to: "/nims" });
                 } catch (e) {
-                  toast.error(e instanceof Error ? e.message : "Transplant failed");
+                  toast.error(
+                    e instanceof Error ? e.message : "Transplant failed",
+                  );
                 }
               }}
             />
@@ -711,7 +773,11 @@ export default function PlantDetailPage() {
             isPending={harvestSeeds.isPending}
             onSubmit={async ({ quantity, notes }) => {
               try {
-                await harvestSeeds.mutateAsync({ plantId: id, quantity, notes });
+                await harvestSeeds.mutateAsync({
+                  plantId: id,
+                  quantity,
+                  notes,
+                });
                 setHarvestOpen(false);
                 toast.success("Seeds saved to your Seed Bank");
               } catch (e) {

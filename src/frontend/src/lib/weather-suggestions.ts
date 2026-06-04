@@ -54,10 +54,7 @@ export function getWeatherSuggestions(
     });
   }
 
-  if (
-    weather.moon.phase === "New Moon" ||
-    weather.moon.phase === "Full Moon"
-  ) {
+  if (weather.moon.phase === "New Moon" || weather.moon.phase === "Full Moon") {
     suggestions.push({
       text: `${weather.moon.phase} — good time for planting root crops`,
       type: "tip",

@@ -13,8 +13,8 @@ import type {
   _SERVICE,
 } from "../declarations/backend.did";
 import {
-  createGerminationScheduleEvents,
   type GerminationScheduleInput,
+  createGerminationScheduleEvents,
 } from "../lib/planting-schedule-utils";
 import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
@@ -36,7 +36,10 @@ export function useZoneSchedule(zone: string, month: number) {
     queryKey: ["zoneSchedule", zone, month],
     queryFn: async (): Promise<Array<ZoneRecommendation>> => {
       if (!svc) return [];
-      const result: ZoneSchedule = await svc.getZoneSchedule(zone, BigInt(month));
+      const result: ZoneSchedule = await svc.getZoneSchedule(
+        zone,
+        BigInt(month),
+      );
       return result.recommendations;
     },
     enabled: !!svc && month >= 1 && month <= 12,

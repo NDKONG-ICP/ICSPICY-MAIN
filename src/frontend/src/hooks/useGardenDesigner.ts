@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import { playPlacementSound } from "@/lib/garden-export";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type {
   GardenDesign,
@@ -44,7 +44,10 @@ export function useGardenDesigner({
   const futureRef = useRef<GardenDesign[]>([]);
 
   const pushHistory = useCallback((prev: GardenDesign) => {
-    historyRef.current = [...historyRef.current.slice(-(HISTORY_MAX - 1)), cloneDesign(prev)];
+    historyRef.current = [
+      ...historyRef.current.slice(-(HISTORY_MAX - 1)),
+      cloneDesign(prev),
+    ];
     futureRef.current = [];
   }, []);
 
@@ -363,7 +366,10 @@ export function useGardenDesigner({
         e.preventDefault();
         undo();
       }
-      if ((e.ctrlKey || e.metaKey) && (e.key === "Z" || (e.key === "z" && e.shiftKey))) {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === "Z" || (e.key === "z" && e.shiftKey))
+      ) {
         e.preventDefault();
         redo();
       }
@@ -389,23 +395,15 @@ export function useGardenDesigner({
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [
-    deleteItem,
-    readOnly,
-    redo,
-    rotateItem,
-    selectedId,
-    selectedType,
-    undo,
-  ]);
+  }, [deleteItem, readOnly, redo, rotateItem, selectedId, selectedType, undo]);
 
   const selectedPlant =
     selectedType === "plant"
-      ? design.plants.find((p) => p.id === selectedId) ?? null
+      ? (design.plants.find((p) => p.id === selectedId) ?? null)
       : null;
   const selectedStructure =
     selectedType === "structure"
-      ? design.structures.find((s) => s.id === selectedId) ?? null
+      ? (design.structures.find((s) => s.id === selectedId) ?? null)
       : null;
 
   return {

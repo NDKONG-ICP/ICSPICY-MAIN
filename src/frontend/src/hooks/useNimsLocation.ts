@@ -27,7 +27,11 @@ export function useNimsLocation() {
   const needsPrompt = preference == null;
 
   useEffect(() => {
-    if (preference === "gps" && device.location == null && device.permission === "prompt") {
+    if (
+      preference === "gps" &&
+      device.location == null &&
+      device.permission === "prompt"
+    ) {
       device.requestLocation();
     }
   }, [preference, device.location, device.permission, device.requestLocation]);

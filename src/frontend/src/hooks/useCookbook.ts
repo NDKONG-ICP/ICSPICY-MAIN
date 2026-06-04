@@ -1,4 +1,12 @@
 import type { ActorSubclass } from "@dfinity/agent";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { Backend } from "../backend";
 import type {
   RecipeCategory,
@@ -6,24 +14,18 @@ import type {
   RecipePublic,
   _SERVICE,
 } from "../declarations/backend.did";
-import {
-  keepPreviousData,
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useQueries,
-} from "@tanstack/react-query";
-import { useBackendActor, useIsAdmin } from "./useBackend";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
+import { useBackendActor, useIsAdmin } from "./useBackend";
 
 export const COOKBOOK_PAGE_SIZE = 12n;
 
 export type { RecipePublic, RecipeCategory } from "../declarations/backend.did";
 
 /** Raw `@dfinity` actor behind the `Backend` envelope (correct Candid decoding). */
-function cookbookService(actor: Backend | null): ActorSubclass<_SERVICE> | null {
+function cookbookService(
+  actor: Backend | null,
+): ActorSubclass<_SERVICE> | null {
   if (!actor) return null;
   return (actor as unknown as { actor: ActorSubclass<_SERVICE> }).actor;
 }
@@ -133,7 +135,7 @@ export function useRecipeBySlug(slug: string | undefined) {
     queryFn: async (): Promise<RecipePublic | null> => {
       if (!svc || !s) return null;
       const opt = await svc.getRecipeBySlug(s);
-      return opt.length === 0 ? null : opt[0] ?? null;
+      return opt.length === 0 ? null : (opt[0] ?? null);
     },
     enabled: !!svc && actorReady && s.length > 0,
     placeholderData: keepPreviousData,
@@ -153,7 +155,7 @@ export function useRecipesByIds(ids: RecipeId[]) {
         if (!svc) return null;
         const id = BigInt(idStr);
         const opt = await svc.getRecipe(id);
-        return opt.length === 0 ? null : opt[0] ?? null;
+        return opt.length === 0 ? null : (opt[0] ?? null);
       },
       enabled: !!svc && actorReady && uniq.length > 0,
       staleTime: 60_000,
@@ -197,7 +199,13 @@ export function useMyFavorites(offset: bigint, limit: bigint) {
   const pid = principal?.toText() ?? "";
 
   return useQuery({
-    queryKey: ["cookbook", "myFavorites", pid, offset.toString(), limit.toString()],
+    queryKey: [
+      "cookbook",
+      "myFavorites",
+      pid,
+      offset.toString(),
+      limit.toString(),
+    ],
     queryFn: async (): Promise<RecipePublic[]> => {
       if (!svc) return [];
       return svc.getMyFavorites(offset, limit);
@@ -269,7 +277,7 @@ export function useRecipeQuery(id: RecipeId | undefined) {
     queryFn: async (): Promise<RecipePublic | null> => {
       if (!svc || id === undefined) return null;
       const opt = await svc.getRecipe(id);
-      return opt.length === 0 ? null : opt[0] ?? null;
+      return opt.length === 0 ? null : (opt[0] ?? null);
     },
     enabled: !!svc && actorReady && id !== undefined,
     staleTime: 45_000,

@@ -50,7 +50,9 @@ export function getCompanionSuggestions(
       if (comp) {
         suggestions.push({
           plant: comp,
-          reason: REASONS[compId] ?? `${comp.name} is a known companion for ${plant.name}.`,
+          reason:
+            REASONS[compId] ??
+            `${comp.name} is a known companion for ${plant.name}.`,
           type: "companion",
         });
       }
@@ -61,7 +63,16 @@ export function getCompanionSuggestions(
     const nearby = existingPlants.filter(
       (p) =>
         p.catalogId === antId &&
-        dist(p, { ...newPlant, id: 0, varietyId: null, label: "", rotation: 0, scale: 1, color: "", icon: "" }) <
+        dist(p, {
+          ...newPlant,
+          id: 0,
+          varietyId: null,
+          label: "",
+          rotation: 0,
+          scale: 1,
+          color: "",
+          icon: "",
+        }) <
           spacing * 3,
     );
     if (nearby.length > 0) {

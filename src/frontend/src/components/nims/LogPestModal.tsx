@@ -73,10 +73,7 @@ export function LogPestModal({
         <div className="space-y-5">
           <div className="space-y-2">
             <Label>Pest / issue</Label>
-            <Select
-              value={pest}
-              onValueChange={setPest}
-            >
+            <Select value={pest} onValueChange={setPest}>
               <SelectTrigger data-ocid="nims-pest-select" className="w-full">
                 <SelectValue placeholder="Pick pest signal" />
               </SelectTrigger>

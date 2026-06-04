@@ -144,7 +144,9 @@ export function PlantCard({ plant, onClick }: PlantInventoryCardProps) {
           <Leaf className="size-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1 space-y-1">
-          <p className="truncate font-semibold text-foreground">{plant.variety}</p>
+          <p className="truncate font-semibold text-foreground">
+            {plant.variety}
+          </p>
           {container !== undefined && (
             <p className="text-xs text-muted-foreground">{container}</p>
           )}
@@ -177,7 +179,12 @@ export function PlantCard({ plant, onClick }: PlantInventoryCardProps) {
 
   if (onClick) {
     return (
-      <button type="button" data-ocid="nims-plant-card" onClick={onClick} className={className}>
+      <button
+        type="button"
+        data-ocid="nims-plant-card"
+        onClick={onClick}
+        className={className}
+      >
         {content}
       </button>
     );

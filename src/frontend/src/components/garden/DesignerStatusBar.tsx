@@ -1,5 +1,5 @@
-import type { GardenDesign } from "@/lib/garden-types";
 import type { YieldEstimate } from "@/lib/garden-rules";
+import type { GardenDesign } from "@/lib/garden-types";
 
 type Props = {
   design: GardenDesign;
@@ -16,12 +16,15 @@ export function DesignerStatusBar({
   zoom = 100,
   lastSaved,
 }: Props) {
-  const beds = design.structures.filter((s) => s.structureType.includes("bed")).length;
+  const beds = design.structures.filter((s) =>
+    s.structureType.includes("bed"),
+  ).length;
 
   return (
     <footer className="border-t border-white/10 bg-black/40 backdrop-blur-xl px-3 py-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
       <span>
-        <strong className="text-foreground">{design.plants.length}</strong> plants
+        <strong className="text-foreground">{design.plants.length}</strong>{" "}
+        plants
         {beds > 0 && (
           <>
             {" "}
@@ -33,7 +36,8 @@ export function DesignerStatusBar({
             {" "}
             · Est. yield{" "}
             <strong className="text-foreground">
-              {yieldEstimate.estimatedLbsMin.toFixed(0)}–{yieldEstimate.estimatedLbsMax.toFixed(0)} lbs
+              {yieldEstimate.estimatedLbsMin.toFixed(0)}–
+              {yieldEstimate.estimatedLbsMax.toFixed(0)} lbs
             </strong>
           </>
         )}

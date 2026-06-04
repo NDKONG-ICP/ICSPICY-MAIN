@@ -1,7 +1,7 @@
 import { CatalogAccordion } from "@/components/garden/CatalogAccordion";
-import { cn } from "@/lib/utils";
-import type { PendingPlacement } from "@/lib/garden-types";
 import type { PlantCategory } from "@/lib/garden-plant-catalog";
+import type { PendingPlacement } from "@/lib/garden-types";
+import { cn } from "@/lib/utils";
 import { ChevronUp } from "lucide-react";
 
 type Props = {

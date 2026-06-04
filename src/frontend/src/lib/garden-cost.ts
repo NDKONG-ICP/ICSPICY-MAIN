@@ -1,6 +1,6 @@
-import type { GardenDesign, PlantPlacement } from "./garden-types";
-import { estimatePlantCost, estimateStructureCost } from "./garden-seasonal";
 import { getPlantById } from "./garden-plant-catalog";
+import { estimatePlantCost, estimateStructureCost } from "./garden-seasonal";
+import type { GardenDesign, PlantPlacement } from "./garden-types";
 
 export type CostLine = {
   label: string;
@@ -23,13 +23,23 @@ export type CostBreakdown = {
   costPerLbYear3: number | null;
 };
 
-function groupPlants(plants: PlantPlacement[]): Map<string, { label: string; qty: number; catalogId?: string }> {
-  const m = new Map<string, { label: string; qty: number; catalogId?: string }>();
+function groupPlants(
+  plants: PlantPlacement[],
+): Map<string, { label: string; qty: number; catalogId?: string }> {
+  const m = new Map<
+    string,
+    { label: string; qty: number; catalogId?: string }
+  >();
   for (const p of plants) {
     const key = p.catalogId ?? p.label;
     const prev = m.get(key);
     if (prev) prev.qty += 1;
-    else m.set(key, { label: p.label, qty: 1, catalogId: p.catalogId ?? undefined });
+    else
+      m.set(key, {
+        label: p.label,
+        qty: 1,
+        catalogId: p.catalogId ?? undefined,
+      });
   }
   return m;
 }
@@ -55,21 +65,31 @@ export function calculateGardenCost(
   for (const s of design.structures) {
     structMap.set(s.structureType, (structMap.get(s.structureType) ?? 0) + 1);
   }
-  const structureLines: CostLine[] = [...structMap.entries()].map(([id, qty]) => ({
-    label: id.replace(/-/g, " "),
-    qty,
-    unitCents: estimateStructureCost(id) * 100,
-  }));
+  const structureLines: CostLine[] = [...structMap.entries()].map(
+    ([id, qty]) => ({
+      label: id.replace(/-/g, " "),
+      qty,
+      unitCents: estimateStructureCost(id) * 100,
+    }),
+  );
 
   const area = design.widthMeters * design.depthMeters;
   const soilCents = Math.round(area * 3 * 100); // ~$3/sqm compost/mulch estimate
 
-  const plantSubtotalCents = plantLines.reduce((s, l) => s + l.qty * l.unitCents, 0);
-  const structureSubtotalCents = structureLines.reduce((s, l) => s + l.qty * l.unitCents, 0);
+  const plantSubtotalCents = plantLines.reduce(
+    (s, l) => s + l.qty * l.unitCents,
+    0,
+  );
+  const structureSubtotalCents = structureLines.reduce(
+    (s, l) => s + l.qty * l.unitCents,
+    0,
+  );
   const totalCents = plantSubtotalCents + structureSubtotalCents + soilCents;
 
   return {
-    plants: plantLines.sort((a, b) => b.qty * b.unitCents - a.qty * a.unitCents),
+    plants: plantLines.sort(
+      (a, b) => b.qty * b.unitCents - a.qty * a.unitCents,
+    ),
     structures: structureLines,
     soilCents,
     plantSubtotalCents,

@@ -1,0 +1,14 @@
+diff --git a/lib/esm/agent.js b/lib/esm/agent.js
+index c8796e6578f1fa4b5985378eb2dc7a425d01e055..d663ad398d9b9e25b16c87146f59b6c4e83bbfb6 100644
+--- a/lib/esm/agent.js
++++ b/lib/esm/agent.js	
+@@ -10,7 +10,8 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
+     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+ };
+ var _SignerAgent_instances, _a, _SignerAgent_isInternalConstructing, _SignerAgent_options, _SignerAgent_certificates, _SignerAgent_queue, _SignerAgent_executeTimeout, _SignerAgent_scheduled, _SignerAgent_autoBatch, _SignerAgent_validation, _SignerAgent_executeQueue, _SignerAgent_executeBatch;
+-import { Certificate, compare, HttpAgent, IC_ROOT_KEY, lookupResultToBuffer, LookupStatus, requestIdOf, SubmitRequestType, } from "@dfinity/agent";
++import { Certificate, HttpAgent, IC_ROOT_KEY, lookupResultToBuffer, LookupPathStatus as LookupStatus, requestIdOf, SubmitRequestType, } from "@dfinity/agent";
++function compare(a, b) { const ua = new Uint8Array(a instanceof ArrayBuffer ? a : (a.buffer ?? a)); const ub = new Uint8Array(b instanceof ArrayBuffer ? b : (b.buffer ?? b)); for (let i = 0; i < Math.min(ua.length, ub.length); i++) { if (ua[i] !== ub[i]) return ua[i] - ub[i]; } return ua.length - ub.length; }
+ import { lebDecode, PipeArrayBuffer } from "@dfinity/candid";
+ import { Principal } from "@dfinity/principal";
+ import { toBase64 } from "@slide-computer/signer";

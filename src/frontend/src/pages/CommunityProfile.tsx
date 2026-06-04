@@ -1,22 +1,22 @@
+import { type Backend, createActor } from "@/backend";
+import { FeedSkeleton, FollowButton, PostCard } from "@/components/community";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FeedSkeleton, FollowButton, PostCard } from "@/components/community";
+import type { PostPublic } from "@/declarations/backend.did";
+import type { _SERVICE } from "@/declarations/backend.did";
+import { useActor } from "@/hooks/useActor";
 import { useAuth } from "@/hooks/useAuth";
 import { useInfiniteCommunityFeed } from "@/hooks/useCommunityFeed";
+import { useMyNftTokenIds } from "@/hooks/useMyNftIds";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { usePublicCommunityProfile } from "@/hooks/useProfile";
 import { getNftImageUrl } from "@/lib/nft-config";
-import { useMyNftTokenIds } from "@/hooks/useMyNftIds";
-import { Link, useParams } from "@tanstack/react-router";
+import type { ActorSubclass } from "@dfinity/agent";
 import { Principal } from "@icp-sdk/core/principal";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, MapPin, Pencil } from "lucide-react";
 import { useMemo } from "react";
-import type { PostPublic } from "@/declarations/backend.did";
-import { useQuery } from "@tanstack/react-query";
-import { createActor, type Backend } from "@/backend";
-import { useActor } from "@/hooks/useActor";
-import type { ActorSubclass } from "@dfinity/agent";
-import type { _SERVICE } from "@/declarations/backend.did";
-import { usePageTitle } from "@/hooks/usePageTitle";
 
 function rawService(actor: Backend | null): ActorSubclass<_SERVICE> | null {
   if (!actor) return null;
@@ -54,11 +54,12 @@ export default function CommunityProfilePage() {
     profilePrincipal &&
     callerPrincipal.toText() === profilePrincipal.toText();
 
-  const { data: profile, isPending } = usePublicCommunityProfile(
-    profilePrincipal,
-  );
+  const { data: profile, isPending } =
+    usePublicCommunityProfile(profilePrincipal);
   usePageTitle(
-    profile?.username?.trim().length ? `${profile.username} · Community` : "Community",
+    profile?.username?.trim().length
+      ? `${profile.username} · Community`
+      : "Community",
   );
   const { data: posts, isPending: postsPending } =
     useUserPosts(profilePrincipal);
@@ -117,9 +118,7 @@ export default function CommunityProfilePage() {
               </Button>
             ) : (
               isAuthenticated &&
-              profilePrincipal && (
-                <FollowButton target={profilePrincipal} />
-              )
+              profilePrincipal && <FollowButton target={profilePrincipal} />
             )}
           </div>
         </div>
@@ -179,7 +178,9 @@ export default function CommunityProfilePage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground italic">No posts yet.</p>
+            <p className="text-sm text-muted-foreground italic">
+              No posts yet.
+            </p>
           )}
         </div>
       </div>

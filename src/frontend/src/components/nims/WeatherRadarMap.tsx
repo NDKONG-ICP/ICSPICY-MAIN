@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 
 interface RadarFrame {
@@ -161,17 +161,14 @@ export function WeatherRadarMap({
       map.removeLayer(layer);
     }
     radarLayersRef.current = frames.map((frame) =>
-      L.tileLayer(
-        `${host}${frame.path}/${TILE_SIZE}/{z}/{x}/{y}/2/1_1.png`,
-        {
-          tileSize: TILE_SIZE,
-          opacity: HIDDEN_OPACITY,
-          maxNativeZoom: MAX_NATIVE_ZOOM,
-          maxZoom: 12,
-          updateWhenIdle: false,
-          updateWhenZooming: false,
-        },
-      ).addTo(map),
+      L.tileLayer(`${host}${frame.path}/${TILE_SIZE}/{z}/{x}/{y}/2/1_1.png`, {
+        tileSize: TILE_SIZE,
+        opacity: HIDDEN_OPACITY,
+        maxNativeZoom: MAX_NATIVE_ZOOM,
+        maxZoom: 12,
+        updateWhenIdle: false,
+        updateWhenZooming: false,
+      }).addTo(map),
     );
 
     return () => {
@@ -208,7 +205,10 @@ export function WeatherRadarMap({
       data-ocid="nims-weather-radar"
       className="relative overflow-hidden rounded-2xl border border-white/10"
     >
-      <div ref={mapRef} className="h-64 w-full sm:h-80 [&_.leaflet-container]:h-full [&_.leaflet-container]:w-full" />
+      <div
+        ref={mapRef}
+        className="h-64 w-full sm:h-80 [&_.leaflet-container]:h-full [&_.leaflet-container]:w-full"
+      />
       {locationLabel && (
         <div className="pointer-events-none absolute left-2 top-2 rounded-md bg-black/60 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
           📍 {locationLabel}
@@ -249,7 +249,9 @@ export function WeatherRadarMap({
               aria-label="Radar timeline scrubber"
             />
           </div>
-          <span className="text-xs text-zinc-300 tabular-nums">{timeLabel}</span>
+          <span className="text-xs text-zinc-300 tabular-nums">
+            {timeLabel}
+          </span>
         </div>
         <div className="mt-1 flex items-center justify-between">
           <span className="text-xs text-zinc-400">

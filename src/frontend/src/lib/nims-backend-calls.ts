@@ -1,18 +1,20 @@
 import { Actor, HttpAgent, type Identity } from "@dfinity/agent";
-import { idlFactory, type _SERVICE } from "../declarations/backend.did.js";
 import type {
   ContainerSize,
   DeathCause,
   PlantId,
   WeatherSnapshot,
 } from "../declarations/backend.did";
+import { type _SERVICE, idlFactory } from "../declarations/backend.did.js";
 import { BACKEND_CANISTER_ID } from "./auth-config";
 
 const IC_HOST = import.meta.env.DEV
   ? "http://127.0.0.1:4943"
   : "https://icp-api.io";
 
-export async function createBackendActor(identity: Identity): Promise<_SERVICE> {
+export async function createBackendActor(
+  identity: Identity,
+): Promise<_SERVICE> {
   const agent = await HttpAgent.create({ host: IC_HOST, identity });
   if (import.meta.env.DEV) {
     await agent.fetchRootKey();

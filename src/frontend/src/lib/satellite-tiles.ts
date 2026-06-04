@@ -9,10 +9,17 @@ export type TileCoord = { x: number; y: number; z: number };
 export type SatelliteSource = "esri" | "google";
 
 export function clampSatelliteZoom(zoom: number): number {
-  return Math.max(MIN_SATELLITE_ZOOM, Math.min(MAX_SATELLITE_ZOOM, Math.round(zoom)));
+  return Math.max(
+    MIN_SATELLITE_ZOOM,
+    Math.min(MAX_SATELLITE_ZOOM, Math.round(zoom)),
+  );
 }
 
-export function latLngToTile(lat: number, lng: number, zoom: number): TileCoord {
+export function latLngToTile(
+  lat: number,
+  lng: number,
+  zoom: number,
+): TileCoord {
   const n = 2 ** zoom;
   const x = Math.floor(((lng + 180) / 360) * n);
   const latRad = (lat * Math.PI) / 180;
@@ -32,7 +39,8 @@ export function metersToLatLngDelta(
   depthMeters: number,
 ): { latDelta: number; lngDelta: number } {
   const latDelta = depthMeters / 2 / 111_320;
-  const lngDelta = widthMeters / 2 / (111_320 * Math.cos((lat * Math.PI) / 180));
+  const lngDelta =
+    widthMeters / 2 / (111_320 * Math.cos((lat * Math.PI) / 180));
   return { latDelta, lngDelta };
 }
 
@@ -42,7 +50,11 @@ export function boundsFromCenter(
   widthMeters: number,
   depthMeters: number,
 ): { south: number; west: number; north: number; east: number } {
-  const { latDelta, lngDelta } = metersToLatLngDelta(lat, widthMeters, depthMeters);
+  const { latDelta, lngDelta } = metersToLatLngDelta(
+    lat,
+    widthMeters,
+    depthMeters,
+  );
   return {
     south: lat - latDelta,
     north: lat + latDelta,
@@ -63,7 +75,11 @@ export function tileUrl(
   return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
 }
 
-export function singleTileUrl(lat: number, lng: number, zoom = DEFAULT_SATELLITE_ZOOM): string {
+export function singleTileUrl(
+  lat: number,
+  lng: number,
+  zoom = DEFAULT_SATELLITE_ZOOM,
+): string {
   const t = latLngToTile(lat, lng, clampSatelliteZoom(zoom));
   return tileUrl(t.x, t.y, t.z, "esri");
 }
@@ -123,10 +139,16 @@ export async function stitchSatelliteTexture(
   _source: SatelliteSource = "esri",
   zoomOverride?: number,
 ): Promise<{ url: string; revoke: () => void } | null> {
-  return loadSatelliteTileTexture(lat, lng, zoomOverride ?? DEFAULT_SATELLITE_ZOOM);
+  return loadSatelliteTileTexture(
+    lat,
+    lng,
+    zoomOverride ?? DEFAULT_SATELLITE_ZOOM,
+  );
 }
 
-export async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+export async function geocodeAddress(
+  address: string,
+): Promise<{ lat: number; lng: number } | null> {
   const q = encodeURIComponent(address.trim());
   if (!q) return null;
   const res = await fetch(

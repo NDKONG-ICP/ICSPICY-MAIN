@@ -67,7 +67,9 @@ export function TrayCell({
       </span>
       <span className="truncate text-white">{label}</span>
       {movedText ? (
-        <span className="truncate text-[9px] font-normal text-white/80">{movedText}</span>
+        <span className="truncate text-[9px] font-normal text-white/80">
+          {movedText}
+        </span>
       ) : subtitle !== undefined ? (
         <span className="truncate text-[9px] font-normal text-white/80">
           {subtitle}

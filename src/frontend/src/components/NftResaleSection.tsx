@@ -25,6 +25,7 @@ import { useActorReady } from "../hooks/useActorReady";
 import { useAuth } from "../hooks/useAuth";
 import { useMyNftTokenIds } from "../hooks/useMyNftIds";
 import {
+  type NftListingPublic,
   centsToStablecoinBase,
   formatUsdCents,
   useBuyListedNft,
@@ -32,10 +33,9 @@ import {
   useListNftForSale,
   useListedNfts,
   useMyNftListings,
-  type NftListingPublic,
 } from "../hooks/useNftResale";
-import { getNftImageUrl } from "../lib/nft-config";
 import { nftImageUrl, unwrapOpt } from "../hooks/useNims";
+import { getNftImageUrl } from "../lib/nft-config";
 
 function truncatePrincipal(p: string) {
   return `${p.slice(0, 8)}…${p.slice(-5)}`;
@@ -242,7 +242,8 @@ function MyListingRow({ listing }: { listing: NftListingPublic }) {
         />
         <div>
           <p className="text-sm font-medium">
-            #{listing.tokenId.toString()} — {formatUsdCents(listing.priceUsdCents)}
+            #{listing.tokenId.toString()} —{" "}
+            {formatUsdCents(listing.priceUsdCents)}
           </p>
           <p className="text-xs text-muted-foreground">
             {listing.isActive ? "Active" : "Delisted"}
@@ -317,7 +318,10 @@ export function NftResaleSection() {
           </p>
         </div>
         {isAuthenticated ? (
-          <Button onClick={() => setListOpen(true)} disabled={ownedIds.length === 0}>
+          <Button
+            onClick={() => setListOpen(true)}
+            disabled={ownedIds.length === 0}
+          >
             <Tag className="w-4 h-4 mr-1" />
             List an NFT
           </Button>

@@ -18,7 +18,9 @@ export function SectionCutPanel({ design, cutY, onCutYChange }: Props) {
           size="sm"
           variant="outline"
           className="h-7"
-          onClick={() => onCutYChange(cutY == null ? design.depthMeters / 2 : null)}
+          onClick={() =>
+            onCutYChange(cutY == null ? design.depthMeters / 2 : null)
+          }
         >
           {cutY == null ? "Place cut" : "Clear"}
         </Button>
@@ -31,12 +33,18 @@ export function SectionCutPanel({ design, cutY, onCutYChange }: Props) {
               <p>No plants at this slice.</p>
             ) : (
               profile.map((p) => (
-                <div key={p.label} style={{ marginLeft: `${Math.min(p.heightM * 4, 40)}px` }}>
-                  {"▲".repeat(Math.max(1, Math.round(p.heightM)))} {p.label} ({p.heightM}m)
+                <div
+                  key={p.label}
+                  style={{ marginLeft: `${Math.min(p.heightM * 4, 40)}px` }}
+                >
+                  {"▲".repeat(Math.max(1, Math.round(p.heightM)))} {p.label} (
+                  {p.heightM}m)
                 </div>
               ))
             )}
-            <p className="text-muted-foreground pt-1">════════════════ ground</p>
+            <p className="text-muted-foreground pt-1">
+              ════════════════ ground
+            </p>
           </div>
         </>
       )}

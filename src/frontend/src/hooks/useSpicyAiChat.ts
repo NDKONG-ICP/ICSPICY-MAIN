@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useUsageTracking } from "./useUsageTracking";
+
 import {
   fromDocsChatResponse,
   getDocsBackendChatActor,
   toDocsChatMessage,
 } from "../lib/docs-backend-chat";
 import {
+  type SpicyChatTurn,
   chatErrorToString,
   getAuthenticatedSpicyAiActor,
   getSpicyAiActor,
   isSpicyAiAuthenticated,
   toSpicyAiMessage,
-  type SpicyChatTurn,
 } from "../lib/spicyai-idl";
 
 const STORAGE_KEY = "spicyai:widget-history";
@@ -33,6 +35,7 @@ export const ON_CHAIN_PHRASES = [
 ];
 
 export function useSpicyAiChat() {
+  const { track, USAGE } = useUsageTracking();
   const [messages, setMessages] = useState<SpicyAiDisplayMessage[]>([]);
   const [history, setHistory] = useState<SpicyChatTurn[]>([]);
   const [loading, setLoading] = useState(false);
@@ -74,7 +77,8 @@ export function useSpicyAiChat() {
     phraseIdxRef.current = 0;
     setThinkPhrase(ON_CHAIN_PHRASES[0]!);
     thinkIntervalRef.current = setInterval(() => {
-      phraseIdxRef.current = (phraseIdxRef.current + 1) % ON_CHAIN_PHRASES.length;
+      phraseIdxRef.current =
+        (phraseIdxRef.current + 1) % ON_CHAIN_PHRASES.length;
       setThinkPhrase(ON_CHAIN_PHRASES[phraseIdxRef.current]!);
     }, 8000);
     return () => {
@@ -94,6 +98,8 @@ export function useSpicyAiChat() {
   const handleSendText = useCallback(
     async (text: string) => {
       if (!text.trim() || loading) return;
+
+      track(USAGE.AI.CHAT.feature, USAGE.AI.CHAT.action);
 
       const newHistory: SpicyChatTurn[] = [
         ...history,
@@ -268,7 +274,8 @@ export function useSpicyAiChat() {
             ...prev,
             {
               role: "error",
-              content: "SpicyAI canister not reachable. Please try again later.",
+              content:
+                "SpicyAI canister not reachable. Please try again later.",
             },
           ]);
           setLoading(false);
@@ -310,7 +317,7 @@ export function useSpicyAiChat() {
         setLoading(false);
       }
     },
-    [history, loading, saveHistory, selectedModel],
+    [history, loading, saveHistory, selectedModel, track, USAGE.AI.CHAT],
   );
 
   const clearHistory = useCallback(() => {

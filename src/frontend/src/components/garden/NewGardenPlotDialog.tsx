@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { clampPlot } from "@/lib/garden-utils";
 import { m2ToFt2 } from "@/lib/garden-smart-data";
+import { clampPlot } from "@/lib/garden-utils";
 import { useEffect, useState } from "react";
 
 export type NewPlotConfig = {
@@ -51,8 +51,14 @@ export function NewGardenPlotDialog({
     setGround("blank");
   }, [open, initialDepth, initialName, initialWidth]);
 
-  const widthM = unit === "m" ? clampPlot(Number(width) || 10) : clampPlot((Number(width) || 32) / 3.28084);
-  const depthM = unit === "m" ? clampPlot(Number(depth) || 10) : clampPlot((Number(depth) || 32) / 3.28084);
+  const widthM =
+    unit === "m"
+      ? clampPlot(Number(width) || 10)
+      : clampPlot((Number(width) || 32) / 3.28084);
+  const depthM =
+    unit === "m"
+      ? clampPlot(Number(depth) || 10)
+      : clampPlot((Number(depth) || 32) / 3.28084);
 
   const submit = () => {
     onConfirm({
@@ -69,8 +75,9 @@ export function NewGardenPlotDialog({
         <DialogHeader>
           <DialogTitle>Start a new garden plot</DialogTitle>
           <DialogDescription>
-            Enter your plot size and choose a ground type. You can add plants and structures on a blank
-            canvas, or align satellite imagery to your property.
+            Enter your plot size and choose a ground type. You can add plants
+            and structures on a blank canvas, or align satellite imagery to your
+            property.
           </DialogDescription>
         </DialogHeader>
 
@@ -132,7 +139,8 @@ export function NewGardenPlotDialog({
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Plot area: {widthM.toFixed(1)} × {depthM.toFixed(1)} m ({m2ToFt2(widthM * depthM).toFixed(0)} ft²)
+            Plot area: {widthM.toFixed(1)} × {depthM.toFixed(1)} m (
+            {m2ToFt2(widthM * depthM).toFixed(0)} ft²)
           </p>
 
           <div className="space-y-2">

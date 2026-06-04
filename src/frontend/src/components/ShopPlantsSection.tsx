@@ -12,27 +12,13 @@ import { Link } from "@tanstack/react-router";
 import { Crown, MapPin, ShoppingCart } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import type { PlantStage } from "../declarations/backend.did";
 import type { PlantStage as BackendPlantStage } from "../backend";
 import { ProductCategory } from "../backend";
 import { StageBadge } from "../components/ui/StageBadge";
-import { ShopListingImage } from "./ShopListingImage";
+import type { PlantStage } from "../declarations/backend.did";
 import { useProducts } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
-import {
-  formatDiscountedPriceDisplay,
-  discountedUnitPriceCents,
-} from "../lib/discount-utils";
-import {
-  CATEGORY_DISPLAY,
-  filterActiveShopProducts,
-  filterLivePlantProducts,
-  getProductImageKeys,
-  productToCartItem,
-  productUnitPrice,
-  type ShopProduct,
-} from "../lib/shop-products";
 import {
   formatCents,
   nftImageUrl,
@@ -43,6 +29,20 @@ import {
   usePlantsForSale,
   useVarieties,
 } from "../hooks/useNims";
+import {
+  discountedUnitPriceCents,
+  formatDiscountedPriceDisplay,
+} from "../lib/discount-utils";
+import {
+  CATEGORY_DISPLAY,
+  type ShopProduct,
+  filterActiveShopProducts,
+  filterLivePlantProducts,
+  getProductImageKeys,
+  productToCartItem,
+  productUnitPrice,
+} from "../lib/shop-products";
+import { ShopListingImage } from "./ShopListingImage";
 
 function CatalogLivePlantCard({
   product,
@@ -57,7 +57,10 @@ function CatalogLivePlantCard({
   const imageKeys = getProductImageKeys(product);
   const unitPrice = productUnitPrice(product);
   const hasDiscount = discountPercent > 0;
-  const displayPriceCents = discountedUnitPriceCents(unitPrice, discountPercent);
+  const displayPriceCents = discountedUnitPriceCents(
+    unitPrice,
+    discountPercent,
+  );
   const displayPrice = Number(displayPriceCents) / 100;
   const listPrice = Number(unitPrice) / 100;
   const cfg = CATEGORY_DISPLAY[ProductCategory.LivePlant];
@@ -149,8 +152,7 @@ export function ShopPlantsSection({
     if (stageFilter === "Mature") return { Mature: null };
     return undefined;
   }, [stageFilter]);
-  const varietyId =
-    varietyFilter === "all" ? undefined : BigInt(varietyFilter);
+  const varietyId = varietyFilter === "all" ? undefined : BigInt(varietyFilter);
   const { data: nimsPlants = [], isLoading: nimsLoading } = usePlantsForSale(
     stage,
     varietyId,

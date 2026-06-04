@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { SiFacebook, SiInstagram, SiTiktok, SiX } from "react-icons/si";
-import { CHILI_VARIETIES, SOCIAL_LINKS } from "../types";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { CHILI_VARIETIES, SOCIAL_LINKS } from "../types";
 
 // ── Heat level registry ──────────────────────────────────────────────────────
 const HEAT_LEVELS: Record<string, { level: number; label: string }> = {
@@ -156,8 +156,7 @@ export default function HomePage() {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage:
-              "url('/assets/generated/hero.PNG')",
+            backgroundImage: "url('/assets/generated/hero.PNG')",
           }}
           aria-hidden="true"
         />

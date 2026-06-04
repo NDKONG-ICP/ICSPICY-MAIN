@@ -1,4 +1,3 @@
-import { CommunityAvatar } from "./CommunityAvatar";
 import { Button } from "@/components/ui/button";
 import {
   ChevronDown,
@@ -23,6 +22,7 @@ import {
   getCommentAuthorInitial,
   timeAgoNanos,
 } from "../../lib/community-utils";
+import { CommunityAvatar } from "./CommunityAvatar";
 
 export function CommentSection({
   postId,
@@ -129,9 +129,7 @@ export function CommentSection({
                     className="flex gap-2.5 items-start"
                   >
                     <CommunityAvatar
-                      principalText={
-                        c.author.toText()
-                      }
+                      principalText={c.author.toText()}
                       username={
                         c.author_username.length === 1
                           ? c.author_username[0]

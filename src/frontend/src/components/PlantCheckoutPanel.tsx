@@ -6,7 +6,6 @@ import { CheckCircle2, Loader2, MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { PlantStage as BackendPlantStage } from "../backend";
-import { StageBadge } from "./ui/StageBadge";
 import { useAuth } from "../hooks/useAuth";
 import { useICPay } from "../hooks/useICPay";
 import {
@@ -18,6 +17,7 @@ import {
   usePurchasePlant,
   usePurchasePlantICPay,
 } from "../hooks/useNims";
+import { StageBadge } from "./ui/StageBadge";
 
 type StableToken = "ckUSDC" | "ckUSDT";
 
@@ -94,7 +94,9 @@ export function PlantCheckoutPanel({ plantId }: { plantId: bigint }) {
         <div className="p-4 space-y-2">
           <h2 className="text-xl font-bold">{plant.variety}</h2>
           <StageBadge stage={plant.stage as unknown as BackendPlantStage} />
-          <p className="text-2xl font-bold text-primary">{formatCents(priceCents)}</p>
+          <p className="text-2xl font-bold text-primary">
+            {formatCents(priceCents)}
+          </p>
           {tokenId !== undefined && (
             <Badge variant="secondary">IC SPICY #{tokenId.toString()}</Badge>
           )}
@@ -125,10 +127,12 @@ export function PlantCheckoutPanel({ plantId }: { plantId: bigint }) {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              Exact amount: {(Number(stableAmount) / 1_000_000).toFixed(2)} {token}
+              Exact amount: {(Number(stableAmount) / 1_000_000).toFixed(2)}{" "}
+              {token}
             </p>
             <p className="text-xs text-amber-500/80">
-              ICP / ckBTC / ckETH — coming soon (price feed integration in progress)
+              ICP / ckBTC / ckETH — coming soon (price feed integration in
+              progress)
             </p>
           </div>
 
@@ -162,7 +166,9 @@ export function PlantCheckoutPanel({ plantId }: { plantId: bigint }) {
               }
             }}
           >
-            {purchase.isPending && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+            {purchase.isPending && (
+              <Loader2 className="w-4 h-4 animate-spin mr-1" />
+            )}
             Pay with {token}
           </Button>
 

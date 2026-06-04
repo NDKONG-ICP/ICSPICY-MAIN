@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import { useMemo } from "react";
 import {
-  useFleetCanisterHealth,
   type FleetCanisterEntry,
+  useFleetCanisterHealth,
 } from "../hooks/useBackend";
 
 const T = 1_000_000_000_000n;
@@ -57,18 +57,22 @@ function FleetRow({ entry }: { entry: FleetCanisterEntry }) {
       </td>
       <td className="py-3">
         {level === "ok" && (
-          <Badge variant="outline" className="text-emerald-600 border-emerald-600/40">
+          <Badge
+            variant="outline"
+            className="text-emerald-600 border-emerald-600/40"
+          >
             Healthy
           </Badge>
         )}
         {level === "warning" && (
-          <Badge variant="outline" className="text-amber-600 border-amber-600/40">
+          <Badge
+            variant="outline"
+            className="text-amber-600 border-amber-600/40"
+          >
             Low cycles
           </Badge>
         )}
-        {level === "critical" && (
-          <Badge variant="destructive">Critical</Badge>
-        )}
+        {level === "critical" && <Badge variant="destructive">Critical</Badge>}
       </td>
     </tr>
   );
@@ -78,8 +82,12 @@ export function AdminCanisterHealthBanner() {
   const { data: fleet = [] } = useFleetCanisterHealth();
 
   const alert = useMemo(() => {
-    const critical = fleet.filter((e) => severity(e.cyclesBalance) === "critical");
-    const warning = fleet.filter((e) => severity(e.cyclesBalance) === "warning");
+    const critical = fleet.filter(
+      (e) => severity(e.cyclesBalance) === "critical",
+    );
+    const warning = fleet.filter(
+      (e) => severity(e.cyclesBalance) === "warning",
+    );
     if (critical.length > 0) {
       return {
         level: "critical" as const,
@@ -109,8 +117,8 @@ export function AdminCanisterHealthBanner() {
             Critical: cycles below 0.5T
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Canisters affected: {alert.names}. Top up immediately or the canister
-            may freeze and stop accepting calls.
+            Canisters affected: {alert.names}. Top up immediately or the
+            canister may freeze and stop accepting calls.
           </p>
         </div>
       </div>
@@ -128,8 +136,8 @@ export function AdminCanisterHealthBanner() {
           Warning: cycles below 1T
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          Canisters affected: {alert.names}. Consider topping up before consumption
-          triggers the freezing threshold.
+          Canisters affected: {alert.names}. Consider topping up before
+          consumption triggers the freezing threshold.
         </p>
       </div>
     </div>
@@ -137,8 +145,12 @@ export function AdminCanisterHealthBanner() {
 }
 
 export function AdminCanisterHealthTab() {
-  const { data: fleet = [], isLoading, refetch, isFetching } =
-    useFleetCanisterHealth();
+  const {
+    data: fleet = [],
+    isLoading,
+    refetch,
+    isFetching,
+  } = useFleetCanisterHealth();
 
   return (
     <div className="space-y-6" data-ocid="admin-canister-health-tab">
@@ -151,8 +163,8 @@ export function AdminCanisterHealthTab() {
             Canister Health
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Cycles balance and memory for all production canisters. Warning below
-            1T cycles; critical below 0.5T.
+            Cycles balance and memory for all production canisters. Warning
+            below 1T cycles; critical below 0.5T.
           </p>
         </div>
         <Button
@@ -163,7 +175,9 @@ export function AdminCanisterHealthTab() {
           className="gap-1.5"
           data-ocid="admin-refresh-canister-health"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
+          <RefreshCw
+            className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`}
+          />
           Refresh
         </Button>
       </div>
@@ -195,7 +209,10 @@ export function AdminCanisterHealthTab() {
               ))
             ) : fleet.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                <td
+                  colSpan={5}
+                  className="py-8 text-center text-muted-foreground"
+                >
                   No health data — sign in as admin to query fleet status.
                 </td>
               </tr>
@@ -211,7 +228,8 @@ export function AdminCanisterHealthTab() {
       <p className="text-[11px] text-muted-foreground leading-relaxed">
         Set a 7-day freezing threshold on mainnet after deploy:{" "}
         <code className="font-mono bg-muted px-1 rounded">
-          dfx canister --network ic update-settings backend --freezing-threshold 604800
+          dfx canister --network ic update-settings backend --freezing-threshold
+          604800
         </code>
         . Run weekly backups with{" "}
         <code className="font-mono bg-muted px-1 rounded">

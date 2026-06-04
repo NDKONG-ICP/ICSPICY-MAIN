@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Activity,
   BarChart3,
@@ -14,23 +15,19 @@ import {
   Wheat,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import type {
-  ContainerSize,
-  DeathCause,
-  TrayCellPublic,
-} from "../declarations/backend.did";
+import type { TransplantInput } from "../backend";
 import {
   ActivityFeed,
-  AdoptPlantPrompt,
   AddPlantModal,
+  AdoptPlantPrompt,
   GerminationModal,
   MarkDeadModal,
   NewTrayModal,
+  NimsAnalyticsPanel,
+  NimsLandingPage,
   NimsLocationPrompt,
   NimsLocationSelector,
-  NimsAnalyticsPanel,
   PlantLifecycleCard,
   PlantSeedModal,
   SeedBankPanel,
@@ -38,11 +35,23 @@ import {
   TransplantedCellModal,
   TrayGrid,
   WeatherBar,
-  NimsLandingPage,
 } from "../components/nims";
-import { exportPlantInventoryCsv } from "../lib/nims-export-mappers";
+import type {
+  ContainerSize,
+  DeathCause,
+  TrayCellPublic,
+} from "../declarations/backend.did";
 import { useAuth } from "../hooks/useAuth";
+import { useAutoWeatherCapture } from "../hooks/useAutoWeatherCapture";
 import { useIsAdmin, useMyTrays, useTrays } from "../hooks/useBackend";
+import { useTransplantCell } from "../hooks/useBackend";
+import {
+  useAddPlant,
+  useAddVariety,
+  useAdminInventory,
+  useMyPlantsNims,
+  useVarieties,
+} from "../hooks/useNims";
 import {
   useActivityFeed,
   useAdoptPurchasedPlant,
@@ -54,22 +63,15 @@ import {
   useTrayGrid,
   useWaterEntireTray,
 } from "../hooks/useNimsDashboard";
-import { useUnadoptedNftTokenIds } from "../hooks/useUnadoptedNfts";
-import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import { useNimsLocation } from "../hooks/useNimsLocation";
-import {
-  useMyPlantsNims,
-  useAdminInventory,
-  useVarieties,
-  useAddPlant,
-  useAddVariety,
-} from "../hooks/useNims";
-import { useWeather } from "../hooks/useWeather";
-import { useAutoWeatherCapture } from "../hooks/useAutoWeatherCapture";
-import { useTransplantCell } from "../hooks/useBackend";
-import { downloadTextFile, plantTagLinksCsv } from "../lib/plant-nfc-url";
-import type { TransplantInput } from "../backend";
+import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { useUnadoptedNftTokenIds } from "../hooks/useUnadoptedNfts";
+import { useUsageTracking } from "../hooks/useUsageTracking";
+import { useWeather } from "../hooks/useWeather";
+import { exportPlantInventoryCsv } from "../lib/nims-export-mappers";
+import { downloadTextFile, plantTagLinksCsv } from "../lib/plant-nfc-url";
+import { useRavenPerks } from "../hooks/useRavenPerks";
 
 type NimsTab =
   | "trays"
@@ -109,10 +111,12 @@ function formatMsAgo(ms: bigint | undefined): string {
 
 export default function NIMSPage() {
   usePageTitle("NIMS");
+  const { track, USAGE } = useUsageTracking();
 
   const navigate = useNavigate();
   const { isAuthenticated, login } = useAuth();
   const { data: isAdmin } = useIsAdmin();
+  const ravenPerks = useRavenPerks();
   const nimsLocation = useNimsLocation();
   const { data: weather, isLoading: weatherLoading } = useWeather(
     nimsLocation.coordinates.lat,
@@ -124,11 +128,16 @@ export default function NIMSPage() {
   const { data: myTrays = [], isLoading: myTraysLoading } = useMyTrays();
   const { data: allTrays = [], isLoading: allTraysLoading } = useTrays();
   const trays = isAdmin && showAllUsers ? allTrays : myTrays;
-  const traysLoading = isAdmin && showAllUsers ? allTraysLoading : myTraysLoading;
+  const traysLoading =
+    isAdmin && showAllUsers ? allTraysLoading : myTraysLoading;
   const { data: varieties = [] } = useVarieties();
   const { data: myPlants = [] } = useMyPlantsNims();
   useAutoWeatherCapture(myPlants, weather, isAuthenticated);
-  const { data: adminInventory = [] } = useAdminInventory(undefined, undefined, undefined);
+  const { data: adminInventory = [] } = useAdminInventory(
+    undefined,
+    undefined,
+    undefined,
+  );
   const { data: activity = [] } = useActivityFeed(40);
   const { data: unadoptedIds = [], dismissUnadoptedNft } =
     useUnadoptedNftTokenIds();
@@ -169,8 +178,11 @@ export default function NIMSPage() {
     [trayCells, selectedCell],
   );
 
-  const inventoryList =
-    isAdmin && showAllUsers ? adminInventory : myPlants;
+  const inventoryList = isAdmin && showAllUsers ? adminInventory : myPlants;
+
+  useEffect(() => {
+    track(USAGE.NIMS.OPEN.feature, USAGE.NIMS.OPEN.action, "nims:open");
+  }, [track, USAGE.NIMS.OPEN]);
 
   const adoptTokenId = unadoptedIds[0] ?? null;
 
@@ -261,10 +273,18 @@ export default function NIMSPage() {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          <Button size="sm" variant="secondary" onClick={() => setNewTrayOpen(true)}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setNewTrayOpen(true)}
+          >
             <Plus className="h-4 w-4 mr-1" /> New tray
           </Button>
-          <Button size="sm" variant="secondary" onClick={() => setAddPlantOpen(true)}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setAddPlantOpen(true)}
+          >
             <Plus className="h-4 w-4 mr-1" /> Add plant
           </Button>
         </div>
@@ -283,13 +303,17 @@ export default function NIMSPage() {
               <p className="text-lg font-bold text-emerald-400">
                 {stats.germinatedToday.toString()}
               </p>
-              <p className="text-[10px] text-muted-foreground">Germinated today</p>
+              <p className="text-[10px] text-muted-foreground">
+                Germinated today
+              </p>
             </div>
             <div className="rounded-lg border border-border bg-card/60 p-3">
               <p className="text-lg font-bold text-amber-400">
                 {stats.needsAttention.toString()}
               </p>
-              <p className="text-[10px] text-muted-foreground">Needs attention</p>
+              <p className="text-[10px] text-muted-foreground">
+                Needs attention
+              </p>
             </div>
             <div className="rounded-lg border border-border bg-card/60 p-3">
               <p className="text-lg font-bold text-cyan-400">
@@ -388,6 +412,10 @@ export default function NIMSPage() {
                 size="sm"
                 variant="outline"
                 onClick={() => {
+                  if (!ravenPerks.hasCsvExport && !isAdmin) {
+                    toast.error("CSV export requires Raven Member (100K $RAVEN). Get $RAVEN on ICPSwap!");
+                    return;
+                  }
                   const list =
                     tab === "myplants" || !(isAdmin && showAllUsers)
                       ? myPlants
@@ -398,49 +426,58 @@ export default function NIMSPage() {
               >
                 📥 Export CSV
               </Button>
-            {isAdmin && showAllUsers && tab === "inventory" && inventoryList.length > 0 && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  const csv = plantTagLinksCsv(
-                    inventoryList.map((lc) => ({
-                      plantId: lc.plant.id,
-                      variety: lc.plant.variety,
-                    })),
-                  );
-                  downloadTextFile(
-                    `icspicy-plant-tags-${new Date().toISOString().slice(0, 10)}.csv`,
-                    csv,
-                  );
-                  toast.success("Tag links CSV downloaded");
-                }}
-              >
-                Generate tag links (CSV)
-              </Button>
-            )}
+              {isAdmin &&
+                showAllUsers &&
+                tab === "inventory" &&
+                inventoryList.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      const csv = plantTagLinksCsv(
+                        inventoryList.map((lc) => ({
+                          plantId: lc.plant.id,
+                          variety: lc.plant.variety,
+                        })),
+                      );
+                      downloadTextFile(
+                        `icspicy-plant-tags-${new Date().toISOString().slice(0, 10)}.csv`,
+                        csv,
+                      );
+                      toast.success("Tag links CSV downloaded");
+                    }}
+                  >
+                    Generate tag links (CSV)
+                  </Button>
+                )}
             </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {(tab === "myplants" || !(isAdmin && showAllUsers) ? myPlants : inventoryList).length === 0 ? (
-              <p className="text-sm text-muted-foreground col-span-2 text-center py-8">
-                {tab === "myplants" || !(isAdmin && showAllUsers)
-                  ? "No plants in your garden yet. Add a plant or adopt a purchased NFT."
-                  : "No inventory plants yet."}
-              </p>
-            ) : (
-              (tab === "myplants" || !(isAdmin && showAllUsers) ? myPlants : inventoryList).map((lc) => (
-                <Link
-                  key={lc.plant.id.toString()}
-                  to="/plant/$plantId"
-                  params={{ plantId: lc.plant.id.toString() }}
-                  className="block no-underline"
-                >
-                  <PlantLifecycleCard lifecycle={lc} />
-                </Link>
-              ))
-            )}
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(tab === "myplants" || !(isAdmin && showAllUsers)
+                ? myPlants
+                : inventoryList
+              ).length === 0 ? (
+                <p className="text-sm text-muted-foreground col-span-2 text-center py-8">
+                  {tab === "myplants" || !(isAdmin && showAllUsers)
+                    ? "No plants in your garden yet. Add a plant or adopt a purchased NFT."
+                    : "No inventory plants yet."}
+                </p>
+              ) : (
+                (tab === "myplants" || !(isAdmin && showAllUsers)
+                  ? myPlants
+                  : inventoryList
+                ).map((lc) => (
+                  <Link
+                    key={lc.plant.id.toString()}
+                    to="/plant/$plantId"
+                    params={{ plantId: lc.plant.id.toString() }}
+                    className="block no-underline"
+                  >
+                    <PlantLifecycleCard lifecycle={lc} />
+                  </Link>
+                ))
+              )}
+            </div>
           </div>
         )}
 
@@ -458,11 +495,32 @@ export default function NIMSPage() {
         {tab === "activity" && <ActivityFeed entries={activity} />}
 
         {tab === "analytics" && (
-          <NimsAnalyticsPanel
-            plants={
-              isAdmin && showAllUsers ? inventoryList : myPlants
-            }
-          />
+          ravenPerks.hasAdvancedAnalytics || isAdmin ? (
+            <NimsAnalyticsPanel
+              plants={isAdmin && showAllUsers ? inventoryList : myPlants}
+            />
+          ) : (
+            <div className="relative rounded-xl overflow-hidden">
+              <div className="opacity-20 pointer-events-none blur-sm select-none">
+                <NimsAnalyticsPanel plants={myPlants} />
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-xl gap-3">
+                <span className="text-3xl">🐦‍⬛</span>
+                <p className="text-white font-semibold text-sm">Raven Member Feature</p>
+                <p className="text-zinc-400 text-xs text-center max-w-xs">
+                  Hold 100K $RAVEN to unlock advanced NIMS analytics, CSV export, and unlimited weather history.
+                </p>
+                <a
+                  href="https://app.icpswap.com/swap?input=ryjl3-tyaaa-aaaaa-aaaba-cai&output=4k7jk-vyaaa-aaaam-qcyaa-cai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                >
+                  Get $RAVEN on ICPSwap
+                </a>
+              </div>
+            </div>
+          )
         )}
       </div>
 
@@ -488,10 +546,13 @@ export default function NIMSPage() {
             }}
             onSubmit={async ({ varietyId }) => {
               const occupied = trayCells.find(
-                (c) => c.position === selectedCell && cellStatusKey(c) !== "empty",
+                (c) =>
+                  c.position === selectedCell && cellStatusKey(c) !== "empty",
               );
               if (occupied) {
-                toast.error(`Cell ${cellPositionLabel(selectedCell)} already has a plant.`);
+                toast.error(
+                  `Cell ${cellPositionLabel(selectedCell)} already has a plant.`,
+                );
                 return;
               }
               try {
@@ -500,13 +561,17 @@ export default function NIMSPage() {
                   cellPosition: selectedCell,
                   varietyId,
                 });
-                toast.success(`Seed planted in ${cellPositionLabel(selectedCell)}`);
+                toast.success(
+                  `Seed planted in ${cellPositionLabel(selectedCell)}`,
+                );
                 setPrefillVarietyId(null);
                 setSeedOpen(false);
               } catch (e) {
                 const msg = e instanceof Error ? e.message : "Plant failed";
                 if (msg.toLowerCase().includes("already occupied")) {
-                  toast.error(`Cell ${cellPositionLabel(selectedCell)} already has a plant.`);
+                  toast.error(
+                    `Cell ${cellPositionLabel(selectedCell)} already has a plant.`,
+                  );
                 } else {
                   toast.error(msg);
                 }
@@ -535,7 +600,9 @@ export default function NIMSPage() {
                 }
                 setGermOpen(false);
               } catch (e) {
-                toast.error(e instanceof Error ? e.message : "Germination failed");
+                toast.error(
+                  e instanceof Error ? e.message : "Germination failed",
+                );
               }
             }}
           />
@@ -588,12 +655,15 @@ export default function NIMSPage() {
               try {
                 await transplantCell.mutateAsync({
                   plant_id: plantId,
-                  container_size: container_size as TransplantInput["container_size"],
+                  container_size:
+                    container_size as TransplantInput["container_size"],
                 });
                 toast.success("🪴 Transplanted to inventory");
                 setTransplantOpen(false);
               } catch (e) {
-                toast.error(e instanceof Error ? e.message : "Transplant failed");
+                toast.error(
+                  e instanceof Error ? e.message : "Transplant failed",
+                );
               }
             }}
           />
@@ -601,11 +671,15 @@ export default function NIMSPage() {
           <TransplantedCellModal
             open={transplantedOpen}
             onOpenChange={setTransplantedOpen}
-            slotLabel={selectedCell != null ? cellPositionLabel(selectedCell) : undefined}
+            slotLabel={
+              selectedCell != null ? cellPositionLabel(selectedCell) : undefined
+            }
             varietyName={unwrapOpt(selectedCellData?.varietyName ?? [])}
             nftTokenId={unwrapOpt(selectedCellData?.nftTokenId ?? [])}
             containerLabel={unwrapOpt(selectedCellData?.containerLabel ?? [])}
-            inventoryPlantId={unwrapOpt(selectedCellData?.inventoryPlantId ?? [])}
+            inventoryPlantId={unwrapOpt(
+              selectedCellData?.inventoryPlantId ?? [],
+            )}
           />
         </>
       )}
@@ -628,7 +702,9 @@ export default function NIMSPage() {
             setNewTrayOpen(false);
             toast.success(`Tray "${name}" created`);
           } catch (e) {
-            toast.error(e instanceof Error ? e.message : "Failed to create tray");
+            toast.error(
+              e instanceof Error ? e.message : "Failed to create tray",
+            );
           }
         }}
       />
@@ -645,6 +721,7 @@ export default function NIMSPage() {
               stage,
               container,
             });
+            track(USAGE.NIMS.PLANT_ADD.feature, USAGE.NIMS.PLANT_ADD.action);
             setAddPlantOpen(false);
             toast.success(`Plant #${result.plantId.toString()} added`);
             void navigate({

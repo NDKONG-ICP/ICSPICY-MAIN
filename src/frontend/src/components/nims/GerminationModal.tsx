@@ -55,73 +55,80 @@ export function GerminationModal({
           onMarkDead?.();
         }}
       />
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-ocid="nims-modal-germination" className="max-w-md gap-6">
-        <DialogHeader>
-          <DialogTitle>Confirm germination</DialogTitle>
-          <DialogDescription>
-            {plantName ?? "Seedling emergence"} • {slotLabel ?? "Tray slot"}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nims-germ-date">Observation date</Label>
-            <Input
-              id="nims-germ-date"
-              data-ocid="nims-germ-date"
-              type="date"
-              value={dateIso}
-              onChange={(e) => setDateIso(e.target.value)}
-            />
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent
+          data-ocid="nims-modal-germination"
+          className="max-w-md gap-6"
+        >
+          <DialogHeader>
+            <DialogTitle>Confirm germination</DialogTitle>
+            <DialogDescription>
+              {plantName ?? "Seedling emergence"} • {slotLabel ?? "Tray slot"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nims-germ-date">Observation date</Label>
+              <Input
+                id="nims-germ-date"
+                data-ocid="nims-germ-date"
+                type="date"
+                value={dateIso}
+                onChange={(e) => setDateIso(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nims-germ-notes">Notes</Label>
+              <Textarea
+                id="nims-germ-notes"
+                data-ocid="nims-germ-notes"
+                placeholder="% germ, tray zone, damping-off watch…"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="nims-germ-notes">Notes</Label>
-            <Textarea
-              id="nims-germ-notes"
-              data-ocid="nims-germ-notes"
-              placeholder="% germ, tray zone, damping-off watch…"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-        </div>
-        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
-          {onMarkDead ? (
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              data-ocid="nims-germ-mark-dead"
-              onClick={() => setConfirmDeadOpen(true)}
-            >
-              Mark dead instead
-            </Button>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-2 sm:ml-auto">
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              data-ocid="nims-germ-submit"
-              disabled={dateIso.trim() === ""}
-              onClick={() => {
-                onSubmit({
-                  dateIso,
-                  notes: notes.trim() === "" ? undefined : notes.trim(),
-                });
-                onOpenChange(false);
-              }}
-            >
-              Mark germinated
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+            {onMarkDead ? (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                data-ocid="nims-germ-mark-dead"
+                onClick={() => setConfirmDeadOpen(true)}
+              >
+                Mark dead instead
+              </Button>
+            ) : (
+              <span />
+            )}
+            <div className="flex gap-2 sm:ml-auto">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                data-ocid="nims-germ-submit"
+                disabled={dateIso.trim() === ""}
+                onClick={() => {
+                  onSubmit({
+                    dateIso,
+                    notes: notes.trim() === "" ? undefined : notes.trim(),
+                  });
+                  onOpenChange(false);
+                }}
+              >
+                Mark germinated
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

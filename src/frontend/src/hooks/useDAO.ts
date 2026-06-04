@@ -23,7 +23,12 @@ function useDaoActor() {
   return useActor<Backend>(createActor);
 }
 
-export type { ProposalPublic, CreateProposalInput, ProposalCategory, ProposalStatus };
+export type {
+  ProposalPublic,
+  CreateProposalInput,
+  ProposalCategory,
+  ProposalStatus,
+};
 
 export function useProposals(
   status?: ProposalStatus,
@@ -123,10 +128,14 @@ export function useDAOStats() {
         ),
         totalVotes: BigInt(stats.totalVotes),
         callerVotes: BigInt(
-          "callerVotes" in stats ? (stats as { callerVotes: bigint }).callerVotes : 0,
+          "callerVotes" in stats
+            ? (stats as { callerVotes: bigint }).callerVotes
+            : 0,
         ),
         uniqueVoters: BigInt(
-          "uniqueVoters" in stats ? (stats as { uniqueVoters: bigint }).uniqueVoters : 0,
+          "uniqueVoters" in stats
+            ? (stats as { uniqueVoters: bigint }).uniqueVoters
+            : 0,
         ),
       };
     },

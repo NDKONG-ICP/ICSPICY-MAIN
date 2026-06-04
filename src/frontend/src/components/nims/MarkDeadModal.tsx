@@ -41,15 +41,18 @@ export function MarkDeadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-ocid="nims-modal-mark-dead" className="max-w-md gap-6">
+      <DialogContent
+        data-ocid="nims-modal-mark-dead"
+        className="max-w-md gap-6"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="size-5" aria-hidden />
             Mark tray loss
           </DialogTitle>
           <DialogDescription>
-            {plantLabel ?? "Recording loss"} freezes provenance permanently for this
-            cell.
+            {plantLabel ?? "Recording loss"} freezes provenance permanently for
+            this cell.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground">
@@ -84,7 +87,11 @@ export function MarkDeadModal({
           />
         )}
         <DialogFooter className="gap-2">
-          <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button

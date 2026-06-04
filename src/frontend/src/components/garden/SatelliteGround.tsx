@@ -1,6 +1,6 @@
-import { memo, useEffect, useRef, useState } from "react";
-import * as THREE from "three";
 import { loadSatelliteThreeTexture } from "@/lib/satellite-texture-cache";
+import { memo, useEffect, useRef, useState } from "react";
+import type * as THREE from "three";
 import { ProceduralGround } from "./ProceduralGround";
 
 type Props = {
@@ -68,7 +68,11 @@ export const SatelliteGround = memo(function SatelliteGround({
   }
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[centerX, -0.01, centerZ]} receiveShadow>
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[centerX, -0.01, centerZ]}
+      receiveShadow
+    >
       <planeGeometry args={[widthMeters, depthMeters]} />
       <meshStandardMaterial
         map={activeTexture ?? undefined}

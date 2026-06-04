@@ -1,0 +1,15 @@
+diff --git a/lib/esm/stoicConnection.js b/lib/esm/stoicConnection.js
+index 97a4c18c69ba4f162e0dbb0b600e39f6216caf64..f3f049cb424c1f4f101ff7627e3de9d8b2b5879a 100644
+--- a/lib/esm/stoicConnection.js
++++ b/lib/esm/stoicConnection.js	
+@@ -13,7 +13,9 @@ var _StoicConnection_instances, _a, _StoicConnection_isInternalConstructing, _St
+ import { StoicTransportError } from "./stoicTransport";
+ import { Delegation, DelegationChain, ECDSAKeyIdentity, Ed25519KeyIdentity, isDelegationValid, } from "@dfinity/identity";
+ import { getDelegationChain, getIdentity, IdbStorage, removeDelegationChain, setDelegationChain, setIdentity, } from "@slide-computer/signer-storage";
+-import { fromHex, requestIdOf, SignIdentity, toHex } from "@dfinity/agent";
++import { requestIdOf, SignIdentity } from "@dfinity/agent";
++function toHex(b) { return Array.from(new Uint8Array(b instanceof ArrayBuffer ? b : (b?.buffer ?? b))).map(x => x.toString(16).padStart(2, '0')).join(''); }
++function fromHex(s) { const m = s.match(/../g) || []; return new Uint8Array(m.map(b => parseInt(b, 16))).buffer; }
+ import { PartialIdentity } from "@dfinity/identity/lib/cjs/identity/partial";
+ import { Principal } from "@dfinity/principal";
+ const ECDSA_KEY_LABEL = "ECDSA";

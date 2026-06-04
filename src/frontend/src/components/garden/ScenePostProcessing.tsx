@@ -1,7 +1,12 @@
-import { EffectComposer, Bloom, Vignette, ToneMapping } from "@react-three/postprocessing";
+import { useThree } from "@react-three/fiber";
+import {
+  Bloom,
+  EffectComposer,
+  ToneMapping,
+  Vignette,
+} from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import { memo, useEffect, useState } from "react";
-import { useThree } from "@react-three/fiber";
 
 export function PixelRatioLimiter() {
   const { gl } = useThree();
@@ -21,7 +26,9 @@ function useCanDoPostProcessing(): boolean {
     const maxRb = ctx.getParameter(ctx.MAX_RENDERBUFFER_SIZE) as number;
     const needW = size.width * dpr;
     const needH = size.height * dpr;
-    setCanPost(maxRb >= needW && maxRb >= needH && needW <= 4096 && needH <= 4096);
+    setCanPost(
+      maxRb >= needW && maxRb >= needH && needW <= 4096 && needH <= 4096,
+    );
   }, [gl, size.width, size.height]);
 
   return canPost;

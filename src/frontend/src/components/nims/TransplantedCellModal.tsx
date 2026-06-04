@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router";
 
 export type TransplantedCellModalProps = {
   open: boolean;
@@ -32,7 +32,10 @@ export function TransplantedCellModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-ocid="nims-modal-transplanted-cell" className="max-w-md">
+      <DialogContent
+        data-ocid="nims-modal-transplanted-cell"
+        className="max-w-md"
+      >
         <DialogHeader>
           <DialogTitle>Transplanted · {slotLabel ?? "Tray cell"}</DialogTitle>
           <DialogDescription>
@@ -43,7 +46,9 @@ export function TransplantedCellModal({
         <div className="space-y-2 text-sm">
           <p>
             <span className="text-muted-foreground">Plant:</span>{" "}
-            <span className="font-medium">{varietyName ?? "Unknown variety"}</span>
+            <span className="font-medium">
+              {varietyName ?? "Unknown variety"}
+            </span>
           </p>
           {nftTokenId != null && (
             <p>
@@ -59,7 +64,11 @@ export function TransplantedCellModal({
           )}
         </div>
         <DialogFooter className="flex-col gap-2 sm:flex-row">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Close
           </Button>
           {detailId ? (

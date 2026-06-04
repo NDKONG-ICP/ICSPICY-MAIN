@@ -1,8 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Principal } from "@icp-sdk/core/principal";
-import { useActor } from "./useActor";
-import { useActorReady } from "./useActorReady";
-import { useAuth } from "./useAuth";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   AddPlantResult,
   ContainerSize,
@@ -15,15 +12,18 @@ import type {
   TrayId,
   VarietyPublic,
 } from "../declarations/backend.did";
+import { getNftImageUrl } from "../lib/nft-config";
 import {
   callRemovePlant,
   callTransplantPlant,
 } from "../lib/nims-backend-calls";
-import { getNftImageUrl } from "../lib/nft-config";
 import {
   refreshAllTrayGrids,
   refreshNimsDashboardStats,
 } from "../lib/nims-query";
+import { useActor } from "./useActor";
+import { useActorReady } from "./useActorReady";
+import { useAuth } from "./useAuth";
 
 import type { Backend } from "../backend";
 
@@ -120,7 +120,13 @@ export function useAdminInventory(
   const actor = useNimsActor();
   const { actorReady } = useActorReady();
   return useQuery({
-    queryKey: ["adminInventory", stage, varietyId?.toString(), forSale, actorReady],
+    queryKey: [
+      "adminInventory",
+      stage,
+      varietyId?.toString(),
+      forSale,
+      actorReady,
+    ],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAdminInventory(
@@ -301,12 +307,17 @@ export function useAddPlantNote() {
   const actor = useNimsActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ plantId, text }: { plantId: PlantId; text: string }) => {
+    mutationFn: async ({
+      plantId,
+      text,
+    }: { plantId: PlantId; text: string }) => {
       if (!actor) throw new Error("Not connected");
       return actor.addPlantNote(plantId, text);
     },
     onSuccess: (_, { plantId }) => {
-      qc.invalidateQueries({ queryKey: ["plantLifecycle", plantId.toString()] });
+      qc.invalidateQueries({
+        queryKey: ["plantLifecycle", plantId.toString()],
+      });
     },
   });
 }
@@ -353,7 +364,9 @@ export function useTransplantPlant() {
       await refreshNimsDashboardStats(qc);
       qc.invalidateQueries({ queryKey: ["adminInventory"] });
       qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
-      qc.invalidateQueries({ queryKey: ["plantLifecycle", vars.plantId.toString()] });
+      qc.invalidateQueries({
+        queryKey: ["plantLifecycle", vars.plantId.toString()],
+      });
     },
   });
 }
@@ -384,7 +397,12 @@ export function usePepperHeadAvailable() {
   });
 }
 
-export type { PlantLifecycle, VarietyPublic, PlantCountStats, PurchasePlantResult };
+export type {
+  PlantLifecycle,
+  VarietyPublic,
+  PlantCountStats,
+  PurchasePlantResult,
+};
 
 export function stageLabel(stage: PlantStage): string {
   if ("Seed" in stage) return "Germinated";

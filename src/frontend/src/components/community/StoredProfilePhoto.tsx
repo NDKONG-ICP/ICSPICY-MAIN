@@ -14,10 +14,7 @@ export function StoredProfilePhoto({
   className?: string;
   fallback?: ReactNode;
 }) {
-  if (
-    !path ||
-    (!isAvatarPath(path) && !isCommunityPhotoPath(path))
-  ) {
+  if (!path || (!isAvatarPath(path) && !isCommunityPhotoPath(path))) {
     return <>{fallback ?? null}</>;
   }
 

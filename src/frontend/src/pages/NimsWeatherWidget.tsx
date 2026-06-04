@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
+import { WEATHER_FETCH_INIT } from "@/lib/weather-service";
 import { CloudRain, MapPin, Thermometer, Wind } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { WEATHER_FETCH_INIT } from "@/lib/weather-service";
 import type { WeatherRecord } from "../backend";
 import { useAddWeatherRecord, useMyWeatherRecords } from "../hooks/useBackend";
 

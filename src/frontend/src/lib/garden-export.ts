@@ -7,7 +7,10 @@ export function playPlacementSound() {
     const gain = audioCtx.createGain();
     osc.type = "sine";
     osc.frequency.setValueAtTime(280, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.08);
+    osc.frequency.exponentialRampToValueAtTime(
+      120,
+      audioCtx.currentTime + 0.08,
+    );
     gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
     osc.connect(gain);
@@ -19,7 +22,9 @@ export function playPlacementSound() {
   }
 }
 
-export async function captureCanvasScreenshot(canvas: HTMLCanvasElement): Promise<void> {
+export async function captureCanvasScreenshot(
+  canvas: HTMLCanvasElement,
+): Promise<void> {
   const url = canvas.toDataURL("image/png");
   const a = document.createElement("a");
   a.href = url;

@@ -6,7 +6,11 @@ type Props = {
   gridSizeMeters: number;
 };
 
-export function GridOverlay3D({ widthMeters, depthMeters, gridSizeMeters }: Props) {
+export function GridOverlay3D({
+  widthMeters,
+  depthMeters,
+  gridSizeMeters,
+}: Props) {
   return (
     <Grid
       args={[widthMeters, depthMeters]}

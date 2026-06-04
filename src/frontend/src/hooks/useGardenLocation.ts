@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { GardenLocationMode } from "../lib/garden-types";
 import { NURSERY_LAT, NURSERY_LNG } from "../lib/weather-service";
 import { useNimsLocation } from "./useNimsLocation";
-import type { GardenLocationMode } from "../lib/garden-types";
 
 const DRAFT_KEY = "garden-location-draft";
 
@@ -35,8 +35,12 @@ function writeStored(designId: number | null, loc: GardenLocationState | null) {
 
 export function useGardenLocation(designId: number | null) {
   const nims = useNimsLocation();
-  const [stored, setStored] = useState<GardenLocationState | null>(() => readStored(designId));
-  const [needsPrompt, setNeedsPrompt] = useState(() => readStored(designId) == null);
+  const [stored, setStored] = useState<GardenLocationState | null>(() =>
+    readStored(designId),
+  );
+  const [needsPrompt, setNeedsPrompt] = useState(
+    () => readStored(designId) == null,
+  );
   const [addressDraft, setAddressDraft] = useState("");
 
   useEffect(() => {

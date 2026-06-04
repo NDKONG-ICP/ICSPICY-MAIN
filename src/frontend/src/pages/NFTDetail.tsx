@@ -17,12 +17,14 @@ import {
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { Value } from "../declarations/backend.did";
-import { useAuth } from "../hooks/useAuth";
+import { NftPlantFlipCard } from "../components/NftPlantFlipCard";
 import {
   TokenPaymentPanel,
   useTokenPaymentState,
 } from "../components/TokenPaymentPanel";
+import { WeatherProvenance } from "../components/nims/WeatherProvenance";
+import type { Value } from "../declarations/backend.did";
+import { useAuth } from "../hooks/useAuth";
 import {
   useIsPepperHead,
   useIsPepperHeadAvailable,
@@ -31,11 +33,9 @@ import {
   useTokenMetadata,
   useTokenOwner,
 } from "../hooks/useBackend";
-import { NftPlantFlipCard } from "../components/NftPlantFlipCard";
-import { WeatherProvenance } from "../components/nims/WeatherProvenance";
 import { usePlantByNft } from "../hooks/useNims";
-import { getNftImageUrl, isValidTokenId } from "../lib/nft-config";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { getNftImageUrl, isValidTokenId } from "../lib/nft-config";
 
 // ── Metadata helpers ────────────────────────────────────────────────────────
 
@@ -669,13 +669,13 @@ export default function NFTDetailPage() {
         : "NFT",
   );
 
-
   const { data: metadata, isLoading: loadingMetadata } = useTokenMetadata(id);
   const { data: owner, isLoading: loadingOwner } = useTokenOwner(id);
   const { data: isPepperHead } = useIsPepperHead(id);
   const { data: certified, isLoading: loadingCertified } =
     useTokenCertified(id);
-  const { data: linkedPlant, isLoading: loadingLinkedPlant } = usePlantByNft(id);
+  const { data: linkedPlant, isLoading: loadingLinkedPlant } =
+    usePlantByNft(id);
 
   if (id === null) {
     return (
@@ -787,10 +787,7 @@ export default function NFTDetailPage() {
             <TraitsGrid attributes={attributes} loading={loadingMetadata} />
 
             {isPepperHead && (
-              <PepperHeadPurchaseCard
-                tokenId={id}
-                ownerPrincipal={ownerText}
-              />
+              <PepperHeadPurchaseCard tokenId={id} ownerPrincipal={ownerText} />
             )}
 
             {linkedPlant ? (

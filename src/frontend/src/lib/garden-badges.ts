@@ -1,5 +1,5 @@
+import { PLANT_CATALOG, getPlantById } from "./garden-plant-catalog";
 import type { GardenDesign } from "./garden-types";
-import { getPlantById, PLANT_CATALOG } from "./garden-plant-catalog";
 
 export type BadgeId =
   | "first_seed"
@@ -25,20 +25,90 @@ export type Badge = {
 };
 
 export const BADGES: Badge[] = [
-  { id: "first_seed", emoji: "🌱", title: "First Seed", description: "Place your first plant" },
-  { id: "tree_hugger", emoji: "🌳", title: "Tree Hugger", description: "Place 10 trees" },
-  { id: "spice_lord", emoji: "🌶️", title: "Spice Lord", description: "Place 10+ pepper varieties" },
-  { id: "pollinator", emoji: "🦋", title: "Pollinator Paradise", description: "10+ pollinator plants" },
-  { id: "homesteader", emoji: "🐔", title: "Homesteader", description: "Coop + beds + fruit trees" },
-  { id: "water_wise", emoji: "🌊", title: "Water Wise", description: "Rain barrels + swales + drip" },
-  { id: "native_champion", emoji: "🍃", title: "Native Champion", description: "80%+ Florida natives" },
-  { id: "master_designer", emoji: "🧑‍🌾", title: "Master Designer", description: "Save 10 designs" },
-  { id: "ai_architect", emoji: "🤖", title: "AI Architect", description: "Generate a layout with AI" },
-  { id: "garden_walker", emoji: "🚶", title: "Garden Walker", description: "Walk through in first-person" },
-  { id: "shutterbug", emoji: "📸", title: "Shutterbug", description: "Export 5 screenshots" },
-  { id: "composter", emoji: "♻️", title: "Composter", description: "Add compost infrastructure" },
-  { id: "food_forest_master", emoji: "🏆", title: "Food Forest Master", description: "50+ edible plants" },
-  { id: "on_fire", emoji: "🔥", title: "On Fire", description: "20+ pepper varieties" },
+  {
+    id: "first_seed",
+    emoji: "🌱",
+    title: "First Seed",
+    description: "Place your first plant",
+  },
+  {
+    id: "tree_hugger",
+    emoji: "🌳",
+    title: "Tree Hugger",
+    description: "Place 10 trees",
+  },
+  {
+    id: "spice_lord",
+    emoji: "🌶️",
+    title: "Spice Lord",
+    description: "Place 10+ pepper varieties",
+  },
+  {
+    id: "pollinator",
+    emoji: "🦋",
+    title: "Pollinator Paradise",
+    description: "10+ pollinator plants",
+  },
+  {
+    id: "homesteader",
+    emoji: "🐔",
+    title: "Homesteader",
+    description: "Coop + beds + fruit trees",
+  },
+  {
+    id: "water_wise",
+    emoji: "🌊",
+    title: "Water Wise",
+    description: "Rain barrels + swales + drip",
+  },
+  {
+    id: "native_champion",
+    emoji: "🍃",
+    title: "Native Champion",
+    description: "80%+ Florida natives",
+  },
+  {
+    id: "master_designer",
+    emoji: "🧑‍🌾",
+    title: "Master Designer",
+    description: "Save 10 designs",
+  },
+  {
+    id: "ai_architect",
+    emoji: "🤖",
+    title: "AI Architect",
+    description: "Generate a layout with AI",
+  },
+  {
+    id: "garden_walker",
+    emoji: "🚶",
+    title: "Garden Walker",
+    description: "Walk through in first-person",
+  },
+  {
+    id: "shutterbug",
+    emoji: "📸",
+    title: "Shutterbug",
+    description: "Export 5 screenshots",
+  },
+  {
+    id: "composter",
+    emoji: "♻️",
+    title: "Composter",
+    description: "Add compost infrastructure",
+  },
+  {
+    id: "food_forest_master",
+    emoji: "🏆",
+    title: "Food Forest Master",
+    description: "50+ edible plants",
+  },
+  {
+    id: "on_fire",
+    emoji: "🔥",
+    title: "On Fire",
+    description: "20+ pepper varieties",
+  },
 ];
 
 const STORAGE_KEY = "garden-badges-earned";
@@ -82,7 +152,11 @@ export function saveBadgeStats(stats: BadgeStats) {
 function countTrees(design: GardenDesign): number {
   return design.plants.filter((p) => {
     const c = p.catalogId ? getPlantById(p.catalogId) : null;
-    return c?.modelType === "large_tree" || c?.modelType === "small_tree" || c?.modelType === "palm";
+    return (
+      c?.modelType === "large_tree" ||
+      c?.modelType === "small_tree" ||
+      c?.modelType === "palm"
+    );
   }).length;
 }
 
@@ -107,12 +181,20 @@ export function evaluateBadges(
   if (countPepperVarieties(design) >= 10) earned.push("spice_lord");
   if (countPepperVarieties(design) >= 20) earned.push("on_fire");
 
-  const pollinators = design.plants.filter((p) => getPlantById(p.catalogId ?? "")?.category === "pollinator").length;
+  const pollinators = design.plants.filter(
+    (p) => getPlantById(p.catalogId ?? "")?.category === "pollinator",
+  ).length;
   if (pollinators >= 10) earned.push("pollinator");
 
-  const hasCoop = design.structures.some((s) => s.structureType.includes("chicken"));
-  const hasBeds = design.structures.some((s) => s.structureType.includes("bed"));
-  const hasFruit = design.plants.some((p) => getPlantById(p.catalogId ?? "")?.category === "tropical_fruit");
+  const hasCoop = design.structures.some((s) =>
+    s.structureType.includes("chicken"),
+  );
+  const hasBeds = design.structures.some((s) =>
+    s.structureType.includes("bed"),
+  );
+  const hasFruit = design.plants.some(
+    (p) => getPlantById(p.catalogId ?? "")?.category === "tropical_fruit",
+  );
   if (hasCoop && hasBeds && hasFruit) earned.push("homesteader");
 
   const water = design.structures.some((s) =>
@@ -120,13 +202,19 @@ export function evaluateBadges(
   );
   if (water) earned.push("water_wise");
 
-  const edible = design.plants.filter((p) => getPlantById(p.catalogId ?? "")?.edible !== false).length;
+  const edible = design.plants.filter(
+    (p) => getPlantById(p.catalogId ?? "")?.edible !== false,
+  ).length;
   if (edible >= 50) earned.push("food_forest_master");
 
-  const natives = design.plants.filter((p) => getPlantById(p.catalogId ?? "")?.nativeFlorida).length;
-  if (design.plants.length > 0 && natives / design.plants.length >= 0.8) earned.push("native_champion");
+  const natives = design.plants.filter(
+    (p) => getPlantById(p.catalogId ?? "")?.nativeFlorida,
+  ).length;
+  if (design.plants.length > 0 && natives / design.plants.length >= 0.8)
+    earned.push("native_champion");
 
-  if (design.structures.some((s) => s.structureType.includes("compost"))) earned.push("composter");
+  if (design.structures.some((s) => s.structureType.includes("compost")))
+    earned.push("composter");
 
   if (stats.savedDesigns >= 10) earned.push("master_designer");
   if (stats.aiUsed) earned.push("ai_architect");

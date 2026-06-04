@@ -1,4 +1,4 @@
-import { useSpring, animated } from "@react-spring/three";
+import { animated, useSpring } from "@react-spring/three";
 import type { ReactNode } from "react";
 
 export function AnimatedPlacement({

@@ -57,7 +57,12 @@ function PlantSeedAnimation() {
               className="flex h-full items-center justify-center text-lg"
               initial={{ y: -24, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.5 }}
+              transition={{
+                type: "spring",
+                stiffness: 260,
+                damping: 18,
+                delay: 0.5,
+              }}
             >
               🌱
             </motion.span>
@@ -72,8 +77,14 @@ function GerminationAnimation() {
   return (
     <motion.div
       className="flex size-24 items-center justify-center rounded-xl border-2 border-emerald-500/60 bg-emerald-950/50"
-      initial={{ backgroundColor: "rgb(180 83 9 / 0.4)", borderColor: "rgb(217 119 6)" }}
-      animate={{ backgroundColor: "rgb(6 78 59 / 0.5)", borderColor: "rgb(16 185 129)" }}
+      initial={{
+        backgroundColor: "rgb(180 83 9 / 0.4)",
+        borderColor: "rgb(217 119 6)",
+      }}
+      animate={{
+        backgroundColor: "rgb(6 78 59 / 0.5)",
+        borderColor: "rgb(16 185 129)",
+      }}
       transition={{ duration: 1.2 }}
     >
       <motion.span
@@ -113,7 +124,12 @@ function LogActionsAnimation() {
               className="pointer-events-none absolute inset-0 rounded-full border-2 border-primary/40"
               initial={{ scale: 1, opacity: 0.8 }}
               animate={{ scale: 1.8, opacity: 0 }}
-              transition={{ delay: 0.4 + i * 0.12, duration: 0.8, repeat: Infinity, repeatDelay: 1.2 }}
+              transition={{
+                delay: 0.4 + i * 0.12,
+                duration: 0.8,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatDelay: 1.2,
+              }}
             />
           </motion.button>
         );
@@ -146,7 +162,11 @@ function WeatherBarAnimation() {
             className={`text-sm font-semibold ${m.color}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: [0.4, 1, 0.7, 1] }}
-            transition={{ delay: i * 0.3, duration: 2, repeat: Infinity }}
+            transition={{
+              delay: i * 0.3,
+              duration: 2,
+              repeat: Number.POSITIVE_INFINITY,
+            }}
           >
             {m.label}
           </motion.div>

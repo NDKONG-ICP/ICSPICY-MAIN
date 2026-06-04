@@ -4,9 +4,7 @@ import { useMemo, useState } from "react";
 import type { PlantPhotoEntry } from "../declarations/backend.did";
 import { FlipCard } from "./FlipCard";
 
-function latestPlantPhoto(
-  photos: PlantPhotoEntry[],
-): PlantPhotoEntry | null {
+function latestPlantPhoto(photos: PlantPhotoEntry[]): PlantPhotoEntry | null {
   if (photos.length === 0) return null;
   return photos.reduce((best, photo) =>
     photo.timestamp > best.timestamp ? photo : best,
@@ -52,7 +50,9 @@ export function NftPlantFlipCard({
         nftErrored ? (
           <div className="flex h-full w-full flex-col items-center justify-center bg-muted text-muted-foreground">
             <span className="text-4xl">🌶️</span>
-            <span className="mt-2 text-sm font-mono">#{tokenId.toString()}</span>
+            <span className="mt-2 text-sm font-mono">
+              #{tokenId.toString()}
+            </span>
           </div>
         ) : (
           <img

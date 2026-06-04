@@ -35,7 +35,14 @@ export type GenerateOpts = {
 
 export function generatePlantStructure(opts: GenerateOpts): PlantStructure {
   const rand = seededRandom(opts.seed);
-  const { height, branchCount, leafDensity, pepperCount, droopFactor, profile } = opts;
+  const {
+    height,
+    branchCount,
+    leafDensity,
+    pepperCount,
+    droopFactor,
+    profile,
+  } = opts;
 
   const stemPoints: [number, number, number][] = [];
   const segments = 6;

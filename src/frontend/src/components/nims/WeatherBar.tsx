@@ -1,14 +1,16 @@
+import { ChevronDown, ChevronUp } from "lucide-react";
 import {
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
-import { AnimatePresence, motion, useMotionValueEvent, useSpring } from "motion/react";
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useSpring,
+} from "motion/react";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
-import { NURSERY_LAT, NURSERY_LNG } from "../../lib/weather-service";
-import type { WeatherData } from "../../hooks/useWeather";
 import type { LocationPreference } from "../../hooks/useNimsLocation";
+import type { WeatherData } from "../../hooks/useWeather";
+import { NURSERY_LAT, NURSERY_LNG } from "../../lib/weather-service";
 import { weatherIcon } from "../../lib/weather-service";
 import { NimsLocationSelector } from "./NimsLocationSelector";
 import { WeatherImmersivePanel } from "./WeatherImmersivePanel";
@@ -93,7 +95,11 @@ export function WeatherBar({
             <span className="flex items-center gap-2 text-xs sm:text-sm">
               <motion.span
                 animate={{ y: [0, -3, 0] }}
-                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                transition={{
+                  repeat: Number.POSITIVE_INFINITY,
+                  duration: 3,
+                  ease: "easeInOut",
+                }}
                 className="text-base"
                 aria-hidden
               >

@@ -20,7 +20,11 @@ export async function compressAvatarImage(file: File): Promise<Blob> {
     img.onload = () => {
       URL.revokeObjectURL(objectUrl);
       let { width, height } = img;
-      const ratio = Math.min(MAX_AVATAR_DIM / width, MAX_AVATAR_DIM / height, 1);
+      const ratio = Math.min(
+        MAX_AVATAR_DIM / width,
+        MAX_AVATAR_DIM / height,
+        1,
+      );
       width = Math.round(width * ratio);
       height = Math.round(height * ratio);
       const canvas = document.createElement("canvas");

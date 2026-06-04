@@ -53,7 +53,8 @@ export function LogFeedingModal({
         <DialogHeader>
           <DialogTitle>Log feeding</DialogTitle>
           <DialogDescription>
-            {plantLabel ?? "Capture nutrient pass for future buyers + provenance."}
+            {plantLabel ??
+              "Capture nutrient pass for future buyers + provenance."}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-5">

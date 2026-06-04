@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import environment from "vite-plugin-environment";
 
+
 const ii_url =
   process.env.DFX_NETWORK === "local"
     ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943/`
@@ -49,6 +50,17 @@ export default defineConfig({
       {
         find: "@",
         replacement: fileURLToPath(new URL("./src", import.meta.url)),
+      },
+      // @nfid/identitykit imports @dfinity/identity subpaths not in the exports
+      // map. Alias them explicitly so Vite/rollup can resolve them.
+      {
+        find: /^@dfinity\/identity\/lib\/cjs\/identity\/partial$/,
+        replacement: fileURLToPath(
+          new URL(
+            "./node_modules/@dfinity/identity/lib/cjs/identity/partial.js",
+            import.meta.url,
+          ),
+        ),
       },
     ],
     dedupe: ["@dfinity/agent", "@dfinity/identity"],

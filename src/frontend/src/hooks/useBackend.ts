@@ -1,5 +1,5 @@
-import type { Principal } from "@icp-sdk/core/principal";
 import type { ActorSubclass } from "@dfinity/agent";
+import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createActor } from "../backend";
 import { variantToString } from "../lib/candid-display";
@@ -51,10 +51,10 @@ import type {
 } from "../backend";
 import { UserRole } from "../backend";
 import type {
-  CreateRecipeInput,
-  UpdateRecipeInput,
-  RecipePublic,
   _SERVICE as BackendServiceRaw,
+  CreateRecipeInput,
+  RecipePublic,
+  UpdateRecipeInput,
 } from "../declarations/backend.did";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
@@ -878,6 +878,64 @@ export function useSaveProfile() {
   });
 }
 
+// ─── Linked wallets ──────────────────────────────────────────────────────────
+
+export function useLinkedWallets() {
+  const { actor, isFetching } = useBackendActor();
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: ["linkedWallets"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getLinkedWallets();
+    },
+    enabled: !!actor && !isFetching && isAuthenticated,
+  });
+}
+
+export function useLinkWallet() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (walletPrincipal: import("@dfinity/principal").Principal) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.linkWallet(walletPrincipal);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["linkedWallets"] });
+    },
+  });
+}
+
+export function useUnlinkWallet() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (walletPrincipal: import("@dfinity/principal").Principal) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.unlinkWallet(walletPrincipal);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["linkedWallets"] });
+      void qc.invalidateQueries({ queryKey: ["ravenPerks"] });
+    },
+  });
+}
+
+export function useRefreshRavenBalance() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Not connected");
+      return actor.refreshRavenBalance();
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["ravenPerks"] });
+    },
+  });
+}
+
 // ─── Membership ──────────────────────────────────────────────────────────────
 
 export function useMembership() {
@@ -1122,7 +1180,7 @@ export function useGetRecipe(id: RecipeId | undefined) {
       const svc = cookbookRaw(actor);
       if (!svc) return null;
       const opt = await svc.getRecipe(id);
-      return opt.length === 0 ? null : opt[0] ?? null;
+      return opt.length === 0 ? null : (opt[0] ?? null);
     },
     enabled: !!actor && !isFetching && id !== undefined && actorReady,
   });
@@ -1286,7 +1344,8 @@ export function useGetClaimInfo(token: string | undefined) {
         nftName: raw.nftName,
         plantId: raw.plantId?.[0],
         variety: raw.variety?.[0],
-        stage: raw.stage?.[0] != null ? variantToString(raw.stage[0]) : undefined,
+        stage:
+          raw.stage?.[0] != null ? variantToString(raw.stage[0]) : undefined,
         photoUrl: raw.photoUrl?.[0],
       };
     },

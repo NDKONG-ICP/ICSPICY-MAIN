@@ -5,21 +5,30 @@ import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
 import { useTokenPrices } from "../hooks/useTokenPrices";
 import { icrc2Approve } from "../lib/icrc2-payment";
+import { oisyIcrc2Approve, oisyPaymentAmount } from "../lib/oisy-payment";
 import { usdToTokenAmount } from "../lib/price-service";
 import {
   ALL_PAYMENT_TOKENS,
+  PAYMENT_LEDGERS,
+  type PaymentTokenSymbol,
+  TOKEN_DECIMALS,
+  VOLATILE_APPROVE_BUFFER_BPS,
   formatTokenAmount,
   formatUsdFromCents,
   isStablePaymentToken,
-  PAYMENT_LEDGERS,
   stableAmountFromUsdCents,
-  TOKEN_DECIMALS,
-  VOLATILE_APPROVE_BUFFER_BPS,
-  type PaymentTokenSymbol,
 } from "../lib/token-payment";
+import { useOisyWallet } from "../providers/OisyWalletProvider";
 import { TOKEN_DISPLAY } from "../types";
+import { OisyConnectButton } from "./OisyConnectButton";
 
 type PayHandler = (args: {
+  token: PaymentTokenSymbol;
+  ledgerCanisterId: string;
+  amount: bigint;
+}) => Promise<void>;
+
+type OisyPayHandler = (args: {
   token: PaymentTokenSymbol;
   ledgerCanisterId: string;
   amount: bigint;
@@ -64,17 +73,23 @@ function formatPaySubtitle(
 export function TokenPaymentPanel({
   usdCents,
   onPay,
+  onOisyPay,
   payingToken,
   setPayingToken,
   dataOcid = "token-payment-panel",
 }: {
   usdCents: bigint;
   onPay: PayHandler;
+  /** When provided, an OISY payment section is shown below the II tokens. */
+  onOisyPay?: OisyPayHandler;
   payingToken: PaymentTokenSymbol | null;
   setPayingToken: (t: PaymentTokenSymbol | null) => void;
   dataOcid?: string;
 }) {
   const { identity, login, isAuthenticated } = useAuth();
+  const { isOisyConnected, oisyAgent, connectOisy } = useOisyWallet();
+  const [oisyPayingToken, setOisyPayingToken] =
+    useState<PaymentTokenSymbol | null>(null);
   const {
     data: prices,
     isLoading: pricesLoading,
@@ -100,7 +115,9 @@ export function TokenPaymentPanel({
     try {
       const amount = paymentAmount(usdCents, token, priceUsd);
       await icrc2Approve(identity, ledgerId, amount, undefined, {
-        bufferBps: isStablePaymentToken(token) ? 0 : VOLATILE_APPROVE_BUFFER_BPS,
+        bufferBps: isStablePaymentToken(token)
+          ? 0
+          : VOLATILE_APPROVE_BUFFER_BPS,
       });
       await onPay({ token, ledgerCanisterId: ledgerId, amount });
     } catch (err) {
@@ -110,10 +127,45 @@ export function TokenPaymentPanel({
     }
   };
 
+  const handleOisyPay = async (token: PaymentTokenSymbol) => {
+    if (!onOisyPay) return;
+    if (!isOisyConnected || !oisyAgent) {
+      await connectOisy();
+      return;
+    }
+    const priceUsd = tokenPriceUsd(token, prices);
+    if (priceUsd == null) {
+      toast.error("Price unavailable — try ckUSDC or ckUSDT");
+      return;
+    }
+    const ledgerId = PAYMENT_LEDGERS[token];
+    setOisyPayingToken(token);
+    try {
+      const amount = oisyPaymentAmount(usdCents, token, priceUsd);
+      await oisyIcrc2Approve(oisyAgent, ledgerId, amount, undefined, {
+        bufferBps: isStablePaymentToken(token)
+          ? 0
+          : VOLATILE_APPROVE_BUFFER_BPS,
+      });
+      await onOisyPay({ token, ledgerCanisterId: ledgerId, amount });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.toLowerCase().includes("cancel") || msg.toLowerCase().includes("reject") || msg.toLowerCase().includes("denied")) {
+        toast.error("Transaction cancelled. No funds were sent.");
+      } else {
+        toast.error(msg || "OISY payment failed");
+      }
+    } finally {
+      setOisyPayingToken(null);
+    }
+  };
+
   const volatileUnavailable = pricesError || !prices;
+  const anyPaying = payingToken !== null || oisyPayingToken !== null;
 
   return (
     <div className="space-y-4" data-ocid={dataOcid}>
+      {/* ── Internet Identity payment ── */}
       <p className="text-sm text-muted-foreground">
         Pay {formatUsdFromCents(usdCents)} with Internet Identity + ICRC-2
       </p>
@@ -135,7 +187,7 @@ export function TokenPaymentPanel({
           const isPaying = payingToken === token;
           const disabled =
             !isAuthenticated ||
-            payingToken !== null ||
+            anyPaying ||
             priceUsd == null ||
             (!isStable && volatileUnavailable);
 
@@ -151,7 +203,7 @@ export function TokenPaymentPanel({
               key={token}
               className="w-full justify-between h-auto py-3"
               disabled={disabled}
-              onClick={() => handlePay(token)}
+              onClick={() => void handlePay(token)}
               data-ocid={`pay-${token.toLowerCase()}-btn`}
             >
               <span className="flex items-center gap-2">
@@ -173,6 +225,94 @@ export function TokenPaymentPanel({
           );
         })}
       </div>
+
+      {/* ── OISY wallet payment ── */}
+      {onOisyPay && (
+        <div
+          className="space-y-3 pt-3 border-t border-border"
+          data-ocid="oisy-payment-section"
+        >
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <p className="text-sm font-medium text-foreground">Pay with OISY</p>
+              <p className="text-xs text-muted-foreground">NFT will be custodied in your OISY wallet</p>
+            </div>
+            {!isOisyConnected && (
+              <OisyConnectButton
+                size="sm"
+                variant="outline"
+                label="Connect OISY"
+              />
+            )}
+          </div>
+          {!isOisyConnected && (
+            <p className="text-xs text-muted-foreground/70 rounded-md bg-muted/30 px-3 py-2">
+              Connect your OISY wallet to pay with OISY. Your NFT will be custodied at your OISY principal.
+            </p>
+          )}
+          {isOisyConnected && (
+            <>
+              {oisyPayingToken !== null && (
+                <div className="flex items-center gap-2 rounded-md bg-orange-500/10 border border-orange-500/30 px-3 py-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-orange-400 flex-shrink-0" />
+                  <p className="text-xs text-orange-300">
+                    Waiting for OISY approval… check your OISY wallet popup.
+                  </p>
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {ALL_PAYMENT_TOKENS.map((token) => {
+                  const display = TOKEN_DISPLAY[token];
+                  const isStable = isStablePaymentToken(token);
+                  const priceUsd = tokenPriceUsd(token, prices);
+                  const isPaying = oisyPayingToken === token;
+                  const disabled =
+                    anyPaying ||
+                    priceUsd == null ||
+                    (!isStable && volatileUnavailable);
+
+                  let subtitle = "—";
+                  if (priceUsd != null) {
+                    subtitle = formatPaySubtitle(usdCents, token, priceUsd);
+                  } else if (!isStable && volatileUnavailable) {
+                    subtitle = "Price unavailable";
+                  }
+
+                  return (
+                    <Button
+                      key={token}
+                      className="w-full justify-between h-auto py-3 border-orange-500/30 hover:border-orange-500/60"
+                      variant="outline"
+                      disabled={disabled}
+                      onClick={() => void handleOisyPay(token)}
+                      data-ocid={`oisy-pay-${token.toLowerCase()}-btn`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${display.bgClass} ${display.colorClass}`}
+                        >
+                          {display.symbol}
+                        </span>
+                        <span className="font-semibold">{token}</span>
+                      </span>
+                      {isPaying ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground text-right max-w-[55%] leading-snug">
+                          {subtitle}
+                        </span>
+                      )}
+                    </Button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground/60">
+                ~2 OISY approval steps: ledger approve + settlement. Your NFT is custodied in OISY.
+              </p>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

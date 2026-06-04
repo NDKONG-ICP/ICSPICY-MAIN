@@ -1,5 +1,5 @@
-import { PostCard } from "@/components/community/PostCard";
 import { FeedSkeleton } from "@/components/community";
+import { PostCard } from "@/components/community/PostCard";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { usePostWithComments } from "@/hooks/usePost";
@@ -54,7 +54,10 @@ export default function CommunityPostPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-1 pb-24" data-ocid="community-post-page">
+    <div
+      className="max-w-2xl mx-auto px-1 pb-24"
+      data-ocid="community-post-page"
+    >
       <div className="mb-4">
         <Link
           to="/community"
@@ -74,7 +77,9 @@ export default function CommunityPostPage() {
           data-ocid="community-post-not-found"
         >
           <span className="text-4xl mb-4 block">🌶️</span>
-          <h1 className="font-display font-bold text-xl mb-2">Post not found</h1>
+          <h1 className="font-display font-bold text-xl mb-2">
+            Post not found
+          </h1>
           <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
             This post may have been deleted or the link is incorrect.
           </p>

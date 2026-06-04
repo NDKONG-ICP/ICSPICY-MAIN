@@ -1,5 +1,5 @@
-import type { GardenDesign } from "@/lib/garden-types";
 import { generateProjectTimeline } from "@/lib/garden-smart-data";
+import type { GardenDesign } from "@/lib/garden-types";
 
 type Props = {
   design: GardenDesign;

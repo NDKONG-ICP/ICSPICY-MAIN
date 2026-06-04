@@ -49,6 +49,7 @@
     "@ic-pay/icpay-sdk": "^1.4.135",
     "@ic-pay/icpay-widget": "^1.2.157",
     "@icp-sdk/core": "~4.1.0",
+    "@nfid/identitykit": "^1.0.18",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-aspect-ratio": "^1.1.0",

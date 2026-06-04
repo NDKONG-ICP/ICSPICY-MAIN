@@ -1,7 +1,11 @@
 import type { LayerVisibility } from "@/lib/garden-types";
 import { Eye, EyeOff } from "lucide-react";
 
-const LAYER_META: { key: keyof LayerVisibility; label: string; emoji: string }[] = [
+const LAYER_META: {
+  key: keyof LayerVisibility;
+  label: string;
+  emoji: string;
+}[] = [
   { key: "plants", label: "Plants", emoji: "🌱" },
   { key: "structures", label: "Structures", emoji: "🏗️" },
   { key: "grid", label: "Grid", emoji: "⊞" },
@@ -39,7 +43,11 @@ export function LayersPanel({ layers, onChange, compact }: Props) {
             <EyeOff className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           )}
           <span>{emoji}</span>
-          <span className={layers[key] ? "" : "text-muted-foreground line-through"}>{label}</span>
+          <span
+            className={layers[key] ? "" : "text-muted-foreground line-through"}
+          >
+            {label}
+          </span>
         </button>
       ))}
     </div>

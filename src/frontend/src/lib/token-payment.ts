@@ -7,10 +7,11 @@ export const PAYMENT_LEDGERS: Record<OfferTokenSymbol, string> = {
   ckETH: "ss2fx-dyaaa-aaaar-qacoq-cai",
   ckUSDC: "xevnm-gaaaa-aaaar-qafnq-cai",
   ckUSDT: "cngnf-vqaaa-aaaar-qag4q-cai",
+  RAVEN: "4k7jk-vyaaa-aaaam-qcyaa-cai",
 };
 
 export const STABLE_PAYMENT_TOKENS = ["ckUSDC", "ckUSDT"] as const;
-export const VOLATILE_PAYMENT_TOKENS = ["ICP", "ckBTC", "ckETH"] as const;
+export const VOLATILE_PAYMENT_TOKENS = ["ICP", "ckBTC", "ckETH", "RAVEN"] as const;
 export const ALL_PAYMENT_TOKENS = [
   ...STABLE_PAYMENT_TOKENS,
   ...VOLATILE_PAYMENT_TOKENS,
@@ -26,6 +27,7 @@ export const TOKEN_DECIMALS: Record<PaymentTokenSymbol, number> = {
   ckETH: 18,
   ckUSDC: 6,
   ckUSDT: 6,
+  RAVEN: 8,
 };
 
 export function isStablePaymentToken(

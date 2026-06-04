@@ -1,5 +1,5 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 export const Butterflies = memo(function Butterflies({
@@ -61,7 +61,13 @@ export const Butterflies = memo(function Butterflies({
     mesh.instanceMatrix.needsUpdate = true;
   });
 
-  return <instancedMesh ref={meshRef} args={[geometry, material, count]} frustumCulled={false} />;
+  return (
+    <instancedMesh
+      ref={meshRef}
+      args={[geometry, material, count]}
+      frustumCulled={false}
+    />
+  );
 });
 
 export const PollenParticles = memo(function PollenParticles({
@@ -101,9 +107,19 @@ export const PollenParticles = memo(function PollenParticles({
   return (
     <points ref={pointsRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} count={count} />
+        <bufferAttribute
+          attach="attributes-position"
+          args={[positions, 3]}
+          count={count}
+        />
       </bufferGeometry>
-      <pointsMaterial size={0.02} color="#ffffcc" transparent opacity={0.4} sizeAttenuation />
+      <pointsMaterial
+        size={0.02}
+        color="#ffffcc"
+        transparent
+        opacity={0.4}
+        sizeAttenuation
+      />
     </points>
   );
 });
@@ -123,7 +139,9 @@ export function AtmosphericEffects({
 
   useEffect(() => {
     if (!enabled) return;
-    const id = requestIdleCallback?.(() => setReady(true)) ?? setTimeout(() => setReady(true), 500);
+    const id =
+      requestIdleCallback?.(() => setReady(true)) ??
+      setTimeout(() => setReady(true), 500);
     return () => {
       if (typeof id === "number") clearTimeout(id);
     };
@@ -132,8 +150,18 @@ export function AtmosphericEffects({
   if (!enabled || !ready) return null;
   return (
     <>
-      <Butterflies count={5} bounds={Math.max(plotWidth, plotDepth)} centerX={cx} centerZ={cz} />
-      <PollenParticles count={40} bounds={Math.max(plotWidth, plotDepth) + 4} centerX={cx} centerZ={cz} />
+      <Butterflies
+        count={5}
+        bounds={Math.max(plotWidth, plotDepth)}
+        centerX={cx}
+        centerZ={cz}
+      />
+      <PollenParticles
+        count={40}
+        bounds={Math.max(plotWidth, plotDepth) + 4}
+        centerX={cx}
+        centerZ={cz}
+      />
     </>
   );
 }

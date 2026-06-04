@@ -5,8 +5,8 @@ import {
 } from "@/components/ui/chart";
 import type { PlantLifecycle } from "@/declarations/backend.did";
 import {
-  aggregateNimsAnalytics,
   NIMS_CHART_COLORS,
+  aggregateNimsAnalytics,
 } from "@/lib/nims-analytics";
 import { useMemo } from "react";
 import {
@@ -35,10 +35,7 @@ export function NimsAnalyticsPanel({
 }: {
   plants: PlantLifecycle[];
 }) {
-  const analytics = useMemo(
-    () => aggregateNimsAnalytics(plants),
-    [plants],
-  );
+  const analytics = useMemo(() => aggregateNimsAnalytics(plants), [plants]);
 
   if (plants.length === 0) {
     return (
@@ -76,7 +73,9 @@ export function NimsAnalyticsPanel({
         <div className="rounded-xl border border-border bg-card p-4">
           <h3 className="font-display font-semibold mb-3">Plants by Stage</h3>
           <ChartContainer
-            config={{ count: { label: "Plants", color: NIMS_CHART_COLORS.green } }}
+            config={{
+              count: { label: "Plants", color: NIMS_CHART_COLORS.green },
+            }}
             className="h-[220px] w-full"
           >
             <PieChart>
@@ -88,10 +87,7 @@ export function NimsAnalyticsPanel({
                 outerRadius={80}
               >
                 {analytics.plantsByStage.map((_, i) => (
-                  <Cell
-                    key={i}
-                    fill={STAGE_COLORS[i % STAGE_COLORS.length]}
-                  />
+                  <Cell key={i} fill={STAGE_COLORS[i % STAGE_COLORS.length]} />
                 ))}
               </Pie>
               <ChartTooltip content={<ChartTooltipContent />} />
@@ -102,7 +98,9 @@ export function NimsAnalyticsPanel({
         <div className="rounded-xl border border-border bg-card p-4">
           <h3 className="font-display font-semibold mb-3">Top Varieties</h3>
           <ChartContainer
-            config={{ count: { label: "Plants", color: NIMS_CHART_COLORS.amber } }}
+            config={{
+              count: { label: "Plants", color: NIMS_CHART_COLORS.amber },
+            }}
             className="h-[220px] w-full"
           >
             <BarChart
@@ -202,7 +200,9 @@ export function NimsAnalyticsPanel({
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4">
-        <h3 className="font-display font-semibold mb-3">Container Distribution</h3>
+        <h3 className="font-display font-semibold mb-3">
+          Container Distribution
+        </h3>
         <ChartContainer
           config={{
             count: { label: "Plants", color: NIMS_CHART_COLORS.purple },
@@ -217,10 +217,7 @@ export function NimsAnalyticsPanel({
               outerRadius={80}
             >
               {analytics.plantsByContainer.map((_, i) => (
-                <Cell
-                  key={i}
-                  fill={STAGE_COLORS[i % STAGE_COLORS.length]}
-                />
+                <Cell key={i} fill={STAGE_COLORS[i % STAGE_COLORS.length]} />
               ))}
             </Pie>
             <ChartTooltip content={<ChartTooltipContent />} />

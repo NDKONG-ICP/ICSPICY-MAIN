@@ -124,8 +124,14 @@ export function filterPlants(opts: {
 }): CatalogPlant[] {
   const q = opts.query?.trim().toLowerCase() ?? "";
   return PLANT_CATALOG.filter((p) => {
-    if (opts.category && opts.category !== "all" && p.category !== opts.category) return false;
-    if (opts.sun && opts.sun !== "all" && p.sunRequirement !== opts.sun) return false;
+    if (
+      opts.category &&
+      opts.category !== "all" &&
+      p.category !== opts.category
+    )
+      return false;
+    if (opts.sun && opts.sun !== "all" && p.sunRequirement !== opts.sun)
+      return false;
     if (opts.nativeOnly && !p.nativeFlorida) return false;
     if (opts.edibleOnly && !p.edible) return false;
     if (opts.zone && !p.usdaZones.includes(opts.zone)) return false;
@@ -145,7 +151,12 @@ export function filterStructures(opts: {
 }): CatalogStructure[] {
   const q = opts.query?.trim().toLowerCase() ?? "";
   return STRUCTURE_CATALOG.filter((s) => {
-    if (opts.category && opts.category !== "all" && s.category !== opts.category) return false;
+    if (
+      opts.category &&
+      opts.category !== "all" &&
+      s.category !== opts.category
+    )
+      return false;
     if (!q) return true;
     return (
       s.name.toLowerCase().includes(q) ||

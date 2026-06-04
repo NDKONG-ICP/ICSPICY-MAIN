@@ -39,6 +39,8 @@ mixin (
   orderShippingAddresses : Map.Map<Common.OrderId, MarketTypes.ShippingAddress>,
   icrc7Owners : Map.Map<Nat, ICRC7.Account>,
   icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
+  linkedWallets : Map.Map<Principal, [Principal]>,
+  ravenBalanceCache : Map.Map<Principal, Nat>,
   selfPrincipal : () -> Principal,
   nextProductId : { var value : Nat },
   nextOrderId : { var value : Nat },
@@ -106,7 +108,7 @@ mixin (
       MarketOrder.createValidatedOrder(
         orders, products, productShippingConfigs, productInventoryRemaining,
         orderShippingCents, orderShippingAddresses,
-        icrc7Balances,
+        icrc7Balances, linkedWallets, ravenBalanceCache,
         orderId, caller, input,
       )
     ) {

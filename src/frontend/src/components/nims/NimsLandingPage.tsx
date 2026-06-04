@@ -67,13 +67,13 @@ export function NimsLandingPage({ onLogin }: NimsLandingPageProps) {
         <motion.div
           className="pointer-events-none absolute -right-24 top-20 size-72 rounded-full bg-red-600/10 blur-3xl"
           animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.6, 0.4] }}
-          transition={{ duration: 8, repeat: Infinity }}
+          transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY }}
           aria-hidden
         />
         <motion.div
           className="pointer-events-none absolute -left-16 bottom-0 size-64 rounded-full bg-emerald-600/10 blur-3xl"
           animate={{ scale: [1.1, 1, 1.1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 10, repeat: Infinity }}
+          transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY }}
           aria-hidden
         />
 
@@ -101,8 +101,8 @@ export function NimsLandingPage({ onLogin }: NimsLandingPageProps) {
             transition={{ delay: 0.2 }}
             className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
           >
-            NIMS is a free plant lifecycle management system for home gardeners and
-            professional nurseries — powered by blockchain provenance.
+            NIMS is a free plant lifecycle management system for home gardeners
+            and professional nurseries — powered by blockchain provenance.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -160,7 +160,9 @@ export function NimsLandingPage({ onLogin }: NimsLandingPageProps) {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">{f.description}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {f.description}
+                    </p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -177,11 +179,15 @@ export function NimsLandingPage({ onLogin }: NimsLandingPageProps) {
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="border-emerald-500/20 bg-emerald-950/10">
             <CardHeader>
-              <CardTitle className="font-display text-xl">🏡 Home Gardener</CardTitle>
+              <CardTitle className="font-display text-xl">
+                🏡 Home Gardener
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Track your backyard peppers, tomatoes, herbs — any plant</li>
+                <li>
+                  Track your backyard peppers, tomatoes, herbs — any plant
+                </li>
                 <li>Free forever. No NFTs required.</li>
                 <li>Weather data, feeding logs, pest tracking, photos</li>
               </ul>
@@ -213,7 +219,11 @@ export function NimsLandingPage({ onLogin }: NimsLandingPageProps) {
                 asChild
                 data-ocid="nims-landing-nursery-cta"
               >
-                <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={SOCIAL_LINKS.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Contact Us
                 </a>
               </Button>
@@ -226,7 +236,9 @@ export function NimsLandingPage({ onLogin }: NimsLandingPageProps) {
       <section className="border-t border-border bg-muted/30 py-16">
         <div className="container max-w-3xl px-4 text-center">
           <blockquote className="space-y-3 font-display text-lg sm:text-xl">
-            <p>IC SPICY is an FDACS Registered Nursery in Port Charlotte, Florida</p>
+            <p>
+              IC SPICY is an FDACS Registered Nursery in Port Charlotte, Florida
+            </p>
             <p className="text-muted-foreground text-base sm:text-lg">
               30+ years growing the world&apos;s hottest peppers
             </p>
@@ -253,7 +265,9 @@ export function NimsLandingPage({ onLogin }: NimsLandingPageProps) {
 
       {/* Final CTA */}
       <section className="container max-w-3xl px-4 py-20 text-center">
-        <h2 className="font-display text-3xl font-bold">Ready to grow smarter?</h2>
+        <h2 className="font-display text-3xl font-bold">
+          Ready to grow smarter?
+        </h2>
         <Button
           size="lg"
           className="mt-8 h-12 px-10 text-base"

@@ -8,7 +8,12 @@ type Props = {
 };
 
 /** 3D sun direction indicator for preview mode. */
-export function SunlightSceneOverlay({ azimuthDeg, altitudeDeg, plotWidth, plotDepth }: Props) {
+export function SunlightSceneOverlay({
+  azimuthDeg,
+  altitudeDeg,
+  plotWidth,
+  plotDepth,
+}: Props) {
   if (altitudeDeg <= 0) return null;
 
   const radius = Math.max(plotWidth, plotDepth) * 0.6;

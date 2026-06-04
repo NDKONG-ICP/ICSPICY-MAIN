@@ -1,3 +1,4 @@
+import { ConnectButton } from "@/components/ConnectButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,16 +7,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ConnectButton } from "@/components/ConnectButton";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronDown, Flame, Menu, ShoppingCart, User, Wallet, X } from "lucide-react";
+import {
+  ChevronDown,
+  Flame,
+  Menu,
+  ShoppingCart,
+  User,
+  Wallet,
+  X,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { SiFacebook, SiInstagram, SiTiktok, SiX } from "react-icons/si";
+import { useNewOrderCountAdmin } from "../hooks/useAdminShop";
 import { useAuth } from "../hooks/useAuth";
 import { useIsAdmin } from "../hooks/useBackend";
-import { useNewOrderCountAdmin } from "../hooks/useAdminShop";
 import { useCart } from "../hooks/useCart";
+import { useRavenPerks } from "../hooks/useRavenPerks";
 import { SOCIAL_LINKS } from "../types/index";
 
 const PRIMARY_NAV = [
@@ -27,9 +36,10 @@ const PRIMARY_NAV = [
 ] as const;
 
 const MORE_NAV_ALWAYS = [
-  { label: "Garden", to: "/garden" },
+  { label: "Garden (Beta)", to: "/garden" },
   { label: "Schedule Builder", to: "/schedule-builder" },
   { label: "DAO", to: "/dao" },
+  { label: "🐦‍⬛ Membership Tiers", to: "/tiers" },
 ] as const;
 
 const SOCIAL_ICONS = [
@@ -53,6 +63,7 @@ export function Header() {
   const { isAuthenticated, isInitializing } = useAuth();
   const { data: isAdmin } = useIsAdmin();
   const { data: newOrderCount = 0 } = useNewOrderCountAdmin();
+  const ravenPerks = useRavenPerks();
   const itemCount = useCart((s) => s.itemCount());
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
@@ -73,7 +84,8 @@ export function Header() {
     ];
   }, [isAdmin, isAuthenticated, isInitializing]);
 
-  const moreMenuOpen = MORE_NAV_ALWAYS.some(({ to }) => currentPath === to) ||
+  const moreMenuOpen =
+    MORE_NAV_ALWAYS.some(({ to }) => currentPath === to) ||
     (isAdmin === true && currentPath === "/admin");
 
   return (
@@ -189,6 +201,26 @@ export function Header() {
               ))}
             </div>
 
+            {/* Raven tier badge — desktop */}
+            {isAuthenticated && ravenPerks.tier !== "free" && (
+              <Link
+                to="/tiers"
+                className="hidden md:flex items-center"
+                aria-label="Raven tier"
+                data-ocid="header-raven-badge"
+              >
+                <span
+                  className={
+                    ravenPerks.tier === "pro"
+                      ? "bg-purple-600/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full text-xs font-bold"
+                      : "bg-blue-600/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full text-xs font-bold"
+                  }
+                >
+                  🐦‍⬛ {ravenPerks.tier === "pro" ? "PRO" : "MEMBER"}
+                </span>
+              </Link>
+            )}
+
             {/* Wallet */}
             <Link
               to="/wallet"
@@ -237,7 +269,10 @@ export function Header() {
             </Link>
 
             {/* Internet Identity + profile — full row sm+ ; mobile drawer has Connect */}
-            <div className="hidden sm:flex items-center gap-2" data-ocid="header-wallet">
+            <div
+              className="hidden sm:flex items-center gap-2"
+              data-ocid="header-wallet"
+            >
               {!isInitializing && isAuthenticated && (
                 <Link to="/profile">
                   <Button

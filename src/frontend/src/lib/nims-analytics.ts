@@ -32,9 +32,7 @@ function stageLabel(stage: PlantLifecycle["plant"]["stage"]): string {
   return "Mature";
 }
 
-function containerKey(
-  cs: PlantLifecycle["plant"]["container_size"],
-): string {
+function containerKey(cs: PlantLifecycle["plant"]["container_size"]): string {
   if (!cs || cs.length === 0) return "Unknown";
   return Object.keys(cs[0]!)[0] ?? "Unknown";
 }
@@ -49,7 +47,10 @@ export function aggregateNimsAnalytics(
   const stageMap = new Map<string, number>();
   const varietyMap = new Map<string, number>();
   const containerMap = new Map<string, number>();
-  const germByVariety = new Map<string, { planted: number; germinated: number }>();
+  const germByVariety = new Map<
+    string,
+    { planted: number; germinated: number }
+  >();
   const activityMap = new Map<
     string,
     { waterings: number; feedings: number; photos: number; notes: number }

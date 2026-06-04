@@ -11,7 +11,9 @@ export function GrowthPreview({ growthStage, onChange }: Props) {
   const stage =
     GROWTH_STAGES.find((s) => s.value === growthStage) ??
     GROWTH_STAGES.reduce((prev, cur) =>
-      Math.abs(cur.value - growthStage) < Math.abs(prev.value - growthStage) ? cur : prev,
+      Math.abs(cur.value - growthStage) < Math.abs(prev.value - growthStage)
+        ? cur
+        : prev,
     );
 
   return (

@@ -27,8 +27,8 @@ export function ConfirmMarkDeadDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Mark this plant dead?</AlertDialogTitle>
           <AlertDialogDescription>
-            This records a permanent loss for the cell. You will confirm details on the
-            next screen. This cannot be undone without an admin revive.
+            This records a permanent loss for the cell. You will confirm details
+            on the next screen. This cannot be undone without an admin revive.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

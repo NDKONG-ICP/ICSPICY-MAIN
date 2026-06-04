@@ -1,4 +1,3 @@
-import { CommunityAvatar } from "./CommunityAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,6 +31,7 @@ import {
   timeAgoNanos,
 } from "../../lib/community-utils";
 import { CommentSection } from "./CommentSection";
+import { CommunityAvatar } from "./CommunityAvatar";
 import { FollowButton } from "./FollowButton";
 import { ImageGallery } from "./ImageGallery";
 import { ShareMenu } from "./ShareMenu";
@@ -134,11 +134,7 @@ export function PostCard({
               size="md"
             />
           ) : (
-            <CommunityAvatar
-              principalText="anonymous"
-              username="?"
-              size="md"
-            />
+            <CommunityAvatar principalText="anonymous" username="?" size="md" />
           )}
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">

@@ -1,7 +1,7 @@
 /** IC SPICY Nursery — Port Charlotte, FL (zip 33954) */
 import { Actor, HttpAgent } from "@dfinity/agent";
-import { idlFactory, type _SERVICE } from "../declarations/backend.did.js";
 import type { WeatherSnapshot } from "../declarations/backend.did";
+import { type _SERVICE, idlFactory } from "../declarations/backend.did.js";
 import { BACKEND_CANISTER_ID, IC_HOST } from "./auth-config";
 import { parseWeatherSource } from "./weather-snapshot";
 
@@ -159,7 +159,12 @@ function weatherDataFromSnapshot(snapshot: WeatherSnapshot): WeatherData {
   const windMph = parsed.windMph ?? 0;
   const aqi = parsed.aqi ?? 42;
   const parts = snapshot.date.split("-").map(Number);
-  const snapshotDate = new Date(parts[0] ?? 0, (parts[1] ?? 1) - 1, parts[2] ?? 1, 12);
+  const snapshotDate = new Date(
+    parts[0] ?? 0,
+    (parts[1] ?? 1) - 1,
+    parts[2] ?? 1,
+    12,
+  );
   const moon = parsed.moonPhase
     ? { phase: parsed.moonPhase, illumination: 0, emoji: "🌙" }
     : getMoonPhase(snapshotDate);
@@ -325,7 +330,11 @@ export function aqiRingColor(aqi: number): string {
   return "#7f1d1d";
 }
 
-export function sunDayProgress(sunriseIso: string, sunsetIso: string, now = new Date()): number {
+export function sunDayProgress(
+  sunriseIso: string,
+  sunsetIso: string,
+  now = new Date(),
+): number {
   if (!sunriseIso || !sunsetIso) return 0.5;
   const rise = new Date(sunriseIso).getTime();
   const set = new Date(sunsetIso).getTime();

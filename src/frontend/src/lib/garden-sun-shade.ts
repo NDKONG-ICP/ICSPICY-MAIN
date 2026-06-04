@@ -1,8 +1,10 @@
-import type { GardenDesign } from "./garden-types";
 import { getPlantById } from "./garden-plant-catalog";
+import type { GardenDesign } from "./garden-types";
 
 export function sunPositionFromHour(lat: number, lng: number, hour: number) {
-  const decl = 23.45 * Math.sin(((284 + new Date().getMonth() * 30) / 365) * (Math.PI / 180));
+  const decl =
+    23.45 *
+    Math.sin(((284 + new Date().getMonth() * 30) / 365) * (Math.PI / 180));
   const latRad = (lat * Math.PI) / 180;
   const hourAngle = ((hour - 12) * 15 * Math.PI) / 180;
   const elev = Math.asin(
@@ -12,7 +14,8 @@ export function sunPositionFromHour(lat: number, lng: number, hour: number) {
   const az =
     Math.atan2(
       Math.sin(hourAngle),
-      Math.cos(hourAngle) * Math.sin(latRad) - Math.tan((decl * Math.PI) / 180) * Math.cos(latRad),
+      Math.cos(hourAngle) * Math.sin(latRad) -
+        Math.tan((decl * Math.PI) / 180) * Math.cos(latRad),
     ) + Math.PI;
   return { elevation: elev, azimuth: az };
 }

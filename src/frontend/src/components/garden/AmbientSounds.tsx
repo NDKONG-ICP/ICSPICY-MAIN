@@ -1,11 +1,13 @@
-import { useEffect, useRef } from "react";
 import type { GardenDesign } from "@/lib/garden-types";
+import { useEffect, useRef } from "react";
 
 export function AmbientSounds({ design }: { design: GardenDesign }) {
   const ctxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
-    const hasWater = design.structures.some((s) => /pond|rain|water|swale/.test(s.structureType));
+    const hasWater = design.structures.some((s) =>
+      /pond|rain|water|swale/.test(s.structureType),
+    );
     try {
       const ctx = new AudioContext();
       ctxRef.current = ctx;

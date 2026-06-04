@@ -11,6 +11,14 @@ overrides:
   '@dfinity/identity': ~3.3.1
   '@dfinity/principal': ~3.3.1
 
+patchedDependencies:
+  '@slide-computer/signer-agent@3.20.0':
+    hash: 5542f1d18f0899e65143e7e7b6a29780ce95ce0d9b2348f01d1d21b441654126
+    path: patches/@slide-computer__signer-agent@3.20.0.patch
+  '@slide-computer/signer-transport-stoic@3.20.0':
+    hash: cb89cbeb3acf9b195fd373ef1e109045957ac3b20d2854a6633917117e5274e7
+    path: patches/@slide-computer__signer-transport-stoic@3.20.0.patch
+
 importers:
 
   .:
@@ -167,6 +175,9 @@ importers:
       '@icp-sdk/core':
         specifier: ~4.1.0
         version: 4.1.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity-secp256k1@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)
+      '@nfid/identitykit':
+        specifier: ^1.0.18
+        version: 1.0.18(261126092af4348a7a01e31f266258fd)
       '@radix-ui/react-accordion':
         specifier: ^1.1.2
         version: 1.2.12(@types/react-dom@19.1.11(@types/react@19.1.17))(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
@@ -812,8 +823,21 @@ packages:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
 
+  '@floating-ui/react@0.26.28':
+    resolution: {integrity: sha512-yORQuuAtVpiRjpMhdc0wJj06b9JFjrYF4qp96j++v2NBpbi6SEGF7donUJ3TMieerQ6qVkAv1tgr7L4r5roTqw==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@headlessui/react@2.2.10':
+    resolution: {integrity: sha512-5pVLNK9wlpxTUTy9GpgbX/SdcRh+HBnPktjM2wbiLTH4p+2EPHBO1aoSryUCuKUIItdDWO9ITlhUL8UnUN/oIA==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: ^18 || ^19 || ^19.0.0-rc
+      react-dom: ^18 || ^19 || ^19.0.0-rc
 
   '@ic-pay/icpay-sdk@1.4.135':
     resolution: {integrity: sha512-vTQQTE1sVrlewyxVBUA1hrE4SGHMvUPcX3npWl1CcNAb+efWbyOLfR5Fjk71ht+R2ijPgXpdBfPgXxz1OuPZIw==}
@@ -1005,6 +1029,15 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@internationalized/date@3.12.2':
+    resolution: {integrity: sha512-FY1Y+H64NDs+HAF6omlnWxm3mEpfgaCSWtL5l551ZZfImA+kGjPFgrnJrGjH6lfmLL0g8Z/mBu1R3kufeCp6Jw==}
+
+  '@internationalized/number@3.6.7':
+    resolution: {integrity: sha512-3ji1fcrT+FPAK86UqEhB/psHixYo6niWPJtt7+qRaYFynt/BaJG8GhAPimtWUpEiVSTq8ZM8L5psMxGquiB/Vg==}
+
+  '@internationalized/string@3.2.9':
+    resolution: {integrity: sha512-kzP/M/mbQxODlmOt4bIQZ2SBVUWUSqMLXooXixnX7noche8WHaQcA+nwFN1K2KCF/cp+LDUhcJsCicwkvhD1pg==}
+
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
 
@@ -1034,6 +1067,19 @@ packages:
     resolution: {integrity: sha512-2Z0FATFHaoYJ8b+Y4y4Hgfn3FRFwuU5zRrk+9dFWp4uGAdHGqVEdP7HP+gLA3X469KXHmfupJaUbKo1b/aDKIg==}
     peerDependencies:
       three: '>= 0.159.0'
+
+  '@nfid/identitykit@1.0.18':
+    resolution: {integrity: sha512-oeVu5BGRo2PMHMPT1QTTULHyh+McfcMnY4WIS6+VVQF0bZzNqfa86yY3KUGIUWfWbXsJPzZIYbk8bo3reU7aUw==}
+    engines: {node: '>=12.7.0'}
+    peerDependencies:
+      '@dfinity/agent': ~3.3.1
+      '@dfinity/auth-client': ~3.3.1
+      '@dfinity/candid': ~3.3.1
+      '@dfinity/identity': ~3.3.1
+      '@dfinity/ledger-icp': '>=2.4.0'
+      '@dfinity/principal': ~3.3.1
+      react: '>=18.3.1'
+      react-dom: '>=18.3.1'
 
   '@noble/curves@1.9.7':
     resolution: {integrity: sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw==}
@@ -1703,6 +1749,18 @@ packages:
   '@radix-ui/rect@1.1.1':
     resolution: {integrity: sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw==}
 
+  '@react-aria/focus@3.22.1':
+    resolution: {integrity: sha512-CPxtkyrBi/HYY5P3lE/57sQ6qfa0lN8E55TOm89H0kNGv0lKt+/0zP7lWERzBjRr5IxBVrQX4gFEowBN52LPaA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+      react-dom: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+
+  '@react-aria/interactions@3.28.1':
+    resolution: {integrity: sha512-Bqb+HrD5I5MHS2SKBhISYqo2SW8Y2dfzgF/Y1lIJq7xqLxheo9vzxPGEHhz+XzkgGfoqEJx8A6a3C7uiqS3HWA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+      react-dom: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+
   '@react-spring/animated@10.1.0':
     resolution: {integrity: sha512-dvGVSfNYhbkzTAnyB1S1940ZiKp6/Ey+b2vQc70dJ5k6gzH/GdlfeDzCh65V94b6OPqF7Xl4VUICVUQpc07iUg==}
     peerDependencies:
@@ -1780,6 +1838,11 @@ packages:
       '@react-three/fiber': ^9.0.0
       react: ^19.0
       three: '>= 0.156.0'
+
+  '@react-types/shared@3.35.0':
+    resolution: {integrity: sha512-iNWvuzEwANttpQpdlu8nPBtdHb0mcCMj1ZTH//iRB5E/14IAnyRlR25rxH7pNLyzHINsPGEKnWvpwDMCT6vziQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
 
   '@remix-run/router@1.23.2':
     resolution: {integrity: sha512-Ic6m2U/rMjTkhERIa/0ZtXJP17QUi2CbWE7cqx4J58M8aA3QTfW+2UlQ4psvTX9IO1RfNVhK3pcpdjej7L+t2w==}
@@ -1941,11 +2004,55 @@ packages:
   '@scure/bip39@1.6.0':
     resolution: {integrity: sha512-+lF0BbLiJNwVlev4eKelw1WWLaiKXw7sSl8T6FvBlWkdX+94aGJ4o8XjUdlyhTCjd8c+B3KT3JfS8P0bLRNU6A==}
 
+  '@slide-computer/signer-agent@3.20.0':
+    resolution: {integrity: sha512-QZKh5nCrcJQXIlvgaTcg2i8x4/c8kINHvGOp8CZWjhT+biCAl6zO0VgtVJfEPOPL0IbSHyGpbaEfwIYBG2iLmA==}
+    deprecated: This package has been replaced by @icp-sdk/signer
+    peerDependencies:
+      '@dfinity/agent': ~3.3.1
+      '@dfinity/candid': ~3.3.1
+      '@dfinity/identity': ~3.3.1
+      '@dfinity/principal': ~3.3.1
+      '@slide-computer/signer': ^3.20.0
+
   '@slide-computer/signer-agent@4.2.2':
     resolution: {integrity: sha512-WKAnkW59EwpJRV2kBJA20Lpgik1JB4qyJTH0fc9SGoUSukdHWgvebM54sfgrDHyTN1W3OtVHKf1jSJz2sXifsA==}
     deprecated: This package has been replaced by @icp-sdk/signer
     peerDependencies:
       '@slide-computer/signer': ^4.2.2
+
+  '@slide-computer/signer-extension@3.20.0':
+    resolution: {integrity: sha512-3SkgbfVJiL6lfCwg4smFLKYiQXvUKllaAbIWTTq4pOMyvuGyG9BwlF5U1a57+mvPO6OqVa7hFe4aRFVaPR13/g==}
+    deprecated: This package has been replaced by @icp-sdk/signer
+    peerDependencies:
+      '@slide-computer/signer': ^3.20.0
+
+  '@slide-computer/signer-storage@3.20.0':
+    resolution: {integrity: sha512-00Gp27fIs8qi+1evdDQ5riUz7af9yaI7Qg7NHZ6imNp8MW1EBFltFHKfMaTzCCkLCCcgV8CXDP0p9maPhpmb3Q==}
+    peerDependencies:
+      '@dfinity/identity': ~3.3.1
+
+  '@slide-computer/signer-transport-auth-client@3.20.0':
+    resolution: {integrity: sha512-MSsjulJ0yUSKJYEPp59I5BMIsdkNPFwg0NHgLISen/D+eysW0xOhtrMwh+TuYqysqoY4WsuqHy4oXaHzFaZ4BQ==}
+    peerDependencies:
+      '@dfinity/auth-client': ~3.3.1
+      '@dfinity/identity': ~3.3.1
+      '@dfinity/principal': ~3.3.1
+      '@slide-computer/signer': ^3.20.0
+
+  '@slide-computer/signer-transport-stoic@3.20.0':
+    resolution: {integrity: sha512-39eelivKNUW1WRKi/EQ6lNK1UYHT2t/WIPDD9KoIb02VVA1bviJ4RAEEUV8wsiKEV1ZWw2Ltoj+16nQCfKqM+Q==}
+    peerDependencies:
+      '@dfinity/agent': ~3.3.1
+      '@dfinity/identity': ~3.3.1
+      '@dfinity/principal': ~3.3.1
+      '@slide-computer/signer': ^3.20.0
+      '@slide-computer/signer-storage': ^3.20.0
+
+  '@slide-computer/signer-web@3.20.0':
+    resolution: {integrity: sha512-VUtF50BudVQ5su4EE60U+GezVkVWGQdbU0O1pTPmlR918IGnVv3yZKJZqcbDiqo3gxRfO/9lwY5WNiTz1zTIRg==}
+    deprecated: This package has been replaced by @icp-sdk/signer
+    peerDependencies:
+      '@slide-computer/signer': ^3.20.0
 
   '@slide-computer/signer-web@4.2.2':
     resolution: {integrity: sha512-sPgj6Gabz7lXz6JbPXU5Dw2lRhmyFKFsqlx4yFLl5D7l65LOyPGMp+iNSxyhCrH4MlXiKJHoYugIkoYi6KWL3Q==}
@@ -1953,9 +2060,21 @@ packages:
     peerDependencies:
       '@slide-computer/signer': ^4.2.2
 
+  '@slide-computer/signer@3.20.0':
+    resolution: {integrity: sha512-Jd4YoaAVHo+mtriU4UsYK544IOjqI8EyILKEuwv4MtKh3L/o3Xn2frH0+UI7otz3iXPrmRI9PYfd/niFtI1Fww==}
+    deprecated: This package has been replaced by @icp-sdk/signer
+    peerDependencies:
+      '@dfinity/agent': ~3.3.1
+      '@dfinity/candid': ~3.3.1
+      '@dfinity/identity': ~3.3.1
+      '@dfinity/principal': ~3.3.1
+
   '@slide-computer/signer@4.2.2':
     resolution: {integrity: sha512-K3gf2xZNUapCWsmNrJz3/o83ejvxHZxE812xEsaFof5olnEXHsbaOtmg0mDVOXSxezun67U3XOvHQR/CvqLqRA==}
     deprecated: This package has been replaced by @icp-sdk/signer
+
+  '@swc/helpers@0.5.23':
+    resolution: {integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==}
 
   '@tabby_ai/hijri-converter@1.0.5':
     resolution: {integrity: sha512-r5bClKrcIusDoo049dSL8CawnHR6mRdDwhlQuIgZRNty68q0x8k3Lf1BtPAMxRf/GgnHBnIO4ujd3+GQdLWzxQ==}
@@ -1996,12 +2115,21 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
+  '@tanstack/react-virtual@3.14.2':
+    resolution: {integrity: sha512-IpWnmCLvuymRfeeLNVXIzNEYBFLpd3drVIS91sqV78VTZFyldlChkOocZRCPp1B+Wnk09bcLNme8WaMU/9/9bQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   '@tanstack/router-core@1.131.50':
     resolution: {integrity: sha512-eojd4JZ5ziUhGEmXZ4CaVX5mQdiTMiz56Sp8ZQ6r7deb55Q+5G4JQDkeuXpI7HMAvzr+4qlsFeLaDRXXjXyOqQ==}
     engines: {node: '>=12'}
 
   '@tanstack/store@0.7.7':
     resolution: {integrity: sha512-xa6pTan1bcaqYDS9BDpSiS63qa6EoDkPN9RsRaxHuDdVDNntzq3xNwR5YKTU/V3SkSyC9T4YVOPh2zRQN0nhIQ==}
+
+  '@tanstack/virtual-core@3.17.0':
+    resolution: {integrity: sha512-gOxY/hFkPh/XQYhnThBHzkbkX3Ed+z/iushyz+R+JAr213aXxUDgQoTgTdrDpBSRsjFM73P/KfUyWmaF9WHMkQ==}
 
   '@tweenjs/tween.js@23.1.3':
     resolution: {integrity: sha512-vJmvvwFxYuGnF2axRtPYocag6Clbb5YS7kLL+SO/TeVFzHqDIWrNKYtcsPMibjDx9O+bu+psAy9NKfWklassUA==}
@@ -2598,6 +2726,9 @@ packages:
   hyphenate-style-name@1.1.0:
     resolution: {integrity: sha512-WDC/ui2VVRrz3jOVi+XtjqkDjiVjTtFaAGiW37k6b+ohyQ5wYDOGkvCZa8+H0nx3gyvv0+BST9xuOgIyGQ00gw==}
 
+  idb-keyval@6.2.5:
+    resolution: {integrity: sha512-eKQkTnS0relYsSOYomx8ozIbmdsQCKUdhyuIaQ2DZgKuaxtyQQMkyD/wlnQN32pO3yutN1b1L8uqwcDKaJd7/Q==}
+
   idb@7.1.1:
     resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
 
@@ -3139,6 +3270,12 @@ packages:
     resolution: {integrity: sha512-xEYQBqfYx/sfb33VJiKnSJp8ehloavImQ2A6564GAbqG55PGw1dAWUn1MUbQB62t0azawUS2CZZhWCjO8gRvTw==}
     engines: {npm: '>=8.2.3'}
 
+  react-aria@3.49.0:
+    resolution: {integrity: sha512-4+oK9FwJQWYhyA5zLfj/feOGY0zZbkE1muoF4gyxMroHVypjcYaRSTlJwvxph2zIlxt757KX6xIK2wJ5Aw1Kog==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+      react-dom: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
+
   react-day-picker@9.14.0:
     resolution: {integrity: sha512-tBaoDWjPwe0M5pGrum4H0SR6Lyk+BO9oHnp9JbKpGKW2mlraNPgP9BMfsg5pWpwrssARmeqk7YBl2oXutZTaHA==}
     engines: {node: '>=18'}
@@ -3234,6 +3371,11 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  react-stately@3.47.0:
+    resolution: {integrity: sha512-H3ar+SOWP920EbVg7qWfP3fZjZiwhlEJAEJQqjt+w8oKijCwFgr0+R4941PIHscOXRNRvEOjvWilitImC0DdBg==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
 
   react-style-singleton@2.2.3:
     resolution: {integrity: sha512-b6jSvxvVnyptAiLjbkWLE/lOnR4lfTtDAl+eUC7RZy+QQWc6wRzIV2CE6xBuMmDxc2qIihtDCZD5NPOFl7fRBQ==}
@@ -3466,6 +3608,9 @@ packages:
     peerDependencies:
       react: '>=17.0'
 
+  tabbable@6.4.0:
+    resolution: {integrity: sha512-05PUHKSNE8ou2dwIxTngl4EzcnsCDZGJ/iCLtDflR/SHB/ny14rXc+qU5P4mG9JkusiV7EivzY9Mhm55AzAvCg==}
+
   tailwind-merge@2.6.1:
     resolution: {integrity: sha512-Oo6tHdpZsGpkKG88HJ8RR1rg/RdnEkQEfMoEk2x1XRI3F1AxeU+ijRXpiVUF4UbLfcxxRGw6TbUINKYdWVsQTQ==}
 
@@ -3473,6 +3618,12 @@ packages:
     resolution: {integrity: sha512-bl6mpH3T7I3UFxuvDEXLxy/VuFxBk5bbzplh7tXI68mwMokNYd1t9qPBHlnyTwfa4JGC4zP516I1hYYtQ/vspA==}
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders'
+
+  tailwindcss-scoped-preflight@3.5.9:
+    resolution: {integrity: sha512-Q1lJssrJ2K96bCj8tocF/HCMy1NwMpFE30is3F4qFAAGfS9XYj6pz8JqfATSEnFhr7D6VAGLMn9apr/yqbSgTQ==}
+    peerDependencies:
+      postcss: ^8
+      tailwindcss: ^3
 
   tailwindcss@3.4.19:
     resolution: {integrity: sha512-3ofp+LL8E+pK/JuPLPggVAIaEuhvIz4qNcf3nA1Xn2o/7fb7s/TYpHhwGDv1ZU3PkBluUVaF8PyCHcm48cKLWQ==}
@@ -3583,6 +3734,11 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
+  use-async-memo@1.2.5:
+    resolution: {integrity: sha512-RWpsb3mtLHfU4vpoD2WSKbrcd9s+ZklDvsX2O9TDQafraTLgeFsKGwanNkBAZjdqvXH3hETolGkiVCPkK2Oc5A==}
+    peerDependencies:
+      react: '>=16.8.0'
+
   use-callback-ref@1.3.3:
     resolution: {integrity: sha512-jQL3lRnocaFtu3V00JToYz/4QkNWswxijDaCVNZRiRTO3HQDLsdu1ZtmIUvV4yPp+rvWm5j0y0TG/S61cuijTg==}
     engines: {node: '>=10'}
@@ -3592,6 +3748,12 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  use-context-selector@2.0.0:
+    resolution: {integrity: sha512-owfuSmUNd3eNp3J9CdDl0kMgfidV+MkDvHPpvthN5ThqM+ibMccNE0k+Iq7TWC6JPFvGZqanqiGCuQx6DyV24g==}
+    peerDependencies:
+      react: '>=18.0.0'
+      scheduler: '>=0.19.0'
 
   use-sidecar@1.1.3:
     resolution: {integrity: sha512-Fedw0aZvkhynoPYlA5WXrMCAMm+nSWdZt6lzJQ7Ok8S6Q+VsHmHpRWndVRJ8Be0ZbkfPc5LRYH+5XrzXcEeLRQ==}
@@ -4100,7 +4262,25 @@ snapshots:
       react: 19.1.5
       react-dom: 19.1.5(react@19.1.5)
 
+  '@floating-ui/react@0.26.28(react-dom@19.1.5(react@19.1.5))(react@19.1.5)':
+    dependencies:
+      '@floating-ui/react-dom': 2.1.8(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      '@floating-ui/utils': 0.2.11
+      react: 19.1.5
+      react-dom: 19.1.5(react@19.1.5)
+      tabbable: 6.4.0
+
   '@floating-ui/utils@0.2.11': {}
+
+  '@headlessui/react@2.2.10(react-dom@19.1.5(react@19.1.5))(react@19.1.5)':
+    dependencies:
+      '@floating-ui/react': 0.26.28(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      '@react-aria/focus': 3.22.1(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      '@react-aria/interactions': 3.28.1(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      '@tanstack/react-virtual': 3.14.2(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      react: 19.1.5
+      react-dom: 19.1.5(react@19.1.5)
+      use-sync-external-store: 1.6.0(react@19.1.5)
 
   '@ic-pay/icpay-sdk@1.4.135':
     dependencies:
@@ -4252,6 +4432,18 @@ snapshots:
   '@img/sharp-win32-x64@0.34.5':
     optional: true
 
+  '@internationalized/date@3.12.2':
+    dependencies:
+      '@swc/helpers': 0.5.23
+
+  '@internationalized/number@3.6.7':
+    dependencies:
+      '@swc/helpers': 0.5.23
+
+  '@internationalized/string@3.2.9':
+    dependencies:
+      '@swc/helpers': 0.5.23
+
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -4283,6 +4475,39 @@ snapshots:
     dependencies:
       promise-worker-transferable: 1.0.4
       three: 0.176.0
+
+  '@nfid/identitykit@1.0.18(261126092af4348a7a01e31f266258fd)':
+    dependencies:
+      '@dfinity/agent': 3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0)
+      '@dfinity/auth-client': 3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)
+      '@dfinity/candid': 3.3.1(@dfinity/principal@3.3.1)
+      '@dfinity/identity': 3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
+      '@dfinity/ledger-icp': 9.1.0(@icp-sdk/canisters@3.6.0(db5e6eef2ee8de69987cebf3aa3307d6))
+      '@dfinity/principal': 3.3.1
+      '@headlessui/react': 2.2.10(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.1.11(@types/react@19.1.17))(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      '@radix-ui/react-tooltip': 1.2.8(@types/react-dom@19.1.11(@types/react@19.1.17))(@types/react@19.1.17)(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      '@slide-computer/signer': 3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)
+      '@slide-computer/signer-agent': 3.20.0(patch_hash=5542f1d18f0899e65143e7e7b6a29780ce95ce0d9b2348f01d1d21b441654126)(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)(@slide-computer/signer@3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1))
+      '@slide-computer/signer-extension': 3.20.0(@slide-computer/signer@3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1))
+      '@slide-computer/signer-storage': 3.20.0(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))
+      '@slide-computer/signer-transport-auth-client': 3.20.0(bb578013a85836f4ffa2449cea7e9f97)
+      '@slide-computer/signer-transport-stoic': 3.20.0(patch_hash=cb89cbeb3acf9b195fd373ef1e109045957ac3b20d2854a6633917117e5274e7)(54d6d460126dd6d19ccf68e63affd787)
+      '@slide-computer/signer-web': 3.20.0(@slide-computer/signer@3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1))
+      clsx: 2.1.1
+      react: 19.1.5
+      react-dom: 19.1.5(react@19.1.5)
+      tailwindcss: 3.4.19
+      tailwindcss-scoped-preflight: 3.5.9(postcss@8.5.8)(tailwindcss@3.4.19)
+      use-async-memo: 1.2.5(react@19.1.5)
+      use-context-selector: 2.0.0(react@19.1.5)(scheduler@0.26.0)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
+      - postcss
+      - scheduler
+      - tsx
+      - yaml
 
   '@noble/curves@1.9.7':
     dependencies:
@@ -4981,6 +5206,21 @@ snapshots:
 
   '@radix-ui/rect@1.1.1': {}
 
+  '@react-aria/focus@3.22.1(react-dom@19.1.5(react@19.1.5))(react@19.1.5)':
+    dependencies:
+      '@swc/helpers': 0.5.23
+      react: 19.1.5
+      react-aria: 3.49.0(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      react-dom: 19.1.5(react@19.1.5)
+
+  '@react-aria/interactions@3.28.1(react-dom@19.1.5(react@19.1.5))(react@19.1.5)':
+    dependencies:
+      '@react-types/shared': 3.35.0(react@19.1.5)
+      '@swc/helpers': 0.5.23
+      react: 19.1.5
+      react-aria: 3.49.0(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+      react-dom: 19.1.5(react@19.1.5)
+
   '@react-spring/animated@10.1.0(react@19.1.5)':
     dependencies:
       '@react-spring/shared': 10.1.0(react@19.1.5)
@@ -5091,6 +5331,10 @@ snapshots:
     transitivePeerDependencies:
       - '@types/three'
 
+  '@react-types/shared@3.35.0(react@19.1.5)':
+    dependencies:
+      react: 19.1.5
+
   '@remix-run/router@1.23.2': {}
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
@@ -5186,18 +5430,65 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
 
+  ? '@slide-computer/signer-agent@3.20.0(patch_hash=5542f1d18f0899e65143e7e7b6a29780ce95ce0d9b2348f01d1d21b441654126)(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)(@slide-computer/signer@3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1))'
+  : dependencies:
+      '@dfinity/agent': 3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0)
+      '@dfinity/candid': 3.3.1(@dfinity/principal@3.3.1)
+      '@dfinity/identity': 3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
+      '@dfinity/principal': 3.3.1
+      '@slide-computer/signer': 3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)
+
   '@slide-computer/signer-agent@4.2.2(@slide-computer/signer@4.2.2)':
     dependencies:
       '@icp-sdk/core': 5.4.0
       '@slide-computer/signer': 4.2.2
 
+  '@slide-computer/signer-extension@3.20.0(@slide-computer/signer@3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1))':
+    dependencies:
+      '@slide-computer/signer': 3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)
+
+  '@slide-computer/signer-storage@3.20.0(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))':
+    dependencies:
+      '@dfinity/identity': 3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
+      idb-keyval: 6.2.5
+
+  '@slide-computer/signer-transport-auth-client@3.20.0(bb578013a85836f4ffa2449cea7e9f97)':
+    dependencies:
+      '@dfinity/auth-client': 3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)
+      '@dfinity/identity': 3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
+      '@dfinity/principal': 3.3.1
+      '@slide-computer/signer': 3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)
+
+  '@slide-computer/signer-transport-stoic@3.20.0(patch_hash=cb89cbeb3acf9b195fd373ef1e109045957ac3b20d2854a6633917117e5274e7)(54d6d460126dd6d19ccf68e63affd787)':
+    dependencies:
+      '@dfinity/agent': 3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0)
+      '@dfinity/identity': 3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
+      '@dfinity/principal': 3.3.1
+      '@slide-computer/signer': 3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)
+      '@slide-computer/signer-storage': 3.20.0(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))
+
+  '@slide-computer/signer-web@3.20.0(@slide-computer/signer@3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1))':
+    dependencies:
+      '@slide-computer/signer': 3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)
+
   '@slide-computer/signer-web@4.2.2(@slide-computer/signer@4.2.2)':
     dependencies:
       '@slide-computer/signer': 4.2.2
 
+  '@slide-computer/signer@3.20.0(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/identity@3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.3.1)':
+    dependencies:
+      '@dfinity/agent': 3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0)
+      '@dfinity/candid': 3.3.1(@dfinity/principal@3.3.1)
+      '@dfinity/identity': 3.3.1(@dfinity/agent@3.3.1(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/hashes@1.8.0))(@dfinity/candid@3.3.1(@dfinity/principal@3.3.1))(@dfinity/principal@3.3.1)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
+      '@dfinity/principal': 3.3.1
+
   '@slide-computer/signer@4.2.2':
     dependencies:
       '@icp-sdk/core': 5.4.0
+
+  '@swc/helpers@0.5.23':
+    dependencies:
+      tslib: 2.8.1
 
   '@tabby_ai/hijri-converter@1.0.5': {}
 
@@ -5240,6 +5531,12 @@ snapshots:
       react-dom: 19.1.5(react@19.1.5)
       use-sync-external-store: 1.6.0(react@19.1.5)
 
+  '@tanstack/react-virtual@3.14.2(react-dom@19.1.5(react@19.1.5))(react@19.1.5)':
+    dependencies:
+      '@tanstack/virtual-core': 3.17.0
+      react: 19.1.5
+      react-dom: 19.1.5(react@19.1.5)
+
   '@tanstack/router-core@1.131.50':
     dependencies:
       '@tanstack/history': 1.131.2
@@ -5251,6 +5548,8 @@ snapshots:
       tiny-warning: 1.0.3
 
   '@tanstack/store@0.7.7': {}
+
+  '@tanstack/virtual-core@3.17.0': {}
 
   '@tweenjs/tween.js@23.1.3': {}
 
@@ -5827,6 +6126,8 @@ snapshots:
   html-url-attributes@3.0.1: {}
 
   hyphenate-style-name@1.1.0: {}
+
+  idb-keyval@6.2.5: {}
 
   idb@7.1.1: {}
 
@@ -6517,6 +6818,20 @@ snapshots:
       parchment: 3.0.0
       quill-delta: 5.1.0
 
+  react-aria@3.49.0(react-dom@19.1.5(react@19.1.5))(react@19.1.5):
+    dependencies:
+      '@internationalized/date': 3.12.2
+      '@internationalized/number': 3.6.7
+      '@internationalized/string': 3.2.9
+      '@react-types/shared': 3.35.0(react@19.1.5)
+      '@swc/helpers': 0.5.23
+      aria-hidden: 1.2.6
+      clsx: 2.1.1
+      react: 19.1.5
+      react-dom: 19.1.5(react@19.1.5)
+      react-stately: 3.47.0(react@19.1.5)
+      use-sync-external-store: 1.6.0(react@19.1.5)
+
   react-day-picker@9.14.0(react@19.1.5):
     dependencies:
       '@date-fns/tz': 1.4.1
@@ -6618,6 +6933,16 @@ snapshots:
       react: 19.1.5
       react-dom: 19.1.5(react@19.1.5)
       react-transition-group: 4.4.5(react-dom@19.1.5(react@19.1.5))(react@19.1.5)
+
+  react-stately@3.47.0(react@19.1.5):
+    dependencies:
+      '@internationalized/date': 3.12.2
+      '@internationalized/number': 3.6.7
+      '@internationalized/string': 3.2.9
+      '@react-types/shared': 3.35.0(react@19.1.5)
+      '@swc/helpers': 0.5.23
+      react: 19.1.5
+      use-sync-external-store: 1.6.0(react@19.1.5)
 
   react-style-singleton@2.2.3(@types/react@19.1.17)(react@19.1.5):
     dependencies:
@@ -6919,10 +7244,17 @@ snapshots:
     dependencies:
       react: 19.1.5
 
+  tabbable@6.4.0: {}
+
   tailwind-merge@2.6.1: {}
 
   tailwindcss-animate@1.0.7(tailwindcss@3.4.19):
     dependencies:
+      tailwindcss: 3.4.19
+
+  tailwindcss-scoped-preflight@3.5.9(postcss@8.5.8)(tailwindcss@3.4.19):
+    dependencies:
+      postcss: 8.5.8
       tailwindcss: 3.4.19
 
   tailwindcss@3.4.19:
@@ -7069,12 +7401,21 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
+  use-async-memo@1.2.5(react@19.1.5):
+    dependencies:
+      react: 19.1.5
+
   use-callback-ref@1.3.3(@types/react@19.1.17)(react@19.1.5):
     dependencies:
       react: 19.1.5
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.1.17
+
+  use-context-selector@2.0.0(react@19.1.5)(scheduler@0.26.0):
+    dependencies:
+      react: 19.1.5
+      scheduler: 0.26.0
 
   use-sidecar@1.1.3(@types/react@19.1.17)(react@19.1.5):
     dependencies:

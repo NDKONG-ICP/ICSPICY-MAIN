@@ -39,7 +39,12 @@ export const ProceduralGround = memo(function ProceduralGround({
         receiveShadow={receiveShadow}
       >
         <planeGeometry args={[widthMeters + 0.6, depthMeters + 0.6]} />
-        <meshStandardMaterial color="#5c4a32" roughness={0.95} transparent opacity={0.35} />
+        <meshStandardMaterial
+          color="#5c4a32"
+          roughness={0.95}
+          transparent
+          opacity={0.35}
+        />
       </mesh>
     </group>
   );

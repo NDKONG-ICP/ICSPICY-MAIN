@@ -1,5 +1,3 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,6 +8,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -158,9 +158,7 @@ export function AdminBatchGiftsTab() {
     try {
       const useRandom = batchMode === "random";
       const startTokenId =
-        batchStartId.trim().length > 0
-          ? BigInt(batchStartId.trim())
-          : null;
+        batchStartId.trim().length > 0 ? BigInt(batchStartId.trim()) : null;
 
       const rows = await batchAirdrop.mutateAsync({
         recipients: principalsParsed,
@@ -183,7 +181,7 @@ export function AdminBatchGiftsTab() {
       <div className="flex items-center gap-2">
         <Gift className="w-5 h-5 text-primary" />
         <h2 className="font-display font-bold text-lg text-foreground">
-          Batch Gifts {'&'} NFT Airdrops
+          Batch Gifts {"&"} NFT Airdrops
         </h2>
       </div>
 
@@ -236,8 +234,8 @@ export function AdminBatchGiftsTab() {
               </div>
             ) : (
               <p className="text-[11px] text-muted-foreground">
-                Picks the next eligible pool-held token using the canister&apos;s
-                random selection path.
+                Picks the next eligible pool-held token using the
+                canister&apos;s random selection path.
               </p>
             )}
           </div>
@@ -353,8 +351,7 @@ export function AdminBatchGiftsTab() {
           />
         </div>
 
-        {batchPrincipals.trim().length > 0 &&
-          principalsParsed === null && (
+        {batchPrincipals.trim().length > 0 && principalsParsed === null && (
           <p className="text-xs text-destructive">
             Invalid principal syntax on one or more lines.
           </p>
@@ -440,7 +437,9 @@ export function AdminBatchGiftsTab() {
                 You are about to send{" "}
                 <strong>{principalsParsed?.length ?? 0}</strong> pool NFT(s) to
                 distinct principals (
-                <strong>{batchMode === "random" ? "random" : "sequential"}</strong>
+                <strong>
+                  {batchMode === "random" ? "random" : "sequential"}
+                </strong>
                 ).
               </p>
               {batchMode === "range" && (

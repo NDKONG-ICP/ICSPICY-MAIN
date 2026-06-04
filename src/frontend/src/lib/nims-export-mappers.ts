@@ -12,9 +12,7 @@ function stageLabel(stage: PlantLifecycle["plant"]["stage"]): string {
   return "Mature";
 }
 
-function containerLabel(
-  cs: PlantLifecycle["plant"]["container_size"],
-): string {
+function containerLabel(cs: PlantLifecycle["plant"]["container_size"]): string {
   if (!cs || cs.length === 0) return "";
   const c = cs[0]!;
   const key = Object.keys(c)[0] ?? "Unknown";
@@ -41,9 +39,7 @@ export function plantLifecycleToExportRow(
     germinatedDate: tsToDate(
       p.germination_date.length === 1 ? p.germination_date[0] : undefined,
     ),
-    lastWatered: tsToDate(
-      lc.wateringLog.at(-1)?.timestamp,
-    ),
+    lastWatered: tsToDate(lc.wateringLog.at(-1)?.timestamp),
     lastFed: tsToDate(lc.feedingLog.at(-1)?.date),
     status: p.sold ? "Sold" : p.for_sale ? "For Sale" : "Active",
     forSale: p.for_sale ? "Yes" : "No",
@@ -78,9 +74,7 @@ export function exportAdminOrdersCsv(orders: AdminOrderPublic[]): void {
       total: (Number(o.total_cents) / 100).toFixed(2),
       pickup: o.pickup ? "Yes" : "No",
       created: new Date(Number(o.created_at / 1_000_000n)).toISOString(),
-      items: o.items
-        .map((i) => `${i.product_name} x${i.quantity}`)
-        .join("; "),
+      items: o.items.map((i) => `${i.product_name} x${i.quantity}`).join("; "),
     })),
     datedCsvFilename("ic-spicy-orders"),
   );
