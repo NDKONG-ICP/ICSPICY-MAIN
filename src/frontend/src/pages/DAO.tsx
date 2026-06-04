@@ -50,8 +50,9 @@ import {
   useProposals,
   useVoteOnProposal,
 } from "../hooks/useDAO";
-import { useMyNftTokenIds } from "../hooks/useMyNftIds";
+import { useMyNftTokenIds, useNftTokenIdsForPrincipal } from "../hooks/useMyNftIds";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { useOisyWallet } from "../providers/OisyWalletProvider";
 
 type FilterType = "all" | string;
 
@@ -709,19 +710,30 @@ export default function DAOPage() {
   usePageTitle("DAO");
 
   const { isAuthenticated, login } = useAuth();
+  const { isOisyConnected, oisyPrincipal } = useOisyWallet();
   const { data: hasAccess, isLoading: accessLoading } = useHasDAOAccess();
   const { data: myNftIds } = useMyNftTokenIds();
+  // Direct public query for OISY-held NFTs — no II session needed
+  const { data: oisyNftIds } = useNftTokenIdsForPrincipal(
+    oisyPrincipal as import("@dfinity/principal").Principal | undefined,
+  );
   const { data: proposals, isLoading: proposalsLoading } = useProposals();
   const { data: isAdmin } = useIsAdmin();
 
   const [filter, setFilter] = useState<FilterType>("all");
   const [createOpen, setCreateOpen] = useState(false);
 
-  if (!isAuthenticated) {
+  // Neither II nor OISY is connected — show gate
+  if (!isAuthenticated && !isOisyConnected) {
     return <DAOGateBanner onLogin={login} />;
   }
 
-  const canVote = Boolean(hasAccess);
+  const oisyNftCount = oisyNftIds?.length ?? 0;
+  const iiNftCount = myNftIds?.length ?? 0;
+
+  // canVote: true if II says so (backend checks linked wallets), OR if OISY-only but holds NFTs
+  // For OISY-only users: they can see the DAO but must sign in with II to cast votes
+  const canVote = Boolean(hasAccess) || (isOisyConnected && !isAuthenticated && oisyNftCount > 0);
 
   const filtered =
     proposals?.filter((p) =>
@@ -776,8 +788,33 @@ export default function DAOPage() {
       {/* Access notice */}
       {!canVote && !accessLoading && <NoAccessBanner />}
 
-      {/* Eligibility */}
-      {canVote && <DAOEligibilityBanner nftCount={myNftIds?.length ?? 0} />}
+      {/* Eligibility — show combined NFT count (II + OISY) */}
+      {canVote && isAuthenticated && (
+        <DAOEligibilityBanner nftCount={iiNftCount + oisyNftCount} />
+      )}
+
+      {/* OISY-only: eligible but needs II to vote */}
+      {canVote && !isAuthenticated && isOisyConnected && oisyNftCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-5 p-3 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-start gap-2"
+          data-ocid="dao-oisy-eligible-banner"
+        >
+          <Crown className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground">
+              Eligible via OISY Wallet — {oisyNftCount} NFT{oisyNftCount !== 1 ? "s" : ""}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Your OISY-held NFTs qualify you to vote. Sign in with Internet Identity to cast your vote.
+            </p>
+            <Button size="sm" className="mt-2 h-7 text-xs" onClick={login}>
+              Sign in with Internet Identity to Vote
+            </Button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Filter tabs */}
       <div

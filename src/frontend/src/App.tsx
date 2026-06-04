@@ -14,6 +14,7 @@ import { PageLoader } from "./components/ui/LoadingSpinner";
 import { useActorReady } from "./hooks/useActorReady";
 import { useAuth } from "./hooks/useAuth";
 import { useIsAdmin } from "./hooks/useBackend";
+import { useOisyWallet } from "./providers/OisyWalletProvider";
 
 // AuthCacheSync: clears ALL query cache when the principal changes.
 // This is critical for Chrome's full-page redirect flow:
@@ -110,14 +111,18 @@ const NFTDetailPage = lazy(() => import("./pages/NFTDetail"));
 function AdminGuard() {
   const { actorReady, probeError } = useActorReady();
   const { isAuthenticated, isInitializing, principal } = useAuth();
+  const { isOisyConnected, isOisyInitializing, oisyPrincipal } = useOisyWallet();
   const { data: isAdmin, isPending: isAdminPending } = useIsAdmin();
 
   // Case 1: II is still initializing (restoring from IndexedDB after Chrome redirect).
   // MUST show loader here — isAdmin is synchronous but principal is not yet known.
   if (isInitializing) return <PageLoader />;
 
-  // Case 2: Not authenticated — show sign-in prompt.
-  if (!isAuthenticated) {
+  // Case 1b: OISY is in the process of connecting — wait briefly.
+  if (!isAuthenticated && isOisyInitializing) return <PageLoader />;
+
+  // Case 2: Neither II nor OISY is connected — show sign-in prompt.
+  if (!isAuthenticated && !isOisyConnected) {
     return (
       <div
         className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4 text-center"
@@ -154,7 +159,9 @@ function AdminGuard() {
   // We reach here only when isInitializing=false, so isAdmin is a definitive answer.
   // We do NOT wait for actorReady here because isAdmin is purely synchronous from the PID.
   if (!isAdmin) {
-    const currentPrincipal = principal?.toText() ?? "unknown";
+    // Show whichever principal is connected (prefer II, fall back to OISY)
+    const currentPrincipal = principal?.toText() ?? oisyPrincipal?.toText() ?? "unknown";
+    const principalLabel = !isAuthenticated && isOisyConnected ? "OISY" : "Internet Identity";
     const handleCopyPid = () => {
       if (currentPrincipal === "unknown") return;
       navigator.clipboard.writeText(currentPrincipal).then(() => {
@@ -180,7 +187,7 @@ function AdminGuard() {
         </div>
         <div className="w-full max-w-md rounded-xl border border-yellow-500/40 bg-yellow-500/10 p-4 text-left space-y-2">
           <p className="text-xs font-bold text-yellow-400 uppercase tracking-wider">
-            Your Internet Identity Principal:
+            Your {principalLabel} Principal:
           </p>
           {currentPrincipal !== "unknown" ? (
             <>
@@ -208,7 +215,7 @@ function AdminGuard() {
             </>
           ) : (
             <p className="text-xs text-yellow-400/70">
-              Sign in with Internet Identity to see your principal ID.
+              Sign in to see your principal ID.
             </p>
           )}
         </div>
@@ -224,9 +231,10 @@ function AdminGuard() {
   }
 
   // Case 5: Confirmed admin (isAdmin=true).
-  // Wait for actorReady before rendering the AdminPage so it has a valid actor.
-  // Show loader while probe completes — this only takes a second or two.
-  if (!actorReady && !probeError) {
+  // For OISY-only admins: skip actorReady (the II actor probe won't resolve without II session).
+  // Admin queries work via public/anonymous actor; mutations will gracefully handle missing II actor.
+  const oisyOnlyAdmin = !isAuthenticated && isOisyConnected;
+  if (!oisyOnlyAdmin && !actorReady && !probeError) {
     return <PageLoader />;
   }
 
