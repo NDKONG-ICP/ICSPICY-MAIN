@@ -9,6 +9,7 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { useQuery } from "@tanstack/react-query";
+import { useOisyWallet } from "../providers/OisyWalletProvider";
 import { useAuth } from "./useAuth";
 import { useLinkedWallets } from "./useBackend";
 
@@ -116,17 +117,32 @@ export const RAVEN_PRO_THRESHOLD_UNITS = PRO_THRESHOLD_UNITS;
 
 export function useRavenPerks(): RavenPerks {
   const { principal, isAuthenticated } = useAuth();
+  const { isOisyConnected, oisyPrincipal } = useOisyWallet();
   const { data: linkedWallets = [] } = useLinkedWallets();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["ravenPerks", principal?.toText(), linkedWallets.map((p) => p.toText()).join(",")],
+    queryKey: [
+      "ravenPerks",
+      principal?.toText() ?? "",
+      oisyPrincipal?.toText() ?? "",
+      linkedWallets.map((p) => p.toText()).join(","),
+    ],
     queryFn: async () => {
-      if (!principal) return 0n;
-      const principals = [principal.toText(), ...linkedWallets.map((p) => p.toText())];
-      const balances = await Promise.all(principals.map((p) => fetchRavenBalance(p)));
+      // Build list of principals to check — deduplicated
+      const seen = new Set<string>();
+      const list: string[] = [];
+      const add = (p: string) => { if (!seen.has(p)) { seen.add(p); list.push(p); } };
+
+      if (principal) add(principal.toText());
+      if (isOisyConnected && oisyPrincipal) add(oisyPrincipal.toText());
+      for (const w of linkedWallets) add(w.toText());
+
+      if (list.length === 0) return 0n;
+      const balances = await Promise.all(list.map((p) => fetchRavenBalance(p)));
       return balances.reduce((sum, b) => sum + b, 0n);
     },
-    enabled: isAuthenticated && !!principal,
+    // Run when II is authenticated OR when OISY is connected (even without II)
+    enabled: (isAuthenticated && !!principal) || isOisyConnected,
     staleTime: 60_000,
     refetchInterval: 60_000,
   });

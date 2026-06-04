@@ -4,6 +4,7 @@ import { useOisyWallet } from "../providers/OisyWalletProvider";
 import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
+import { useNftTokenIdsForPrincipal } from "./useMyNftIds";
 
 export type NftDiscount = {
   discountPercent: number;
@@ -17,13 +18,41 @@ const EMPTY: NftDiscount = {
   tokenId: null,
 };
 
+/**
+ * Mirror of lib/nft-discount.mo discountForToken — token ID ranges → discount tier.
+ * 1-5000: 5% common, 5001-7838: 7% uncommon,
+ * 7839-7888: 15% founder_pepperhead, 7889-8726: 10% rare_pepperhead,
+ * 8727-8888: 10% rare, else 0% none.
+ */
+export function discountForTokenId(tokenId: bigint): { pct: number; rarity: string } {
+  const id = Number(tokenId);
+  if (id >= 1 && id <= 5000) return { pct: 5, rarity: "common" };
+  if (id >= 5001 && id <= 7838) return { pct: 7, rarity: "uncommon" };
+  if (id >= 7839 && id <= 7888) return { pct: 15, rarity: "founder_pepperhead" };
+  if (id >= 7889 && id <= 8726) return { pct: 10, rarity: "rare_pepperhead" };
+  if (id >= 8727 && id <= 8888) return { pct: 10, rarity: "rare" };
+  return { pct: 0, rarity: "none" };
+}
+
+/** Client-side best discount across an array of token IDs — mirrors backend bestFromTokenIds. */
+function bestFromTokenIds(tokenIds: bigint[]): NftDiscount {
+  let best: NftDiscount = EMPTY;
+  for (const id of tokenIds) {
+    const { pct, rarity } = discountForTokenId(id);
+    if (pct > best.discountPercent) {
+      best = { discountPercent: pct, rarity, tokenId: id };
+    }
+  }
+  return best;
+}
+
 export function useNftDiscount() {
   const { isAuthenticated } = useAuth();
   const { actor } = useActor<import("../backend").Backend>(createActor);
   const { actorReady } = useActorReady();
-  const { isOisyConnected, oisyBackendWrapped } = useOisyWallet();
+  const { isOisyConnected, oisyPrincipal } = useOisyWallet();
 
-  // Primary query: II actor (checks II principal + all linked wallets via backend)
+  // Primary query: II actor — backend checks II principal + ALL linked wallets server-side.
   const iiQuery = useQuery({
     queryKey: ["nftDiscount", actorReady],
     queryFn: async (): Promise<NftDiscount> => {
@@ -42,39 +71,38 @@ export function useNftDiscount() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fallback query: OISY actor — used when II is not authenticated.
-  // getCallerDiscount is a query call (no popup needed) with caller = OISY principal.
-  // The backend checks the OISY principal's own NFTs directly.
-  const oisyQuery = useQuery({
-    queryKey: ["nftDiscountOisy", isOisyConnected],
-    queryFn: async (): Promise<NftDiscount> => {
-      if (!oisyBackendWrapped) return EMPTY;
-      try {
-        const result = await oisyBackendWrapped.getCallerDiscount();
-        return {
-          discountPercent: Number(result.discountPercent),
-          rarity: result.rarity,
-          tokenId:
-            result.tokenId !== undefined && result.tokenId !== null
-              ? BigInt(result.tokenId)
-              : null,
-        };
-      } catch {
-        return EMPTY;
-      }
-    },
-    // Only run when OISY is connected AND II is NOT (avoid double-counting)
-    enabled: isOisyConnected && !isAuthenticated && !!oisyBackendWrapped,
-    staleTime: 5 * 60 * 1000,
-  });
+  // OISY-only fallback: public icrc7_tokens_of query — no OISY signer popup.
+  // Discount calculated client-side from token IDs using the same rarity map as the backend.
+  const oisyNfts = useNftTokenIdsForPrincipal(
+    isOisyConnected && !isAuthenticated
+      ? (oisyPrincipal as import("@dfinity/principal").Principal | undefined)
+      : undefined,
+  );
 
-  // Use II result when available; fall back to OISY result for OISY-only users.
-  const active = isAuthenticated ? iiQuery : oisyQuery;
+  if (isAuthenticated) {
+    return {
+      discountPercent: iiQuery.data?.discountPercent ?? 0,
+      rarity: iiQuery.data?.rarity ?? "none",
+      tokenId: iiQuery.data?.tokenId ?? null,
+      isLoading: iiQuery.isLoading,
+    };
+  }
+
+  // OISY-only path: derive discount from public NFT query result
+  if (isOisyConnected) {
+    const computed = oisyNfts.data ? bestFromTokenIds(oisyNfts.data) : EMPTY;
+    return {
+      discountPercent: computed.discountPercent,
+      rarity: computed.rarity,
+      tokenId: computed.tokenId,
+      isLoading: oisyNfts.isLoading,
+    };
+  }
 
   return {
-    discountPercent: active.data?.discountPercent ?? 0,
-    rarity: active.data?.rarity ?? "none",
-    tokenId: active.data?.tokenId ?? null,
-    isLoading: active.isLoading,
+    discountPercent: 0,
+    rarity: "none",
+    tokenId: null,
+    isLoading: false,
   };
 }
