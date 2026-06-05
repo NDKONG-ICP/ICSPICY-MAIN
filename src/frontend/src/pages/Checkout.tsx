@@ -63,10 +63,14 @@ import type { CartItem } from "../types";
 
 function NftDiscountSection({
   discountPercent,
+  nftDiscountPercent,
+  ravenDiscountPercent,
   rarity,
   discountAmount,
 }: {
   discountPercent: number;
+  nftDiscountPercent: number;
+  ravenDiscountPercent: number;
   rarity: string;
   discountAmount: number;
 }) {
@@ -92,20 +96,46 @@ function NftDiscountSection({
 
   const rarityLabel = formatRarityLabel(rarity);
 
+  // When stacked, attribute per-source savings proportionally from the subtotal
+  // so each line makes intuitive sense (NFT pct + RAVEN pct = combined total pct).
+  const subtotalForCalc = discountPercent > 0 ? Math.round(discountAmount * 100 / discountPercent) : 0;
+  const nftAmount = discountAmountCents(subtotalForCalc, nftDiscountPercent);
+  const ravenAmount = discountAmountCents(subtotalForCalc, ravenDiscountPercent);
+  const isStacked = nftDiscountPercent > 0 && ravenDiscountPercent > 0;
+
   return (
     <div className="space-y-2" data-ocid="checkout-nft-discount">
-      <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
-        🌶️ NFT Holder Discount: {discountPercent}% off
-        {rarityLabel ? ` (${rarityLabel})` : ""}
-      </div>
-      <div className="flex justify-between text-sm">
-        <span className="text-muted-foreground">
-          NFT discount ({discountPercent}%)
-        </span>
-        <span className="font-semibold text-primary">
-          -${(discountAmount / 100).toFixed(2)}
-        </span>
-      </div>
+      {nftDiscountPercent > 0 && (
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground flex items-center gap-1">
+            🌶️ PepperHead discount ({nftDiscountPercent}%)
+            {rarityLabel ? ` · ${rarityLabel}` : ""}
+          </span>
+          <span className="font-semibold text-primary">
+            -${((isStacked ? nftAmount : discountAmount) / 100).toFixed(2)}
+          </span>
+        </div>
+      )}
+      {ravenDiscountPercent > 0 && (
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground flex items-center gap-1">
+            🐦‍⬛ RAVEN discount ({ravenDiscountPercent}%)
+          </span>
+          <span className="font-semibold text-blue-400">
+            -${(ravenAmount / 100).toFixed(2)}
+          </span>
+        </div>
+      )}
+      {isStacked && (
+        <div className="flex justify-between text-sm border-t border-primary/20 pt-1">
+          <span className="text-muted-foreground font-medium">
+            Total discount ({discountPercent}%)
+          </span>
+          <span className="font-semibold text-primary">
+            -${(discountAmount / 100).toFixed(2)}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -1163,6 +1193,8 @@ export default function CheckoutPage() {
 
                 <NftDiscountSection
                   discountPercent={discountPercent}
+                  nftDiscountPercent={nftDiscountPct}
+                  ravenDiscountPercent={ravenDiscountPct}
                   rarity={rarity}
                   discountAmount={discountAmount}
                 />

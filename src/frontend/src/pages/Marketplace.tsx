@@ -1157,7 +1157,13 @@ function OffersTab({ priceE8sMap }: { priceE8sMap: Map<string, bigint> }) {
 
 // ─── Cart Drawer ──────────────────────────────────────────────────────────────
 
-function CartFloat({ discountPercent }: { discountPercent: number }) {
+function CartFloat({
+  nftDiscountPercent,
+  ravenDiscountPercent,
+}: {
+  nftDiscountPercent: number;
+  ravenDiscountPercent: number;
+}) {
   const {
     items,
     itemCount,
@@ -1170,6 +1176,7 @@ function CartFloat({ discountPercent }: { discountPercent: number }) {
   const count = itemCount();
   const shipping = shippingCents();
   const rawSubtotal = subtotalCents();
+  const discountPercent = Math.min(nftDiscountPercent + ravenDiscountPercent, 20);
   const discountAmount = discountAmountCents(rawSubtotal, discountPercent);
   const total = rawSubtotal - discountAmount + shipping;
   const hasDiscount = discountPercent > 0;
@@ -1292,8 +1299,13 @@ function CartFloat({ discountPercent }: { discountPercent: number }) {
             <div className="p-4 border-t border-border space-y-3">
               {hasDiscount && (
                 <>
-                  <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
-                    🌶️ NFT Holder Discount: {discountPercent}% off
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground space-y-1">
+                    {nftDiscountPercent > 0 && (
+                      <div>🌶️ PepperHead Discount: {nftDiscountPercent}% off</div>
+                    )}
+                    {ravenDiscountPercent > 0 && (
+                      <div>🐦‍⬛ RAVEN Holder Discount: {ravenDiscountPercent}% off</div>
+                    )}
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Subtotal</span>
@@ -1302,7 +1314,7 @@ function CartFloat({ discountPercent }: { discountPercent: number }) {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-primary">
-                    <span>Discount</span>
+                    <span>Discount ({discountPercent}%)</span>
                     <span>-${(discountAmount / 100).toFixed(2)}</span>
                   </div>
                 </>
@@ -1581,11 +1593,13 @@ function ProductImageGallery({
 
 function ProductModal({
   product,
-  discountPercent,
+  nftDiscountPercent,
+  ravenDiscountPercent,
   onClose,
 }: {
   product: ShopProduct;
-  discountPercent: number;
+  nftDiscountPercent: number;
+  ravenDiscountPercent: number;
   onClose: () => void;
 }) {
   const addItem = useCart((s) => s.addItem);
@@ -1600,6 +1614,7 @@ function ProductModal({
     onClose();
   };
 
+  const discountPercent = Math.min(nftDiscountPercent + ravenDiscountPercent, 20);
   const displayPriceCents = discountedUnitPriceCents(
     unitPrice,
     discountPercent,
@@ -1666,10 +1681,22 @@ function ProductModal({
         </div>
 
         {hasDiscount && (
-          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/30 mb-4">
-            <p className="text-xs text-foreground">
-              🌶️ NFT Holder Discount: {discountPercent}% off applied
-            </p>
+          <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-primary/5 border border-primary/30 mb-4">
+            {nftDiscountPercent > 0 && (
+              <p className="text-xs text-foreground">
+                🌶️ PepperHead Discount: {nftDiscountPercent}% off
+              </p>
+            )}
+            {ravenDiscountPercent > 0 && (
+              <p className="text-xs text-foreground">
+                🐦‍⬛ RAVEN Holder Discount: {ravenDiscountPercent}% off
+              </p>
+            )}
+            {nftDiscountPercent > 0 && ravenDiscountPercent > 0 && (
+              <p className="text-xs font-semibold text-primary">
+                Total savings: {discountPercent}% off
+              </p>
+            )}
           </div>
         )}
 
@@ -1750,11 +1777,13 @@ function ProductModal({
 
 function ProductCard({
   product,
-  discountPercent,
+  nftDiscountPercent,
+  ravenDiscountPercent,
   onSelect,
 }: {
   product: ShopProduct;
-  discountPercent: number;
+  nftDiscountPercent: number;
+  ravenDiscountPercent: number;
   onSelect: () => void;
 }) {
   const addItem = useCart((s) => s.addItem);
@@ -1768,6 +1797,7 @@ function ProductCard({
     toast.success(`Added ${product.name} to cart`);
   };
 
+  const discountPercent = Math.min(nftDiscountPercent + ravenDiscountPercent, 20);
   const displayPriceCents = discountedUnitPriceCents(
     unitPrice,
     discountPercent,
@@ -1801,10 +1831,17 @@ function ProductCard({
           <StageBadge category={product.category} />
         </div>
         {hasDiscount && (
-          <div className="absolute top-2 right-2">
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/90 border border-primary/50 text-primary-foreground text-xs font-medium">
-              -{discountPercent}%
-            </span>
+          <div className="absolute top-2 right-2 flex flex-col gap-0.5 items-end">
+            {nftDiscountPercent > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-primary/90 border border-primary/50 text-primary-foreground text-[10px] font-medium">
+                🌶️ -{nftDiscountPercent}%
+              </span>
+            )}
+            {ravenDiscountPercent > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-blue-600/90 border border-blue-500/50 text-white text-[10px] font-medium">
+                🐦‍⬛ -{ravenDiscountPercent}%
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -1873,12 +1910,14 @@ function ProductCard({
 function ProductsCatalogSection({
   products,
   isLoading,
-  discountPercent,
+  nftDiscountPercent,
+  ravenDiscountPercent,
   onSelectProduct,
 }: {
   products: ShopProduct[];
   isLoading: boolean;
-  discountPercent: number;
+  nftDiscountPercent: number;
+  ravenDiscountPercent: number;
   onSelectProduct: (p: ShopProduct) => void;
 }) {
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory | null>(
@@ -1934,7 +1973,8 @@ function ProductsCatalogSection({
             <ProductCard
               key={p.id.toString()}
               product={p}
-              discountPercent={discountPercent}
+              nftDiscountPercent={nftDiscountPercent}
+              ravenDiscountPercent={ravenDiscountPercent}
               onSelect={() => onSelectProduct(p)}
             />
           ))}
@@ -2086,7 +2126,8 @@ export default function MarketplacePage() {
         <ProductsCatalogSection
           products={catalogProducts}
           isLoading={allLoading}
-          discountPercent={discountPercent}
+          nftDiscountPercent={nftDiscountPercent}
+          ravenDiscountPercent={ravenDiscountPercent}
           onSelectProduct={setSelectedProduct}
         />
       )}
@@ -2097,14 +2138,18 @@ export default function MarketplacePage() {
       {selectedProduct && (
         <ProductModal
           product={selectedProduct}
-          discountPercent={discountPercent}
+          nftDiscountPercent={nftDiscountPercent}
+          ravenDiscountPercent={ravenDiscountPercent}
           onClose={() => setSelectedProduct(null)}
         />
       )}
 
       {/* Floating cart */}
       {(isPlantsTab || isProductsTab || isPepperHeadTab) && (
-        <CartFloat discountPercent={discountPercent} />
+        <CartFloat
+          nftDiscountPercent={nftDiscountPercent}
+          ravenDiscountPercent={ravenDiscountPercent}
+        />
       )}
     </div>
   );
