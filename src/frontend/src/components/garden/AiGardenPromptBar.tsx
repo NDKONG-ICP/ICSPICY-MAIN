@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Shuffle, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 type Props = {
   plotWidth: number;
@@ -43,7 +44,17 @@ export function AiGardenPromptBar({
         plotDepth,
         zone,
       );
-      onGenerate(layoutToDesign(layout), layout.explanation, text);
+      try {
+        onGenerate(layoutToDesign(layout), layout.explanation, text);
+      } catch (e) {
+        console.error("AI layout apply failed:", e);
+        toast.error("AI layout failed — try a different prompt.");
+      }
+    } catch (e) {
+      console.error("AI garden generation failed:", e);
+      toast.error(
+        "AI generation failed — the fallback may have encountered an issue. Try again.",
+      );
     } finally {
       onGeneratingChange(false);
     }

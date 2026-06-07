@@ -1188,13 +1188,22 @@ export default function GardenDesignerPage() {
               design.depthMeters,
               zoneLabel,
             )
-              .then((layout) =>
-                handleAiGenerate(
-                  layoutToDesign(layout, design),
-                  layout.explanation,
-                  lastAiPrompt,
-                ),
-              )
+              .then((layout) => {
+                try {
+                  handleAiGenerate(
+                    layoutToDesign(layout, design),
+                    layout.explanation,
+                    lastAiPrompt,
+                  );
+                } catch (e) {
+                  console.error("AI layout apply failed:", e);
+                  toast.error("AI layout failed — try a different prompt.");
+                }
+              })
+              .catch((e) => {
+                console.error("AI generation failed:", e);
+                toast.error("AI generation failed. Please try again.");
+              })
               .finally(() => setAiGenerating(false));
           }}
         />

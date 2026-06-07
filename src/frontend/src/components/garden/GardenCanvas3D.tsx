@@ -776,8 +776,14 @@ function Scene({
 export function GardenCanvas3D(props: Props) {
   const { onSetBrush, pending, varieties, walkMode } = props;
   const mobile = useIsMobile();
+  // Detect ACTUAL touch-primary devices, not touch-capable desktops/laptops.
+  // pointer:coarse = touchscreen is the primary pointer (phones, tablets).
+  // pointer:fine = mouse/trackpad is primary (laptops with touchscreens still have fine pointer).
   const isTouch =
-    mobile || (typeof window !== "undefined" && "ontouchstart" in window);
+    mobile ||
+    (typeof window !== "undefined" &&
+      window.matchMedia("(pointer: coarse)").matches &&
+      !window.matchMedia("(pointer: fine)").matches);
   const cam =
     Math.max(props.design.widthMeters, props.design.depthMeters) * 0.85;
   const cx = props.design.widthMeters / 2;
