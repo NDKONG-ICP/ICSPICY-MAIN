@@ -1,300 +1,105 @@
-import { LayersPanel } from "@/components/garden/LayersPanel";
-import { SmartDataPanel } from "@/components/garden/SmartDataPanel";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  PRESET_PROMPTS,
-  generateGardenLayout,
-  layoutToDesign,
-  surprisePrompt,
-} from "@/lib/garden-ai";
-import type { YieldEstimate } from "@/lib/garden-rules";
-import type { GardenDesign, LayerVisibility } from "@/lib/garden-types";
+import type { VarietyPublic } from "@/declarations/backend.did";
+import type { PendingPlacement } from "@/lib/garden-types";
 import { cn } from "@/lib/utils";
-import { Sparkles, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { CatalogAccordion } from "./CatalogAccordion";
 
 type Props = {
-  open: boolean;
-  onClose: () => void;
-  plotWidth: number;
-  plotDepth: number;
-  zone: string;
-  generating: boolean;
-  onGeneratingChange: (v: boolean) => void;
-  onGenerate: (
-    design: ReturnType<typeof layoutToDesign>,
-    explanation: string,
-    prompt: string,
-  ) => void;
-  onLocation: () => void;
-  onPreview: () => void;
-  onWalk: () => void;
-  onSave: () => void;
-  onLoad?: () => void;
-  onShare: () => void;
-  onScreenshot: () => void;
-  onWeather: () => void;
-  onEnvironment: () => void;
-  onGallery: () => void;
-  onExportSvg?: () => void;
-  onNewPlot?: () => void;
-  design?: GardenDesign;
-  yieldEst?: YieldEstimate;
-  layers?: LayerVisibility;
-  onLayersChange?: (l: LayerVisibility) => void;
-  weatherOn: boolean;
-  isAuthenticated: boolean;
+  readOnly?: boolean;
+  varieties: VarietyPublic[];
+  onPending: (p: PendingPlacement | null) => void;
+  onIcPlant: (v: VarietyPublic) => void;
+  /** Optional controlled expanded state (e.g. opened from the 3D build hotbar). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-export function MobileActionsSheet({
-  open,
-  onClose,
-  plotWidth,
-  plotDepth,
-  zone,
-  generating,
-  onGeneratingChange,
-  onGenerate,
-  onLocation,
-  onPreview,
-  onWalk,
-  onSave,
-  onLoad,
-  onShare,
-  onScreenshot,
-  onWeather,
-  onEnvironment,
-  onGallery,
-  onExportSvg,
-  onNewPlot,
-  design,
-  yieldEst,
-  layers,
-  onLayersChange,
-  weatherOn,
-  isAuthenticated,
-}: Props) {
-  const [prompt, setPrompt] = useState("");
+const PEEK_PX = 88;
 
-  const runAi = async (text: string) => {
-    if (!text.trim() || generating) return;
-    onGeneratingChange(true);
-    try {
-      const layout = await generateGardenLayout(
-        text,
-        plotWidth,
-        plotDepth,
-        zone,
-      );
-      onGenerate(layoutToDesign(layout), layout.explanation, text);
-      onClose();
-    } finally {
-      onGeneratingChange(false);
-    }
+/**
+ * Swipeable bottom sheet (mobile catalog). Peeks at 88px showing the search bar
+ * + filter chips; drag the handle (or tap it) to expand to 60vh for the full
+ * accordion. Auto-collapses to peek when a plant is selected for placement so
+ * the canvas stays visible.
+ */
+export function MobileActionsSheet({
+  readOnly,
+  varieties,
+  onPending,
+  onIcPlant,
+  open,
+  onOpenChange,
+}: Props) {
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const expanded = open ?? internalExpanded;
+  const setExpanded = (v: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof v === "function" ? v(expanded) : v;
+    if (onOpenChange) onOpenChange(next);
+    else setInternalExpanded(next);
+  };
+  const [dragY, setDragY] = useState<number | null>(null);
+  const startY = useRef(0);
+  const sheetH = useRef(0);
+
+  useEffect(() => {
+    sheetH.current = window.innerHeight * 0.6;
+  }, []);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    startY.current = e.touches[0]!.clientY;
+    setDragY(0);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (dragY === null) return;
+    setDragY(e.touches[0]!.clientY - startY.current);
+  };
+  const onTouchEnd = () => {
+    if (dragY === null) return;
+    if (dragY < -40) setExpanded(true);
+    else if (dragY > 40) setExpanded(false);
+    setDragY(null);
   };
 
-  if (!open) return null;
+  const baseTranslate = expanded ? 0 : `calc(60vh - ${PEEK_PX}px)`;
+  const transform =
+    dragY !== null
+      ? `translateY(calc(${expanded ? 0 : `60vh - ${PEEK_PX}px`} + ${dragY}px))`
+      : `translateY(${typeof baseTranslate === "number" ? `${baseTranslate}px` : baseTranslate})`;
 
   return (
-    <div className="sm:hidden fixed inset-0 z-[70]">
+    <div
+      className="garden-designer fixed inset-x-0 bottom-0 z-[60] h-[60vh] rounded-t-2xl border-t border-[color:var(--garden-border)] bg-[color:var(--garden-surface)] shadow-2xl sm:hidden"
+      style={{
+        transform,
+        transition: dragY === null ? "transform 320ms cubic-bezier(0.34,1.56,0.64,1)" : "none",
+      }}
+    >
       <button
         type="button"
-        className="absolute inset-0 bg-black/60"
-        onClick={onClose}
-        aria-label="Close menu"
-      />
-      <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-auto rounded-t-2xl border border-white/10 bg-card p-4 pb-8 shadow-2xl">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold">Garden actions</h3>
-          <Button size="icon" variant="ghost" onClick={onClose}>
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-
-        <div className="space-y-3 mb-4">
-          <p className="text-xs text-muted-foreground">🤖 AI Generate</p>
-          <div className="flex gap-2">
-            <Input
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe your dream garden…"
-              className="flex-1"
-              disabled={generating}
-            />
-            <Button
-              disabled={generating || !prompt.trim()}
-              onClick={() => void runAi(prompt)}
-            >
-              <Sparkles className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {PRESET_PROMPTS.slice(0, 4).map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                disabled={generating}
-                onClick={() => void runAi(p.prompt)}
-                className="rounded-full px-2 py-0.5 text-[10px] border border-white/10 bg-white/5"
-              >
-                {p.emoji} {p.label}
-              </button>
-            ))}
-            <button
-              type="button"
-              disabled={generating}
-              onClick={() => void runAi(surprisePrompt())}
-              className="rounded-full px-2 py-0.5 text-[10px] border border-white/10 bg-white/5"
-            >
-              🎲 Surprise
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <Button
-            variant="outline"
-            className="justify-start"
-            onClick={() => {
-              onLocation();
-              onClose();
-            }}
-          >
-            📍 Set Location
-          </Button>
-          {onNewPlot && (
-            <Button
-              variant="outline"
-              className="justify-start"
-              onClick={() => {
-                onNewPlot();
-                onClose();
-              }}
-            >
-              📐 New blank plot
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            className="justify-start"
-            onClick={() => {
-              onPreview();
-              onClose();
-            }}
-          >
-            ▶ Preview
-          </Button>
-          <Button
-            variant="outline"
-            className="justify-start"
-            onClick={() => {
-              onWalk();
-              onClose();
-            }}
-          >
-            🚶 Walk
-          </Button>
-          {isAuthenticated && (
-            <Button
-              variant="outline"
-              className="justify-start"
-              onClick={() => {
-                onSave();
-                onClose();
-              }}
-            >
-              💾 Save
-            </Button>
-          )}
-          {onLoad && (
-            <Button
-              variant="outline"
-              className="justify-start"
-              onClick={() => {
-                onLoad();
-                onClose();
-              }}
-            >
-              📂 Load
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            className="justify-start"
-            onClick={() => {
-              onShare();
-              onClose();
-            }}
-          >
-            📤 Share
-          </Button>
-          <Button
-            variant="outline"
-            className="justify-start"
-            onClick={() => {
-              onScreenshot();
-              onClose();
-            }}
-          >
-            🖼️ Export PNG
-          </Button>
-          {onExportSvg && (
-            <Button
-              variant="outline"
-              className="justify-start"
-              onClick={() => {
-                onExportSvg();
-                onClose();
-              }}
-            >
-              📐 Export SVG
-            </Button>
-          )}
-          <Button
-            variant={weatherOn ? "default" : "outline"}
-            className="justify-start"
-            onClick={() => {
-              onWeather();
-              onClose();
-            }}
-          >
-            🌤️ Live Weather
-          </Button>
-          <Button
-            variant="outline"
-            className="justify-start"
-            onClick={() => {
-              onEnvironment();
-              onClose();
-            }}
-          >
-            ⚙️ Environment
-          </Button>
-          <Button
-            variant="outline"
-            className={cn("justify-start col-span-2")}
-            onClick={() => {
-              onGallery();
-              onClose();
-            }}
-          >
-            🌿 Community Gallery
-          </Button>
-        </div>
-
-        {layers && onLayersChange && (
-          <div className="mt-4 border-t border-white/10 pt-4">
-            <p className="text-xs font-semibold mb-2">👁️ Layers</p>
-            <LayersPanel layers={layers} onChange={onLayersChange} compact />
-          </div>
+        aria-label={expanded ? "Collapse catalog" : "Expand catalog"}
+        onClick={() => setExpanded((v) => !v)}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        className="flex w-full justify-center py-2"
+      >
+        <span className="h-1 w-10 rounded-full bg-[#3a3a45]" />
+      </button>
+      <div
+        className={cn(
+          "h-[calc(60vh-32px)] overflow-y-auto px-3 pb-6",
+          !expanded && "overflow-hidden",
         )}
-
-        {design && yieldEst && (
-          <div className="mt-4">
-            <SmartDataPanel design={design} yieldEst={yieldEst} compact />
-          </div>
-        )}
+      >
+        <CatalogAccordion
+          readOnly={readOnly}
+          varieties={varieties}
+          onIcPlant={onIcPlant}
+          onPending={(p) => {
+            onPending(p);
+            if (p) setExpanded(false);
+          }}
+        />
       </div>
     </div>
   );

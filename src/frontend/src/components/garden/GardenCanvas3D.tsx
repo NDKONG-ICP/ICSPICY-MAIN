@@ -1,21 +1,18 @@
 import type { VarietyPublic } from "@/declarations/backend.did";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSunPosition } from "@/hooks/useSunPosition";
-import { getSeasonalState, monthSkyTint } from "@/lib/garden-seasonal";
+import {
+  type ModelType,
+  getPlantById,
+} from "@/lib/garden-plant-catalog";
 import type {
   CameraPresetId,
   GardenDesign,
   LayerVisibility,
+  PendingPlacement,
   PlantPlacement,
-  StructurePlacement,
 } from "@/lib/garden-types";
-import { formatScoville } from "@/lib/garden-utils";
-import {
-  ContactShadows,
-  Environment,
-  OrbitControls,
-  Sky,
-  TransformControls,
-} from "@react-three/drei";
+import { Html, OrbitControls, Sky } from "@react-three/drei";
 import { Canvas, type ThreeEvent } from "@react-three/fiber";
 import {
   Suspense,
@@ -25,24 +22,28 @@ import {
   useRef,
   useState,
 } from "react";
-import SunCalc from "suncalc";
-import type { Group } from "three";
-import { AnimatedPlacement } from "./AnimatedPlacement";
-import { AtmosphericEffects } from "./AtmosphericEffects";
+import * as THREE from "three";
 import { CameraPresetController } from "./CameraPresetController";
-import { EzTreePlant } from "./EzTreePlant";
+import {
+  type Collider,
+  FPVController,
+  type PlantRef,
+  type ReticleState,
+  type StickVisual,
+  type TouchVisualState,
+} from "./FPVController";
+import { GardenGround } from "./GardenGround";
 import { GhostPreview3D } from "./GhostPreview";
 import { GridOverlay3D } from "./GridOverlay";
-import { InstancedPlantField, instancedPlantIds } from "./InstancedPlantField";
-import { RainParticles } from "./RainParticles";
-import { SatelliteGround } from "./SatelliteGround";
 import { PixelRatioLimiter, ScenePostProcessing } from "./ScenePostProcessing";
 import { StructureMesh } from "./StructureMesh";
-import { SunlightSceneOverlay } from "./SunlightSimulation3D";
-import { SwayingPlant } from "./SwayingPlant";
-import { TexturedGround } from "./TexturedGround";
-import { WalkMode } from "./WalkMode";
-import { PlantModel } from "./plants/PlantModel";
+import {
+  GltfPlantModel,
+  type PlantCategory,
+  ProceduralPlantGhost,
+} from "./plants/GltfPlantModel";
+
+type CamMode = "orbit" | "walk" | "build";
 
 type Props = {
   design: GardenDesign;
@@ -51,7 +52,7 @@ type Props = {
   selectedType: "plant" | "structure" | null;
   ghost: { x: number; y: number } | null;
   pendingLabel?: string | null;
-  pending?: import("@/lib/garden-types").PendingPlacement | null;
+  pending?: PendingPlacement | null;
   readOnly?: boolean;
   useProcedural?: boolean;
   growthStage?: number;
@@ -87,31 +88,425 @@ type Props = {
     y: number,
   ) => void;
   onDeleteItem: (id: number, type: "plant" | "structure") => void;
+  /** Place at explicit metre coordinates — the same path the 2D canvas uses. */
+  onPlaceAt?: (east: number, north: number) => void;
+  /** Set the active placement "brush" (reuses the designer's pending state). */
+  onSetBrush?: (pending: PendingPlacement | null) => void;
+  /** Open the mobile catalog sheet (build-mode "＋" tile, touch only). */
+  onOpenCatalog?: () => void;
 };
 
-function TransformableItem({
-  selectedId,
-  selectedType,
-  onMoveItem,
-  children,
-}: {
-  selectedId: number;
-  selectedType: "plant" | "structure";
-  onMoveItem: Props["onMoveItem"];
-  children: React.ReactNode;
-}) {
-  const groupRef = useRef<Group>(null);
-  const commit = () => {
-    const g = groupRef.current;
-    if (!g) return;
-    onMoveItem(selectedId, selectedType, g.position.x, g.position.z);
+// ---------------------------------------------------------------------------
+// Category classification (drives which procedural model / GLTF is rendered).
+// ---------------------------------------------------------------------------
+
+function modelTypeToCategory(mt: ModelType): PlantCategory {
+  switch (mt) {
+    case "pepper":
+      return "pepper";
+    case "small_tree":
+    case "large_tree":
+    case "palm":
+      return "tree";
+    case "herb":
+    case "groundcover":
+    case "grass":
+    case "succulent":
+      return "herb";
+    default:
+      return "shrub";
+  }
+}
+
+function categoryFromName(name: string): PlantCategory {
+  const n = name.toLowerCase();
+  if (/tree|citrus|avocado|mango|palm|banana|fig|guava/.test(n)) return "tree";
+  if (/herb|basil|mint|cilantro|oregano|thyme|parsley|chive/.test(n))
+    return "herb";
+  if (/pepper|chili|chile|capsicum|reaper|ghost|scorpion|habanero|jalap/.test(n))
+    return "pepper";
+  return "shrub";
+}
+
+function inferSubcategory(scoville: number): string {
+  if (scoville > 100_000) return "superhot";
+  if (scoville > 10_000) return "hot";
+  if (scoville > 1_000) return "medium";
+  return "mild";
+}
+
+function getPlantVisualProps(
+  plant: PlantPlacement,
+  varieties: VarietyPublic[],
+): {
+  fruitColor?: string;
+  plantColor?: string;
+  scovilleMax?: number;
+  subcategory?: string;
+} {
+  const catalog = plant.catalogId ? getPlantById(plant.catalogId) : undefined;
+  const variety =
+    plant.varietyId != null
+      ? varieties.find((v) => Number(v.id) === plant.varietyId)
+      : undefined;
+  const scovilleMax =
+    catalog?.scovilleMax ??
+    plant.scoville ??
+    (variety ? Number(variety.scovilleMax) : undefined);
+
+  return {
+    fruitColor: catalog?.fruitColor || undefined,
+    plantColor: catalog?.color ?? plant.color,
+    scovilleMax,
+    subcategory:
+      catalog?.subcategory ??
+      (scovilleMax != null ? inferSubcategory(scovilleMax) : undefined),
   };
+}
+
+function getPlantCategory(
+  plant: PlantPlacement,
+  varieties: VarietyPublic[],
+): PlantCategory {
+  if (plant.catalogId) {
+    const c = getPlantById(plant.catalogId);
+    if (c) return modelTypeToCategory(c.modelType);
+  }
+  const name =
+    plant.label ||
+    varieties.find((v) => Number(v.id) === plant.varietyId)?.name ||
+    "";
+  return categoryFromName(name);
+}
+
+// ---------------------------------------------------------------------------
+// In-canvas UI overlay (mode pill, hint bar, hotbar, reticle).
+// ---------------------------------------------------------------------------
+
+type OverlayProps = {
+  camMode: CamMode;
+  setCamMode: (m: CamMode) => void;
+  buildBrush: PendingPlacement | null;
+  hotbar: VarietyPublic[];
+  onSelectSlot: (index: number) => void;
+  removeTarget: boolean;
+  placeValid: boolean;
+  isTouch: boolean;
+  touchVisualRef: React.RefObject<TouchVisualState>;
+  reticleRef: React.RefObject<ReticleState | null>;
+  onPlaceAt?: (east: number, north: number) => void;
+  onDeleteItem: (id: number, type: "plant" | "structure") => void;
+  onOpenCatalog?: () => void;
+};
+
+function ModePill({
+  camMode,
+  setCamMode,
+  isTouch,
+}: {
+  camMode: CamMode;
+  setCamMode: (m: CamMode) => void;
+  isTouch: boolean;
+}) {
   return (
-    <TransformControls mode="translate" onMouseUp={commit}>
-      <group ref={groupRef}>{children}</group>
-    </TransformControls>
+    <div
+      className={`pointer-events-auto absolute left-1/2 flex -translate-x-1/2 overflow-hidden rounded-full bg-black/65 shadow-xl backdrop-blur ${
+        isTouch ? "top-2" : "bottom-4"
+      }`}
+    >
+      {(
+        [
+          ["orbit", "🔭 Orbit"],
+          ["walk", "🚶 Walk"],
+          ["build", "🔨 Build"],
+        ] as [CamMode, string][]
+      ).map(([m, label]) => {
+        const active = camMode === m;
+        return (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setCamMode(m)}
+            className={isTouch ? "px-5 py-2.5 text-white" : "px-4 py-2 text-white"}
+            style={{
+              fontFamily: "'Syne', sans-serif",
+              fontSize: 13,
+              fontWeight: 600,
+              minHeight: isTouch ? 44 : undefined,
+              background: active ? "#22c55e" : "transparent",
+              color: active ? "#04210f" : "#e6e6e6",
+            }}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
+
+function CanvasOverlay({
+  camMode,
+  setCamMode,
+  buildBrush,
+  hotbar,
+  onSelectSlot,
+  removeTarget,
+  placeValid,
+  isTouch,
+  touchVisualRef,
+  reticleRef,
+  onPlaceAt,
+  onDeleteItem,
+  onOpenCatalog,
+}: OverlayProps) {
+  const fpv = camMode !== "orbit";
+  const moveRingRef = useRef<HTMLDivElement>(null);
+  const moveKnobRef = useRef<HTMLDivElement>(null);
+  const lookRingRef = useRef<HTMLDivElement>(null);
+  const lookKnobRef = useRef<HTMLDivElement>(null);
+
+  // Touch joystick visuals: drive DOM from the shared ref via rAF (no re-render).
+  useEffect(() => {
+    if (!isTouch) return;
+    let raf = 0;
+    const apply = (
+      ring: HTMLDivElement | null,
+      knob: HTMLDivElement | null,
+      s: StickVisual,
+    ) => {
+      if (!ring || !knob) return;
+      ring.style.opacity = s.active ? "1" : "0";
+      knob.style.opacity = s.active ? "1" : "0";
+      if (s.active) {
+        ring.style.left = `${s.ox}px`;
+        ring.style.top = `${s.oy}px`;
+        knob.style.left = `${s.kx}px`;
+        knob.style.top = `${s.ky}px`;
+      }
+    };
+    const tick = () => {
+      const tv = touchVisualRef.current;
+      if (tv) {
+        apply(moveRingRef.current, moveKnobRef.current, tv.move);
+        apply(lookRingRef.current, lookKnobRef.current, tv.look);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [isTouch, touchVisualRef]);
+
+  const hint = isTouch
+    ? camMode === "build"
+      ? "Left thumb move · Right thumb look · Aim with reticle · tap Place / Remove"
+      : "Left thumb to move · Right thumb to look"
+    : `Click to capture mouse · WASD move · Shift sprint · Esc release${
+        camMode === "build" ? " · LMB place · RMB/X remove" : ""
+      }`;
+
+  return (
+    <Html fullscreen>
+      <div
+        className="pointer-events-none absolute inset-0 select-none"
+        style={{ touchAction: "none" }}
+      >
+        {/* Hint bar */}
+        {fpv && (
+          <div
+            className={`absolute left-1/2 -translate-x-1/2 rounded-md bg-black/65 px-3 py-1.5 text-white shadow-lg backdrop-blur ${
+              isTouch ? "bottom-2" : "top-3"
+            }`}
+            style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: isTouch ? 10 : 12,
+              maxWidth: "92vw",
+              textAlign: "center",
+            }}
+          >
+            {hint}
+          </div>
+        )}
+
+        {/* Center reticle (Build only) */}
+        {camMode === "build" && (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div
+              className="relative h-6 w-6 rounded-full border-2"
+              style={{
+                borderColor: removeTarget ? "#ef4444" : "#22c55e",
+                boxShadow: `0 0 8px ${removeTarget ? "#ef4444" : "#22c55e"}`,
+              }}
+            >
+              <div
+                className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{ background: removeTarget ? "#ef4444" : "#22c55e" }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Touch joystick visuals (dynamic origin) */}
+        {isTouch && fpv && (
+          <>
+            <div
+              ref={moveRingRef}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                width: 100,
+                height: 100,
+                background: "rgba(34,197,94,0.15)",
+                border: "1px solid rgba(34,197,94,0.4)",
+                opacity: 0,
+                transition: "opacity 150ms",
+              }}
+            />
+            <div
+              ref={moveKnobRef}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                width: 44,
+                height: 44,
+                background: "rgba(34,197,94,0.6)",
+                opacity: 0,
+                transition: "opacity 150ms",
+              }}
+            />
+            <div
+              ref={lookRingRef}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                width: 100,
+                height: 100,
+                background: "rgba(34,197,94,0.15)",
+                border: "1px solid rgba(34,197,94,0.4)",
+                opacity: 0,
+                transition: "opacity 150ms",
+              }}
+            />
+            <div
+              ref={lookKnobRef}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                width: 44,
+                height: 44,
+                background: "rgba(34,197,94,0.6)",
+                opacity: 0,
+                transition: "opacity 150ms",
+              }}
+            />
+          </>
+        )}
+
+        {/* Touch build buttons (Place / Remove) */}
+        {isTouch && camMode === "build" && (
+          <div className="pointer-events-none absolute bottom-28 left-1/2 flex -translate-x-1/2 items-center gap-16">
+            <button
+              type="button"
+              disabled={!removeTarget}
+              onClick={() => {
+                const r = reticleRef.current;
+                if (r?.plantId != null) onDeleteItem(r.plantId, "plant");
+              }}
+              title="Remove plant under reticle"
+              className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-xl transition"
+              style={{
+                background: removeTarget ? "#ef4444" : "#ef444455",
+                color: "#fff",
+                opacity: removeTarget ? 1 : 0.5,
+              }}
+            >
+              🗑
+            </button>
+            <button
+              type="button"
+              disabled={!placeValid}
+              onClick={() => {
+                const r = reticleRef.current;
+                if (r?.valid) onPlaceAt?.(r.x, r.z);
+              }}
+              title="Place at reticle"
+              className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-xl transition"
+              style={{
+                background: placeValid ? "#22c55e" : "#22c55e55",
+                color: "#04210f",
+                opacity: placeValid ? 1 : 0.5,
+              }}
+            >
+              🌱
+            </button>
+          </div>
+        )}
+
+        {/* Build hotbar — top strip (touch) or bottom (desktop) */}
+        {camMode === "build" && (
+          <div
+            className={`pointer-events-auto absolute left-1/2 flex -translate-x-1/2 gap-1.5 rounded-xl bg-black/60 p-1.5 shadow-xl backdrop-blur ${
+              isTouch ? "top-16 max-w-[92vw] overflow-x-auto" : "bottom-16"
+            }`}
+          >
+            {hotbar.map((v, i) => {
+              const active =
+                buildBrush?.kind === "plant" &&
+                buildBrush.varietyId === Number(v.id);
+              const dim = isTouch ? 56 : 48;
+              return (
+                <button
+                  key={String(v.id)}
+                  type="button"
+                  onClick={() => onSelectSlot(i)}
+                  title={v.name}
+                  className="flex shrink-0 flex-col items-center justify-center rounded-lg border text-white transition"
+                  style={{
+                    width: dim,
+                    height: dim,
+                    borderColor: active ? "#22c55e" : "#ffffff22",
+                    background: active ? "#22c55e22" : "#ffffff0d",
+                  }}
+                >
+                  <span style={{ fontSize: isTouch ? 22 : 18 }}>🌶️</span>
+                  {!isTouch && (
+                    <span
+                      style={{ fontFamily: "'DM Mono', monospace", fontSize: 9 }}
+                    >
+                      {i + 1}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => {
+                if (isTouch) onOpenCatalog?.();
+                else if (document.pointerLockElement) document.exitPointerLock();
+              }}
+              title="Pick from catalog"
+              className="flex shrink-0 items-center justify-center rounded-lg border border-dashed border-white/30 text-2xl text-white/80"
+              style={{ width: isTouch ? 56 : 48, height: isTouch ? 56 : 48 }}
+            >
+              ＋
+            </button>
+          </div>
+        )}
+
+        <ModePill camMode={camMode} setCamMode={setCamMode} isTouch={isTouch} />
+      </div>
+    </Html>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Scene
+// ---------------------------------------------------------------------------
+
+type SceneProps = Props & {
+  camMode: CamMode;
+  setCamMode: (m: CamMode) => void;
+  buildBrush: PendingPlacement | null;
+  onSelectSlot: (index: number) => void;
+  isTouch: boolean;
+};
 
 function Scene({
   design,
@@ -121,94 +516,54 @@ function Scene({
   ghost,
   pending,
   readOnly,
+  growthStage = 1,
+  sunLat = 28.5383,
+  sunLng = -81.3792,
+  timeOfDayHour = 14,
+  cameraPreset = "sims",
+  layers,
+  camMode,
+  setCamMode,
+  buildBrush,
+  onSelectSlot,
+  isTouch,
   onSelectPlant,
   onSelectStructure,
   onPointerMove,
   onPlace,
   onClearSelection,
-  onMoveItem,
   onDeleteItem,
-  useProcedural = false,
-  growthStage = 1,
-  sunLat = 28.5383,
-  sunLng = -81.3792,
-  timeOfDayHour = 14,
-  showSun = false,
-  satelliteEnabled = false,
-  gardenLat = 28.5383,
-  gardenLng = -81.3792,
-  satelliteZoom,
-  cameraPreset = "sims",
-  layers,
-  walkMode = false,
-  onExitWalk,
-  simulationMonth = null,
-  revealedPlantIds = null,
-  weatherOverlay = false,
-  isRaining = false,
-  windDirection = 0,
-  liveWeatherHour = null,
-  tempTint = "neutral",
-}: Props) {
+  onPlaceAt,
+  onOpenCatalog,
+}: SceneProps) {
   const cx = design.widthMeters / 2;
   const cz = design.depthMeters / 2;
   const plotSize = Math.max(design.widthMeters, design.depthMeters);
-  const effectiveHour =
-    weatherOverlay && liveWeatherHour != null
-      ? liveWeatherHour
-      : simulationMonth != null
-        ? monthSkyTint(simulationMonth).hour
-        : timeOfDayHour;
-  const sun = useSunPosition(sunLat, sunLng, effectiveHour);
-  const monthTint =
-    simulationMonth != null ? monthSkyTint(simulationMonth) : null;
-  const skyColor =
-    tempTint === "warm"
-      ? "#ffd4a8"
-      : tempTint === "cool"
-        ? "#a8c8e8"
-        : (monthTint?.fogColor ?? sun.skyColor);
-  const [atmospheric, setAtmospheric] = useState(false);
+  const sun = useSunPosition(sunLat, sunLng, timeOfDayHour);
 
-  const visiblePlants = useMemo(() => {
-    let plants = design.plants;
-    if (revealedPlantIds)
-      plants = plants.filter((p) => revealedPlantIds.has(p.id));
-    return plants;
-  }, [design.plants, revealedPlantIds]);
+  const ghostGroupRef = useRef<THREE.Group>(null);
+  const [removeTarget, setRemoveTarget] = useState<number | null>(null);
+  const [placeValid, setPlaceValid] = useState(false);
+  const touchVisualRef = useRef<TouchVisualState>({
+    move: { active: false, ox: 0, oy: 0, kx: 0, ky: 0 },
+    look: { active: false, ox: 0, oy: 0, kx: 0, ky: 0 },
+  });
+  const reticleRef = useRef<ReticleState | null>(null);
 
-  useEffect(() => {
-    if (window.innerWidth < 1024) return;
-    const id =
-      requestIdleCallback?.(() => setAtmospheric(true)) ??
-      setTimeout(() => setAtmospheric(true), 800);
-    return () => {
-      if (typeof id === "number") clearTimeout(id);
-    };
-  }, []);
+  const showGrid = layers?.grid !== false;
+  const showShadows = layers?.shadows !== false;
+  const showPlants = layers?.plants !== false;
+  const showStructures = layers?.structures !== false;
+  const isOrbit = camMode === "orbit";
 
-  const scovilleByVariety = useMemo(() => {
-    const m = new Map<number, string>();
-    for (const v of varieties) {
-      m.set(Number(v.id), formatScoville(v.scovilleMin, v.scovilleMax));
-    }
-    return m;
-  }, [varieties]);
-
-  const instancedIds = useMemo(
-    () => instancedPlantIds(visiblePlants),
-    [visiblePlants],
+  const fpvPlants = useMemo<PlantRef[]>(
+    () => design.plants.map((p) => ({ id: p.id, x: p.x, z: p.y })),
+    [design.plants],
   );
-  const selectedPlant =
-    selectedType === "plant"
-      ? (visiblePlants.find((p) => p.id === selectedId) ??
-        design.plants.find((p) => p.id === selectedId) ??
-        null)
-      : null;
-  const selectedStructure =
-    selectedType === "structure"
-      ? (design.structures.find((s) => s.id === selectedId) ?? null)
-      : null;
+  const colliders = useMemo<Collider[]>(
+    () => design.plants.map((p) => ({ x: p.x, z: p.y, radius: 0.3 })),
+    [design.plants],
+  );
 
   const handleGround = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
@@ -221,158 +576,57 @@ function Scene({
     [design.depthMeters, design.widthMeters, onPlace, onPointerMove, readOnly],
   );
 
-  const sunPos = useMemo(() => {
-    const pos = SunCalc.getPosition(new Date(), sunLat, sunLng);
-    return {
-      altitudeDeg: (pos.altitude * 180) / Math.PI,
-      azimuthDeg: ((pos.azimuth * 180) / Math.PI + 180) % 360,
-    };
-  }, [sunLat, sunLng]);
+  const fillSun: [number, number, number] = [
+    -sun.position[0],
+    sun.position[1] * 0.6,
+    -sun.position[2],
+  ];
 
-  const renderPlant = (p: PlantPlacement, selected: boolean) => {
-    if (layers && !layers.plants) return null;
-    if (instancedIds.has(p.id)) return null;
-    const seasonal =
-      simulationMonth != null ? getSeasonalState(p, simulationMonth) : null;
-    const maturity = seasonal?.maturity ?? growthStage;
-    const label =
-      p.varietyId != null ? (scovilleByVariety.get(p.varietyId) ?? null) : null;
-    const mesh = useProcedural ? (
-      <EzTreePlant
-        placement={{
-          ...p,
-          color: seasonal?.color ?? p.color,
-          scale: seasonal?.scale ?? p.scale,
-        }}
-        growthStage={maturity}
-        selected={selected}
-        scovilleLabel={label}
-        readOnly={readOnly}
-        onSelect={() => onSelectPlant(p.id)}
-        onLongPressDelete={() => onDeleteItem(p.id, "plant")}
-      />
-    ) : (
-      <PlantModel
-        placement={{
-          ...p,
-          color: seasonal?.color ?? p.color,
-          scale: seasonal?.scale ?? p.scale,
-        }}
-        selected={selected}
-        scovilleLabel={label}
-        maturity={maturity}
-        readOnly={readOnly}
-        onSelect={() => onSelectPlant(p.id)}
-        onLongPressDelete={() => onDeleteItem(p.id, "plant")}
-      />
-    );
-    return (
-      <SwayingPlant intensity={0.012} seed={p.id} windDirection={windDirection}>
-        <AnimatedPlacement>{mesh}</AnimatedPlacement>
-      </SwayingPlant>
-    );
-  };
-
-  const renderStructure = (s: StructurePlacement, selected: boolean) => {
-    if (layers && !layers.structures) return null;
-    return (
-      <StructureMesh
-        placement={s}
-        selected={selected}
-        onSelect={() => onSelectStructure(s.id)}
-      />
-    );
-  };
-
-  const showGrid = layers?.grid !== false;
-  const showShadows = layers?.shadows !== false;
-
-  if (walkMode && onExitWalk) {
-    return <WalkMode design={design} onExit={onExitWalk} />;
-  }
+  const ghostCategory =
+    buildBrush?.kind === "plant"
+      ? categoryFromName(buildBrush.label)
+      : "pepper";
 
   return (
     <>
-      {cameraPreset !== "walk" && (
+      {isOrbit && cameraPreset !== "walk" && (
         <CameraPresetController
           preset={cameraPreset}
           plotCenter={[cx, 0, cz]}
           plotSize={plotSize}
         />
       )}
+
+      {/* Warm Sims-style sky + lighting */}
       <Sky
         sunPosition={sun.position}
-        turbidity={sun.skyTurbidity}
+        turbidity={6}
         rayleigh={2}
         mieCoefficient={0.005}
         mieDirectionalG={0.8}
       />
-      <color attach="background" args={[skyColor]} />
-      <fog attach="fog" args={[monthTint?.fogColor ?? skyColor, 25, 90]} />
-      <ambientLight intensity={sun.ambientIntensity} color="#b8d4e3" />
+      <fog attach="fog" args={["#c8e6c9", 20, 80]} />
+      <ambientLight intensity={0.6} color="#fff5e0" />
       <directionalLight
         position={sun.position}
-        intensity={sun.directionalIntensity}
-        color="#fff5e6"
+        intensity={1.2}
+        color="#fffae0"
         castShadow={showShadows}
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-far={50}
-        shadow-camera-left={-15}
-        shadow-camera-right={15}
-        shadow-camera-top={15}
-        shadow-camera-bottom={-15}
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-far={100}
+        shadow-camera-left={-20}
+        shadow-camera-right={20}
+        shadow-camera-top={20}
+        shadow-camera-bottom={-20}
       />
-      <Environment preset="sunset" background={false} />
-      {showShadows && (
-        <ContactShadows
-          position={[cx, 0, cz]}
-          scale={plotSize + 4}
-          blur={2}
-          far={4}
-          opacity={0.4}
-        />
-      )}
+      <directionalLight position={fillSun} intensity={0.3} color="#c0e0ff" />
+      <hemisphereLight args={["#87ceeb", "#2d5a1b", 0.4]} />
 
-      {satelliteEnabled && layers?.satellite !== false ? (
-        <SatelliteGround
-          lat={gardenLat}
-          lng={gardenLng}
-          widthMeters={design.widthMeters}
-          depthMeters={design.depthMeters}
-          centerX={cx}
-          centerZ={cz}
-          enabled
-          zoom={satelliteZoom}
-        />
-      ) : (
-        <TexturedGround
-          widthMeters={design.widthMeters}
-          depthMeters={design.depthMeters}
-          centerX={cx}
-          centerZ={cz}
-        />
-      )}
-
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[cx, 0.001, cz]}
-        onPointerMove={handleGround}
-        onClick={handleGround}
-      >
-        <planeGeometry args={[design.widthMeters, design.depthMeters]} />
-        <meshStandardMaterial transparent opacity={0} />
-      </mesh>
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[cx, -0.001, cz]}
-        onClick={() => onClearSelection()}
-      >
-        <planeGeometry
-          args={[design.widthMeters + 4, design.depthMeters + 4]}
-        />
-        <meshBasicMaterial visible={false} />
-      </mesh>
+      {/* Stylized grass ground */}
+      <GardenGround
+        widthMeters={design.widthMeters}
+        depthMeters={design.depthMeters}
+      />
 
       {showGrid && (
         <GridOverlay3D
@@ -382,50 +636,66 @@ function Scene({
         />
       )}
 
-      <InstancedPlantField plants={visiblePlants} />
+      {/* Orbit-mode ground interaction (placement + clear selection) */}
+      {isOrbit && (
+        <>
+          <mesh
+            rotation={[-Math.PI / 2, 0, 0]}
+            position={[cx, 0.001, cz]}
+            onPointerMove={handleGround}
+            onClick={handleGround}
+          >
+            <planeGeometry args={[design.widthMeters, design.depthMeters]} />
+            <meshStandardMaterial transparent opacity={0} />
+          </mesh>
+          <mesh
+            rotation={[-Math.PI / 2, 0, 0]}
+            position={[cx, -0.001, cz]}
+            onClick={() => onClearSelection()}
+          >
+            <planeGeometry
+              args={[design.widthMeters + 4, design.depthMeters + 4]}
+            />
+            <meshBasicMaterial visible={false} />
+          </mesh>
+        </>
+      )}
 
-      {design.structures
-        .filter((s) => s.id !== selectedStructure?.id)
-        .map((s) => (
-          <AnimatedPlacement key={`s-${s.id}`}>
-            {renderStructure(s, false)}
-          </AnimatedPlacement>
-        ))}
-      {visiblePlants
-        .filter((p) => p.id !== selectedPlant?.id)
-        .map((p) => (
-          <group key={`p-${p.id}`}>{renderPlant(p, false)}</group>
+      {/* Plants */}
+      {showPlants &&
+        design.plants.map((p) => {
+          const visual = getPlantVisualProps(p, varieties);
+          return (
+            <GltfPlantModel
+              key={`p-${p.id}`}
+              category={getPlantCategory(p, varieties)}
+              position={[p.x, 0, p.y]}
+              scale={p.scale ?? 1}
+              growthStage={growthStage}
+              selected={selectedId === p.id && selectedType === "plant"}
+              varietyName={p.label}
+              fruitColor={visual.fruitColor}
+              plantColor={visual.plantColor}
+              scovilleMax={visual.scovilleMax}
+              subcategory={visual.subcategory}
+              onClick={() => onSelectPlant(p.id)}
+            />
+          );
+        })}
+
+      {/* Structures */}
+      {showStructures &&
+        design.structures.map((s) => (
+          <StructureMesh
+            key={`s-${s.id}`}
+            placement={s}
+            selected={selectedId === s.id && selectedType === "structure"}
+            onSelect={() => onSelectStructure(s.id)}
+          />
         ))}
 
-      {!readOnly && selectedPlant && selectedId != null && (
-        <TransformableItem
-          selectedId={selectedId}
-          selectedType="plant"
-          onMoveItem={onMoveItem}
-        >
-          {renderPlant(selectedPlant, true)}
-        </TransformableItem>
-      )}
-      {!readOnly && selectedStructure && selectedId != null && (
-        <TransformableItem
-          selectedId={selectedId}
-          selectedType="structure"
-          onMoveItem={onMoveItem}
-        >
-          {renderStructure(selectedStructure, true)}
-        </TransformableItem>
-      )}
-      {readOnly && selectedPlant && (
-        <group key={`ro-p-${selectedPlant.id}`}>
-          {renderPlant(selectedPlant, true)}
-        </group>
-      )}
-      {readOnly && selectedStructure && (
-        <group key={`ro-s-${selectedStructure.id}`}>
-          {renderStructure(selectedStructure, true)}
-        </group>
-      )}
-      {ghost && pending && (
+      {/* Orbit ghost preview */}
+      {isOrbit && ghost && pending && (
         <GhostPreview3D
           x={ghost.x}
           y={ghost.y}
@@ -433,41 +703,144 @@ function Scene({
           maturity={growthStage}
         />
       )}
-      {showSun && (
-        <SunlightSceneOverlay
-          azimuthDeg={sunPos.azimuthDeg}
-          altitudeDeg={sunPos.altitudeDeg}
-          plotWidth={design.widthMeters}
-          plotDepth={design.depthMeters}
+
+      {/* Build-mode reticle ghost (positioned imperatively by FPVController) */}
+      {camMode === "build" && buildBrush?.kind === "plant" && (
+        <group ref={ghostGroupRef} visible={false}>
+          <ProceduralPlantGhost
+            category={ghostCategory}
+            seed={7}
+            scale={1}
+            growthStage={1}
+            plantColor={buildBrush.color}
+            scovilleMax={buildBrush.scoville}
+            fruitColor={
+              buildBrush.catalogId
+                ? (getPlantById(buildBrush.catalogId)?.fruitColor ?? undefined)
+                : undefined
+            }
+            subcategory={
+              buildBrush.catalogId
+                ? getPlantById(buildBrush.catalogId)?.subcategory
+                : buildBrush.scoville
+                  ? inferSubcategory(buildBrush.scoville)
+                  : undefined
+            }
+          />
+        </group>
+      )}
+
+      {/* First-person controller (walk + build) */}
+      {!isOrbit && (
+        <FPVController
+          mode={camMode === "build" ? "build" : "walk"}
+          enabled
+          isTouch={isTouch}
+          widthMeters={design.widthMeters}
+          depthMeters={design.depthMeters}
+          colliders={colliders}
+          plants={fpvPlants}
+          ghostRef={ghostGroupRef}
+          touchVisualRef={touchVisualRef}
+          reticleRef={reticleRef}
+          onTargetChange={setRemoveTarget}
+          onReticleValidChange={setPlaceValid}
+          onPlaceAtReticle={(x, z) => onPlaceAt?.(x, z)}
+          onRemoveAtReticle={(id) => onDeleteItem(id, "plant")}
         />
       )}
-      <AtmosphericEffects
-        enabled={atmospheric && !walkMode}
-        plotWidth={design.widthMeters}
-        plotDepth={design.depthMeters}
+
+      <CanvasOverlay
+        camMode={camMode}
+        setCamMode={setCamMode}
+        buildBrush={buildBrush}
+        hotbar={varieties.slice(0, 9)}
+        onSelectSlot={onSelectSlot}
+        removeTarget={removeTarget != null}
+        placeValid={placeValid}
+        isTouch={isTouch}
+        touchVisualRef={touchVisualRef}
+        reticleRef={reticleRef}
+        onPlaceAt={onPlaceAt}
+        onDeleteItem={onDeleteItem}
+        onOpenCatalog={onOpenCatalog}
       />
-      {isRaining && (
-        <RainParticles active bounds={plotSize} centerX={cx} centerZ={cz} />
-      )}
     </>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Wrapper
+// ---------------------------------------------------------------------------
+
 export function GardenCanvas3D(props: Props) {
+  const { onSetBrush, pending, varieties, walkMode } = props;
+  const mobile = useIsMobile();
+  const isTouch =
+    mobile || (typeof window !== "undefined" && "ontouchstart" in window);
   const cam =
     Math.max(props.design.widthMeters, props.design.depthMeters) * 0.85;
   const cx = props.design.widthMeters / 2;
   const cz = props.design.depthMeters / 2;
   const [desktopFx, setDesktopFx] = useState(true);
+  const [camMode, setCamMode] = useState<CamMode>("orbit");
+  const [buildBrush, setBuildBrush] = useState<PendingPlacement | null>(null);
   const internalRef = useRef<HTMLCanvasElement>(null);
-  const walkMode = props.walkMode ?? false;
+
+  // Honour an externally-requested walk session once on mount/prop change.
+  useEffect(() => {
+    if (walkMode) setCamMode("walk");
+  }, [walkMode]);
 
   useEffect(() => {
-    setDesktopFx(window.innerWidth >= 768 && !walkMode);
-    const onResize = () => setDesktopFx(window.innerWidth >= 768 && !walkMode);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [walkMode]);
+    const update = () => setDesktopFx(window.innerWidth >= 768);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const selectSlot = useCallback(
+    (index: number) => {
+      const v = varieties[index];
+      if (!v) return;
+      const brush: PendingPlacement = {
+        kind: "plant",
+        varietyId: Number(v.id),
+        label: v.name,
+        color: "#dc2626",
+        icon: "🌶️",
+        scoville: Number(v.scovilleMax),
+      };
+      setBuildBrush(brush);
+      onSetBrush?.(brush);
+    },
+    [varieties, onSetBrush],
+  );
+
+  // Number keys 1-9 pick a hotbar slot while in Build mode.
+  useEffect(() => {
+    if (camMode !== "build") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code.startsWith("Digit")) {
+        const n = Number(e.code.slice(5));
+        if (n >= 1 && n <= 9) selectSlot(n - 1);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [camMode, selectSlot]);
+
+  // Keep the placement brush armed in Build mode. `placePlant` clears `pending`
+  // after each placement → re-arm. A fresh non-null plant `pending` (e.g. picked
+  // from the catalog sheet) is adopted as the new brush.
+  useEffect(() => {
+    if (camMode !== "build") return;
+    if (pending == null) {
+      if (buildBrush) onSetBrush?.(buildBrush);
+    } else if (pending.kind === "plant" && pending !== buildBrush) {
+      setBuildBrush(pending);
+    }
+  }, [camMode, buildBrush, pending, onSetBrush]);
 
   return (
     <div className="h-full w-full min-h-[320px] rounded-lg overflow-hidden bg-[#0f172a] shadow-inner">
@@ -481,7 +854,7 @@ export function GardenCanvas3D(props: Props) {
           }
         }}
         dpr={[1, 2]}
-        shadows={!walkMode}
+        shadows
         camera={{ position: [cx + cam * 0.4, cam, cz + cam * 0.4], fov: 50 }}
         gl={{
           preserveDrawingBuffer: true,
@@ -491,18 +864,26 @@ export function GardenCanvas3D(props: Props) {
       >
         <Suspense fallback={null}>
           <PixelRatioLimiter />
-          <Scene {...props} />
-          <ScenePostProcessing enabled={desktopFx && !walkMode} />
-        </Suspense>
-        {!walkMode && (
-          <OrbitControls
-            makeDefault
-            maxPolarAngle={Math.PI / 2.1}
-            minDistance={3}
-            maxDistance={40}
-            target={[cx, 0, cz]}
+          <Scene
+            {...props}
+            camMode={camMode}
+            setCamMode={setCamMode}
+            buildBrush={buildBrush}
+            onSelectSlot={selectSlot}
+            isTouch={isTouch}
           />
-        )}
+          <ScenePostProcessing
+            enabled={desktopFx && !isTouch && camMode === "orbit"}
+          />
+        </Suspense>
+        <OrbitControls
+          makeDefault
+          enabled={camMode === "orbit"}
+          maxPolarAngle={Math.PI / 2.1}
+          minDistance={3}
+          maxDistance={40}
+          target={[cx, 0, cz]}
+        />
       </Canvas>
     </div>
   );
