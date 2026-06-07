@@ -347,3 +347,156 @@
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   GARDEN DESIGNER — Dark luxury design system (Obsidian + forest green + gold)
+   Scoped under .garden-designer so it never leaks into the rest of the app.
+   ══════════════════════════════════════════════════════════════════════════════ */
+.garden-designer {
+  --garden-bg: #0a0a0b;
+  --garden-surface: #111113;
+  --garden-surface-raised: #1a1a1f;
+  --garden-border: #2a2a35;
+  --garden-accent: #22c55e;
+  --garden-gold: #d4a843;
+  --garden-text: #f0f0f0;
+  --garden-text-muted: #7a7a8a;
+  --garden-pro: #d4a843;
+  --garden-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+
+  --garden-font-display: "Syne", "Rajdhani", system-ui, sans-serif;
+  --garden-font-mono: "DM Mono", "Space Mono", ui-monospace, monospace;
+
+  background: var(--garden-bg);
+  color: var(--garden-text);
+}
+
+.garden-font-display {
+  font-family: var(--garden-font-display);
+  letter-spacing: -0.01em;
+}
+
+.garden-font-mono {
+  font-family: var(--garden-font-mono);
+  font-feature-settings: "tnum" 1;
+}
+
+/* Panels slide in from their edge */
+.garden-panel-enter {
+  animation: garden-slide-in 200ms ease-out both;
+}
+@keyframes garden-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--garden-slide-from, -12px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Plant placement pop */
+@keyframes garden-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Leaflet plant markers */
+.garden-plant-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+  animation: garden-pop-in 150ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.garden-plant-marker .marker-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  border: 1px dashed rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.1);
+  pointer-events: none;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.garden-plant-marker[data-overlap="true"] .marker-ring {
+  background: rgba(255, 100, 100, 0.18);
+  border-color: rgba(255, 100, 100, 0.5);
+}
+.garden-plant-marker .marker-icon {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  font-size: 15px;
+  line-height: 1;
+  background: var(--garden-surface-raised, #1a1a1f);
+  border: 2px solid var(--marker-color, #22c55e);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+.garden-plant-marker[data-selected="true"] .marker-icon {
+  box-shadow: 0 0 0 2px var(--garden-gold, #d4a843),
+    0 2px 10px rgba(0, 0, 0, 0.6);
+}
+.garden-plant-marker .marker-label {
+  margin-top: 2px;
+  max-width: 90px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: var(--garden-font-mono, monospace);
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #f0f0f0;
+  background: rgba(10, 10, 11, 0.78);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.garden-plant-marker:hover .marker-label,
+.garden-plant-marker[data-selected="true"] .marker-label {
+  opacity: 1;
+}
+
+/* Leaflet map container must fill its parent */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  background: #0a0a0b;
+  cursor: grab;
+}
+.leaflet-container:active {
+  cursor: grabbing;
+}
+.leaflet-grab {
+  cursor: grab !important;
+}
+
+/* Leaflet host inside the designer */
+.garden-leaflet .leaflet-container {
+  background: #05060a;
+  font-family: var(--garden-font-mono, monospace);
+  outline: none;
+}
+.garden-leaflet.garden-placing .leaflet-container,
+.garden-leaflet.garden-placing .leaflet-interactive {
+  cursor: crosshair !important;
+}
+.garden-leaflet .leaflet-control-attribution {
+  background: rgba(10, 10, 11, 0.6);
+  color: #7a7a8a;
+  font-size: 9px;
+}
