@@ -158,6 +158,145 @@ function generateExplanation(
   return `Here's a suggested layout based on your description${parts.length ? `: ${parts.join(", ")}` : ""}. Tap any element to adjust.`;
 }
 
+/**
+ * Layered food-forest generator. Produces a legitimately useful permaculture
+ * layout in four stacked zones rather than scattering plants randomly.
+ *
+ * Coordinate convention matches GardenDesign: x = metres east of SW corner,
+ * y = metres north of SW corner. "North edge" = high y.
+ */
+export function generateFoodForestFallback(
+  gardenWidthM: number,
+  gardenDepthM: number,
+  prompt: string,
+): Pt[] {
+  const plants: Pt[] = [];
+  const w = gardenWidthM;
+  const d = gardenDepthM;
+
+  const isPollinatorFocus = /pollinat|bee|butterfly|wildlife/i.test(prompt);
+  const isSpicyFocus = /spicy|hot|pepper|chili|reaper|ghost|habanero/i.test(
+    prompt,
+  );
+
+  // ── Zone 1 — Canopy layer: large fruit/nut trees along the north edge ──────
+  // Spaced ~4 m apart so mature crowns interlock without crowding.
+  const canopyIds = [
+    resolvePlant("mango", "avocado"),
+    resolvePlant("avocado", "jackfruit"),
+    resolvePlant("jackfruit", "mamey-sapote"),
+    resolvePlant("lychee", "longan"),
+  ].filter(Boolean) as string[];
+  if (w >= 6 && canopyIds.length > 0) {
+    const canopyY = Math.max(1.5, d - 1.5);
+    const canopyCount = Math.max(2, Math.min(4, Math.floor(w / 4)));
+    const canopyGap = w / (canopyCount + 1);
+    for (let i = 0; i < canopyCount; i++) {
+      placePlant(
+        plants,
+        canopyIds[i % canopyIds.length]!,
+        canopyGap * (i + 1),
+        canopyY,
+        1.25,
+      );
+    }
+  }
+
+  // ── Zone 2 — Sub-canopy: citrus + nitrogen fixers in a loose mid band ──────
+  const subCanopyIds = [
+    resolvePlant("navel-orange", "valencia-orange", "meyer-lemon"),
+    resolvePlant("guava", "barbados-cherry"),
+    resolvePlant("moringa"),
+    resolvePlant("pigeon-pea"),
+  ].filter(Boolean) as string[];
+  if (d >= 6 && subCanopyIds.length > 0) {
+    const bandY = d * 0.62;
+    const count = Math.max(2, Math.min(5, Math.floor(w / 3)));
+    const gap = w / (count + 1);
+    for (let i = 0; i < count; i++) {
+      placePlant(
+        plants,
+        subCanopyIds[i % subCanopyIds.length]!,
+        gap * (i + 1),
+        bandY,
+        1.05,
+      );
+    }
+  }
+
+  // ── Zone 3 — Shrub/herb layer: pepper or veggie grid in the sunny centre ───
+  const gridIds = (
+    isSpicyFocus
+      ? [
+          "carolina-reaper",
+          "ghost-pepper",
+          "scotch-bonnet",
+          "datil-pepper",
+          "orange-habanero",
+          "thai-bird-s-eye",
+        ]
+      : [
+          "thai-basil",
+          "datil-pepper",
+          "turmeric",
+          "lemongrass",
+          "rosemary",
+          "mint",
+        ]
+  )
+    .map((id) => resolvePlant(id))
+    .filter(Boolean) as string[];
+  if (gridIds.length > 0) {
+    const spacing = 0.75;
+    const marginX = 1.2;
+    const startY = 1.5;
+    const endY = d * 0.5;
+    const cols = Math.max(1, Math.floor((w - marginX * 2) / spacing));
+    const rows = Math.max(1, Math.floor((endY - startY) / spacing));
+    let g = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        // Skip a central walking row so the bed is reachable.
+        if (r === Math.floor(rows / 2)) continue;
+        placePlant(
+          plants,
+          gridIds[g % gridIds.length]!,
+          marginX + c * spacing + (r % 2) * (spacing / 2),
+          startY + r * spacing,
+          0.9,
+        );
+        g++;
+        if (plants.length > 120) break;
+      }
+      if (plants.length > 120) break;
+    }
+  }
+
+  // ── Zone 4 — Living border: pest-deterrent ring of marigold + basil ────────
+  const borderIds = [
+    resolvePlant("marigold", "blanket-flower"),
+    resolvePlant("thai-basil", "mint"),
+    isPollinatorFocus ? resolvePlant("milkweed", "blanket-flower") : null,
+  ].filter(Boolean) as string[];
+  if (borderIds.length > 0) {
+    const step = 1.0;
+    let b = 0;
+    const edge = 0.4;
+    // bottom + top edges
+    for (let x = edge; x <= w - edge; x += step) {
+      placePlant(plants, borderIds[b++ % borderIds.length]!, x, edge, 0.8);
+      placePlant(plants, borderIds[b++ % borderIds.length]!, x, d - edge, 0.8);
+    }
+    // left + right edges
+    for (let y = edge + step; y <= d - edge - step; y += step) {
+      placePlant(plants, borderIds[b++ % borderIds.length]!, edge, y, 0.8);
+      placePlant(plants, borderIds[b++ % borderIds.length]!, w - edge, y, 0.8);
+    }
+  }
+
+  return plants;
+}
+
 export function generateLayoutFallback(
   userPrompt: string,
   plotWidth: number,
@@ -167,6 +306,35 @@ export function generateLayoutFallback(
   const q = userPrompt.toLowerCase();
   const w = plotWidth;
   const d = plotDepth;
+
+  const wantsFoodForest = /food forest|guild|permaculture|layered|forest garden/i.test(
+    q,
+  );
+
+  // Dedicated layered generator for food-forest / permaculture requests.
+  if (wantsFoodForest) {
+    const ffPlants = generateFoodForestFallback(w, d, userPrompt);
+    const ffStructures: GeneratedLayoutStructure[] = [];
+    placeStructure(ffStructures, resolveStructure("path-mulch"), 0.2, d * 0.5, w * 0.9, 0.6);
+    placeStructure(ffStructures, resolveStructure("compost-bin-3bay"), w * 0.9, d * 0.12);
+    placeStructure(ffStructures, resolveStructure("rain-barrel"), w * 0.08, d * 0.08);
+    placeStructure(
+      ffStructures,
+      resolveStructure("drip-irrigation-zone"),
+      w * 0.5,
+      d * 0.3,
+      w * 0.7,
+      0.3,
+    );
+    return {
+      name: "Layered Food Forest",
+      widthMeters: w,
+      depthMeters: d,
+      plants: ffPlants.slice(0, 120),
+      structures: ffStructures.slice(0, 20),
+      explanation: `${generateExplanation(ffPlants, ffStructures)} Canopy fruit trees anchor the north edge, citrus + nitrogen fixers form the sub-canopy, a pepper/herb grid fills the sunny centre, and a marigold-and-basil border deters pests. (Zone ${zone} layered fallback.)`,
+    };
+  }
 
   const wantsPeppers =
     /pepper|hot|spicy|reaper|ghost|habanero|scotch|carolina/i.test(q);

@@ -5,20 +5,20 @@ import {
   plantCategoryLabel,
   structureCategoryLabel,
 } from "@/lib/garden-catalog-groups";
+import { metersToInches } from "@/lib/garden-geo";
 import {
   type CatalogPlant,
   type CatalogStructure,
   PLANT_CATALOG,
   type PlantCategory,
   STRUCTURE_CATALOG,
-  type StructureCategory,
   filterPlants,
   filterStructures,
 } from "@/lib/garden-plant-catalog";
 import type { PendingPlacement } from "@/lib/garden-types";
 import { formatScoville, varietyColor, varietyIcon } from "@/lib/garden-utils";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Cloud, CloudSun, Search, Sun } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type Props = {
@@ -31,10 +31,71 @@ type Props = {
   onIcPlant?: (v: VarietyPublic) => void;
 };
 
-function SunIcon({ req }: { req: CatalogPlant["sunRequirement"] }) {
-  if (req === "full") return <Sun className="h-3 w-3 text-amber-400" />;
-  if (req === "partial") return <CloudSun className="h-3 w-3 text-sky-300" />;
-  return <Cloud className="h-3 w-3 text-slate-400" />;
+type FilterChip = "all" | "peppers" | "trees" | "herbs" | "structures" | "decor";
+
+const CHIPS: { id: FilterChip; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "peppers", label: "Peppers" },
+  { id: "trees", label: "Trees" },
+  { id: "herbs", label: "Herbs" },
+  { id: "structures", label: "Structures" },
+  { id: "decor", label: "Decor" },
+];
+
+const TREE_CATS: PlantCategory[] = [
+  "tropical_fruit",
+  "citrus",
+  "berry",
+  "native_tree",
+  "palm",
+];
+const HERB_CATS: PlantCategory[] = [
+  "herb",
+  "vegetable",
+  "leafy_green",
+  "root_crop",
+  "vine",
+  "native_shrub",
+  "native_ground",
+  "nitrogen_fixer",
+  "pollinator",
+  "cover_crop",
+  "ornamental",
+];
+
+const CAT_COLOR: Partial<Record<PlantCategory, string>> = {
+  pepper: "#ef4444",
+  tropical_fruit: "#22c55e",
+  citrus: "#eab308",
+  berry: "#a855f7",
+  herb: "#a3e635",
+  palm: "#10b981",
+  native_tree: "#22c55e",
+  pollinator: "#f472b6",
+};
+
+type Section = {
+  key: string;
+  label: string;
+  emoji: string;
+  plants?: CatalogPlant[];
+  structures?: CatalogStructure[];
+  color?: string;
+};
+
+function pepperSubgroup(plants: CatalogPlant[], label: string, emoji: string, key: string, lo: number, hi: number): Section {
+  return {
+    key,
+    label,
+    emoji,
+    color: "#ef4444",
+    plants: plants
+      .filter((p) => {
+        const s = p.scovilleMax ?? 0;
+        return s >= lo && s < hi;
+      })
+      .sort((a, b) => (b.scovilleMax ?? 0) - (a.scovilleMax ?? 0)),
+  };
 }
 
 export function CatalogAccordion({
@@ -49,7 +110,52 @@ export function CatalogAccordion({
   const [internalQ, setInternalQ] = useState("");
   const q = externalQ ?? internalQ;
   const setQ = onSearchChange ?? setInternalQ;
-  const [openKey, setOpenKey] = useState<string | null>("pepper");
+  const [chip, setChip] = useState<FilterChip>("all");
+  const [openKey, setOpenKey] = useState<string | null>("superhot");
+
+  const peppers = useMemo(
+    () => PLANT_CATALOG.filter((p) => p.category === "pepper"),
+    [],
+  );
+
+  const sections = useMemo<Section[]>(() => {
+    const out: Section[] = [];
+    const showPeppers = chip === "all" || chip === "peppers";
+    const showTrees = chip === "all" || chip === "trees";
+    const showHerbs = chip === "all" || chip === "herbs";
+    const showStructures = chip === "all" || chip === "structures" || chip === "decor";
+
+    if (showPeppers) {
+      out.push(
+        pepperSubgroup(peppers, "Superhot Peppers", "🌶️", "superhot", 100_000, Number.POSITIVE_INFINITY),
+        pepperSubgroup(peppers, "Hot Peppers", "🔥", "hot", 10_000, 100_000),
+        pepperSubgroup(peppers, "Medium Peppers", "🌶", "medium", 1_000, 10_000),
+        pepperSubgroup(peppers, "Mild & Sweet", "🫑", "mild", -1, 1_000),
+      );
+    }
+    if (showTrees) {
+      for (const { id, emoji } of PLANT_CATEGORY_ORDER) {
+        if (!TREE_CATS.includes(id)) continue;
+        const ps = filterPlants({ category: id });
+        if (ps.length) out.push({ key: `cat-${id}`, label: plantCategoryLabel(id), emoji, plants: ps, color: CAT_COLOR[id] });
+      }
+    }
+    if (showHerbs) {
+      for (const { id, emoji } of PLANT_CATEGORY_ORDER) {
+        if (!HERB_CATS.includes(id)) continue;
+        const ps = filterPlants({ category: id });
+        if (ps.length) out.push({ key: `cat-${id}`, label: plantCategoryLabel(id), emoji, plants: ps, color: CAT_COLOR[id] });
+      }
+    }
+    if (showStructures) {
+      for (const { id, emoji } of STRUCTURE_CATEGORY_ORDER) {
+        if (chip === "decor" && id !== "decor") continue;
+        const ss = STRUCTURE_CATALOG.filter((s) => s.category === id);
+        if (ss.length) out.push({ key: `struct-${id}`, label: structureCategoryLabel(id), emoji, structures: ss, color: "#d4a843" });
+      }
+    }
+    return out.filter((s) => (s.plants?.length ?? 0) + (s.structures?.length ?? 0) > 0);
+  }, [chip, peppers]);
 
   const searchPlants = useMemo(
     () => (q.trim() ? filterPlants({ query: q }) : []),
@@ -59,20 +165,6 @@ export function CatalogAccordion({
     () => (q.trim() ? filterStructures({ query: q }) : []),
     [q],
   );
-
-  const plantCounts = useMemo(() => {
-    const m = new Map<PlantCategory, number>();
-    for (const p of PLANT_CATALOG)
-      m.set(p.category, (m.get(p.category) ?? 0) + 1);
-    return m;
-  }, []);
-
-  const structureCounts = useMemo(() => {
-    const m = new Map<StructureCategory, number>();
-    for (const s of STRUCTURE_CATALOG)
-      m.set(s.category, (m.get(s.category) ?? 0) + 1);
-    return m;
-  }, []);
 
   const startPlant = (p: CatalogPlant) => {
     if (readOnly) return;
@@ -100,123 +192,126 @@ export function CatalogAccordion({
     });
   };
 
-  const toggle = (key: string) =>
-    setOpenKey((prev) => (prev === key ? null : key));
+  const PlantCard = ({ p }: { p: CatalogPlant }) => {
+    const inches = Math.round(metersToInches(p.spacing));
+    const needsSpace = inches > 24;
+    return (
+      <button
+        type="button"
+        onClick={() => startPlant(p)}
+        title={`${p.name} — ${p.latinName}`}
+        className="group relative flex h-[78px] flex-col justify-between rounded-md border border-[color:var(--garden-border)] bg-[color:var(--garden-surface-raised)] p-2 text-left transition-all hover:-translate-y-0.5 hover:border-[color:var(--garden-accent)]"
+      >
+        <span
+          className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full"
+          style={{ backgroundColor: CAT_COLOR[p.category] ?? p.color }}
+        />
+        <span className="text-lg leading-none">{p.iconEmoji}</span>
+        <span className="garden-font-display line-clamp-2 text-[11px] font-bold leading-tight text-[color:var(--garden-text)]">
+          {p.name}
+        </span>
+        <span
+          className={cn(
+            "garden-font-mono text-[9px]",
+            needsSpace
+              ? "text-[color:var(--garden-gold)]"
+              : "text-[color:var(--garden-text-muted)]",
+          )}
+        >
+          ↔ {inches}"
+        </span>
+      </button>
+    );
+  };
 
-  const renderPlantRow = (p: CatalogPlant) => (
+  const StructureCard = ({ s }: { s: CatalogStructure }) => (
     <button
-      key={p.id}
-      type="button"
-      onClick={() => startPlant(p)}
-      className={cn(
-        "w-full rounded-md border border-white/10 bg-white/5 text-left transition-colors hover:border-primary/40 hover:bg-white/10",
-        compact ? "p-2 flex items-center gap-2 shrink-0 w-28" : "p-2.5 mb-1",
-      )}
-    >
-      {compact ? (
-        <>
-          <span className="text-xl">{p.iconEmoji}</span>
-          <span className="text-[10px] font-medium line-clamp-2">{p.name}</span>
-        </>
-      ) : (
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{p.iconEmoji}</span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium truncate">{p.name}</span>
-              <SunIcon req={p.sunRequirement} />
-            </div>
-            <p className="text-[10px] text-muted-foreground truncate">
-              {p.latinName}
-            </p>
-          </div>
-        </div>
-      )}
-    </button>
-  );
-
-  const renderStructureRow = (s: CatalogStructure) => (
-    <button
-      key={s.id}
       type="button"
       onClick={() => startStructure(s)}
-      className={cn(
-        "w-full rounded-md border border-white/10 bg-white/5 text-left hover:border-primary/40",
-        compact ? "p-2 flex flex-col items-center shrink-0 w-28" : "p-2.5 mb-1",
-      )}
+      title={s.description}
+      className="group relative flex h-[78px] flex-col justify-between rounded-md border border-[color:var(--garden-border)] bg-[color:var(--garden-surface-raised)] p-2 text-left transition-all hover:-translate-y-0.5 hover:border-[color:var(--garden-gold)]"
     >
-      <span className="text-lg">{s.iconEmoji}</span>
-      <span
-        className={cn(
-          "font-medium",
-          compact ? "text-[10px] text-center line-clamp-2" : "text-sm",
-        )}
-      >
+      <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[color:var(--garden-gold)]" />
+      <span className="text-lg leading-none">{s.iconEmoji}</span>
+      <span className="garden-font-display line-clamp-2 text-[11px] font-bold leading-tight text-[color:var(--garden-text)]">
         {s.name}
+      </span>
+      <span className="garden-font-mono text-[9px] text-[color:var(--garden-text-muted)]">
+        {s.defaultWidth}×{s.defaultDepth}m
       </span>
     </button>
   );
 
-  if (q.trim()) {
-    const items = (
-      <div
-        className={cn(
-          compact ? "flex gap-2 overflow-x-auto pb-2" : "space-y-1",
-        )}
-      >
-        {searchPlants.map(renderPlantRow)}
-        {searchStructures.map(renderStructureRow)}
-        {searchPlants.length === 0 && searchStructures.length === 0 && (
-          <p className="text-xs text-muted-foreground p-2">
-            No matches for "{q}"
-          </p>
-        )}
-      </div>
-    );
+  const SearchBox = (
+    <div className="relative">
+      <Search className="absolute left-2 top-2.5 h-4 w-4 text-[color:var(--garden-text-muted)]" />
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder={`Search ${PLANT_CATALOG.length}+ plants…`}
+        className="w-full rounded-md border border-[color:var(--garden-border)] bg-[color:var(--garden-surface)] py-2 pl-8 pr-2 text-sm text-[color:var(--garden-text)] outline-none focus:border-[color:var(--garden-accent)]"
+      />
+    </div>
+  );
+
+  // Compact (mobile horizontal strip) — keep simple.
+  if (compact) {
+    const items = q.trim()
+      ? [...searchPlants, ...searchStructures]
+      : PLANT_CATALOG.slice(0, 40);
     return (
-      <div className="space-y-2">
-        {!compact && (
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search plants & structures…"
-              className="w-full rounded-md border border-white/10 bg-white/5 pl-8 py-2 text-sm"
-            />
-          </div>
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {items.map((it) =>
+          "iconEmoji" in it && "spacing" in it ? (
+            <div key={(it as CatalogPlant).id} className="w-24 shrink-0">
+              <PlantCard p={it as CatalogPlant} />
+            </div>
+          ) : (
+            <div key={(it as CatalogStructure).id} className="w-24 shrink-0">
+              <StructureCard s={it as CatalogStructure} />
+            </div>
+          ),
         )}
-        {items}
       </div>
     );
   }
 
   return (
-    <div className="space-y-1">
-      {!compact && (
-        <div className="relative mb-2">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={`Search ${PLANT_CATALOG.length}+ plants…`}
-            className="w-full rounded-md border border-white/10 bg-white/5 pl-8 py-2 text-sm"
-          />
-        </div>
-      )}
+    <div className="space-y-2">
+      {SearchBox}
 
-      {varieties.length > 0 && onIcPlant && (
-        <details className="rounded-lg border border-white/10 bg-white/5 mb-2">
-          <summary className="cursor-pointer px-3 py-2 text-sm font-medium">
+      {/* Filter chips */}
+      <div className="flex flex-wrap gap-1.5">
+        {CHIPS.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => setChip(c.id)}
+            className={cn(
+              "rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors",
+              chip === c.id
+                ? "border-[color:var(--garden-accent)] bg-[color:var(--garden-accent)]/15 text-[color:var(--garden-accent)]"
+                : "border-[color:var(--garden-border)] text-[color:var(--garden-text-muted)] hover:text-[color:var(--garden-text)]",
+            )}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      {/* IC SPICY shop varieties */}
+      {varieties.length > 0 && onIcPlant && !q.trim() && (
+        <details className="rounded-lg border border-[color:var(--garden-border)] bg-[color:var(--garden-surface-raised)]">
+          <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-[color:var(--garden-text)]">
             🌶️ IC SPICY Shop ({varieties.length})
           </summary>
-          <div className="px-2 pb-2 space-y-1 max-h-40 overflow-auto">
+          <div className="max-h-40 space-y-1 overflow-auto px-2 pb-2">
             {varieties.slice(0, 30).map((v) => (
               <button
                 key={v.id.toString()}
                 type="button"
                 onClick={() => onIcPlant(v)}
-                className="w-full rounded-md p-2 text-left text-xs hover:bg-white/10 border border-transparent hover:border-white/10"
+                className="w-full rounded-md border border-transparent p-2 text-left text-xs text-[color:var(--garden-text)] hover:border-[color:var(--garden-border)] hover:bg-white/5"
               >
                 {v.name} · {formatScoville(v.scovilleMin, v.scovilleMax)}
               </button>
@@ -225,89 +320,60 @@ export function CatalogAccordion({
         </details>
       )}
 
-      {PLANT_CATEGORY_ORDER.map(({ id, emoji }) => {
-        const count = plantCounts.get(id) ?? 0;
-        if (count === 0) return null;
-        const key = `plant-${id}`;
-        const open = openKey === key;
-        const plants = filterPlants({ category: id });
-        return (
-          <div
-            key={key}
-            className="rounded-lg border border-white/10 overflow-hidden"
-          >
-            <button
-              type="button"
-              onClick={() => toggle(key)}
-              className="flex w-full items-center justify-between px-3 py-2 text-sm bg-white/5 hover:bg-white/10"
+      {/* Search results */}
+      {q.trim() ? (
+        <div className="grid grid-cols-2 gap-2">
+          {searchPlants.map((p) => (
+            <PlantCard key={p.id} p={p} />
+          ))}
+          {searchStructures.map((s) => (
+            <StructureCard key={s.id} s={s} />
+          ))}
+          {searchPlants.length === 0 && searchStructures.length === 0 && (
+            <p className="col-span-2 p-2 text-xs text-[color:var(--garden-text-muted)]">
+              No matches for "{q}"
+            </p>
+          )}
+        </div>
+      ) : (
+        sections.map((sec) => {
+          const open = openKey === sec.key;
+          const count =
+            (sec.plants?.length ?? 0) + (sec.structures?.length ?? 0);
+          return (
+            <div
+              key={sec.key}
+              className="overflow-hidden rounded-lg border border-[color:var(--garden-border)]"
             >
-              <span>
-                {emoji} {plantCategoryLabel(id)} ({count})
-              </span>
-              <ChevronDown
-                className={cn(
-                  "h-4 w-4 transition-transform",
-                  open && "rotate-180",
-                )}
-              />
-            </button>
-            {open && (
-              <div
-                className={cn(
-                  "px-2 pb-2 max-h-64 overflow-auto",
-                  compact && "flex gap-2 overflow-x-auto max-h-none",
-                )}
+              <button
+                type="button"
+                onClick={() => setOpenKey((k) => (k === sec.key ? null : sec.key))}
+                className="flex w-full items-center justify-between bg-[color:var(--garden-surface-raised)] px-3 py-2 text-sm text-[color:var(--garden-text)] hover:bg-white/5"
               >
-                {plants.map(renderPlantRow)}
-              </div>
-            )}
-          </div>
-        );
-      })}
-
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide px-1 pt-2">
-        Structures
-      </p>
-
-      {STRUCTURE_CATEGORY_ORDER.map(({ id, emoji }) => {
-        const count = structureCounts.get(id) ?? 0;
-        if (count === 0) return null;
-        const key = `struct-${id}`;
-        const open = openKey === key;
-        const structs = STRUCTURE_CATALOG.filter((s) => s.category === id);
-        return (
-          <div
-            key={key}
-            className="rounded-lg border border-white/10 overflow-hidden"
-          >
-            <button
-              type="button"
-              onClick={() => toggle(key)}
-              className="flex w-full items-center justify-between px-3 py-2 text-sm bg-white/5 hover:bg-white/10"
-            >
-              <span>
-                {emoji} {structureCategoryLabel(id)} ({count})
-              </span>
-              <ChevronDown
-                className={cn(
-                  "h-4 w-4 transition-transform",
-                  open && "rotate-180",
-                )}
-              />
-            </button>
-            {open && (
-              <div
-                className={cn(
-                  "px-2 pb-2 max-h-48 overflow-auto",
-                  compact && "flex gap-2 overflow-x-auto",
-                )}
-              >
-                {structs.map(renderStructureRow)}
-              </div>
-            )}
-          </div>
-        );
-      })}
+                <span className="garden-font-display font-semibold uppercase tracking-wide text-xs">
+                  {sec.emoji} {sec.label} ({count})
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 transition-transform text-[color:var(--garden-text-muted)]",
+                    open && "rotate-180",
+                  )}
+                />
+              </button>
+              {open && (
+                <div className="grid max-h-72 grid-cols-2 gap-2 overflow-auto p-2">
+                  {sec.plants?.map((p) => (
+                    <PlantCard key={p.id} p={p} />
+                  ))}
+                  {sec.structures?.map((s) => (
+                    <StructureCard key={s.id} s={s} />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }

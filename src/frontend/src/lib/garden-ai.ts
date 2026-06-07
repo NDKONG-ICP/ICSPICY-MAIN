@@ -76,34 +76,76 @@ function structureSnippet(): string {
   ).join("\n");
 }
 
-export function extractJson(text: string): GeneratedLayout | null {
-  const trimmed = text.trim();
+/**
+ * Robustly pull a JSON object/array out of an arbitrary LLM response.
+ * SpicyAI frequently wraps JSON in prose or markdown fences, or emits a
+ * trailing comment after the closing brace — so we try, in order:
+ *   1. direct parse
+ *   2. fenced ```json block
+ *   3. first balanced { … } or [ … ] span (string/escape aware)
+ */
+export function extractJsonFromLlmResponse(raw: string): unknown {
+  const text = raw.trim();
 
+  // 1. Direct parse.
   try {
-    return JSON.parse(trimmed) as GeneratedLayout;
+    return JSON.parse(text);
   } catch {
     /* continue */
   }
 
-  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenceMatch?.[1]) {
+  // 2. Markdown code block (```json … ``` or ``` … ```).
+  const mdMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (mdMatch?.[1]) {
     try {
-      return JSON.parse(fenceMatch[1].trim()) as GeneratedLayout;
+      return JSON.parse(mdMatch[1].trim());
     } catch {
       /* continue */
     }
   }
 
-  const start = trimmed.indexOf("{");
-  const end = trimmed.lastIndexOf("}");
-  if (start >= 0 && end > start) {
-    try {
-      return JSON.parse(trimmed.slice(start, end + 1)) as GeneratedLayout;
-    } catch {
-      /* continue */
+  // 3. First balanced { … } / [ … ] block, respecting strings + escapes.
+  const start = text.search(/[[{]/);
+  if (start !== -1) {
+    let depth = 0;
+    let inStr = false;
+    let esc = false;
+    for (let i = start; i < text.length; i++) {
+      const c = text[i];
+      if (esc) {
+        esc = false;
+        continue;
+      }
+      if (c === "\\" && inStr) {
+        esc = true;
+        continue;
+      }
+      if (c === '"') inStr = !inStr;
+      if (!inStr) {
+        if (c === "{" || c === "[") depth++;
+        if (c === "}" || c === "]") {
+          depth--;
+          if (depth === 0) {
+            try {
+              return JSON.parse(text.slice(start, i + 1));
+            } catch {
+              /* keep scanning — there may be a later valid block */
+            }
+          }
+        }
+      }
     }
   }
 
+  // 4. Give up — caller falls back to the deterministic generator.
+  return null;
+}
+
+export function extractJson(text: string): GeneratedLayout | null {
+  const parsed = extractJsonFromLlmResponse(text);
+  if (parsed && typeof parsed === "object") {
+    return parsed as GeneratedLayout;
+  }
   return null;
 }
 
@@ -226,7 +268,7 @@ Plot: ${plotWidth}m × ${plotDepth}m, Zone ${zone}`;
       });
       if (res.ok?.response) {
         const parsed = extractJson(res.ok.response);
-        if (parsed && parsed.plants?.length) {
+        if (parsed?.plants?.length) {
           return validateLayout(parsed, plotWidth, plotDepth);
         }
         console.warn(
