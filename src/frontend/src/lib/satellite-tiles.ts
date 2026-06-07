@@ -2,7 +2,7 @@ const TILE_SIZE = 256;
 export const DEFAULT_SATELLITE_ZOOM = 17;
 export const SATELLITE_ZOOM = DEFAULT_SATELLITE_ZOOM;
 export const MIN_SATELLITE_ZOOM = 15;
-export const MAX_SATELLITE_ZOOM = 19;
+export const MAX_SATELLITE_ZOOM = 21;
 export const MAX_TILE_TEXTURE_PX = 512;
 
 export type TileCoord = { x: number; y: number; z: number };
@@ -163,3 +163,23 @@ export async function geocodeAddress(
 
 export const ESRI_SATELLITE_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+
+/**
+ * Google Maps satellite — typically fresher/sharper imagery than ESRI in
+ * residential areas. Uses the mt{s} subdomain template for load-balancing; the
+ * Leaflet layer that consumes this MUST pass `subdomains: ["0","1","2","3"]`.
+ */
+export const GOOGLE_SATELLITE_URL =
+  "https://mt{s}.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}";
+
+/** Higher-resolution Google satellite variant (scale hint). */
+export const GOOGLE_SATELLITE_HQ_URL =
+  "https://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}&s=Ga";
+
+/**
+ * Mapbox satellite — often sharper residential imagery. Uses the public sample
+ * token (basic access, no project key required); the @2x/512 tiles need
+ * `tileSize: 512` + `zoomOffset: -1` on the Leaflet layer.
+ */
+export const MAPBOX_SATELLITE_URL =
+  "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcWJ3MmgifQ.gMGilFAVwcRywvV80L8YmA";

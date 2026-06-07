@@ -48,6 +48,29 @@ export function getCachedSatelliteTileUrl(
   return urlCache.get(cacheKey(lat, lng, zoom)) ?? null;
 }
 
+/**
+ * Downscale an image to fit within maxSize on its largest edge. Guards against
+ * over-large GPU textures (some mobile GPUs choke above 2048²). Returns a canvas
+ * suitable for use as THREE.Texture.image. No-op (returns null) when already small.
+ */
+export function resizeImageToMax(
+  img: HTMLImageElement | HTMLCanvasElement,
+  maxSize: number,
+): HTMLCanvasElement | null {
+  const w = img.width;
+  const h = img.height;
+  if (w <= maxSize && h <= maxSize) return null;
+  const scale = Math.min(maxSize / w, maxSize / h, 1);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.floor(w * scale);
+  canvas.height = Math.floor(h * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+const MAX_TEXTURE_PX = 512;
 const textureCache = new Map<string, THREE.Texture>();
 
 export function loadSatelliteThreeTexture(
@@ -67,6 +90,14 @@ export function loadSatelliteThreeTexture(
         loader.load(
           url,
           (tex) => {
+            const img = tex.image as HTMLImageElement | undefined;
+            if (img) {
+              const resized = resizeImageToMax(img, MAX_TEXTURE_PX);
+              if (resized) {
+                tex.image = resized;
+                tex.needsUpdate = true;
+              }
+            }
             tex.wrapS = THREE.ClampToEdgeWrapping;
             tex.wrapT = THREE.ClampToEdgeWrapping;
             tex.minFilter = THREE.LinearFilter;
