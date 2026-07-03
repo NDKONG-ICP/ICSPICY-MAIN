@@ -11,6 +11,7 @@ import {
   Package,
   Plus,
   Sprout,
+  Trash2,
   Users,
   Wheat,
 } from "lucide-react";
@@ -30,6 +31,7 @@ import {
   NimsLocationSelector,
   PlantLifecycleCard,
   PlantSeedModal,
+  RemovePlantModal,
   SeedBankPanel,
   TransplantModal,
   TransplantedCellModal,
@@ -50,6 +52,7 @@ import {
   useAddVariety,
   useAdminInventory,
   useMyPlantsNims,
+  useRemovePlant,
   useVarieties,
 } from "../hooks/useNims";
 import {
@@ -145,6 +148,11 @@ export default function NIMSPage() {
   const createTray = useCreateNimsTray();
   const addPlant = useAddPlant();
   const addVariety = useAddVariety();
+  const removePlant = useRemovePlant();
+  const [removeTarget, setRemoveTarget] = useState<{
+    plantId: bigint;
+    label: string;
+  } | null>(null);
   const [adoptOpen, setAdoptOpen] = useState(false);
   const [newTrayOpen, setNewTrayOpen] = useState(false);
   const [addPlantOpen, setAddPlantOpen] = useState(false);
@@ -467,14 +475,31 @@ export default function NIMSPage() {
                   ? myPlants
                   : inventoryList
                 ).map((lc) => (
-                  <Link
-                    key={lc.plant.id.toString()}
-                    to="/plant/$plantId"
-                    params={{ plantId: lc.plant.id.toString() }}
-                    className="block no-underline"
-                  >
-                    <PlantLifecycleCard lifecycle={lc} />
-                  </Link>
+                  <div key={lc.plant.id.toString()} className="relative group">
+                    <Link
+                      to="/plant/$plantId"
+                      params={{ plantId: lc.plant.id.toString() }}
+                      className="block no-underline"
+                    >
+                      <PlantLifecycleCard lifecycle={lc} />
+                    </Link>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${lc.plant.variety}`}
+                      data-ocid="nims-plant-card-delete"
+                      className="absolute right-2 top-2 z-10 flex size-8 items-center justify-center rounded-md border border-border bg-background/80 text-muted-foreground opacity-70 backdrop-blur transition hover:border-destructive hover:text-destructive hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setRemoveTarget({
+                          plantId: lc.plant.id,
+                          label: lc.plant.variety,
+                        });
+                      }}
+                    >
+                      <Trash2 className="size-4" aria-hidden />
+                    </button>
+                  </div>
                 ))
               )}
             </div>
@@ -584,6 +609,17 @@ export default function NIMSPage() {
             onOpenChange={setGermOpen}
             slotLabel={cellPositionLabel(selectedCell)}
             plantName={unwrapOpt(selectedCellData?.varietyName ?? [])}
+            onRemovePlant={
+              unwrapOpt(selectedCellData?.plantId ?? []) != null
+                ? () =>
+                    setRemoveTarget({
+                      plantId: unwrapOpt(selectedCellData?.plantId ?? [])!,
+                      label:
+                        unwrapOpt(selectedCellData?.varietyName ?? []) ??
+                        `cell ${cellPositionLabel(selectedCell)}`,
+                    })
+                : undefined
+            }
             onMarkDead={openMarkDead}
             onSubmit={async () => {
               try {
@@ -646,6 +682,17 @@ export default function NIMSPage() {
               `Cell ${cellPositionLabel(selectedCell)}`
             }
             onMarkDead={openMarkDead}
+            onRemovePlant={
+              unwrapOpt(selectedCellData?.plantId ?? []) != null
+                ? () =>
+                    setRemoveTarget({
+                      plantId: unwrapOpt(selectedCellData?.plantId ?? [])!,
+                      label:
+                        unwrapOpt(selectedCellData?.varietyName ?? []) ??
+                        `cell ${cellPositionLabel(selectedCell)}`,
+                    })
+                : undefined
+            }
             onSubmit={async ({ container_size }) => {
               const plantId = unwrapOpt(selectedCellData?.plantId ?? []);
               if (plantId == null) {
@@ -683,6 +730,25 @@ export default function NIMSPage() {
           />
         </>
       )}
+
+      <RemovePlantModal
+        open={removeTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null);
+        }}
+        plantLabel={removeTarget?.label}
+        isPending={removePlant.isPending}
+        onConfirm={async () => {
+          if (!removeTarget) return;
+          try {
+            await removePlant.mutateAsync(removeTarget.plantId);
+            toast.success("Plant deleted");
+            setRemoveTarget(null);
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Delete failed");
+          }
+        }}
+      />
 
       <NimsLocationPrompt
         open={nimsLocation.needsPrompt}

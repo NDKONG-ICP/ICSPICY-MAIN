@@ -561,15 +561,12 @@ export default function PlantDetailPage() {
             onAction={handleQuickAction}
             isPlantDead={plantIsDead}
             hiddenActions={[
-              ...(canEdit ? [] : (["harvest_seeds", "nfc_tag"] as const)),
+              ...(canEdit
+                ? []
+                : (["harvest_seeds", "nfc_tag", "remove_plant"] as const)),
               ...(isAdmin
                 ? []
-                : ([
-                    "list_sale",
-                    "mark_dead",
-                    "revive_plant",
-                    "remove_plant",
-                  ] as const)),
+                : (["list_sale", "mark_dead", "revive_plant"] as const)),
             ]}
             disabled={
               plantIsDead
@@ -757,7 +754,7 @@ export default function PlantDetailPage() {
             onConfirm={async () => {
               try {
                 await removePlant.mutateAsync(id);
-                toast.success("Plant removed — NFT returned to pool");
+                toast.success("Plant deleted");
                 setRemoveOpen(false);
                 void navigate({ to: "/nims" });
               } catch (e) {

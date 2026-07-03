@@ -32,6 +32,8 @@ export type TransplantModalProps = {
   inventoryMode?: boolean;
   onSubmit: (payload: TransplantSubmitPayload) => void | Promise<void>;
   onMarkDead?: () => void;
+  /** Delete a plant added by mistake — clears the cell back to empty. */
+  onRemovePlant?: () => void;
 };
 
 export function TransplantModal({
@@ -42,6 +44,7 @@ export function TransplantModal({
   inventoryMode = false,
   onSubmit,
   onMarkDead,
+  onRemovePlant,
 }: TransplantModalProps) {
   const current =
     currentContainer == null
@@ -174,19 +177,34 @@ export function TransplantModal({
             )}
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
-            {onMarkDead ? (
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                data-ocid="nims-transplant-mark-dead"
-                onClick={() => setConfirmDeadOpen(true)}
-              >
-                Mark dead
-              </Button>
-            ) : (
-              <span />
-            )}
+            <div className="flex flex-wrap gap-2">
+              {onMarkDead && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  data-ocid="nims-transplant-mark-dead"
+                  onClick={() => setConfirmDeadOpen(true)}
+                >
+                  Mark dead
+                </Button>
+              )}
+              {onRemovePlant && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  data-ocid="nims-transplant-remove-plant"
+                  className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onRemovePlant();
+                  }}
+                >
+                  Added by mistake? Remove
+                </Button>
+              )}
+            </div>
             <div className="flex gap-2 sm:ml-auto">
               <Button
                 variant="outline"

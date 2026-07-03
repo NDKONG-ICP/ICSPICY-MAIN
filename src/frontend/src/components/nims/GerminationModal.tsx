@@ -28,6 +28,8 @@ export type GerminationModalProps = {
   defaultDateIso?: string;
   onSubmit: (payload: GerminationSubmit) => void;
   onMarkDead?: () => void;
+  /** Delete a plant added by mistake — clears the cell back to empty. */
+  onRemovePlant?: () => void;
 };
 
 export function GerminationModal({
@@ -38,6 +40,7 @@ export function GerminationModal({
   defaultDateIso,
   onSubmit,
   onMarkDead,
+  onRemovePlant,
 }: GerminationModalProps) {
   const isoToday = () => new Date().toISOString().slice(0, 10);
   const [dateIso, setDateIso] = useState(defaultDateIso ?? isoToday());
@@ -90,19 +93,34 @@ export function GerminationModal({
             </div>
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
-            {onMarkDead ? (
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                data-ocid="nims-germ-mark-dead"
-                onClick={() => setConfirmDeadOpen(true)}
-              >
-                Mark dead instead
-              </Button>
-            ) : (
-              <span />
-            )}
+            <div className="flex flex-wrap gap-2">
+              {onMarkDead && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  data-ocid="nims-germ-mark-dead"
+                  onClick={() => setConfirmDeadOpen(true)}
+                >
+                  Mark dead instead
+                </Button>
+              )}
+              {onRemovePlant && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  data-ocid="nims-germ-remove-plant"
+                  className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onRemovePlant();
+                  }}
+                >
+                  Added by mistake? Remove
+                </Button>
+              )}
+            </div>
             <div className="flex gap-2 sm:ml-auto">
               <Button
                 variant="outline"

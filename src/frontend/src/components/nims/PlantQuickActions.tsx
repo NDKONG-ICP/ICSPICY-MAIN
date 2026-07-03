@@ -61,7 +61,7 @@ const BASE_ACTIONS: ReadonlyArray<ActionDef> = [
   },
   {
     key: "remove_plant",
-    label: "Remove Plant",
+    label: "Delete Plant",
     icon: Trash2,
     tone: "danger",
   },

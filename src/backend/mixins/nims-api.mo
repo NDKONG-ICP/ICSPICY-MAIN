@@ -214,7 +214,15 @@ mixin (
   };
 
   public shared ({ caller }) func removePlant(plantId : Common.PlantId) : async Bool {
-    if (not nimsIsAdmin(caller)) Runtime.trap("Unauthorized: Admin only");
+    AccessControl.requireAuthenticated(caller);
+    switch (plants.get(plantId)) {
+      case null return false;
+      case (?plant) {
+        if (not NimsLib.ownerOrAdmin(plant, plantId, sideMaps(), caller, nimsIsAdmin)) {
+          Runtime.trap("Unauthorized: only the plant owner or an admin can remove this plant");
+        };
+      };
+    };
     let ok = NimsLib.removePlant(
       plants, trays, sideMaps(), icrc7Owners, icrc7Balances, icrc37Approvals,
       selfPrincipal(), plantId,

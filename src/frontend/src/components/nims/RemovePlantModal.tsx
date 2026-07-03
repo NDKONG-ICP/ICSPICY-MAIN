@@ -27,11 +27,12 @@ export function RemovePlantModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-ocid="nims-modal-remove-plant" className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Remove plant?</DialogTitle>
+          <DialogTitle>Delete {plantLabel ?? "plant"}?</DialogTitle>
           <DialogDescription>
-            {plantLabel
-              ? `Remove ${plantLabel} from inventory? The NFT will be returned to the pool.`
-              : "Remove this plant from inventory? The NFT will be returned to the pool."}
+            This removes the plant and all its lifecycle data (watering,
+            feeding, photos, notes). This cannot be undone. If an NFT is
+            assigned, it is returned to the pool — not burned. Any tray cell it
+            occupies is cleared.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -49,7 +50,7 @@ export function RemovePlantModal({
             disabled={isPending}
             onClick={() => void onConfirm()}
           >
-            {isPending ? "Removing…" : "Remove plant"}
+            {isPending ? "Deleting…" : "Delete plant"}
           </Button>
         </DialogFooter>
       </DialogContent>
