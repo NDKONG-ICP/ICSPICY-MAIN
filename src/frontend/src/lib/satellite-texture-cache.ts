@@ -70,15 +70,16 @@ export function resizeImageToMax(
   return canvas;
 }
 
-const MAX_TEXTURE_PX = 512;
+const DEFAULT_MAX_TEXTURE_PX = 512;
 const textureCache = new Map<string, THREE.Texture>();
 
 export function loadSatelliteThreeTexture(
   lat: number,
   lng: number,
   zoom: number,
+  maxTexturePx: number = DEFAULT_MAX_TEXTURE_PX,
 ): Promise<THREE.Texture> {
-  const key = cacheKey(lat, lng, zoom);
+  const key = `${cacheKey(lat, lng, zoom)}:${maxTexturePx}`;
   const cached = textureCache.get(key);
   if (cached) return Promise.resolve(cached);
 
@@ -92,7 +93,7 @@ export function loadSatelliteThreeTexture(
           (tex) => {
             const img = tex.image as HTMLImageElement | undefined;
             if (img) {
-              const resized = resizeImageToMax(img, MAX_TEXTURE_PX);
+              const resized = resizeImageToMax(img, maxTexturePx);
               if (resized) {
                 tex.image = resized;
                 tex.needsUpdate = true;

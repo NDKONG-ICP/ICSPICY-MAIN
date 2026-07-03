@@ -232,6 +232,7 @@ export interface SaveProfileInput {
     bio: string;
     username: string;
     avatar_key?: string;
+    location?: string;
 }
 export interface PlantTimeline {
     stage_history: Array<StageHistory>;
@@ -776,6 +777,7 @@ export interface UserProfilePublic {
     bio: string;
     username: string;
     avatar_key?: string;
+    location?: string;
     following_count: bigint;
     created_at: Timestamp;
     follower_count: bigint;
@@ -4463,6 +4465,7 @@ function from_candid_record_n132(_uploadFile: (file: ExternalBlob) => Promise<Ui
     bio: string;
     username: string;
     avatar_key: [] | [string];
+    location: [] | [string];
     following_count: bigint;
     created_at: _Timestamp;
     follower_count: bigint;
@@ -4471,6 +4474,7 @@ function from_candid_record_n132(_uploadFile: (file: ExternalBlob) => Promise<Ui
     bio: string;
     username: string;
     avatar_key?: string;
+    location?: string;
     following_count: bigint;
     created_at: Timestamp;
     follower_count: bigint;
@@ -4480,6 +4484,7 @@ function from_candid_record_n132(_uploadFile: (file: ExternalBlob) => Promise<Ui
         bio: value.bio,
         username: value.username,
         avatar_key: record_opt_to_undefined(from_candid_opt_n17(_uploadFile, _downloadFile, value.avatar_key)),
+        location: record_opt_to_undefined(from_candid_opt_n17(_uploadFile, _downloadFile, value.location)),
         following_count: value.following_count,
         created_at: value.created_at,
         follower_count: value.follower_count,
@@ -5958,15 +5963,18 @@ function to_candid_record_n210(_uploadFile: (file: ExternalBlob) => Promise<Uint
     bio: string;
     username: string;
     avatar_key?: string;
+    location?: string;
 }): {
     bio: string;
     username: string;
     avatar_key: [] | [string];
+    location: [] | [string];
 } {
     return {
         bio: value.bio,
         username: value.username,
-        avatar_key: value.avatar_key ? candid_some(value.avatar_key) : candid_none()
+        avatar_key: value.avatar_key ? candid_some(value.avatar_key) : candid_none(),
+        location: value.location ? candid_some(value.location) : candid_none()
     };
 }
 function to_candid_record_n212(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {

@@ -1,9 +1,11 @@
+import { isWindSwayEnabled } from "@/lib/garden-device-tier";
 import { Float, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import {
   Component,
   type ReactNode,
   Suspense,
+  memo,
   useEffect,
   useMemo,
   useRef,
@@ -176,7 +178,7 @@ function FlutterLeafCluster({
   const leafOpacity = ghost ? 0.4 : 1;
 
   useFrame((state) => {
-    if (!ref.current) return;
+    if (!ref.current || !isWindSwayEnabled()) return;
     const t = state.clock.elapsedTime;
     ref.current.rotation.z = Math.sin(t * 2.5 + phase) * 0.08;
     ref.current.rotation.x = Math.sin(t * 2.0 + phase * 1.3) * 0.04;
@@ -421,7 +423,7 @@ function ProceduralPlant({
   }, [model]);
 
   useFrame((state) => {
-    if (!groupRef.current) return;
+    if (!groupRef.current || !isWindSwayEnabled()) return;
     const t = state.clock.elapsedTime;
     groupRef.current.rotation.z = Math.sin(t * 0.8 + swayPhase) * 0.018;
   });
@@ -589,7 +591,7 @@ export type GltfPlantModelProps = {
   onClick?: () => void;
 };
 
-export function GltfPlantModel({
+export const GltfPlantModel = memo(function GltfPlantModel({
   category,
   position,
   scale = 1,
@@ -639,7 +641,7 @@ export function GltfPlantModel({
       </GltfErrorBoundary>
     </group>
   );
-}
+});
 
 /** Exported so the build-mode reticle can render a translucent placement ghost. */
 export function ProceduralPlantGhost(props: ProceduralPlantProps) {

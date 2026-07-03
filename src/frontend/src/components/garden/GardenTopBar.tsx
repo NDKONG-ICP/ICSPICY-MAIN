@@ -5,6 +5,7 @@ import {
   Download,
   Grid3x3,
   MapPin,
+  Menu,
   Ruler,
   Save,
   Sliders,
@@ -87,6 +88,17 @@ export function GardenTopBar({
 }: Props) {
   return (
     <div className="flex h-12 shrink-0 items-center gap-2 border-b border-[color:var(--garden-border)] bg-[#0d0d10] px-3">
+      {/* Mobile: ☰ menu opens the tools drawer */}
+      <button
+        type="button"
+        title="Menu"
+        aria-label="Open menu"
+        onClick={onOpenProTools}
+        className="flex h-9 w-9 items-center justify-center rounded-md text-[color:var(--garden-text-muted)] hover:bg-white/5 hover:text-[color:var(--garden-text)] sm:hidden"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
       {/* Logo + title */}
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-lg leading-none">🌶</span>
@@ -95,7 +107,7 @@ export function GardenTopBar({
         </span>
       </div>
 
-      <TopButton title="Back" onClick={onBack}>
+      <TopButton title="Back" onClick={onBack} className="hidden sm:flex">
         <ArrowLeft className="h-4 w-4" />
         <span className="hidden md:inline">Back</span>
       </TopButton>
@@ -107,7 +119,7 @@ export function GardenTopBar({
         {title}
       </span>
 
-      <div className="mx-1 h-5 w-px bg-[color:var(--garden-border)]" />
+      <div className="mx-1 hidden h-5 w-px bg-[color:var(--garden-border)] sm:block" />
 
       {/* 2D / 3D pill toggle */}
       <div className="flex overflow-hidden rounded-md border border-[color:var(--garden-border)]">
@@ -128,9 +140,14 @@ export function GardenTopBar({
         ))}
       </div>
 
-      <div className="mx-1 h-5 w-px bg-[color:var(--garden-border)]" />
+      <div className="mx-1 hidden h-5 w-px bg-[color:var(--garden-border)] sm:block" />
 
-      <TopButton title="Toggle grid" active={gridOn} onClick={onToggleGrid}>
+      <TopButton
+        title="Toggle grid"
+        active={gridOn}
+        onClick={onToggleGrid}
+        className="hidden sm:flex"
+      >
         <Grid3x3 className="h-4 w-4" />
         <span className="hidden lg:inline">Grid</span>
       </TopButton>
@@ -140,25 +157,38 @@ export function GardenTopBar({
           title="Measure tool"
           active={measureActive}
           onClick={onToggleMeasure}
+          className="hidden sm:flex"
         >
           <Ruler className="h-4 w-4" />
           <span className="hidden lg:inline">Measure</span>
         </TopButton>
       )}
 
-      <TopButton title="Change location" onClick={onLocation}>
+      <TopButton
+        title="Change location"
+        onClick={onLocation}
+        className="hidden sm:flex"
+      >
         <MapPin className="h-4 w-4" />
         <span className="hidden lg:inline">Location</span>
       </TopButton>
 
-      <TopButton title="Pro tools" onClick={onOpenProTools}>
+      <TopButton
+        title="Pro tools"
+        onClick={onOpenProTools}
+        className="hidden sm:flex"
+      >
         <Sliders className="h-4 w-4" />
         <span className="hidden lg:inline">Pro</span>
       </TopButton>
 
       {/* Right cluster */}
       <div className="ml-auto flex items-center gap-2">
-        <TopButton title="Export plan" onClick={onExport}>
+        <TopButton
+          title="Export plan"
+          onClick={onExport}
+          className="hidden sm:flex"
+        >
           <Download className="h-4 w-4" />
           <span className="hidden md:inline">Export</span>
         </TopButton>
@@ -172,7 +202,7 @@ export function GardenTopBar({
           }
           onClick={onAi}
           className={cn(
-            "flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors",
+            "hidden h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors sm:flex",
             "text-[color:var(--garden-gold)] hover:bg-[color:var(--garden-gold)]/15",
           )}
         >

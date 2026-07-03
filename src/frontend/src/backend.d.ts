@@ -152,6 +152,7 @@ export interface SaveProfileInput {
     bio: string;
     username: string;
     avatar_key?: string;
+    location?: string;
 }
 export interface PlantTimeline {
     stage_history: Array<StageHistory>;
@@ -666,6 +667,7 @@ export interface UserProfilePublic {
     bio: string;
     username: string;
     avatar_key?: string;
+    location?: string;
     following_count: bigint;
     created_at: Timestamp;
     follower_count: bigint;

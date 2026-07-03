@@ -714,6 +714,18 @@ export default function NIMSPage() {
         onOpenChange={setAddPlantOpen}
         varieties={varieties}
         isPending={addPlant.isPending}
+        isCreatingVariety={addVariety.isPending}
+        onCreateVariety={async (name, species) => {
+          const id = await addVariety.mutateAsync({
+            name,
+            species,
+            scovilleMin: 0,
+            scovilleMax: 0,
+            description: "",
+          });
+          toast.success(`Variety "${name}" added`);
+          return id;
+        }}
         onSubmit={async ({ varietyId, stage, container }) => {
           try {
             const result = await addPlant.mutateAsync({

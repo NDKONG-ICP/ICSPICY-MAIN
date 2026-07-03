@@ -22,6 +22,7 @@ import { Loader2, Plus, Sprout } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { SeedSource, VarietyPublic } from "../../declarations/backend.did";
+import { useAddVariety } from "../../hooks/useNims";
 import {
   seedSourceLabel,
   unwrapOpt,
@@ -34,6 +35,7 @@ import {
   useSeedBankStats,
 } from "../../hooks/useSeedBank";
 import { exportSeedLotsCsv } from "../../lib/nims-export-mappers";
+import { VarietyPicker } from "./VarietyPicker";
 
 function fmtMonth(ts: bigint): string {
   return new Date(Number(ts / 1_000_000n)).toLocaleDateString(undefined, {
@@ -74,6 +76,7 @@ export function SeedBankPanel({
   const addSeedLot = useAddSeedLot();
   const recordCross = useRecordCross();
   const addVendor = useAddVendor();
+  const addVariety = useAddVariety();
 
   const [addSeedsOpen, setAddSeedsOpen] = useState(false);
   const [recordCrossOpen, setRecordCrossOpen] = useState(false);
@@ -361,6 +364,18 @@ export function SeedBankPanel({
         varieties={varieties}
         vendors={vendors}
         isPending={addSeedLot.isPending}
+        isCreatingVariety={addVariety.isPending}
+        onCreateVariety={async (name, species) => {
+          const id = await addVariety.mutateAsync({
+            name,
+            species,
+            scovilleMin: 0,
+            scovilleMax: 0,
+            description: "",
+          });
+          toast.success(`Variety "${name}" added`);
+          return id;
+        }}
         onSubmit={async (payload) => {
           try {
             await addSeedLot.mutateAsync(payload);
@@ -412,6 +427,8 @@ function AddSeedsDialog({
   varieties,
   vendors,
   isPending,
+  isCreatingVariety,
+  onCreateVariety,
   onSubmit,
 }: {
   open: boolean;
@@ -419,6 +436,8 @@ function AddSeedsDialog({
   varieties: VarietyPublic[];
   vendors: { id: bigint; name: string }[];
   isPending?: boolean;
+  isCreatingVariety?: boolean;
+  onCreateVariety: (name: string, species: string) => Promise<bigint>;
   onSubmit: (p: {
     varietyId: bigint;
     source: SeedSource;
@@ -427,7 +446,8 @@ function AddSeedsDialog({
     notes?: string;
   }) => void | Promise<void>;
 }) {
-  const [varietyId, setVarietyId] = useState(varieties[0]?.id.toString() ?? "");
+  const [varietyId, setVarietyId] = useState("");
+  const [addFormOpen, setAddFormOpen] = useState(false);
   const [sourceIdx, setSourceIdx] = useState("0");
   const [vendorId, setVendorId] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -445,18 +465,15 @@ function AddSeedsDialog({
         <div className="space-y-3">
           <div className="space-y-1">
             <Label>Variety</Label>
-            <Select value={varietyId} onValueChange={setVarietyId}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {varieties.map((v) => (
-                  <SelectItem key={v.id.toString()} value={v.id.toString()}>
-                    {v.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <VarietyPicker
+              idPrefix="nims-seed-lot"
+              varieties={varieties}
+              value={varietyId}
+              onChange={setVarietyId}
+              onCreateVariety={onCreateVariety}
+              isCreating={isCreatingVariety}
+              onAddFormOpenChange={setAddFormOpen}
+            />
           </div>
           <div className="space-y-1">
             <Label>Source</Label>
@@ -512,7 +529,7 @@ function AddSeedsDialog({
             Cancel
           </Button>
           <Button
-            disabled={!varietyId || isPending}
+            disabled={!varietyId || addFormOpen || isPending}
             onClick={() =>
               void onSubmit({
                 varietyId: BigInt(varietyId),

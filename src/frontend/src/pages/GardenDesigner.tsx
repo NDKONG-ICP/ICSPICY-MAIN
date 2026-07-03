@@ -5,6 +5,10 @@ import { CostCalculatorPanel } from "@/components/garden/CostCalculatorPanel";
 import { DesignerToolbar } from "@/components/garden/DesignerToolbar";
 import { GardenBetaBanner } from "@/components/garden/GardenBetaBanner";
 import { GardenCanvas3D } from "@/components/garden/GardenCanvas3D";
+import {
+  type EntryIntent,
+  GardenEntryChoice,
+} from "@/components/garden/GardenEntryChoice";
 import { GardenEnvironmentDialog } from "@/components/garden/GardenEnvironmentDialog";
 import { GardenLocationPicker } from "@/components/garden/GardenLocationPicker";
 import {
@@ -19,6 +23,8 @@ import { GardenTopDown } from "@/components/garden/GardenTopDown";
 import { LayersPanel } from "@/components/garden/LayersPanel";
 import { LoadDesignDialog } from "@/components/garden/LoadDesignDialog";
 import { MobileActionsSheet } from "@/components/garden/MobileActionsSheet";
+import { MobileBottomToolStrip } from "@/components/garden/MobileBottomToolStrip";
+import { MobileFloatingActions } from "@/components/garden/MobileFloatingActions";
 import {
   NewGardenPlotDialog,
   type NewPlotConfig,
@@ -173,6 +179,8 @@ export default function GardenDesignerPage() {
   const [urlDesignId] = useState(() => designIdFromUrl());
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
   const [newPlotOpen, setNewPlotOpen] = useState(false);
+  const [entryOpen, setEntryOpen] = useState(false);
+  const entryIntentRef = useRef<EntryIntent>("blank");
   const [envOpen, setEnvOpen] = useState(false);
   const [environment, setEnvironment] = useState<GardenEnvironment>(() =>
     loadEnvironment(),
@@ -355,9 +363,17 @@ export default function GardenDesignerPage() {
     }
   }, [pending]);
 
+  // First open with no design → show the entry choice screen (unless a design
+  // is being loaded from the URL).
   useEffect(() => {
-    if (gardenLocation.needsPrompt) setNewPlotOpen(true);
-  }, [gardenLocation.needsPrompt]);
+    if (gardenLocation.needsPrompt && urlDesignId == null) setEntryOpen(true);
+  }, [gardenLocation.needsPrompt, urlDesignId]);
+
+  const handleEntryChoice = useCallback((intent: EntryIntent) => {
+    entryIntentRef.current = intent;
+    setEntryOpen(false);
+    setNewPlotOpen(true);
+  }, []);
 
   useEffect(() => {
     const z = gardenLocation.location?.satelliteZoom;
@@ -399,6 +415,12 @@ export default function GardenDesignerPage() {
       } else {
         setLocationPickerOpen(true);
         toast.message("Position your plot on satellite imagery.");
+      }
+      // AI entry path: open the AI prompt right after sizing the plot.
+      if (entryIntentRef.current === "ai") {
+        entryIntentRef.current = "blank";
+        setProOpen(true);
+        toast.message("Describe your dream garden in the AI prompt.");
       }
     },
     [gardenLocation, loadDesign],
@@ -802,7 +824,7 @@ export default function GardenDesignerPage() {
   );
 
   return (
-    <div className="garden-designer flex h-[calc(100vh-4rem)] flex-col overflow-hidden text-[color:var(--garden-text)]">
+    <div className="garden-designer relative flex h-[calc(100vh-4rem)] flex-col overflow-hidden text-[color:var(--garden-text)]">
       <GardenTopBar
         title={design.name}
         onBack={() => void navigate({ to: "/" })}
@@ -849,7 +871,8 @@ export default function GardenDesignerPage() {
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1">
+      {/* pb-14 on mobile keeps the canvas clear of the fixed bottom strip */}
+      <div className="flex min-h-0 flex-1 pb-14 sm:pb-0">
         {/* Left — catalog sidebar */}
         {!isMobile && mode === "edit" && (
           <aside
@@ -1006,6 +1029,24 @@ export default function GardenDesignerPage() {
         />
       )}
 
+      {/* Mobile bottom strip: quick categories + catalog toggle (56px) */}
+      {isMobile && mode === "edit" && !catalogOpen && (
+        <MobileBottomToolStrip
+          activeTool={toolExtras.activeTool}
+          onTool={setActiveTool}
+          onOpenCatalog={() => setCatalogOpen(true)}
+          catalogOpen={catalogOpen}
+          onQuickCategory={() => setCatalogOpen(true)}
+          onSave={() => void designer.saveDesign()}
+          readOnly={mode !== "edit"}
+        />
+      )}
+
+      {/* Mobile floating actions for the selected item (rotate/scale/dup/del) */}
+      {isMobile && mode === "edit" && (
+        <MobileFloatingActions designer={designer} readOnly={false} />
+      )}
+
       {/* Mobile catalog bottom sheet */}
       {isMobile && mode === "edit" && (
         <MobileActionsSheet
@@ -1017,6 +1058,19 @@ export default function GardenDesignerPage() {
           onOpenChange={setCatalogOpen}
         />
       )}
+
+      {/* Entry choice — first open with no design */}
+      <GardenEntryChoice
+        open={entryOpen}
+        savedDesigns={myDesigns}
+        onChoose={handleEntryChoice}
+        onLoadDesign={(d) => {
+          setEntryOpen(false);
+          gardenLocation.dismissPrompt();
+          loadDesign(d);
+          toast.success(`Loaded "${d.name}"`);
+        }}
+      />
 
       {/* ── Pro tools drawer ──────────────────────────────────────────────── */}
       {proOpen && (
@@ -1246,6 +1300,9 @@ export default function GardenDesignerPage() {
         initialName={design.name}
         initialWidth={design.widthMeters}
         initialDepth={design.depthMeters}
+        initialGround={
+          entryIntentRef.current === "satellite" ? "satellite" : "blank"
+        }
         onConfirm={handleNewPlot}
       />
 

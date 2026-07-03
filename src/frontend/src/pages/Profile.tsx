@@ -49,6 +49,7 @@ export default function ProfilePage() {
 
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
+  const [location, setLocation] = useState("");
   const [avatarKey, setAvatarKey] = useState<string | undefined>();
   const [dirty, setDirty] = useState(false);
 
@@ -56,9 +57,9 @@ export default function ProfilePage() {
     if (profile && !dirty) {
       setUsername(profile.username ?? "");
       setBio(profile.bio ?? "");
-      setAvatarKey(
-        profile.avatar_key?.length === 1 ? profile.avatar_key[0] : undefined,
-      );
+      setLocation(profile.location ?? "");
+      // Wrapper actor returns avatar_key as a plain string, not a Candid opt array.
+      setAvatarKey(profile.avatar_key || undefined);
     }
   }, [profile, dirty]);
 
@@ -81,6 +82,7 @@ export default function ProfilePage() {
         username: username.trim() || "anonymous",
         bio: bio.trim(),
         avatar_key: avatarKey,
+        location: location.trim() || undefined,
       });
       setDirty(false);
       toast.success("Profile saved");
@@ -194,6 +196,18 @@ export default function ProfilePage() {
                   }}
                   rows={4}
                   placeholder="Tell the community about your grow…"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={location}
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+                    setDirty(true);
+                  }}
+                  placeholder="e.g. Zone 8a Arkansas"
                 />
               </div>
               <Button

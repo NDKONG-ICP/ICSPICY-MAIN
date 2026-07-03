@@ -1,6 +1,7 @@
 import type { VarietyPublic } from "@/declarations/backend.did";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSunPosition } from "@/hooks/useSunPosition";
+import { useDeviceTier } from "@/lib/garden-device-tier";
 import {
   type ModelType,
   getPlantById,
@@ -32,7 +33,9 @@ import {
   type StickVisual,
   type TouchVisualState,
 } from "./FPVController";
+import { FpsGovernor } from "./FpsGovernor";
 import { GardenGround } from "./GardenGround";
+import { InstancedPlantField, instancedPlantIds } from "./InstancedPlantField";
 import { GhostPreview3D } from "./GhostPreview";
 import { GridOverlay3D } from "./GridOverlay";
 import { PixelRatioLimiter, ScenePostProcessing } from "./ScenePostProcessing";
@@ -540,6 +543,7 @@ function Scene({
   const cz = design.depthMeters / 2;
   const plotSize = Math.max(design.widthMeters, design.depthMeters);
   const sun = useSunPosition(sunLat, sunLng, timeOfDayHour);
+  const { settings: tierSettings } = useDeviceTier();
 
   const ghostGroupRef = useRef<THREE.Group>(null);
   const [removeTarget, setRemoveTarget] = useState<number | null>(null);
@@ -551,7 +555,7 @@ function Scene({
   const reticleRef = useRef<ReticleState | null>(null);
 
   const showGrid = layers?.grid !== false;
-  const showShadows = layers?.shadows !== false;
+  const showShadows = layers?.shadows !== false && tierSettings.shadows;
   const showPlants = layers?.plants !== false;
   const showStructures = layers?.structures !== false;
   const isOrbit = camMode === "orbit";
@@ -571,10 +575,19 @@ function Scene({
       const x = Math.max(0, Math.min(design.widthMeters, p.x));
       const y = Math.max(0, Math.min(design.depthMeters, p.z));
       if (e.type === "pointermove") onPointerMove(x, y);
-      else if (e.type === "click" && !readOnly) onPlace();
+      // Distinguish tap from camera drag: R3F's `delta` is the pointer travel
+      // in pixels between down and up. Ignore "clicks" that were drags.
+      else if (e.type === "click" && !readOnly && e.delta < 10) onPlace();
     },
     [design.depthMeters, design.widthMeters, onPlace, onPointerMove, readOnly],
   );
+
+  // Instanced rendering for repeated varieties past the tier threshold.
+  const instancedIds = useMemo(() => {
+    if (design.plants.length <= tierSettings.maxPlantsBeforeInstancing)
+      return new Set<number>();
+    return instancedPlantIds(design.plants);
+  }, [design.plants, tierSettings.maxPlantsBeforeInstancing]);
 
   const fillSun: [number, number, number] = [
     -sun.position[0],
@@ -612,7 +625,7 @@ function Scene({
         intensity={1.2}
         color="#fffae0"
         castShadow={showShadows}
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[tierSettings.shadowMapSize, tierSettings.shadowMapSize]}
         shadow-camera-far={100}
         shadow-camera-left={-20}
         shadow-camera-right={20}
@@ -661,9 +674,15 @@ function Scene({
         </>
       )}
 
-      {/* Plants */}
+      {/* Plants — repeated varieties above the tier threshold render as a
+          single instanced mesh; everything else gets the full model. */}
+      {showPlants && instancedIds.size > 0 && (
+        <InstancedPlantField plants={design.plants} />
+      )}
       {showPlants &&
         design.plants.map((p) => {
+          const isSelected = selectedId === p.id && selectedType === "plant";
+          if (instancedIds.has(p.id) && !isSelected) return null;
           const visual = getPlantVisualProps(p, varieties);
           return (
             <GltfPlantModel
@@ -672,7 +691,7 @@ function Scene({
               position={[p.x, 0, p.y]}
               scale={p.scale ?? 1}
               growthStage={growthStage}
-              selected={selectedId === p.id && selectedType === "plant"}
+              selected={isSelected}
               varietyName={p.label}
               fruitColor={visual.fruitColor}
               plantColor={visual.plantColor}
@@ -775,6 +794,7 @@ function Scene({
 
 export function GardenCanvas3D(props: Props) {
   const { onSetBrush, pending, varieties, walkMode } = props;
+  const { settings: tierSettings } = useDeviceTier();
   const mobile = useIsMobile();
   // Detect ACTUAL touch-primary devices, not touch-capable desktops/laptops.
   // pointer:coarse = touchscreen is the primary pointer (phones, tablets).
@@ -784,8 +804,11 @@ export function GardenCanvas3D(props: Props) {
     (typeof window !== "undefined" &&
       window.matchMedia("(pointer: coarse)").matches &&
       !window.matchMedia("(pointer: fine)").matches);
-  const cam =
-    Math.max(props.design.widthMeters, props.design.depthMeters) * 0.85;
+  const plotSize = Math.max(
+    props.design.widthMeters,
+    props.design.depthMeters,
+  );
+  const viewDist = Math.max(plotSize, 8);
   const cx = props.design.widthMeters / 2;
   const cz = props.design.depthMeters / 2;
   const [desktopFx, setDesktopFx] = useState(true);
@@ -859,17 +882,28 @@ export function GardenCanvas3D(props: Props) {
             ).current = el as unknown as HTMLCanvasElement;
           }
         }}
-        dpr={[1, 2]}
-        shadows
-        camera={{ position: [cx + cam * 0.4, cam, cz + cam * 0.4], fov: 50 }}
+        dpr={tierSettings.pixelRatio}
+        shadows={tierSettings.shadows}
+        camera={{
+          position: [
+            cx + viewDist * 0.7,
+            viewDist * 0.8,
+            cz + viewDist * 0.7,
+          ],
+          fov: 50,
+          near: 0.1,
+          far: 1000,
+        }}
         gl={{
           preserveDrawingBuffer: true,
-          antialias: true,
+          antialias: tierSettings.antialiasing,
           powerPreference: "high-performance",
+          failIfMajorPerformanceCaveat: false,
         }}
       >
         <Suspense fallback={null}>
-          <PixelRatioLimiter />
+          <PixelRatioLimiter max={tierSettings.pixelRatio} />
+          <FpsGovernor />
           <Scene
             {...props}
             camMode={camMode}
@@ -879,15 +913,26 @@ export function GardenCanvas3D(props: Props) {
             isTouch={isTouch}
           />
           <ScenePostProcessing
-            enabled={desktopFx && !isTouch && camMode === "orbit"}
+            enabled={
+              desktopFx &&
+              !isTouch &&
+              camMode === "orbit" &&
+              tierSettings.postProcessing
+            }
           />
         </Suspense>
         <OrbitControls
           makeDefault
           enabled={camMode === "orbit"}
+          enableDamping
+          dampingFactor={0.1}
+          touches={{
+            ONE: THREE.TOUCH.ROTATE,
+            TWO: THREE.TOUCH.DOLLY_PAN,
+          }}
           maxPolarAngle={Math.PI / 2.1}
-          minDistance={3}
-          maxDistance={40}
+          minDistance={2}
+          maxDistance={50}
           target={[cx, 0, cz]}
         />
       </Canvas>

@@ -1,3 +1,4 @@
+import { useDeviceTier } from "@/lib/garden-device-tier";
 import { loadSatelliteThreeTexture } from "@/lib/satellite-texture-cache";
 import { memo, useEffect, useRef, useState } from "react";
 import type * as THREE from "three";
@@ -27,6 +28,7 @@ export const SatelliteGround = memo(function SatelliteGround({
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [failed, setFailed] = useState(false);
   const displayedRef = useRef<THREE.Texture | null>(null);
+  const { settings } = useDeviceTier();
 
   useEffect(() => {
     if (!enabled) {
@@ -39,7 +41,7 @@ export const SatelliteGround = memo(function SatelliteGround({
     let cancelled = false;
     setFailed(false);
 
-    void loadSatelliteThreeTexture(lat, lng, zoom)
+    void loadSatelliteThreeTexture(lat, lng, zoom, settings.satelliteTextureSize)
       .then((tex) => {
         if (cancelled) return;
         displayedRef.current = tex;
@@ -52,7 +54,7 @@ export const SatelliteGround = memo(function SatelliteGround({
     return () => {
       cancelled = true;
     };
-  }, [enabled, lat, lng, zoom]);
+  }, [enabled, lat, lng, zoom, settings.satelliteTextureSize]);
 
   const activeTexture = texture ?? displayedRef.current;
 

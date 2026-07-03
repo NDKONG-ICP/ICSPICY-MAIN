@@ -8,11 +8,11 @@ import {
 import { ToneMappingMode } from "postprocessing";
 import { memo, useEffect, useState } from "react";
 
-export function PixelRatioLimiter() {
+export function PixelRatioLimiter({ max = 2 }: { max?: number }) {
   const { gl } = useThree();
   useEffect(() => {
-    gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  }, [gl]);
+    gl.setPixelRatio(Math.min(window.devicePixelRatio, max));
+  }, [gl, max]);
   return null;
 }
 

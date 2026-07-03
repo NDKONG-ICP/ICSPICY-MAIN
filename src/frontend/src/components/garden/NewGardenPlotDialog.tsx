@@ -27,6 +27,7 @@ type Props = {
   initialName?: string;
   initialWidth?: number;
   initialDepth?: number;
+  initialGround?: "blank" | "satellite";
 };
 
 export function NewGardenPlotDialog({
@@ -36,11 +37,12 @@ export function NewGardenPlotDialog({
   initialName = "My Garden",
   initialWidth = 10,
   initialDepth = 10,
+  initialGround = "blank",
 }: Props) {
   const [name, setName] = useState(initialName);
   const [width, setWidth] = useState(String(initialWidth));
   const [depth, setDepth] = useState(String(initialDepth));
-  const [ground, setGround] = useState<"blank" | "satellite">("blank");
+  const [ground, setGround] = useState<"blank" | "satellite">(initialGround);
   const [unit, setUnit] = useState<"m" | "ft">("m");
 
   useEffect(() => {
@@ -48,8 +50,8 @@ export function NewGardenPlotDialog({
     setName(initialName);
     setWidth(String(initialWidth));
     setDepth(String(initialDepth));
-    setGround("blank");
-  }, [open, initialDepth, initialName, initialWidth]);
+    setGround(initialGround);
+  }, [open, initialDepth, initialName, initialWidth, initialGround]);
 
   const widthM =
     unit === "m"

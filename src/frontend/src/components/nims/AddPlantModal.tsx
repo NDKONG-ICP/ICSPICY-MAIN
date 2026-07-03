@@ -21,6 +21,7 @@ import type {
   PlantStage,
   VarietyPublic,
 } from "../../declarations/backend.did";
+import { VarietyPicker } from "./VarietyPicker";
 
 const CONTAINERS: ReadonlyArray<{ label: string; size: ContainerSize }> = [
   { label: "1 gallon pot", size: { Gal1New: null } },
@@ -42,21 +43,24 @@ export function AddPlantModal({
   onOpenChange,
   varieties,
   isPending,
+  isCreatingVariety,
+  onCreateVariety,
   onSubmit,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   varieties: VarietyPublic[];
   isPending?: boolean;
+  isCreatingVariety?: boolean;
+  onCreateVariety: (name: string, species: string) => Promise<bigint>;
   onSubmit: (payload: {
     varietyId: bigint;
     stage: PlantStage;
     container: ContainerSize;
   }) => void;
 }) {
-  const [varietyId, setVarietyId] = useState<string>(
-    varieties[0]?.id.toString() ?? "",
-  );
+  const [varietyId, setVarietyId] = useState<string>("");
+  const [addFormOpen, setAddFormOpen] = useState(false);
   const [stageKey, setStageKey] = useState("Seedling");
   const [containerIdx, setContainerIdx] = useState("0");
 
@@ -75,18 +79,15 @@ export function AddPlantModal({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Variety</Label>
-            <Select value={varietyId} onValueChange={setVarietyId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose variety" />
-              </SelectTrigger>
-              <SelectContent>
-                {varieties.map((v) => (
-                  <SelectItem key={v.id.toString()} value={v.id.toString()}>
-                    {v.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <VarietyPicker
+              idPrefix="nims-add-plant"
+              varieties={varieties}
+              value={varietyId}
+              onChange={setVarietyId}
+              onCreateVariety={onCreateVariety}
+              isCreating={isCreatingVariety}
+              onAddFormOpenChange={setAddFormOpen}
+            />
           </div>
           <div className="space-y-2">
             <Label>Stage</Label>
@@ -124,7 +125,7 @@ export function AddPlantModal({
             Cancel
           </Button>
           <Button
-            disabled={!varietyId || isPending}
+            disabled={!varietyId || addFormOpen || isPending}
             onClick={() =>
               onSubmit({
                 varietyId: BigInt(varietyId),
