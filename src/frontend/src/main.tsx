@@ -16,6 +16,10 @@ declare global {
   }
 }
 
+// Prerendered crawlable content block (injected at build time for SEO) is
+// replaced by the live app once React mounts.
+document.getElementById("prerendered")?.remove();
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

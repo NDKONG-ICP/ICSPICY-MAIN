@@ -66,6 +66,9 @@ import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
 import { useRavenPerks } from "../hooks/useRavenPerks";
 import { Seo } from "../components/Seo";
+import { staticRouteSeo } from "../lib/seo-routes.mjs";
+
+const MARKETPLACE_SEO = staticRouteSeo("/marketplace");
 import { useTokenPrices } from "../hooks/useTokenPrices";
 import { useUsageTracking } from "../hooks/useUsageTracking";
 import {
@@ -2079,8 +2082,8 @@ export default function MarketplacePage() {
   return (
     <div>
       <Seo
-        title="Shop Hot Pepper Plants, Seeds & Artisan Spices | IC SPICY"
-        description="Live hot pepper plants with NFT provenance — seedlings from $6, 1-gallon $25, 5-gallon $45 — plus artisan spices, pods, and regenerative garden inputs. Shipped from our FDACS-registered Florida nursery."
+        title={MARKETPLACE_SEO.title}
+        description={MARKETPLACE_SEO.description}
         path="/marketplace"
         jsonLd={productJsonLd}
       />

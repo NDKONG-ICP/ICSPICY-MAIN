@@ -9,14 +9,23 @@ import { AuthClient } from "@dfinity/auth-client";
 import type { IDL } from "@dfinity/candid";
 import { BACKEND_CANISTER_ID } from "./auth-config";
 
+export interface RecipeSeoContent {
+  intro: [] | [string];
+  faqs: Array<[string, string]>;
+}
+
 interface RecipeVideoActor {
   getRecipeVideoUrl(id: bigint): Promise<[] | [string]>;
   listRecipeVideoUrls(): Promise<Array<[bigint, string]>>;
   setRecipeVideoUrl(id: bigint, videoUrl: [] | [string]): Promise<boolean>;
+  getRecipeSeoContent(id: bigint): Promise<RecipeSeoContent>;
+  setRecipeIntro(id: bigint, intro: string): Promise<boolean>;
+  setRecipeFaqs(id: bigint, faqs: Array<[string, string]>): Promise<boolean>;
 }
 
-const recipeVideoIdlFactory: IDL.InterfaceFactory = ({ IDL }) =>
-  IDL.Service({
+const recipeVideoIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
+  const FaqPair = IDL.Tuple(IDL.Text, IDL.Text);
+  return IDL.Service({
     getRecipeVideoUrl: IDL.Func([IDL.Nat], [IDL.Opt(IDL.Text)], ["query"]),
     listRecipeVideoUrls: IDL.Func(
       [],
@@ -24,7 +33,15 @@ const recipeVideoIdlFactory: IDL.InterfaceFactory = ({ IDL }) =>
       ["query"],
     ),
     setRecipeVideoUrl: IDL.Func([IDL.Nat, IDL.Opt(IDL.Text)], [IDL.Bool], []),
+    getRecipeSeoContent: IDL.Func(
+      [IDL.Nat],
+      [IDL.Record({ intro: IDL.Opt(IDL.Text), faqs: IDL.Vec(FaqPair) })],
+      ["query"],
+    ),
+    setRecipeIntro: IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
+    setRecipeFaqs: IDL.Func([IDL.Nat, IDL.Vec(FaqPair)], [IDL.Bool], []),
   });
+};
 
 function resolveHost(): string {
   if (typeof window === "undefined") return "https://icp-api.io";
@@ -98,4 +115,36 @@ export async function saveRecipeVideoUrl(
   const actor = await getAuthActor();
   if (!actor) throw new Error("Sign in required");
   return actor.setRecipeVideoUrl(recipeId, videoUrl ? [videoUrl] : []);
+}
+
+/** Public: intro paragraph + Common Questions for a recipe. */
+export async function fetchRecipeSeoContent(recipeId: bigint): Promise<{
+  intro: string | null;
+  faqs: Array<[string, string]>;
+}> {
+  const res = await getQueryActor().getRecipeSeoContent(recipeId);
+  return {
+    intro: res.intro.length > 0 ? (res.intro[0] ?? null) : null,
+    faqs: res.faqs,
+  };
+}
+
+/** Admin: set the intro paragraph ("" clears). */
+export async function saveRecipeIntro(
+  recipeId: bigint,
+  intro: string,
+): Promise<boolean> {
+  const actor = await getAuthActor();
+  if (!actor) throw new Error("Sign in required");
+  return actor.setRecipeIntro(recipeId, intro);
+}
+
+/** Admin: set the Common Questions ([] clears). */
+export async function saveRecipeFaqs(
+  recipeId: bigint,
+  faqs: Array<[string, string]>,
+): Promise<boolean> {
+  const actor = await getAuthActor();
+  if (!actor) throw new Error("Sign in required");
+  return actor.setRecipeFaqs(recipeId, faqs);
 }

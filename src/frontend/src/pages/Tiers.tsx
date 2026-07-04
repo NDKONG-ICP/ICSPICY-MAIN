@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { CheckCircle2, ExternalLink, XCircle } from "lucide-react";
-import { usePageTitle } from "../hooks/usePageTitle";
+import { Seo } from "../components/Seo";
+import { staticRouteSeo } from "../lib/seo-routes.mjs";
 import {
   RAVEN_MEMBER_THRESHOLD_UNITS,
   RAVEN_PRO_THRESHOLD_UNITS,
@@ -154,12 +155,18 @@ function TierCard({
   );
 }
 
+const TIERS_SEO = staticRouteSeo("/tiers");
+
 export default function TiersPage() {
-  usePageTitle("Membership Tiers");
   const ravenPerks = useRavenPerks();
 
   return (
     <div className="max-w-5xl mx-auto px-4 pb-20 pt-8 space-y-10">
+      <Seo
+        title={TIERS_SEO.title}
+        description={TIERS_SEO.description}
+        path="/tiers"
+      />
       {/* Header */}
       <div className="text-center space-y-3">
         <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">

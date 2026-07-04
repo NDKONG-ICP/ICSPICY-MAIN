@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node ../../scripts/generate-sitemap.mjs && vite build && pnpm copy:env",
+    "build": "node ../../scripts/generate-sitemap.mjs && vite build && pnpm copy:env && node ../../scripts/prerender-routes.mjs",
     "copy:env": "cp env.json dist/",
     "typecheck": "tsc --noEmit",
     "check": "biome check src",

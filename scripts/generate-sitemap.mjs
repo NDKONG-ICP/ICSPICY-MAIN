@@ -95,10 +95,13 @@ async function main() {
       canisterId: BACKEND_CANISTER,
     });
 
-    // Recipes — page through in chunks of 100
+    // Recipes — page through in chunks of 100 (dedupe: data has repeat slugs)
+    const seenSlugs = new Set();
     for (let offset = 0n; ; offset += 100n) {
       const page = await actor.getRecipes([], [], offset, 100n);
       for (const r of page) {
+        if (seenSlugs.has(r.slug)) continue;
+        seenSlugs.add(r.slug);
         entries.push(
           urlEntry(`${SITE}/cookbook/${encodeURIComponent(r.slug)}`, {
             priority: "0.8",

@@ -371,6 +371,9 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // Side map for recipe YouTube tutorial URLs — stored Recipe record stays
   // untouched (stable-memory upgrade safety, see AGENTS.md migration rules).
   let recipeVideoUrls = Map.empty<Common.RecipeId, Text>();
+  // SEO Phase 2: per-recipe intro paragraph + Common Questions (same pattern).
+  let recipeIntros = Map.empty<Common.RecipeId, Text>();
+  let recipeFaqs = Map.empty<Common.RecipeId, [(Text, Text)]>();
 
   // ── Claim token state (QR label → NFT claim flow) ─────────────────────────
 
@@ -659,7 +662,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     certStore,
     linkedWallets,
   );
-  include RecipesAPI(accessControlState, recipes, recipeFavorites, recipeVideoUrls, nextRecipeId, auditLog);
+  include RecipesAPI(accessControlState, recipes, recipeFavorites, recipeVideoUrls, recipeIntros, recipeFaqs, nextRecipeId, auditLog);
   include ClaimAPI(
     accessControlState,
     nftClaimTokens,

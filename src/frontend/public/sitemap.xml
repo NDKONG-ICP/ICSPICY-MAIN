@@ -251,22 +251,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.icspicy.app/cookbook/fermented-plant-juice-fpj</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://www.icspicy.app/cookbook/fermented-fruit-juice-ffj</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/fish-amino-acid-faa</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/lactic-acid-bacteria-lab</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -286,11 +271,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.icspicy.app/cookbook/water-soluble-calcium-phosphate-wcp</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://www.icspicy.app/cookbook/diluted-seawater-minerals</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -306,11 +286,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.icspicy.app/cookbook/imo-stage-2-liquid-culture</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://www.icspicy.app/cookbook/imo-stage-3-field-compost</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -321,57 +296,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.icspicy.app/cookbook/imo-stage-5-fish-enhanced-imo</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/jadam-microorganism-solution-jms</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/jadam-wetting-agent-jwa</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/jadam-sulfur-js</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/jadam-herbal-solution-jhs</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/pyroligneous-wood-vinegar-ws</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/jadam-liquid-fertilizer-jlf</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://www.icspicy.app/cookbook/rice-wash-water-capture</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/maintenance-foliar-cocktail</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/seed-priming-soak-wca-ohn-lab</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/aerated-compost-tea</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -417,86 +342,6 @@
   </url>
   <url>
     <loc>https://www.icspicy.app/cookbook/bone-char-mineral-adjustment</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/comfrey-leaf-plant-extract</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/ripening-seawater-progression</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/anthracnose-suppression-spray</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/powdery-mildew-js-jwa</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/aphid-jhs-rotation</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/whitefly-herbal-ferment-program</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/chili-garlic-insect-spray</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/neem-oil-emulsion</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/soft-soap-jwa-cleaner-spray</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/transplant-imo-lab-drench</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/bud-break-wca-ffj-spray</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/root-zone-lab-treatment</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/blossom-end-rot-prevention</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/soil-biology-recovery-program</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/molasses-microbe-field-drench</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.icspicy.app/cookbook/zone-10a-perennial-pepper-winter-tlc</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

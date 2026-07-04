@@ -52,6 +52,9 @@ import { useGardenLocation } from "@/hooks/useGardenLocation";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useVarieties } from "@/hooks/useNims";
 import { Seo } from "@/components/Seo";
+import { staticRouteSeo } from "@/lib/seo-routes.mjs";
+
+const GARDEN_SEO = staticRouteSeo("/garden");
 import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { useWeather } from "@/hooks/useWeather";
 import { generateGardenLayout, layoutToDesign } from "@/lib/garden-ai";
@@ -825,20 +828,10 @@ export default function GardenDesignerPage() {
   return (
     <div className="garden-designer relative flex h-[calc(100vh-4rem)] flex-col overflow-hidden text-[color:var(--garden-text)]">
       <Seo
-        title="Free 3D Garden Designer — 385 Florida Plants | IC SPICY"
-        description="Design your Florida garden in 3D, free. 385 plants, 65 structures, companion planting rules, satellite yard mode, and AI layout generation. Built for Zone 8b–11a growers."
+        title={GARDEN_SEO.title}
+        description={GARDEN_SEO.description}
         path="/garden"
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "WebApplication",
-          name: "IC SPICY 3D Garden Designer",
-          url: "https://www.icspicy.app/garden",
-          applicationCategory: "DesignApplication",
-          operatingSystem: "Web",
-          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-          description:
-            "Free 3D garden design tool with 385 Florida plants, companion planting, and AI layout generation.",
-        }}
+        jsonLd={GARDEN_SEO.jsonLd ?? undefined}
       />
       <GardenTopBar
         title={design.name}

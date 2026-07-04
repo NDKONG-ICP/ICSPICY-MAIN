@@ -52,6 +52,9 @@ import {
 } from "../hooks/useDAO";
 import { useMyNftTokenIds, useNftTokenIdsForPrincipal } from "../hooks/useMyNftIds";
 import { Seo } from "../components/Seo";
+import { staticRouteSeo } from "../lib/seo-routes.mjs";
+
+const DAO_SEO = staticRouteSeo("/dao");
 import { useOisyWallet } from "../providers/OisyWalletProvider";
 
 type FilterType = "all" | string;
@@ -754,8 +757,8 @@ export default function DAOPage() {
   return (
     <div data-ocid="dao-page">
       <Seo
-        title="IC SPICY DAO — NFT Holder Governance on the Internet Computer"
-        description="Vote on nursery decisions with your IC SPICY plant NFT. On-chain governance, proposals, and community treasury — powered by the Internet Computer."
+        title={DAO_SEO.title}
+        description={DAO_SEO.description}
         path="/dao"
       />
       {/* Header */}

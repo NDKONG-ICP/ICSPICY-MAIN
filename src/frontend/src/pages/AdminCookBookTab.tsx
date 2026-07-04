@@ -43,8 +43,12 @@ import {
   useListRecipesAdmin,
   usePublishRecipe,
 } from "../hooks/useCookbook";
+import { Textarea } from "@/components/ui/textarea";
 import {
   fetchAllRecipeVideoUrls,
+  fetchRecipeSeoContent,
+  saveRecipeFaqs,
+  saveRecipeIntro,
   saveRecipeVideoUrl,
 } from "../lib/recipe-video-idl";
 import { parseYouTubeId, youTubeThumbnailUrl } from "../lib/youtube";
@@ -57,6 +61,7 @@ export default function AdminCookBookTab() {
 
   const [deleteTarget, setDeleteTarget] = useState<RecipePublic | null>(null);
   const [videoTarget, setVideoTarget] = useState<RecipePublic | null>(null);
+  const [seoTarget, setSeoTarget] = useState<RecipePublic | null>(null);
 
   const { data: videoUrls } = useQuery({
     queryKey: ["recipeVideoUrls"],
@@ -177,6 +182,7 @@ export default function AdminCookBookTab() {
               onPublish={() => void handlePublish(r)}
               onDelete={() => setDeleteTarget(r)}
               onVideo={() => setVideoTarget(r)}
+              onSeo={() => setSeoTarget(r)}
               publishBusy={publish.isPending}
             />
           ))}
@@ -220,7 +226,160 @@ export default function AdminCookBookTab() {
           onClose={() => setVideoTarget(null)}
         />
       ) : null}
+
+      {seoTarget ? (
+        <RecipeSeoDialog
+          recipe={seoTarget}
+          onClose={() => setSeoTarget(null)}
+        />
+      ) : null}
     </div>
+  );
+}
+
+function RecipeSeoDialog({
+  recipe,
+  onClose,
+}: {
+  recipe: RecipePublic;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [intro, setIntro] = useState("");
+  const [faqs, setFaqs] = useState<Array<{ q: string; a: string }>>([
+    { q: "", a: "" },
+    { q: "", a: "" },
+    { q: "", a: "" },
+  ]);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const { data: current } = useQuery({
+    queryKey: ["recipeSeoContent", recipe.id.toString()],
+    queryFn: () => fetchRecipeSeoContent(recipe.id),
+    staleTime: 0,
+  });
+
+  if (current && !loaded) {
+    setIntro(current.intro ?? "");
+    if (current.faqs.length > 0) {
+      setFaqs(
+        [0, 1, 2].map((i) => ({
+          q: current.faqs[i]?.[0] ?? "",
+          a: current.faqs[i]?.[1] ?? "",
+        })),
+      );
+    }
+    setLoaded(true);
+  }
+
+  async function save() {
+    setSaving(true);
+    try {
+      const cleanFaqs = faqs
+        .filter((f) => f.q.trim() && f.a.trim())
+        .map((f) => [f.q.trim(), f.a.trim()] as [string, string]);
+      const okIntro = await saveRecipeIntro(recipe.id, intro.trim());
+      const okFaqs = await saveRecipeFaqs(recipe.id, cleanFaqs);
+      if (!okIntro || !okFaqs) {
+        toast.error("Backend rejected the SEO update.");
+        return;
+      }
+      await queryClient.invalidateQueries({
+        queryKey: ["recipeSeoContent", recipe.id.toString()],
+      });
+      toast.success("SEO content saved.");
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "SEO update failed.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="bg-card border-border max-h-[85vh] overflow-y-auto sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle className="font-display font-bold">
+            SEO content — {recipe.title}
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground text-sm">
+            Unique intro paragraph + Common Questions shown on the recipe page
+            and in the prerendered HTML / FAQPage schema.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold text-muted-foreground">
+              Intro paragraph (2–3 sentences)
+            </p>
+            <Textarea
+              value={intro}
+              onChange={(e) => setIntro(e.target.value)}
+              rows={4}
+              maxLength={2000}
+              placeholder="Why this recipe matters, what it does for the soil/plant, when to use it…"
+              className="text-sm bg-muted/30 border-border resize-none"
+            />
+          </div>
+
+          {faqs.map((f, i) => (
+            <div
+              key={`seo-faq-${String(i)}`}
+              className="space-y-1.5 rounded-xl border border-border/60 p-3"
+            >
+              <Input
+                value={f.q}
+                onChange={(e) =>
+                  setFaqs((prev) =>
+                    prev.map((p, j) =>
+                      j === i ? { ...p, q: e.target.value } : p,
+                    ),
+                  )
+                }
+                maxLength={300}
+                placeholder={`Question ${String(i + 1)}`}
+                className="text-sm bg-muted/30 border-border"
+              />
+              <Textarea
+                value={f.a}
+                onChange={(e) =>
+                  setFaqs((prev) =>
+                    prev.map((p, j) =>
+                      j === i ? { ...p, a: e.target.value } : p,
+                    ),
+                  )
+                }
+                rows={3}
+                maxLength={2000}
+                placeholder="Answer"
+                className="text-sm bg-muted/30 border-border resize-none"
+              />
+            </div>
+          ))}
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button
+            variant="outline"
+            className="border-border text-xs"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="text-xs"
+            disabled={saving}
+            onClick={() => void save()}
+          >
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+            Save SEO content
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -339,6 +498,7 @@ function RecipeAdminRow({
   onPublish,
   onDelete,
   onVideo,
+  onSeo,
   publishBusy,
 }: {
   recipe: RecipePublic;
@@ -346,6 +506,7 @@ function RecipeAdminRow({
   onPublish: () => void;
   onDelete: () => void;
   onVideo: () => void;
+  onSeo: () => void;
   publishBusy: boolean;
 }) {
   return (
@@ -410,6 +571,16 @@ function RecipeAdminRow({
         >
           <Youtube className="w-3.5 h-3.5" />
           <span className="ml-1">{hasVideo ? "Video ✓" : "Video"}</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 text-xs border-border"
+          onClick={onSeo}
+          title="Edit intro paragraph + Common Questions"
+          data-ocid="recipe-seo-btn"
+        >
+          SEO
         </Button>
         <Button
           size="sm"

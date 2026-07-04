@@ -17,6 +17,8 @@ mixin (
   recipes : RecipesLib.RecipeMap,
   recipeFavorites : RecipesLib.FavoriteMap,
   recipeVideoUrls : Map.Map<Common.RecipeId, Text>,
+  recipeIntros : Map.Map<Common.RecipeId, Text>,
+  recipeFaqs : Map.Map<Common.RecipeId, [(Text, Text)]>,
   nextRecipeId : { var value : Nat },
   auditLog : { var value : AuditLog.AuditLog },
 ) {
@@ -181,5 +183,95 @@ mixin (
   /// Public: all recipe→video mappings (for list badges / admin CMS).
   public query func listRecipeVideoUrls() : async [(Common.RecipeId, Text)] {
     recipeVideoUrls.entries().toArray();
+  };
+
+  // ── Recipe SEO content (intro paragraph + FAQ) — same additive side-map
+  //    pattern as recipeVideoUrls; the stored Recipe record stays untouched ──
+
+  /// Admin: set (or clear with "") the unique intro paragraph for a recipe.
+  public shared ({ caller }) func setRecipeIntro(
+    id : Common.RecipeId,
+    intro : Text,
+  ) : async Bool {
+    AccessControl.requireAdmin(accessControlState, caller);
+    switch (recipes.get(id)) {
+      case null return false;
+      case (?_) {};
+    };
+    if (intro.size() == 0) {
+      ignore recipeIntros.delete(id);
+    } else {
+      if (intro.size() > 2000) {
+        Runtime.trap("Intro too long (max 2000 chars)");
+      };
+      recipeIntros.add(id, intro);
+    };
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "recipe_intro_set";
+      detail = "id=" # Nat.toText(id);
+    });
+    true;
+  };
+
+  /// Admin: set (or clear with []) the Common Questions for a recipe.
+  public shared ({ caller }) func setRecipeFaqs(
+    id : Common.RecipeId,
+    faqs : [(Text, Text)],
+  ) : async Bool {
+    AccessControl.requireAdmin(accessControlState, caller);
+    switch (recipes.get(id)) {
+      case null return false;
+      case (?_) {};
+    };
+    if (faqs.size() == 0) {
+      ignore recipeFaqs.delete(id);
+    } else {
+      if (faqs.size() > 6) {
+        Runtime.trap("Too many FAQs (max 6)");
+      };
+      for ((q, a) in faqs.vals()) {
+        if (q.size() == 0 or a.size() == 0 or q.size() > 300 or a.size() > 2000) {
+          Runtime.trap("FAQ entries must be non-empty (Q ≤300, A ≤2000 chars)");
+        };
+      };
+      recipeFaqs.add(id, faqs);
+    };
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "recipe_faqs_set";
+      detail = "id=" # Nat.toText(id);
+    });
+    true;
+  };
+
+  /// Public: intro + FAQs for one recipe (recipe detail page).
+  public query func getRecipeSeoContent(id : Common.RecipeId) : async {
+    intro : ?Text;
+    faqs : [(Text, Text)];
+  } {
+    {
+      intro = recipeIntros.get(id);
+      faqs = switch (recipeFaqs.get(id)) {
+        case (?f) f;
+        case null [];
+      };
+    };
+  };
+
+  /// Public: all SEO content (prerender script + admin CMS).
+  public query func listRecipeSeoContent() : async [(Common.RecipeId, Text, [(Text, Text)])] {
+    let ids = Set.empty<Nat>();
+    for ((id, _) in recipeIntros.entries()) { ids.add(id) };
+    for ((id, _) in recipeFaqs.entries()) { ids.add(id) };
+    ids.values().map<Nat, (Common.RecipeId, Text, [(Text, Text)])>(func id {
+      (
+        id,
+        switch (recipeIntros.get(id)) { case (?t) t; case null "" },
+        switch (recipeFaqs.get(id)) { case (?f) f; case null [] },
+      );
+    }).toArray();
   };
 };

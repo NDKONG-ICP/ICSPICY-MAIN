@@ -32,7 +32,8 @@ import {
   useGetScheduleData,
   useSaveSchedule,
 } from "../hooks/useBackend";
-import { usePageTitle } from "../hooks/usePageTitle";
+import { Seo } from "../components/Seo";
+import { staticRouteSeo } from "../lib/seo-routes.mjs";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -816,9 +817,9 @@ function MobileSection({
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-export default function ScheduleBuilderPage() {
-  usePageTitle("Schedule Builder");
+const SCHEDULE_SEO = staticRouteSeo("/schedule-builder");
 
+export default function ScheduleBuilderPage() {
   const { isAuthenticated, login } = useAuth();
   const [selectedStage, setSelectedStage] = useState<string>("");
   const [selectedInputs, setSelectedInputs] = useState<string[]>([]);
@@ -939,6 +940,11 @@ export default function ScheduleBuilderPage() {
 
   return (
     <>
+      <Seo
+        title={SCHEDULE_SEO.title}
+        description={SCHEDULE_SEO.description}
+        path="/schedule-builder"
+      />
       {/* Print-only styles */}
       <style>{`
         @media print {

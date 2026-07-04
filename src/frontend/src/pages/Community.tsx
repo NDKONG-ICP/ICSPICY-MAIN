@@ -26,6 +26,9 @@ import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Seo } from "../components/Seo";
+import { staticRouteSeo } from "../lib/seo-routes.mjs";
+
+const COMMUNITY_SEO = staticRouteSeo("/community");
 
 const FEED_TABS: { mode: FeedMode; label: string }[] = [
   { mode: "global", label: "Global" },
@@ -165,8 +168,8 @@ export default function CommunityPage() {
   return (
     <div data-ocid="community-page" className="max-w-2xl mx-auto px-1 pb-24">
       <Seo
-        title="Grower Community — Share Your Garden | IC SPICY"
-        description="Join the IC SPICY grower community: share plant photos, grow logs, and regenerative farming tips with hot pepper growers across the country."
+        title={COMMUNITY_SEO.title}
+        description={COMMUNITY_SEO.description}
         path="/community"
       />
       <ProfileSetupDialog

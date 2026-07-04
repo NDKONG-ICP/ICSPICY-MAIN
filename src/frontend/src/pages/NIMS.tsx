@@ -70,6 +70,7 @@ import {
 import { useNimsLocation } from "../hooks/useNimsLocation";
 import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import { Seo } from "../components/Seo";
+import { staticRouteSeo } from "../lib/seo-routes.mjs";
 import { useUnadoptedNftTokenIds } from "../hooks/useUnadoptedNfts";
 import { useUsageTracking } from "../hooks/useUsageTracking";
 import { useWeather } from "../hooks/useWeather";
@@ -113,22 +114,13 @@ function formatMsAgo(ms: bigint | undefined): string {
   return `${Math.round(sec / 86400)}d ago`;
 }
 
+const NIMS_ROUTE_SEO = staticRouteSeo("/nims");
 const NIMS_SEO = (
   <Seo
-    title="NIMS — Free Plant Tracking App | Weather, Lifecycle & Grow Logs | IC SPICY"
-    description="Track every plant from seed to harvest, free. NIMS logs waterings, feedings, photos, and pests — with automatic local weather capture and on-chain grow history. Built by the IC SPICY nursery in Port Charlotte, FL."
+    title={NIMS_ROUTE_SEO.title}
+    description={NIMS_ROUTE_SEO.description}
     path="/nims"
-    jsonLd={{
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      name: "NIMS — Nursery Inventory Management System",
-      url: "https://www.icspicy.app/nims",
-      applicationCategory: "LifestyleApplication",
-      operatingSystem: "Web",
-      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-      description:
-        "Free plant tracking app: lifecycle logs, weather capture, seed bank, tray management, and AI growing guides.",
-    }}
+    jsonLd={NIMS_ROUTE_SEO.jsonLd ?? undefined}
   />
 );
 

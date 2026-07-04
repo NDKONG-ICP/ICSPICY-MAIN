@@ -17,6 +17,9 @@ import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Seo } from "../components/Seo";
+import { staticRouteSeo } from "../lib/seo-routes.mjs";
+
+const COOKBOOK_SEO = staticRouteSeo("/cookbook");
 import type { RecipePublic } from "../declarations/backend.did";
 import { useActorReady } from "../hooks/useActorReady";
 import { useAuth } from "../hooks/useAuth";
@@ -170,17 +173,10 @@ export default function CookBookPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 pb-20">
       <Seo
-        title="Natural Farming Recipes — KNF, JADAM, FPJ, LAB | IC SPICY CookBook"
-        description="50+ free Korean Natural Farming and JADAM recipes: FPJ, LAB, OHN, IMO, fish amino acids, water-soluble calcium, and more. Step-by-step regenerative inputs from the IC SPICY nursery."
+        title={COOKBOOK_SEO.title}
+        description={COOKBOOK_SEO.description}
         path="/cookbook"
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "CollectionPage",
-          name: "IC SPICY Natural Farming CookBook",
-          url: "https://www.icspicy.app/cookbook",
-          description:
-            "Free library of Korean Natural Farming (KNF) and JADAM recipes for regenerative growing.",
-        }}
+        jsonLd={COOKBOOK_SEO.jsonLd ?? undefined}
       />
       <motion.section
         className="relative rounded-2xl overflow-hidden mb-10 mt-4 border border-border/60 bg-card/40"

@@ -1,9 +1,16 @@
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Bot,
+  ChevronRight,
   Flame,
   Heart,
   Loader2,
@@ -13,7 +20,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { Seo } from "../components/Seo";
 import { YouTubeEmbed } from "../components/YouTubeEmbed";
@@ -22,11 +29,21 @@ import { useAuth } from "../hooks/useAuth";
 import {
   difficultyLabel,
   recipeCategoryLabel,
+  useGetRecipes,
   useRecipeBySlug,
+  useRecipeQuery,
   useRecipesByIds,
   useToggleFavorite,
 } from "../hooks/useCookbook";
-import { fetchRecipeVideoUrl } from "../lib/recipe-video-idl";
+import {
+  fetchRecipeSeoContent,
+  fetchRecipeVideoUrl,
+} from "../lib/recipe-video-idl";
+import {
+  faqPageJsonLd,
+  recipeBreadcrumbJsonLd,
+  recipeSeoMeta,
+} from "../lib/seo-routes.mjs";
 import { parseYouTubeId, youTubeThumbnailUrl } from "../lib/youtube";
 
 function IngredientLine({ ing }: { ing: Ingredient }) {
@@ -53,14 +70,49 @@ function IngredientLine({ ing }: { ing: Ingredient }) {
 
 export default function CookbookRecipeDetailPage() {
   const { slug: slugParam } = useParams({ from: "/cookbook/$slug" });
+  const navigate = useNavigate();
 
   const { isAuthenticated } = useAuth();
   const slugDecoded = slugParam ? decodeURIComponent(slugParam) : "";
 
-  const { data: recipe, isPending } = useRecipeBySlug(slugDecoded);
+  // Old links used numeric IDs (/cookbook/12). Resolve those by ID, then
+  // canonicalize: replace the URL with the slug so crawlers and shares
+  // converge on one canonical address.
+  const isNumericParam = /^\d+$/.test(slugDecoded);
+  const { data: bySlug, isPending: slugPending } = useRecipeBySlug(
+    isNumericParam ? undefined : slugDecoded,
+  );
+  const { data: byId, isPending: idPending } = useRecipeQuery(
+    isNumericParam ? BigInt(slugDecoded) : undefined,
+  );
+  const recipe = isNumericParam ? (byId ?? undefined) : bySlug;
+  const isPending = isNumericParam ? idPending : slugPending;
+
+  useEffect(() => {
+    if (isNumericParam && recipe) {
+      void navigate({
+        to: "/cookbook/$slug",
+        params: { slug: recipe.slug },
+        replace: true,
+      });
+    }
+  }, [isNumericParam, recipe, navigate]);
+
   const relatedIds = recipe?.related_recipe_ids ?? [];
   const relatedQ = useRecipesByIds([...relatedIds]);
+  // Same-category fallback when a recipe has no curated related list.
+  const sameCategoryQ = useGetRecipes(recipe?.category ?? null, "", 0n, 7n);
   const favoriteMut = useToggleFavorite();
+
+  const { data: seoContent } = useQuery({
+    queryKey: ["recipeSeoContent", recipe?.id.toString() ?? ""],
+    enabled: !!recipe,
+    staleTime: 10 * 60 * 1000,
+    queryFn: () =>
+      recipe
+        ? fetchRecipeSeoContent(recipe.id)
+        : Promise.resolve({ intro: null, faqs: [] }),
+  });
 
   const sortedSteps = useMemo(() => {
     const steps = recipe?.steps ? [...recipe.steps] : [];
@@ -141,6 +193,15 @@ export default function CookbookRecipeDetailPage() {
   }
 
   const heroKey = recipe.image_key.length ? recipe.image_key[0] : null;
+  const categoryLabel = recipeCategoryLabel(recipe.category);
+  const meta = recipeSeoMeta(recipe);
+
+  const relatedRecipes =
+    relatedQ.recipes.length > 0
+      ? relatedQ.recipes
+      : (sameCategoryQ.data ?? [])
+          .filter((r) => r.id !== recipe.id)
+          .slice(0, 4);
 
   const recipeJsonLd = {
     "@context": "https://schema.org",
@@ -176,14 +237,21 @@ export default function CookbookRecipeDetailPage() {
     }),
   };
 
+  const faqSchema = faqPageJsonLd(seoContent?.faqs ?? []);
+  const jsonLdBlocks = [
+    recipeJsonLd,
+    recipeBreadcrumbJsonLd(recipe, categoryLabel),
+    ...(faqSchema ? [faqSchema] : []),
+  ];
+
   return (
     <>
       <Seo
-        title={`${recipe.title} Recipe — Korean Natural Farming | IC SPICY`}
-        description={recipe.description.slice(0, 160)}
-        path={`/cookbook/${encodeURIComponent(recipe.slug)}`}
+        title={meta.title}
+        description={meta.description}
+        path={meta.path}
         ogType="article"
-        jsonLd={recipeJsonLd}
+        jsonLd={jsonLdBlocks}
       />
       <style>{`
         @media print {
@@ -202,7 +270,7 @@ export default function CookbookRecipeDetailPage() {
 
       <div className="max-w-4xl mx-auto px-4 pb-20 print:hidden">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <div className="flex flex-wrap items-center gap-3 mb-6 mt-6">
+          <div className="flex flex-wrap items-center gap-3 mb-3 mt-6">
             <Button
               asChild
               variant="ghost"
@@ -216,12 +284,37 @@ export default function CookbookRecipeDetailPage() {
             </Button>
           </div>
 
+          <nav
+            aria-label="Breadcrumb"
+            className="flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground mb-5"
+          >
+            <Link to="/" className="hover:text-primary transition-smooth">
+              Home
+            </Link>
+            <ChevronRight className="w-3 h-3 opacity-60" aria-hidden />
+            <Link
+              to="/cookbook"
+              className="hover:text-primary transition-smooth"
+            >
+              CookBook
+            </Link>
+            <ChevronRight className="w-3 h-3 opacity-60" aria-hidden />
+            <span>{categoryLabel}</span>
+            <ChevronRight className="w-3 h-3 opacity-60" aria-hidden />
+            <span
+              className="text-foreground/80 font-medium truncate max-w-[16rem]"
+              aria-current="page"
+            >
+              {recipe.title}
+            </span>
+          </nav>
+
           <article className="rounded-3xl border border-border/70 bg-card/55 overflow-hidden">
             <div className="relative aspect-[21/11] md:aspect-[21/9] bg-muted/40 border-b border-border/60">
               {heroKey ? (
                 <img
                   src={`/api/object-storage/${heroKey}`}
-                  alt=""
+                  alt={`${recipe.title} — ${categoryLabel} natural farming recipe`}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -377,6 +470,17 @@ export default function CookbookRecipeDetailPage() {
                 </Button>
               </div>
 
+              {seoContent?.intro ? (
+                <section
+                  aria-label="About this recipe"
+                  className="rounded-xl border border-primary/20 bg-primary/5 p-4"
+                >
+                  <p className="text-sm md:text-base text-foreground/90 leading-relaxed">
+                    {seoContent.intro}
+                  </p>
+                </section>
+              ) : null}
+
               {videoId ? (
                 <section aria-label="Video tutorial">
                   <h2 className="font-display font-bold text-xl mb-3 text-primary">
@@ -482,7 +586,31 @@ export default function CookbookRecipeDetailPage() {
                 </div>
               ) : null}
 
-              {relatedQ.recipes.length > 0 ? (
+              {seoContent && seoContent.faqs.length > 0 ? (
+                <section className="pt-4 border-t border-border/55">
+                  <h2 className="font-display font-bold text-xl mb-3">
+                    Common questions
+                  </h2>
+                  <Accordion type="single" collapsible className="w-full">
+                    {seoContent.faqs.map(([q, a], i) => (
+                      <AccordionItem
+                        key={`faq-${recipe.id}-${String(i)}`}
+                        value={`faq-${String(i)}`}
+                        className="border-border/60"
+                      >
+                        <AccordionTrigger className="text-sm font-semibold text-left hover:text-primary">
+                          {q}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-sm text-muted-foreground leading-relaxed">
+                          {a}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </section>
+              ) : null}
+
+              {relatedRecipes.length > 0 ? (
                 <section className="pt-4 border-t border-border/55">
                   <h2 className="font-display font-bold text-xl mb-4">
                     Related recipes
@@ -494,7 +622,7 @@ export default function CookbookRecipeDetailPage() {
                     </p>
                   ) : (
                     <div className="grid sm:grid-cols-2 gap-4">
-                      {relatedQ.recipes.map((r) => (
+                      {relatedRecipes.map((r) => (
                         <Link
                           key={r.id.toString()}
                           to="/cookbook/$slug"
