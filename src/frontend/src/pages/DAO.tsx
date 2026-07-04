@@ -51,7 +51,7 @@ import {
   useVoteOnProposal,
 } from "../hooks/useDAO";
 import { useMyNftTokenIds, useNftTokenIdsForPrincipal } from "../hooks/useMyNftIds";
-import { usePageTitle } from "../hooks/usePageTitle";
+import { Seo } from "../components/Seo";
 import { useOisyWallet } from "../providers/OisyWalletProvider";
 
 type FilterType = "all" | string;
@@ -707,8 +707,6 @@ function NoAccessBanner() {
 // ─── Main DAO Page ────────────────────────────────────────────────────────────
 
 export default function DAOPage() {
-  usePageTitle("DAO");
-
   const { isAuthenticated, login } = useAuth();
   const { isOisyConnected, oisyPrincipal } = useOisyWallet();
   const { data: hasAccess, isLoading: accessLoading } = useHasDAOAccess();
@@ -755,6 +753,11 @@ export default function DAOPage() {
 
   return (
     <div data-ocid="dao-page">
+      <Seo
+        title="IC SPICY DAO — NFT Holder Governance on the Internet Computer"
+        description="Vote on nursery decisions with your IC SPICY plant NFT. On-chain governance, proposals, and community treasury — powered by the Internet Computer."
+        path="/dao"
+      />
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}

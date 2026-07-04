@@ -28,9 +28,11 @@ import {
   getPostAuthorPrincipalText,
   isPostEditableWindow,
   postImagePaths,
+  postVideoMedia,
   timeAgoNanos,
 } from "../../lib/community-utils";
 import { CommentSection } from "./CommentSection";
+import { OnChainVideo } from "./OnChainVideo";
 import { CommunityAvatar } from "./CommunityAvatar";
 import { FollowButton } from "./FollowButton";
 import { ImageGallery } from "./ImageGallery";
@@ -68,6 +70,7 @@ export function PostCard({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const imgs = postImagePaths(post);
+  const video = postVideoMedia(post);
   const plantId = post.plant_id.length === 1 ? post.plant_id[0]! : undefined;
   const nftTok =
     post.nft_token_id.length === 1 ? post.nft_token_id[0]! : undefined;
@@ -321,6 +324,15 @@ export function PostCard({
           ) : null}
         </div>
       )}
+
+      {video ? (
+        <div className="mb-4">
+          <OnChainVideo
+            videoKey={video.videoKey}
+            posterKey={video.posterKey}
+          />
+        </div>
+      ) : null}
 
       {imgs.length > 0 ? (
         <div className="mb-4">

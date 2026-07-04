@@ -9,11 +9,14 @@ import RecipesLib "../lib/recipes";
 import Principal "mo:core/Principal";
 import Time "mo:core/Time";
 import Nat "mo:core/Nat";
+import Text "mo:core/Text";
+import Iter "mo:core/Iter";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
   recipes : RecipesLib.RecipeMap,
   recipeFavorites : RecipesLib.FavoriteMap,
+  recipeVideoUrls : Map.Map<Common.RecipeId, Text>,
   nextRecipeId : { var value : Nat },
   auditLog : { var value : AuditLog.AuditLog },
 ) {
@@ -133,5 +136,50 @@ mixin (
   public shared ({ caller }) func seedDefaultRecipes() : async () {
     AccessControl.requireAdmin(accessControlState, caller);
     RecipesLib.seedRecipes(recipes, nextRecipeId, caller);
+  };
+
+  // ── Recipe video URLs (side map — stored Recipe record stays untouched
+  //    for stable-memory upgrade safety) ─────────────────────────────────────
+
+  func isYouTubeUrl(url : Text) : Bool {
+    Text.contains(url, #text "youtube.com/") or Text.contains(url, #text "youtu.be/");
+  };
+
+  /// Admin: set (or clear with null) the YouTube tutorial URL for a recipe.
+  public shared ({ caller }) func setRecipeVideoUrl(
+    id : Common.RecipeId,
+    videoUrl : ?Text,
+  ) : async Bool {
+    AccessControl.requireAdmin(accessControlState, caller);
+    switch (recipes.get(id)) {
+      case null return false;
+      case (?_) {};
+    };
+    switch (videoUrl) {
+      case null { ignore recipeVideoUrls.delete(id) };
+      case (?url) {
+        if (url.size() == 0 or url.size() > 300 or not isYouTubeUrl(url)) {
+          Runtime.trap("Invalid video URL: must be a YouTube link under 300 chars");
+        };
+        recipeVideoUrls.add(id, url);
+      };
+    };
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "recipe_video_set";
+      detail = "id=" # Nat.toText(id);
+    });
+    true;
+  };
+
+  /// Public: YouTube tutorial URL for a recipe, if one was set.
+  public query func getRecipeVideoUrl(id : Common.RecipeId) : async ?Text {
+    recipeVideoUrls.get(id);
+  };
+
+  /// Public: all recipe→video mappings (for list badges / admin CMS).
+  public query func listRecipeVideoUrls() : async [(Common.RecipeId, Text)] {
+    recipeVideoUrls.entries().toArray();
   };
 };

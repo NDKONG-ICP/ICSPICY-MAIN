@@ -44,6 +44,8 @@ import TreasuryAPI "mixins/treasury-api";
 import PriceOracleAPI "mixins/price-oracle-api";
 import DABAPI "mixins/dab-api";
 import ArtworkUploadAPI "mixins/artwork-upload-api";
+import CommunityVideoAPI "mixins/community-video-api";
+import VideoUploadTypes "types/video-upload";
 import PoolAPI "mixins/pool-api";
 import PoolLib "lib/pool";
 import PoolTypes "types/pool";
@@ -52,7 +54,9 @@ import ProductShipping "lib/product-shipping";
 import PaymentAPI "mixins/payment-api";
 import AdminShopAPI "mixins/admin-shop-api";
 import VarietyAPI "mixins/variety-api";
+import VarietyGuideAPI "mixins/variety-guide-api";
 import VarietyTypes "types/variety";
+import VarietyGuideTypes "types/variety-guide";
 import SeedBankTypes "types/seed-bank";
 import NimsAPI "mixins/nims-api";
 import PlantingScheduleTypes "types/planting-schedule";
@@ -91,6 +95,11 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   /// Per-principal rate limiters for cycle-drain protection (CDA).
   transient let rateLimits : RateLimits.Bundle = RateLimits.init();
+
+  // In-flight chunked video uploads (community posts). Transient — sessions
+  // are ephemeral buffers and do not survive upgrades.
+  transient let videoUploadSessions = Map.empty<Nat, VideoUploadTypes.VideoUploadSession>();
+  transient let nextVideoUploadId = { var value : Nat = 0 };
 
   // ── Admin management ───────────────────────────────────────────────────────
 
@@ -229,6 +238,8 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   let varieties                 = Map.empty<Nat, VarietyTypes.Variety>();
   let nextVarietyId             = { var value : Nat = 1 };
+  // AI-generated growing guides, keyed "varietyId:zoneKey"
+  let varietyGuides             = Map.empty<Text, VarietyGuideTypes.VarietyGuide>();
   let plantVarietyIds           = Map.empty<Common.PlantId, Nat>();
   let plantOwners               = Map.empty<Common.PlantId, Principal>();
   let plantPrices               = Map.empty<Common.PlantId, Nat>();
@@ -357,6 +368,9 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let recipes      = Map.empty<Common.RecipeId, RecipeTypes.Recipe>();
   let recipeFavorites = Map.empty<Principal, Set.Set<Common.RecipeId>>();
   let nextRecipeId = { var value : Nat = 1 };
+  // Side map for recipe YouTube tutorial URLs — stored Recipe record stays
+  // untouched (stable-memory upgrade safety, see AGENTS.md migration rules).
+  let recipeVideoUrls = Map.empty<Common.RecipeId, Text>();
 
   // ── Claim token state (QR label → NFT claim flow) ─────────────────────────
 
@@ -539,6 +553,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   include PlantsAPI(accessControlState, plants, trays, trayOwners, feedings, stageHistory, weatherRecords, weatherIndex, artworkLayers, rwaTokens, plantNotesLog, nextPlantId, nextTrayId, nextFeedingId, nextWeatherRecordId, nextArtworkLayerId);
   include VarietyAPI(accessControlState, varieties, plantVarietyIds, nextVarietyId);
+  include VarietyGuideAPI(accessControlState, varietyGuides);
   include NimsAPI(
     accessControlState,
     callerGuards,
@@ -644,7 +659,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     certStore,
     linkedWallets,
   );
-  include RecipesAPI(accessControlState, recipes, recipeFavorites, nextRecipeId, auditLog);
+  include RecipesAPI(accessControlState, recipes, recipeFavorites, recipeVideoUrls, nextRecipeId, auditLog);
   include ClaimAPI(
     accessControlState,
     nftClaimTokens,
@@ -700,6 +715,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include PriceOracleAPI(accessControlState, priceOracleState);
   include DABAPI(accessControlState);
   include ArtworkUploadAPI(accessControlState, rateLimits, artworkUploadSession, storedFiles, poolNFTs, selfPrincipalText, uploadsCanisterPrincipal);
+  include CommunityVideoAPI(accessControlState, rateLimits, videoUploadSessions, nextVideoUploadId, uploadsCanisterPrincipal);
   include PoolAPI(accessControlState, nftPool, nextPoolProductId);
   include PaymentAPI(
     accessControlState,

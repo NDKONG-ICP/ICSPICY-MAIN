@@ -26,6 +26,7 @@ import {
   MarkDeadModal,
   NewTrayModal,
   NimsAnalyticsPanel,
+  NimsHeroStats,
   NimsLandingPage,
   NimsLocationPrompt,
   NimsLocationSelector,
@@ -68,7 +69,7 @@ import {
 } from "../hooks/useNimsDashboard";
 import { useNimsLocation } from "../hooks/useNimsLocation";
 import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
-import { usePageTitle } from "../hooks/usePageTitle";
+import { Seo } from "../components/Seo";
 import { useUnadoptedNftTokenIds } from "../hooks/useUnadoptedNfts";
 import { useUsageTracking } from "../hooks/useUsageTracking";
 import { useWeather } from "../hooks/useWeather";
@@ -112,8 +113,26 @@ function formatMsAgo(ms: bigint | undefined): string {
   return `${Math.round(sec / 86400)}d ago`;
 }
 
+const NIMS_SEO = (
+  <Seo
+    title="NIMS — Free Plant Tracking App | Weather, Lifecycle & Grow Logs | IC SPICY"
+    description="Track every plant from seed to harvest, free. NIMS logs waterings, feedings, photos, and pests — with automatic local weather capture and on-chain grow history. Built by the IC SPICY nursery in Port Charlotte, FL."
+    path="/nims"
+    jsonLd={{
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: "NIMS — Nursery Inventory Management System",
+      url: "https://www.icspicy.app/nims",
+      applicationCategory: "LifestyleApplication",
+      operatingSystem: "Web",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      description:
+        "Free plant tracking app: lifecycle logs, weather capture, seed bank, tray management, and AI growing guides.",
+    }}
+  />
+);
+
 export default function NIMSPage() {
-  usePageTitle("NIMS");
   const { track, USAGE } = useUsageTracking();
 
   const navigate = useNavigate();
@@ -214,7 +233,12 @@ export default function NIMSPage() {
   };
 
   if (!isAuthenticated) {
-    return <NimsLandingPage onLogin={login} />;
+    return (
+      <>
+        {NIMS_SEO}
+        <NimsLandingPage onLogin={login} />
+      </>
+    );
   }
 
   const handleCellClick = (position: bigint) => {
@@ -242,6 +266,7 @@ export default function NIMSPage() {
 
   return (
     <div className="min-h-screen pb-24" data-ocid="nims-dashboard">
+      {NIMS_SEO}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border">
         <WeatherBar
           data={weather}
@@ -258,6 +283,7 @@ export default function NIMSPage() {
       </div>
 
       <div className="container max-w-2xl px-3 py-4 space-y-4">
+        <NimsHeroStats plants={myPlants} />
         <div className="flex items-center justify-between gap-2">
           <h1 className="text-xl font-display font-bold">NIMS</h1>
           <div className="flex items-center gap-2">
@@ -801,7 +827,16 @@ export default function NIMSPage() {
             });
             track(USAGE.NIMS.PLANT_ADD.feature, USAGE.NIMS.PLANT_ADD.action);
             setAddPlantOpen(false);
-            toast.success(`Plant #${result.plantId.toString()} added`);
+            toast.success(`Plant #${result.plantId.toString()} added`, {
+              action: {
+                label: "View growing guide →",
+                onClick: () =>
+                  void navigate({
+                    to: "/variety/$varietyId/guide",
+                    params: { varietyId: varietyId.toString() },
+                  }),
+              },
+            });
             void navigate({
               to: "/plants/$plantId",
               params: { plantId: result.plantId.toString() },

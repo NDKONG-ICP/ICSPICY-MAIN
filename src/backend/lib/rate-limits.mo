@@ -5,6 +5,7 @@ module {
     payment : RateLimit.Limiter;
     icpay : RateLimit.Limiter;
     upload : RateLimit.Limiter;
+    videoUpload : RateLimit.Limiter;
     communityPost : RateLimit.Limiter;
     communityComment : RateLimit.Limiter;
     order : RateLimit.Limiter;
@@ -20,6 +21,7 @@ module {
       payment = RateLimit.init({ maxCallsPerWindow = 5; windowSizeNanos = MINUTE });
       icpay = RateLimit.init({ maxCallsPerWindow = 3; windowSizeNanos = MINUTE });
       upload = RateLimit.init({ maxCallsPerWindow = 10; windowSizeNanos = MINUTE });
+      videoUpload = RateLimit.init({ maxCallsPerWindow = 2; windowSizeNanos = 10 * MINUTE });
       communityPost = RateLimit.init({ maxCallsPerWindow = 5; windowSizeNanos = MINUTE });
       communityComment = RateLimit.init({ maxCallsPerWindow = 10; windowSizeNanos = MINUTE });
       order = RateLimit.init({ maxCallsPerWindow = 5; windowSizeNanos = MINUTE });
@@ -32,6 +34,7 @@ module {
     RateLimit.cleanup(bundle.payment);
     RateLimit.cleanup(bundle.icpay);
     RateLimit.cleanup(bundle.upload);
+    RateLimit.cleanup(bundle.videoUpload);
     RateLimit.cleanup(bundle.communityPost);
     RateLimit.cleanup(bundle.communityComment);
     RateLimit.cleanup(bundle.order);

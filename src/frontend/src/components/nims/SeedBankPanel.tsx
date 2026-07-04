@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Sprout } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { BookOpen, Loader2, Plus, Sprout } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { SeedSource, VarietyPublic } from "../../declarations/backend.did";
@@ -257,15 +258,30 @@ export function SeedBankPanel({
                     {unwrapOpt(lot.notes) && (
                       <p className="text-xs italic">{unwrapOpt(lot.notes)}</p>
                     )}
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="w-full"
-                      onClick={() => onPlantFromLot(lot.varietyId)}
-                    >
-                      <Sprout className="size-3.5 mr-1" />
-                      Plant from this lot
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="flex-1"
+                        onClick={() => onPlantFromLot(lot.varietyId)}
+                      >
+                        <Sprout className="size-3.5 mr-1" />
+                        Plant from this lot
+                      </Button>
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        title="Growing guide"
+                      >
+                        <Link
+                          to="/variety/$varietyId/guide"
+                          params={{ varietyId: lot.varietyId.toString() }}
+                        >
+                          <BookOpen className="size-3.5" aria-hidden />
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 );
               })}

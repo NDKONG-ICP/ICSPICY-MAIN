@@ -10,15 +10,27 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
   BookOpen,
   Eye,
   EyeOff,
   Link2 as LinkIcon,
+  Loader2,
   RefreshCw,
   Trash2,
+  Youtube,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -31,6 +43,11 @@ import {
   useListRecipesAdmin,
   usePublishRecipe,
 } from "../hooks/useCookbook";
+import {
+  fetchAllRecipeVideoUrls,
+  saveRecipeVideoUrl,
+} from "../lib/recipe-video-idl";
+import { parseYouTubeId, youTubeThumbnailUrl } from "../lib/youtube";
 
 export default function AdminCookBookTab() {
   const { data: recipes, isPending } = useListRecipesAdmin();
@@ -39,6 +56,13 @@ export default function AdminCookBookTab() {
   const delRecipe = useDeleteRecipeAdmin();
 
   const [deleteTarget, setDeleteTarget] = useState<RecipePublic | null>(null);
+  const [videoTarget, setVideoTarget] = useState<RecipePublic | null>(null);
+
+  const { data: videoUrls } = useQuery({
+    queryKey: ["recipeVideoUrls"],
+    queryFn: fetchAllRecipeVideoUrls,
+    staleTime: 60 * 1000,
+  });
 
   const sorted = useMemo(() => {
     const list = recipes ?? [];
@@ -149,8 +173,10 @@ export default function AdminCookBookTab() {
             <RecipeAdminRow
               key={r.id.toString()}
               recipe={r}
+              hasVideo={videoUrls?.has(r.id.toString()) ?? false}
               onPublish={() => void handlePublish(r)}
               onDelete={() => setDeleteTarget(r)}
+              onVideo={() => setVideoTarget(r)}
               publishBusy={publish.isPending}
             />
           ))}
@@ -186,19 +212,140 @@ export default function AdminCookBookTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {videoTarget ? (
+        <RecipeVideoDialog
+          recipe={videoTarget}
+          currentUrl={videoUrls?.get(videoTarget.id.toString()) ?? ""}
+          onClose={() => setVideoTarget(null)}
+        />
+      ) : null}
     </div>
+  );
+}
+
+function RecipeVideoDialog({
+  recipe,
+  currentUrl,
+  onClose,
+}: {
+  recipe: RecipePublic;
+  currentUrl: string;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [url, setUrl] = useState(currentUrl);
+  const [saving, setSaving] = useState(false);
+
+  const trimmed = url.trim();
+  const videoId = trimmed ? parseYouTubeId(trimmed) : null;
+  const invalid = trimmed.length > 0 && !videoId;
+
+  async function save(clear: boolean) {
+    setSaving(true);
+    try {
+      const ok = await saveRecipeVideoUrl(recipe.id, clear ? null : trimmed);
+      if (!ok) {
+        toast.error("Backend rejected the video update.");
+        return;
+      }
+      await queryClient.invalidateQueries({ queryKey: ["recipeVideoUrls"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["recipeVideoUrl", recipe.id.toString()],
+      });
+      toast.success(clear ? "Video removed." : "Video saved.");
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Video update failed.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="bg-card border-border">
+        <DialogHeader>
+          <DialogTitle className="font-display font-bold flex items-center gap-2">
+            <Youtube className="w-4 h-4 text-red-500" />
+            Video tutorial — {recipe.title}
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground text-sm">
+            Paste a YouTube URL (watch, youtu.be, or shorts). The recipe page
+            shows a lazy-loaded, privacy-enhanced embed above the ingredients.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <Input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=…"
+            className="bg-muted/30 border-border text-sm"
+            data-ocid="recipe-video-url-input"
+          />
+          {invalid ? (
+            <p className="text-xs text-destructive">
+              That doesn&apos;t look like a YouTube video URL.
+            </p>
+          ) : null}
+          {videoId ? (
+            <div className="rounded-xl overflow-hidden border border-border">
+              <img
+                src={youTubeThumbnailUrl(videoId)}
+                alt="Video thumbnail preview"
+                className="w-full aspect-video object-cover"
+              />
+            </div>
+          ) : null}
+        </div>
+
+        <DialogFooter className="gap-2">
+          {currentUrl ? (
+            <Button
+              variant="ghost"
+              className="text-destructive hover:text-destructive text-xs"
+              disabled={saving}
+              onClick={() => void save(true)}
+            >
+              Remove video
+            </Button>
+          ) : null}
+          <Button
+            variant="outline"
+            className="border-border text-xs"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="text-xs"
+            disabled={saving || !videoId}
+            onClick={() => void save(false)}
+            data-ocid="recipe-video-save-btn"
+          >
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+            Save video
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function RecipeAdminRow({
   recipe,
+  hasVideo,
   onPublish,
   onDelete,
+  onVideo,
   publishBusy,
 }: {
   recipe: RecipePublic;
+  hasVideo: boolean;
   onPublish: () => void;
   onDelete: () => void;
+  onVideo: () => void;
   publishBusy: boolean;
 }) {
   return (
@@ -253,6 +400,17 @@ function RecipeAdminRow({
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-2 lg:justify-end">
+        <Button
+          size="sm"
+          variant="outline"
+          className={`h-8 text-xs border-border ${hasVideo ? "text-red-400 border-red-500/40" : ""}`}
+          onClick={onVideo}
+          title={hasVideo ? "Edit YouTube tutorial" : "Add YouTube tutorial"}
+          data-ocid="recipe-video-btn"
+        >
+          <Youtube className="w-3.5 h-3.5" />
+          <span className="ml-1">{hasVideo ? "Video ✓" : "Video"}</span>
+        </Button>
         <Button
           size="sm"
           variant="outline"

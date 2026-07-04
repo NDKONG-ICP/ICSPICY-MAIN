@@ -96,6 +96,62 @@ module {
     };
   };
 
+  /// Forward pre-chunked Blob data (e.g. a video assembled from ingress
+  /// chunks) to the uploads canister via its batch API. Chunks are sent
+  /// one-by-one so the full payload is never concatenated in heap.
+  /// Each chunk must be ≤ ~1.9MB (asset canister message limit).
+  public func storeBlobChunksToUploadsCanister(
+    uploadsCanister : ?Principal,
+    path : Text,
+    chunks : [Blob],
+    mimeType : Text,
+  ) : async () {
+    switch (uploadsCanister) {
+      case null {
+        Runtime.trap(
+          "Uploads canister not configured — admin must call setUploadsCanisterId",
+        );
+      };
+      case (?principal) {
+        let assets : AssetCanister = actor (Principal.toText(principal));
+        let key = assetKey(path);
+        if (chunks.size() == 0) {
+          Runtime.trap("Cannot store empty file");
+        };
+        let batchRes = await assets.create_batch();
+        let batchId = batchRes.batch_id;
+        var chunkIds : [ChunkId] = [];
+        for (chunk in chunks.vals()) {
+          let chunkRes = await assets.create_chunk({
+            batch_id = batchId;
+            content = chunk;
+          });
+          chunkIds := Array.concat(chunkIds, [chunkRes.chunk_id]);
+        };
+        await assets.commit_batch({
+          batch_id = batchId;
+          operations = [
+            #CreateAsset({
+              key = key;
+              content_type = mimeType;
+              max_age = null;
+              headers = null;
+              enable_aliasing = null;
+              allow_raw_access = ?true;
+            }),
+            #SetAssetContent({
+              key = key;
+              content_encoding = "identity";
+              chunk_ids = chunkIds;
+              last_chunk = null;
+              sha256 = null;
+            }),
+          ];
+        });
+      };
+    };
+  };
+
   func storeLarge(
     assets : AssetCanister,
     key : Text,

@@ -25,7 +25,7 @@ import { Plus, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { usePageTitle } from "../hooks/usePageTitle";
+import { Seo } from "../components/Seo";
 
 const FEED_TABS: { mode: FeedMode; label: string }[] = [
   { mode: "global", label: "Global" },
@@ -132,8 +132,6 @@ function ProfileSetupDialog({
 }
 
 export default function CommunityPage() {
-  usePageTitle("Community");
-
   const { isAuthenticated, login } = useAuth();
   const { data: profile, isPending: profilePending } = useMyCommunityProfile();
   const [feedMode, setFeedMode] = useState<FeedMode>("global");
@@ -166,6 +164,11 @@ export default function CommunityPage() {
 
   return (
     <div data-ocid="community-page" className="max-w-2xl mx-auto px-1 pb-24">
+      <Seo
+        title="Grower Community — Share Your Garden | IC SPICY"
+        description="Join the IC SPICY grower community: share plant photos, grow logs, and regenerative farming tips with hot pepper growers across the country."
+        path="/community"
+      />
       <ProfileSetupDialog
         open={needsProfile}
         onComplete={() => setProfileSetupDone(true)}

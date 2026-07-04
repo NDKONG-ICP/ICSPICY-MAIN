@@ -1,4 +1,5 @@
-import { Loader2, Plus } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { BookOpen, Loader2, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -148,21 +149,34 @@ export function VarietyPicker({
       />
       <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border border-border p-1">
         {shown.map((v) => (
-          <button
+          <div
             key={v.id.toString()}
-            type="button"
-            className={`flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm transition hover:bg-muted ${
+            className={`flex w-full items-center gap-1 rounded-md transition hover:bg-muted ${
               value === v.id.toString()
                 ? "bg-primary/10 ring-1 ring-primary"
                 : ""
             }`}
-            onClick={() => onChange(v.id.toString())}
           >
-            <span className="font-medium">{v.name}</span>
-            <span className="ml-2 truncate text-xs text-muted-foreground">
-              {v.species}
-            </span>
-          </button>
+            <button
+              type="button"
+              className="flex min-w-0 flex-1 items-center justify-between px-2 py-2 text-left text-sm"
+              onClick={() => onChange(v.id.toString())}
+            >
+              <span className="font-medium">{v.name}</span>
+              <span className="ml-2 truncate text-xs text-muted-foreground">
+                {v.species}
+              </span>
+            </button>
+            <Link
+              to="/variety/$varietyId/guide"
+              params={{ varietyId: v.id.toString() }}
+              className="mr-1 shrink-0 rounded p-1.5 text-muted-foreground transition hover:text-primary"
+              title={`Growing guide for ${v.name}`}
+              aria-label={`Growing guide for ${v.name}`}
+            >
+              <BookOpen className="size-4" aria-hidden />
+            </Link>
+          </div>
         ))}
         {shown.length === 0 && (
           <p className="px-2 py-2 text-center text-xs text-muted-foreground">

@@ -1,3 +1,10 @@
+/**
+ * Climate Canvas — the plant's life rendered in weather. Recharts,
+ * radically restyled: value-mapped heat gradients, water-column rainfall,
+ * Scoville-colored UV band with shimmer, care-event markers on the lines,
+ * glassmorphism tooltips, and a stats ribbon. Charts lazy-mount below the
+ * fold and respect prefers-reduced-motion.
+ */
 import { Button } from "@/components/ui/button";
 import { ChartContainer } from "@/components/ui/chart";
 import { downloadTextFile } from "@/lib/plant-nfc-url";
@@ -8,7 +15,15 @@ import {
   weatherHistoryToCsv,
 } from "@/lib/weather-history";
 import { ChevronDown, Download } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useReducedMotion } from "motion/react";
+import {
+  type ReactNode,
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Area,
   Bar,
@@ -30,17 +45,12 @@ const RANGE_OPTIONS: { id: WeatherDateRange; label: string }[] = [
   { id: "all", label: "All time" },
 ];
 
-const CHART_ANIMATION = {
-  isAnimationActive: true,
-  animationDuration: 1400,
-  animationEasing: "ease-out" as const,
-};
-
 type ChartRow = WeatherHistoryPoint & {
   label: string;
   waterDot: number | null;
   feedDot: number | null;
   pestDot: number | null;
+  careDetail: string;
 };
 
 function formatChartDate(date: string): string {
@@ -58,22 +68,43 @@ function formatFullDate(date: string): string {
   });
 }
 
+/** Scoville-style UV heat color. */
 function uvFill(uv: number): string {
-  if (uv >= 8) return "#ef4444";
+  if (uv >= 8) return "#dc2626";
   if (uv >= 6) return "#f97316";
-  if (uv >= 3) return "#eab308";
+  if (uv >= 3) return "#fbbf24";
   return "#22c55e";
 }
 
-function activitySummary(row: ChartRow): string[] {
-  const items: string[] = [];
-  if (row.watered) items.push("💧 Watered");
-  if (row.fed) items.push("🧪 Fed");
-  if (row.pestLogged) items.push("🐛 Pest logged");
-  return items;
+function icTsToDateKey(ts: bigint): string {
+  return new Date(Number(ts / 1_000_000n)).toISOString().slice(0, 10);
 }
 
-function WeatherHistoryTooltip({
+/** "Watered 250ml · Fed FPJ" — per-day care summary from the raw logs. */
+function buildCareDetails(lifecycle: PlantLifecycle): Map<string, string> {
+  const byDate = new Map<string, string[]>();
+  const push = (date: string, entry: string) => {
+    const list = byDate.get(date) ?? [];
+    list.push(entry);
+    byDate.set(date, list);
+  };
+  for (const w of lifecycle.wateringLog) {
+    push(icTsToDateKey(w.timestamp), `💧 Watered ${w.amountMl.toString()}ml`);
+  }
+  for (const f of lifecycle.feedingLog) {
+    push(icTsToDateKey(f.date), `🧪 Fed ${f.product_name}`);
+  }
+  for (const p of lifecycle.pestLog) {
+    push(icTsToDateKey(p.timestamp), `🐛 ${p.pestName}`);
+  }
+  const out = new Map<string, string>();
+  for (const [date, list] of byDate) out.set(date, list.join(" · "));
+  return out;
+}
+
+// ── Glassmorphism tooltip ────────────────────────────────────────────────────
+
+function ClimateTooltip({
   active,
   payload,
 }: {
@@ -84,39 +115,33 @@ function WeatherHistoryTooltip({
   const row = payload[0]?.payload;
   if (!row) return null;
 
-  const activities = activitySummary(row);
-
   return (
-    <div className="rounded-xl border border-white/10 bg-zinc-950/95 px-3 py-2.5 text-xs shadow-xl backdrop-blur-md">
-      <p className="mb-2 font-semibold text-amber-200">
+    <div className="rounded-xl border border-white/15 bg-zinc-950/85 px-3 py-2.5 text-xs shadow-[0_8px_32px_-8px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+      <p className="mb-2 flex items-center justify-between gap-3 font-semibold text-amber-200">
         {formatFullDate(row.date)}
+        {row.moonPhase && <span aria-hidden>🌙</span>}
       </p>
       <div className="grid gap-1 text-zinc-300">
         <span>
           <span className="text-red-400">High</span> {row.highF.toFixed(0)}°F ·{" "}
-          <span className="text-blue-400">Low</span> {row.lowF.toFixed(0)}°F
+          <span className="text-sky-400">Low</span> {row.lowF.toFixed(0)}°F
         </span>
         <span>
-          💧 Humidity {row.humidity.toFixed(0)}% · 🌧️ {row.rainInches.toFixed(2)}
-          &quot;
+          💧 {row.humidity.toFixed(0)}% · 🌧️ {row.rainInches.toFixed(2)}&quot; ·
+          ☀️ UV {row.uvIndex.toFixed(1)}
         </span>
-        <span>
-          ☀️ UV {row.uvIndex.toFixed(1)} · 🌬️ {row.windMph?.toFixed(0) ?? "—"} mph
-        </span>
-        {row.aqi != null && <span>🫁 AQI {row.aqi}</span>}
-        {row.moonPhase && <span>🌙 {row.moonPhase}</span>}
+        {(row.windMph != null || row.aqi != null) && (
+          <span>
+            {row.windMph != null && <>🌬️ {row.windMph.toFixed(0)} mph</>}
+            {row.windMph != null && row.aqi != null && " · "}
+            {row.aqi != null && <>🫁 AQI {row.aqi}</>}
+          </span>
+        )}
       </div>
-      {activities.length > 0 ? (
-        <div className="mt-2 border-t border-white/10 pt-2">
-          <p className="mb-1 text-[10px] uppercase tracking-wide text-zinc-500">
-            Logged
-          </p>
-          <ul className="space-y-0.5 text-zinc-200">
-            {activities.map((a) => (
-              <li key={a}>{a}</li>
-            ))}
-          </ul>
-        </div>
+      {row.careDetail ? (
+        <p className="mt-2 border-t border-white/10 pt-2 font-medium text-emerald-200">
+          {row.careDetail}
+        </p>
       ) : (
         <p className="mt-2 border-t border-white/10 pt-2 text-zinc-500">
           No care logs this day
@@ -125,6 +150,8 @@ function WeatherHistoryTooltip({
     </div>
   );
 }
+
+// ── Care-event markers on the chart line ─────────────────────────────────────
 
 function ActivityDot({
   cx,
@@ -139,13 +166,13 @@ function ActivityDot({
 }) {
   if (cx == null || cy == null) return <g />;
   return (
-    <g className="cursor-pointer">
+    <g>
       <circle
         cx={cx}
         cy={cy}
         r={12}
         fill={color}
-        fillOpacity={0.15}
+        fillOpacity={0.18}
         stroke={color}
         strokeWidth={1.5}
       />
@@ -156,11 +183,103 @@ function ActivityDot({
   );
 }
 
+// ── Lazy below-the-fold mount ────────────────────────────────────────────────
+
+function LazyChart({
+  height,
+  children,
+}: {
+  height: number;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "160px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [visible]);
+
+  return (
+    <div ref={ref} style={{ minHeight: height }}>
+      {visible ? children : null}
+    </div>
+  );
+}
+
+// ── Stats ribbon ─────────────────────────────────────────────────────────────
+
+const StatsRibbon = memo(function StatsRibbon({ rows }: { rows: ChartRow[] }) {
+  const stats = useMemo(() => {
+    const totalRain = rows.reduce((s, r) => s + r.rainInches, 0);
+    const hottest = rows.reduce(
+      (best, r) => (r.highF > best.highF ? r : best),
+      rows[0]!,
+    );
+    const careEvents = rows.reduce(
+      (s, r) =>
+        s + (r.watered ? 1 : 0) + (r.fed ? 1 : 0) + (r.pestLogged ? 1 : 0),
+      0,
+    );
+    return { totalRain, hottest, careEvents };
+  }, [rows]);
+
+  const items = [
+    { emoji: "📅", value: `${rows.length}`, label: "days tracked" },
+    {
+      emoji: "🌧️",
+      value: `${stats.totalRain.toFixed(1)}"`,
+      label: "total rain",
+    },
+    {
+      emoji: "🔥",
+      value: `${stats.hottest.highF.toFixed(0)}°F`,
+      label: formatChartDate(stats.hottest.date),
+    },
+    { emoji: "🧑‍🌾", value: `${stats.careEvents}`, label: "care events" },
+  ];
+
+  return (
+    <div className="grid grid-cols-4 gap-2">
+      {items.map((item) => (
+        <div
+          key={item.label}
+          className="rounded-lg border border-white/10 bg-gradient-to-b from-zinc-900/80 to-zinc-950/80 px-2 py-1.5 text-center backdrop-blur-sm"
+        >
+          <p className="text-sm font-bold text-foreground">
+            <span aria-hidden className="mr-0.5">
+              {item.emoji}
+            </span>
+            {item.value}
+          </p>
+          <p className="text-[9px] uppercase tracking-wide text-muted-foreground">
+            {item.label}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+});
+
+// ── Main component ───────────────────────────────────────────────────────────
+
 export function WeatherHistoryCharts({
   lifecycle,
 }: {
   lifecycle: PlantLifecycle;
 }) {
+  const reducedMotion = useReducedMotion() ?? false;
   const [range, setRange] = useState<WeatherDateRange>("30d");
   const [tableOpen, setTableOpen] = useState(false);
 
@@ -168,6 +287,7 @@ export function WeatherHistoryCharts({
     () => buildWeatherHistory(lifecycle, range),
     [lifecycle, range],
   );
+  const careDetails = useMemo(() => buildCareDetails(lifecycle), [lifecycle]);
 
   const chartData = useMemo<ChartRow[]>(
     () =>
@@ -175,11 +295,27 @@ export function WeatherHistoryCharts({
         ...p,
         label: formatChartDate(p.date),
         waterDot: p.watered ? p.highF : null,
-        feedDot: p.fed ? p.humidity : null,
+        feedDot: p.fed ? p.lowF : null,
         pestDot: p.pestLogged ? p.uvIndex : null,
+        careDetail: careDetails.get(p.date) ?? "",
       })),
-    [points],
+    [points, careDetails],
   );
+
+  // 1.2s draw-in, staggered per chart; disabled entirely for reduced motion.
+  const chartAnim = (order: number) => ({
+    isAnimationActive: !reducedMotion,
+    animationDuration: 1200,
+    animationBegin: order * 220,
+    animationEasing: "ease-out" as const,
+  });
+
+  const plantName =
+    lifecycle.plant.common_name.length > 0
+      ? lifecycle.plant.common_name[0]!
+      : lifecycle.plant.variety;
+
+  const hasScorcher = chartData.some((d) => d.uvIndex >= 8);
 
   if (points.length === 0) {
     return (
@@ -194,7 +330,31 @@ export function WeatherHistoryCharts({
   }
 
   return (
-    <div className="space-y-6" data-ocid="weather-history-charts">
+    <div className="space-y-5" data-ocid="weather-history-charts">
+      <style>{`
+        @keyframes uv-shimmer {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.72; }
+        }
+        .uv-shimmer .recharts-area-area {
+          animation: uv-shimmer 3.2s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .uv-shimmer .recharts-area-area { animation: none; }
+        }
+      `}</style>
+
+      {/* Section header + stats ribbon */}
+      <div className="space-y-3">
+        <h2 className="font-display text-base font-bold text-foreground">
+          🌶️ Climate Canvas —{" "}
+          <span className="bg-gradient-to-r from-red-400 via-orange-400 to-amber-300 bg-clip-text text-transparent">
+            {plantName}'s life in weather
+          </span>
+        </h2>
+        <StatsRibbon rows={chartData} />
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {RANGE_OPTIONS.map((opt) => (
           <Button
@@ -209,304 +369,301 @@ export function WeatherHistoryCharts({
         ))}
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-zinc-950/40 p-4 backdrop-blur-sm">
+      {/* ── Temperature: heat-gradient area ── */}
+      <div className="rounded-xl border border-white/10 bg-gradient-to-b from-zinc-950/70 to-stone-950/50 p-4 backdrop-blur-sm">
         <h3 className="mb-3 font-display font-semibold text-foreground">
-          Temperature (°F)
+          Temperature <span className="text-xs text-muted-foreground">°F</span>
         </h3>
-        <ChartContainer
-          config={{
-            highF: { label: "High", color: "#ef4444" },
-            lowF: { label: "Low", color: "#60a5fa" },
-          }}
-          className="h-[240px] w-full"
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              data={chartData}
-              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient
-                  id="tempHighGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity={0.45} />
-                  <stop offset="100%" stopColor="#ef4444" stopOpacity={0.02} />
-                </linearGradient>
-                <linearGradient
-                  id="tempLowGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(255,255,255,0.06)"
-              />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 11, fill: "#a1a1aa" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "#a1a1aa" }}
-                unit="°"
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                content={<WeatherHistoryTooltip />}
-                cursor={{ stroke: "#ef4444", strokeOpacity: 0.3 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="highF"
-                stroke="#ef4444"
-                fill="url(#tempHighGradient)"
-                strokeWidth={2.5}
-                {...CHART_ANIMATION}
-              />
-              <Area
-                type="monotone"
-                dataKey="lowF"
-                stroke="#60a5fa"
-                fill="url(#tempLowGradient)"
-                strokeWidth={2}
-                {...CHART_ANIMATION}
-              />
-              <Line
-                type="monotone"
-                dataKey="waterDot"
-                stroke="transparent"
-                isAnimationActive={false}
-                dot={(props) => {
-                  const { cx, cy, payload } = props as {
-                    cx?: number;
-                    cy?: number;
-                    payload?: ChartRow;
-                  };
-                  if (!payload?.watered) return <g />;
-                  return (
-                    <ActivityDot cx={cx} cy={cy} emoji="💧" color="#38bdf8" />
-                  );
-                }}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        <LazyChart height={240}>
+          <ChartContainer
+            config={{
+              highF: { label: "High", color: "#f97316" },
+              lowF: { label: "Low", color: "#60a5fa" },
+            }}
+            className="h-[240px] w-full"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={chartData}
+                margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  {/* literal heat gradient — deep red (hottest) → orange → amber, by value */}
+                  <linearGradient id="heatByValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#7f1d1d" stopOpacity={0.9} />
+                    <stop offset="35%" stopColor="#f97316" stopOpacity={0.55} />
+                    <stop offset="75%" stopColor="#fbbf24" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.04} />
+                  </linearGradient>
+                  <linearGradient id="heatStroke" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#f97316" />
+                  </linearGradient>
+                  <linearGradient id="coolLow" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#0c4a6e" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.05)"
+                />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                  unit="°"
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  content={<ClimateTooltip />}
+                  cursor={{ stroke: "#f97316", strokeOpacity: 0.35 }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="highF"
+                  stroke="url(#heatStroke)"
+                  fill="url(#heatByValue)"
+                  strokeWidth={2.5}
+                  {...chartAnim(0)}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="lowF"
+                  stroke="#60a5fa"
+                  fill="url(#coolLow)"
+                  strokeWidth={1.5}
+                  {...chartAnim(0)}
+                />
+                {/* care markers ON the line */}
+                <Line
+                  type="monotone"
+                  dataKey="waterDot"
+                  stroke="transparent"
+                  isAnimationActive={false}
+                  dot={(props) => {
+                    const { cx, cy, payload } = props as {
+                      cx?: number;
+                      cy?: number;
+                      payload?: ChartRow;
+                    };
+                    if (!payload?.watered) return <g />;
+                    return (
+                      <ActivityDot cx={cx} cy={cy} emoji="💧" color="#38bdf8" />
+                    );
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="feedDot"
+                  stroke="transparent"
+                  isAnimationActive={false}
+                  dot={(props) => {
+                    const { cx, cy, payload } = props as {
+                      cx?: number;
+                      cy?: number;
+                      payload?: ChartRow;
+                    };
+                    if (!payload?.fed) return <g />;
+                    return (
+                      <ActivityDot cx={cx} cy={cy} emoji="🧪" color="#fbbf24" />
+                    );
+                  }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </LazyChart>
         <p className="mt-1 text-xs text-muted-foreground">
-          💧 = watering logged · hover for details
+          💧 watering · 🧪 feeding — markers ride the temperature line
         </p>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-zinc-950/40 p-4 backdrop-blur-sm">
+      {/* ── Rainfall: falling water columns + humidity ── */}
+      <div className="rounded-xl border border-white/10 bg-gradient-to-b from-zinc-950/70 to-slate-950/50 p-4 backdrop-blur-sm">
         <h3 className="mb-3 font-display font-semibold text-foreground">
-          Humidity & Rainfall
+          Humidity &amp; Rainfall
         </h3>
-        <ChartContainer
-          config={{
-            rainInches: { label: "Rain (in)", color: "#3b82f6" },
-            humidity: { label: "Humidity %", color: "#fbbf24" },
-          }}
-          className="h-[240px] w-full"
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              data={chartData}
-              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient
-                  id="rainBarGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.95} />
-                  <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.35} />
-                </linearGradient>
-                <linearGradient
-                  id="humidityLineGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor="#fbbf24" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(255,255,255,0.06)"
-              />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 11, fill: "#a1a1aa" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                yAxisId="left"
-                tick={{ fontSize: 11, fill: "#a1a1aa" }}
-                unit='"'
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                tick={{ fontSize: 11, fill: "#a1a1aa" }}
-                unit="%"
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                content={<WeatherHistoryTooltip />}
-                cursor={{ fill: "rgba(59,130,246,0.08)" }}
-              />
-              <Bar
-                yAxisId="left"
-                dataKey="rainInches"
-                fill="url(#rainBarGradient)"
-                radius={[4, 4, 0, 0]}
-                {...CHART_ANIMATION}
-              />
-              <Area
-                yAxisId="right"
-                type="monotone"
-                dataKey="humidity"
-                stroke="#fbbf24"
-                fill="url(#humidityLineGradient)"
-                strokeWidth={2}
-                {...CHART_ANIMATION}
-              />
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="feedDot"
-                stroke="transparent"
-                isAnimationActive={false}
-                dot={(props) => {
-                  const { cx, cy, payload } = props as {
-                    cx?: number;
-                    cy?: number;
-                    payload?: ChartRow;
-                  };
-                  if (!payload?.fed) return <g />;
-                  return (
-                    <ActivityDot cx={cx} cy={cy} emoji="🧪" color="#a3e635" />
-                  );
-                }}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        <LazyChart height={240}>
+          <ChartContainer
+            config={{
+              rainInches: { label: "Rain (in)", color: "#38bdf8" },
+              humidity: { label: "Humidity %", color: "#fbbf24" },
+            }}
+            className="h-[240px] w-full"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={chartData}
+                margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  {/* water column — bright crest, deep base */}
+                  <linearGradient id="waterColumn" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#7dd3fc" stopOpacity={0.95} />
+                    <stop offset="45%" stopColor="#38bdf8" stopOpacity={0.7} />
+                    <stop offset="100%" stopColor="#1e40af" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="humidityHaze" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#fbbf24" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.05)"
+                />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  yAxisId="left"
+                  tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                  unit='"'
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                  unit="%"
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  content={<ClimateTooltip />}
+                  cursor={{ fill: "rgba(56,189,248,0.08)" }}
+                />
+                {/* bars "fill up" from the bottom on mount */}
+                <Bar
+                  yAxisId="left"
+                  dataKey="rainInches"
+                  fill="url(#waterColumn)"
+                  radius={[6, 6, 0, 0]}
+                  {...chartAnim(1)}
+                />
+                <Area
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="humidity"
+                  stroke="#fbbf24"
+                  fill="url(#humidityHaze)"
+                  strokeWidth={1.5}
+                  {...chartAnim(1)}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </LazyChart>
+      </div>
+
+      {/* ── UV: flame-intensity band ── */}
+      <div className="rounded-xl border border-white/10 bg-gradient-to-b from-zinc-950/70 to-red-950/20 p-4 backdrop-blur-sm">
+        <h3 className="mb-3 font-display font-semibold text-foreground">
+          UV Index{" "}
+          <span className="text-xs text-muted-foreground">
+            Scoville-style heat band
+          </span>
+        </h3>
+        <LazyChart height={220}>
+          <ChartContainer
+            config={{ uvIndex: { label: "UV", color: "#f97316" } }}
+            className={`h-[220px] w-full ${hasScorcher && !reducedMotion ? "uv-shimmer" : ""}`}
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={chartData}
+                margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.05)"
+                />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                  domain={[0, 12]}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <ReferenceLine
+                  y={6}
+                  stroke="#f97316"
+                  strokeDasharray="4 4"
+                  strokeOpacity={0.5}
+                />
+                <ReferenceLine
+                  y={8}
+                  stroke="#ef4444"
+                  strokeDasharray="4 4"
+                  strokeOpacity={0.5}
+                />
+                <Tooltip
+                  content={<ClimateTooltip />}
+                  cursor={{ stroke: "#f97316", strokeOpacity: 0.25 }}
+                />
+                <defs>
+                  {/* per-day Scoville coloring across the horizontal axis */}
+                  <linearGradient id="uvScoville" x1="0" y1="0" x2="1" y2="0">
+                    {chartData.map((d, i) => (
+                      <stop
+                        key={d.date}
+                        offset={`${(i / Math.max(chartData.length - 1, 1)) * 100}%`}
+                        stopColor={uvFill(d.uvIndex)}
+                        stopOpacity={0.55}
+                      />
+                    ))}
+                  </linearGradient>
+                </defs>
+                <Area
+                  type="monotone"
+                  dataKey="uvIndex"
+                  stroke="#f97316"
+                  fill="url(#uvScoville)"
+                  strokeWidth={2.5}
+                  {...chartAnim(2)}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="pestDot"
+                  stroke="transparent"
+                  isAnimationActive={false}
+                  dot={(props) => {
+                    const { cx, cy, payload } = props as {
+                      cx?: number;
+                      cy?: number;
+                      payload?: ChartRow;
+                    };
+                    if (!payload?.pestLogged) return <g />;
+                    return (
+                      <ActivityDot cx={cx} cy={cy} emoji="🐛" color="#f87171" />
+                    );
+                  }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </LazyChart>
         <p className="mt-1 text-xs text-muted-foreground">
-          🧪 = feeding logged
+          🐛 = pest treatment logged · red band = UV 8+ scorchers
         </p>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-zinc-950/40 p-4 backdrop-blur-sm">
-        <h3 className="mb-3 font-display font-semibold text-foreground">
-          UV Index
-        </h3>
-        <ChartContainer
-          config={{ uvIndex: { label: "UV", color: "#f97316" } }}
-          className="h-[220px] w-full"
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              data={chartData}
-              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(255,255,255,0.06)"
-              />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 11, fill: "#a1a1aa" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "#a1a1aa" }}
-                domain={[0, 12]}
-                axisLine={false}
-                tickLine={false}
-              />
-              <ReferenceLine
-                y={6}
-                stroke="#f97316"
-                strokeDasharray="4 4"
-                strokeOpacity={0.6}
-              />
-              <ReferenceLine
-                y={8}
-                stroke="#ef4444"
-                strokeDasharray="4 4"
-                strokeOpacity={0.6}
-              />
-              <Tooltip
-                content={<WeatherHistoryTooltip />}
-                cursor={{ stroke: "#f97316", strokeOpacity: 0.25 }}
-              />
-              <defs>
-                <linearGradient id="uvGradient" x1="0" y1="0" x2="0" y2="1">
-                  {chartData.map((d, i) => (
-                    <stop
-                      key={d.date}
-                      offset={`${(i / Math.max(chartData.length - 1, 1)) * 100}%`}
-                      stopColor={uvFill(d.uvIndex)}
-                      stopOpacity={0.55}
-                    />
-                  ))}
-                </linearGradient>
-              </defs>
-              <Area
-                type="monotone"
-                dataKey="uvIndex"
-                stroke="#f97316"
-                fill="url(#uvGradient)"
-                strokeWidth={2.5}
-                {...CHART_ANIMATION}
-              />
-              <Line
-                type="monotone"
-                dataKey="pestDot"
-                stroke="transparent"
-                isAnimationActive={false}
-                dot={(props) => {
-                  const { cx, cy, payload } = props as {
-                    cx?: number;
-                    cy?: number;
-                    payload?: ChartRow;
-                  };
-                  if (!payload?.pestLogged) return <g />;
-                  return (
-                    <ActivityDot cx={cx} cy={cy} emoji="🐛" color="#f87171" />
-                  );
-                }}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-        <p className="mt-1 text-xs text-muted-foreground">
-          🐛 = pest treatment logged
-        </p>
-      </div>
-
+      {/* ── Data table + CSV ── */}
       <div className="rounded-xl border border-border bg-card">
         <button
           type="button"
@@ -565,7 +722,11 @@ export function WeatherHistoryCharts({
   );
 }
 
-function WeatherTableRow({ point: p }: { point: WeatherHistoryPoint }) {
+const WeatherTableRow = memo(function WeatherTableRow({
+  point: p,
+}: {
+  point: WeatherHistoryPoint;
+}) {
   return (
     <tr className="border-b border-border/50">
       <td className="py-2 pr-3 font-mono">{p.date}</td>
@@ -579,4 +740,4 @@ function WeatherTableRow({ point: p }: { point: WeatherHistoryPoint }) {
       <td className="py-2">{p.moonPhase ?? "—"}</td>
     </tr>
   );
-}
+});

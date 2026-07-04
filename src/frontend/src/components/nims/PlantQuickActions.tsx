@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   Bug,
   Camera,
   Droplet,
@@ -28,7 +29,8 @@ export type QuickPlantAction =
   | "list_sale"
   | "mark_dead"
   | "revive_plant"
-  | "remove_plant";
+  | "remove_plant"
+  | "growing_guide";
 
 type ActionDef = {
   key: QuickPlantAction;
@@ -45,6 +47,7 @@ const BASE_ACTIONS: ReadonlyArray<ActionDef> = [
   { key: "note", label: "Note", icon: NotepadText },
   { key: "transplant", label: "Transplant", icon: Move },
   { key: "harvest_seeds", label: "Harvest Seeds", icon: Wheat },
+  { key: "growing_guide", label: "Growing Guide", icon: BookOpen },
   { key: "nfc_tag", label: "NFC Tag Link", icon: Tag },
   { key: "list_sale", label: "List for Sale", icon: ShoppingBag },
   {

@@ -47,9 +47,27 @@ const FOOTER_LINKS = [
     title: "Tools",
     links: [
       { label: "NIMS Inventory", to: "/nims" },
+      { label: "Garden Designer", to: "/garden" },
       { label: "Schedule Builder", to: "/schedule-builder" },
       { label: "CookBook", to: "/cookbook" },
       { label: "My Wallet", to: "/wallet" },
+    ],
+  },
+  {
+    title: "Popular Recipes",
+    links: [
+      {
+        label: "Fermented Plant Juice (FPJ)",
+        to: "/cookbook/fermented-plant-juice-fpj",
+      },
+      {
+        label: "Lactic Acid Bacteria (LAB)",
+        to: "/cookbook/lactic-acid-bacteria-lab",
+      },
+      {
+        label: "Fish Amino Acid (FAA)",
+        to: "/cookbook/fish-amino-acid-faa",
+      },
     ],
   },
 ] as const;
@@ -60,7 +78,7 @@ export function Footer() {
   return (
     <footer className="bg-card border-t border-border" data-ocid="footer">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-10">
           {/* Brand column */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">

@@ -90,6 +90,7 @@ const OrdersPage = lazy(() => import("./pages/Orders"));
 const WalletPage = lazy(() => import("./pages/Wallet"));
 const NIMSPage = lazy(() => import("./pages/NIMS"));
 const CookBookPage = lazy(() => import("./pages/CookBook"));
+const VarietyGuidePage = lazy(() => import("./pages/VarietyGuide"));
 const CookbookRecipeDetailPage = lazy(
   () => import("./pages/CookbookRecipeDetail"),
 );
@@ -429,6 +430,12 @@ const plantNfcRoute = createRoute({
   component: PlantDetailPage,
 });
 
+const varietyGuideRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/variety/$varietyId/guide",
+  component: VarietyGuidePage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   marketplaceRoute,
@@ -445,6 +452,7 @@ const routeTree = rootRoute.addChildren([
   ordersRoute,
   walletRoute,
   nimsRoute,
+  varietyGuideRoute,
   cookbookDetailRoute,
   cookbookRoute,
   scheduleBuilderRoute,

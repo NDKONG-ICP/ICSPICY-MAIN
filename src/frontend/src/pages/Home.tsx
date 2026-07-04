@@ -20,7 +20,13 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { SiFacebook, SiInstagram, SiTiktok, SiX } from "react-icons/si";
-import { usePageTitle } from "../hooks/usePageTitle";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Seo } from "../components/Seo";
 import { CHILI_VARIETIES, SOCIAL_LINKS } from "../types";
 
 // ── Heat level registry ──────────────────────────────────────────────────────
@@ -655,12 +661,77 @@ function NimsDemoShowcase() {
   );
 }
 
+// ── FAQ (visible section + FAQPage schema must match) ───────────────────────
+const FAQ_ITEMS = [
+  {
+    q: "What is NIMS?",
+    a: "NIMS (Nursery Inventory Management System) is our free plant-tracking app. Log waterings, feedings, photos, and pests for every plant — each entry captures your local weather automatically, and your grow history is stored on the Internet Computer blockchain.",
+  },
+  {
+    q: "What is an NFT plant?",
+    a: "Every live plant from IC SPICY comes with an NFT that proves its provenance. The NFT records the plant's full lifecycle — seed date, germination, transplants, and care history — and travels with ownership if the plant is sold or gifted.",
+  },
+  {
+    q: "Do you ship plants?",
+    a: "Yes. We ship live pepper plants, seedlings, and artisan spice products across the United States from our FDACS-registered nursery in Port Charlotte, Florida.",
+  },
+  {
+    q: "What growing methods do you use?",
+    a: "We grow regeneratively using Korean Natural Farming (KNF) and JADAM methods — IMO soil biology, fermented plant inputs like FPJ, LAB, and OHN, and zero synthetic fertilizers or pesticides. Our free CookBook shares 50+ of these recipes.",
+  },
+  {
+    q: "Is the 3D Garden Designer free?",
+    a: "Yes. The Garden Designer is free and includes 385 Florida-friendly plants and 65 structures, with AI layout generation available to Raven Pro members.",
+  },
+] as const;
+
+const HOME_JSON_LD = [
+  {
+    "@context": "https://schema.org",
+    "@type": "GardenStore",
+    name: "IC SPICY",
+    description:
+      "FDACS Registered Nursery in Port Charlotte, FL growing the world's rarest and hottest chili peppers with regenerative KNF & JADAM methods. Every live plant ships with an NFT proving its provenance. Free NIMS plant tracking, natural farming CookBook, and 3D garden designer.",
+    url: "https://www.icspicy.app",
+    image: "https://www.icspicy.app/banner.png",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Port Charlotte",
+      addressRegion: "FL",
+      addressCountry: "US",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 26.9762,
+      longitude: -82.0906,
+    },
+    priceRange: "$6–$45",
+    sameAs: [
+      "https://x.com/icspicyrwa",
+      "https://www.youtube.com/@icspicyrwa",
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_ITEMS.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  },
+];
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function HomePage() {
-  usePageTitle("Home");
-
   return (
     <div className="w-full">
+      <Seo
+        title="IC SPICY — Florida Hot Pepper Nursery | Live Plants with NFT Provenance"
+        description="FDACS Registered Nursery in Port Charlotte, FL. World's rarest and hottest chili peppers grown with regenerative KNF methods. Free NIMS plant tracking, natural farming CookBook, and 3D garden designer. Every plant ships with an NFT proving its provenance."
+        path="/"
+        jsonLd={HOME_JSON_LD}
+      />
 
       {/* ══ HERO ══ Gardener-first, NIMS demo ═══════════════════════════════ */}
       <section
@@ -1468,6 +1539,34 @@ export default function HomePage() {
               </div>
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* ══ FAQ ══ matches the FAQPage structured data ══════════════════════ */}
+      <section
+        id="faq"
+        className="py-16 border-t border-border"
+        data-ocid="home-faq"
+      >
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <h2 className="font-display font-bold text-2xl sm:text-3xl text-foreground mb-2 text-center">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-muted-foreground text-sm text-center mb-8">
+            Growing, shipping, NFTs, and the free tools — answered.
+          </p>
+          <Accordion type="single" collapsible className="w-full">
+            {FAQ_ITEMS.map((item, i) => (
+              <AccordionItem key={item.q} value={`faq-${i}`}>
+                <AccordionTrigger className="text-left font-medium">
+                  {item.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground text-sm leading-relaxed">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </section>
     </div>

@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ImageIcon, Loader2, Sparkles, X } from "lucide-react";
+import { ImageIcon, Loader2, Sparkles, Video, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Backend } from "../../backend";
@@ -24,8 +24,22 @@ import {
   MAX_COMMUNITY_IMAGE_FILES,
   uploadCommunityImages,
 } from "../../lib/community-image-upload";
+import {
+  isSupportedVideoFile,
+  prepareVideoFile,
+  uploadCommunityVideo,
+  VIDEO_SIZE_MESSAGE,
+} from "../../lib/community-video-upload";
 
 const MAX_CHARS = 2000;
+
+type PickedVideo = {
+  file: File;
+  contentType: string;
+  poster: Uint8Array | null;
+  posterPreviewUrl: string | null;
+  duration: number;
+};
 
 export function PostComposer({
   onPublished,
@@ -33,9 +47,13 @@ export function PostComposer({
   onPublished?: () => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
   const [content, setContent] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [picked, setPicked] = useState<File[]>([]);
+  const [video, setVideo] = useState<PickedVideo | null>(null);
+  const [videoChecking, setVideoChecking] = useState(false);
+  const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const [plantSel, setPlantSel] = useState<string>("__none");
   const [nftSel, setNftSel] = useState<string>("__none");
 
@@ -79,13 +97,14 @@ export function PostComposer({
     !!actor &&
     !!principalText;
 
+  // Backend caps media keys at 4 per post; a video consumes 2 (video + poster).
+  const maxImages = video
+    ? Math.max(0, MAX_COMMUNITY_IMAGE_FILES - 2)
+    : MAX_COMMUNITY_IMAGE_FILES;
+
   const addFilesFromInput = (list: FileList | null) => {
     const next = [...picked];
-    for (
-      let i = 0;
-      list && i < list.length && next.length < MAX_COMMUNITY_IMAGE_FILES;
-      i++
-    ) {
+    for (let i = 0; list && i < list.length && next.length < maxImages; i++) {
       const file = list[i]!;
       if (!file.type.startsWith("image/")) {
         toast.error("Attachments must be photos.");
@@ -93,10 +112,30 @@ export function PostComposer({
       }
       next.push(file);
     }
-    if (list?.length && next.length > MAX_COMMUNITY_IMAGE_FILES) {
-      toast.message(`Carousel caps at ${MAX_COMMUNITY_IMAGE_FILES} images.`);
+    if (list?.length && next.length > maxImages) {
+      toast.message(`Carousel caps at ${maxImages} images.`);
     }
-    setPicked(next.slice(0, MAX_COMMUNITY_IMAGE_FILES));
+    setPicked(next.slice(0, maxImages));
+  };
+
+  const addVideoFromInput = async (list: FileList | null) => {
+    const file = list?.[0];
+    if (!file) return;
+    if (!isSupportedVideoFile(file)) {
+      toast.error("Videos must be mp4, webm, or mov.");
+      return;
+    }
+    setVideoChecking(true);
+    try {
+      const prepared = await prepareVideoFile(file);
+      setVideo({ file, ...prepared });
+      // Keep the total media keys within the backend's 4-key cap.
+      setPicked((prev) => prev.slice(0, Math.max(0, MAX_COMMUNITY_IMAGE_FILES - 2)));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : VIDEO_SIZE_MESSAGE);
+    } finally {
+      setVideoChecking(false);
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -134,13 +173,26 @@ export function PostComposer({
           ? []
           : await uploadCommunityImages(actor, principalText, picked);
 
+      const mediaKeys = [...uploaded];
+      if (video) {
+        setVideoProgress(0);
+        const { videoKey, posterKey } = await uploadCommunityVideo(
+          video.file,
+          video.contentType,
+          video.poster,
+          setVideoProgress,
+        );
+        mediaKeys.push(videoKey);
+        if (posterKey) mediaKeys.push(posterKey);
+      }
+
       const payload: CreatePostInput = {
         content: text,
         anonymous,
         plant_id: plantSel === "__none" ? [] : [BigInt(plantSel)],
         nft_token_id: nftSel === "__none" ? [] : [BigInt(nftSel)],
         image_key: [],
-        image_keys: uploaded,
+        image_keys: mediaKeys,
       };
 
       await createPost.mutateAsync(payload);
@@ -149,19 +201,23 @@ export function PostComposer({
         err instanceof Error ? err.message : "Could not publish post.",
       );
       return;
+    } finally {
+      setVideoProgress(null);
     }
 
     toast.success("Posted to the community feed.");
     setContent("");
     setAnonymous(false);
     setPicked([]);
+    setVideo(null);
     setPlantSel("__none");
     setNftSel("__none");
     if (fileRef.current) fileRef.current.value = "";
+    if (videoRef.current) videoRef.current.value = "";
     onPublished?.();
   };
 
-  const busy = createPost.isPending;
+  const busy = createPost.isPending || videoProgress !== null;
 
   return (
     <form
@@ -187,6 +243,53 @@ export function PostComposer({
         placeholder="Share grow notes, pheno hunts, recipes, or ask the farm…"
         className="resize-none text-sm min-h-[120px] bg-muted/30 border-border"
       />
+
+      {video ? (
+        <div className="relative rounded-xl border border-border overflow-hidden bg-muted/40">
+          {video.posterPreviewUrl ? (
+            <img
+              src={video.posterPreviewUrl}
+              alt="Video preview"
+              className="w-full max-h-56 object-cover"
+            />
+          ) : (
+            <div className="h-32 flex items-center justify-center text-muted-foreground">
+              <Video className="w-8 h-8 opacity-60" />
+            </div>
+          )}
+          <span className="absolute top-2 left-2 rounded-full bg-black/70 border border-white/15 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+            🎬 {Math.round(video.duration)}s ·{" "}
+            {(video.file.size / 1_000_000).toFixed(1)}MB · goes on-chain ⛓️
+          </span>
+          {videoProgress === null ? (
+            <button
+              type="button"
+              className="absolute top-1.5 right-1.5 rounded-full bg-background/80 p-1 text-xs"
+              onClick={() => {
+                setVideo(null);
+                if (videoRef.current) videoRef.current.value = "";
+              }}
+              aria-label="Remove video"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          ) : null}
+          {videoProgress !== null ? (
+            <div className="absolute inset-x-0 bottom-0 bg-black/60 px-3 py-2 space-y-1">
+              <div className="flex justify-between text-[10px] text-white/90 font-medium">
+                <span>Uploading to the uploads canister…</span>
+                <span>{Math.round(videoProgress * 100)}%</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-white/15 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-300"
+                  style={{ width: `${Math.round(videoProgress * 100)}%` }}
+                />
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {picked.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -218,21 +321,48 @@ export function PostComposer({
       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 hover:text-foreground transition-smooth"
+          className="inline-flex items-center gap-1.5 hover:text-foreground transition-smooth disabled:opacity-50"
           onClick={() => fileRef.current?.click()}
-          disabled={picked.length >= MAX_COMMUNITY_IMAGE_FILES}
+          disabled={picked.length >= maxImages}
         >
           <ImageIcon className="w-4 h-4" />
-          Add photos ({picked.length}/{MAX_COMMUNITY_IMAGE_FILES})
+          Add photos ({picked.length}/{maxImages})
         </button>
         <input
           ref={fileRef}
           type="file"
           accept="image/*"
           multiple
+          aria-label="Add photos"
           className="hidden"
           onChange={(e) => {
             addFilesFromInput(e.target.files);
+            e.target.value = "";
+          }}
+        />
+        <button
+          type="button"
+          className="inline-flex items-center gap-1.5 hover:text-foreground transition-smooth disabled:opacity-50"
+          onClick={() => videoRef.current?.click()}
+          disabled={!!video || videoChecking}
+          title="Attach one short video (≤60s, ≤50MB) — stored fully on-chain"
+          data-ocid="composer-add-video"
+        >
+          {videoChecking ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Video className="w-4 h-4" />
+          )}
+          {video ? "Video added" : "Add video"}
+        </button>
+        <input
+          ref={videoRef}
+          type="file"
+          accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+          aria-label="Add video"
+          className="hidden"
+          onChange={(e) => {
+            void addVideoFromInput(e.target.files);
             e.target.value = "";
           }}
         />

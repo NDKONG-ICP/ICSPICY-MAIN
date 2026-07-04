@@ -30,9 +30,10 @@ import {
   LogWateringModal,
   MarkDeadModal,
   NfcTagLinkModal,
+  CareStreakHeatmap,
   NimsStoredPhoto,
   PlantQuickActions,
-  PlantTimeline,
+  PlantStoryVine,
   type QuickPlantAction,
   RemovePlantModal,
   RevivePlantModal,
@@ -245,6 +246,18 @@ export default function PlantDetailPage() {
       case "remove_plant":
         setRemoveOpen(true);
         break;
+      case "growing_guide": {
+        const vid = unwrapOpt(lc.varietyId);
+        if (vid == null) {
+          toast.info("No variety recorded for this plant yet.");
+          break;
+        }
+        void navigate({
+          to: "/variety/$varietyId/guide",
+          params: { varietyId: vid.toString() },
+        });
+        break;
+      }
     }
   };
 
@@ -340,12 +353,16 @@ export default function PlantDetailPage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Lifecycle Timeline</CardTitle>
+              <CardTitle className="text-sm">
+                🌿 Plant Story — life on the vine
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <PlantTimeline lifecycle={lc} />
+              <PlantStoryVine lifecycle={lc} />
             </CardContent>
           </Card>
+
+          <CareStreakHeatmap lifecycle={lc} />
 
           <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm">
             <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />

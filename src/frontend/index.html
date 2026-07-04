@@ -50,6 +50,12 @@
     />
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="canonical" href="https://www.icspicy.app/" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+    <!-- IC boundary + assets canister preconnects -->
+    <link rel="preconnect" href="https://icp-api.io" crossorigin />
+    <link rel="preconnect" href="https://gawk3-2qaaa-aaaao-ba4sa-cai.icp0.io" crossorigin />
 
     <!-- Garden Designer typography: Syne (display) + DM Mono (data/coords) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -58,9 +64,84 @@
       href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+
+    <!-- LocalBusiness structured data — static so crawlers get it on first fetch -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "GardenStore",
+        "name": "IC SPICY",
+        "description": "FDACS Registered Nursery in Port Charlotte, FL growing the world's rarest and hottest chili peppers with regenerative Korean Natural Farming methods. Every live plant ships with an NFT proving its provenance.",
+        "url": "https://www.icspicy.app",
+        "image": "https://www.icspicy.app/banner.png",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Port Charlotte",
+          "addressRegion": "FL",
+          "addressCountry": "US"
+        },
+        "geo": { "@type": "GeoCoordinates", "latitude": 26.9762, "longitude": -82.0906 },
+        "priceRange": "$6–$45"
+      }
+    </script>
+
+    <style>
+      /* Crawlable-but-invisible summary content (removed once React mounts) */
+      .seo-prerender {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Real content for crawlers on first fetch. React replaces this on mount. -->
+      <div class="seo-prerender">
+        <h1>IC SPICY — Florida Hot Pepper Nursery with NFT Provenance</h1>
+        <p>
+          IC SPICY is an FDACS-registered nursery in Port Charlotte, Florida,
+          growing the world's rarest and hottest chili peppers — Carolina
+          Reaper, 7 Pot Primo, Scotch Bonnet, and hundreds more — using
+          regenerative Korean Natural Farming (KNF) and JADAM methods with
+          over 30 years of growing experience. Every live plant ships with an
+          NFT on the Internet Computer that proves its provenance and records
+          its full lifecycle from seed to harvest. The site also offers NIMS,
+          a free plant-tracking app with automatic weather capture; a Natural
+          Farming CookBook with 50+ free KNF and JADAM recipes like FPJ, LAB,
+          OHN, and IMO; and a free 3D garden designer with 385
+          Florida-friendly plants.
+        </p>
+        <nav aria-label="Site sections">
+          <a href="/marketplace">Shop hot pepper plants and artisan spices</a>
+          <a href="/nims">NIMS free plant tracking app</a>
+          <a href="/cookbook">Natural Farming CookBook — KNF and JADAM recipes</a>
+          <a href="/garden">Free 3D Garden Designer</a>
+          <a href="/plants">Plant NFTs with on-chain provenance</a>
+          <a href="/dao">DAO governance for NFT holders</a>
+          <a href="/community">Grower community</a>
+        </nav>
+      </div>
+    </div>
+    <noscript>
+      <div style="max-width: 640px; margin: 40px auto; font-family: sans-serif; padding: 0 16px">
+        <h1>IC SPICY — Florida Hot Pepper Nursery</h1>
+        <p>
+          FDACS Registered Nursery in Port Charlotte, FL. World's rarest and
+          hottest chili peppers, grown regeneratively. Every plant comes with
+          an NFT proving its provenance. This app requires JavaScript.
+        </p>
+        <ul>
+          <li><a href="/marketplace">Shop</a></li>
+          <li><a href="/nims">NIMS plant tracking</a></li>
+          <li><a href="/cookbook">Natural Farming CookBook</a></li>
+          <li><a href="/garden">3D Garden Designer</a></li>
+        </ul>
+      </div>
+    </noscript>
     <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>

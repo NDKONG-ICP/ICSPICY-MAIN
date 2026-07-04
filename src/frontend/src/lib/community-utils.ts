@@ -1,4 +1,5 @@
 import type { CommentPublic, PostPublic } from "../declarations/backend.did";
+import { isVideoKey, isVideoPosterKey } from "./community-video-upload";
 
 export function timeAgoNanos(ts: bigint): string {
   const diff = Date.now() - Number(ts) / 1_000_000;
@@ -17,13 +18,30 @@ export function isPostEditableWindow(
   return Date.now() - Number(createdAtNanos) / 1_000_000 < windowMs;
 }
 
-export function postImagePaths(post: PostPublic): string[] {
+function allMediaKeys(post: PostPublic): string[] {
   const keys = [...post.image_keys];
   if (post.image_key.length === 1) {
     const k = post.image_key[0]!;
     if (!keys.includes(k)) keys.unshift(k);
   }
   return keys.filter((k) => k.length > 0);
+}
+
+/** Photo keys only — on-chain video/poster keys are rendered separately. */
+export function postImagePaths(post: PostPublic): string[] {
+  return allMediaKeys(post).filter(
+    (k) => !isVideoKey(k) && !isVideoPosterKey(k),
+  );
+}
+
+/** On-chain video attachment (one per post), if present. */
+export function postVideoMedia(
+  post: PostPublic,
+): { videoKey: string; posterKey: string | null } | null {
+  const keys = allMediaKeys(post);
+  const videoKey = keys.find(isVideoKey);
+  if (!videoKey) return null;
+  return { videoKey, posterKey: keys.find(isVideoPosterKey) ?? null };
 }
 
 export function getPostAuthorPrincipalText(

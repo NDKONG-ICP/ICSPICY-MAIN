@@ -37,7 +37,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { Offer, ResaleListingPublic } from "../backend";
 import { OfferStatus, ProductCategory, RarityTier } from "../backend";
@@ -65,7 +65,7 @@ import {
 import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
 import { useRavenPerks } from "../hooks/useRavenPerks";
-import { usePageTitle } from "../hooks/usePageTitle";
+import { Seo } from "../components/Seo";
 import { useTokenPrices } from "../hooks/useTokenPrices";
 import { useUsageTracking } from "../hooks/useUsageTracking";
 import {
@@ -2024,7 +2024,6 @@ function ProductGrid({ count = 8 }: { count?: number }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MarketplacePage() {
-  usePageTitle("Shop");
   const { track, USAGE } = useUsageTracking();
 
   useEffect(() => {
@@ -2050,8 +2049,41 @@ export default function MarketplacePage() {
     filterActiveShopProducts(allProducts as ShopProduct[]),
   );
 
+  const productJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: "IC SPICY Shop",
+      itemListElement: catalogProducts.slice(0, 25).map((p, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        item: {
+          "@type": "Product",
+          name: p.name,
+          description: p.description,
+          offers: {
+            "@type": "Offer",
+            price: (Number(p.price_cents) / 100).toFixed(2),
+            priceCurrency: "USD",
+            availability:
+              (p.inventory_remaining ?? 1n) > 0n
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+          },
+        },
+      })),
+    }),
+    [catalogProducts],
+  );
+
   return (
     <div>
+      <Seo
+        title="Shop Hot Pepper Plants, Seeds & Artisan Spices | IC SPICY"
+        description="Live hot pepper plants with NFT provenance — seedlings from $6, 1-gallon $25, 5-gallon $45 — plus artisan spices, pods, and regenerative garden inputs. Shipped from our FDACS-registered Florida nursery."
+        path="/marketplace"
+        jsonLd={productJsonLd}
+      />
       {/* Page header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">

@@ -11,9 +11,12 @@ import {
   Share2,
   ShieldAlert,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { useMemo } from "react";
 import { toast } from "sonner";
+import { Seo } from "../components/Seo";
+import { YouTubeEmbed } from "../components/YouTubeEmbed";
 import type { Ingredient } from "../declarations/backend.did";
 import { useAuth } from "../hooks/useAuth";
 import {
@@ -23,6 +26,8 @@ import {
   useRecipesByIds,
   useToggleFavorite,
 } from "../hooks/useCookbook";
+import { fetchRecipeVideoUrl } from "../lib/recipe-video-idl";
+import { parseYouTubeId, youTubeThumbnailUrl } from "../lib/youtube";
 
 function IngredientLine({ ing }: { ing: Ingredient }) {
   const note = ing.notes.length ? (ing.notes[0] ?? "") : "";
@@ -62,6 +67,15 @@ export default function CookbookRecipeDetailPage() {
     steps.sort((a, b) => Number(a.step_number) - Number(b.step_number));
     return steps;
   }, [recipe?.steps]);
+
+  const { data: videoUrl } = useQuery({
+    queryKey: ["recipeVideoUrl", recipe?.id.toString() ?? ""],
+    enabled: !!recipe,
+    staleTime: 10 * 60 * 1000,
+    queryFn: () =>
+      recipe ? fetchRecipeVideoUrl(recipe.id) : Promise.resolve(null),
+  });
+  const videoId = videoUrl ? parseYouTubeId(videoUrl) : null;
 
   async function handleShare() {
     if (!recipe) return;
@@ -128,8 +142,49 @@ export default function CookbookRecipeDetailPage() {
 
   const heroKey = recipe.image_key.length ? recipe.image_key[0] : null;
 
+  const recipeJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Recipe",
+    name: recipe.title,
+    description: recipe.description,
+    keywords: [...recipe.tags, "KNF", "natural farming", "regenerative"].join(
+      ", ",
+    ),
+    recipeCategory: recipeCategoryLabel(recipe.category),
+    recipeIngredient: recipe.ingredients.map((ing) =>
+      `${ing.amount} ${ing.name}`.trim(),
+    ),
+    recipeInstructions: sortedSteps.map((s) => ({
+      "@type": "HowToStep",
+      position: Number(s.step_number),
+      text: s.instruction,
+    })),
+    ...(recipe.prep_time.length > 0 && { prepTime: recipe.prep_time[0] }),
+    ...(recipe.total_time.length > 0 && { totalTime: recipe.total_time[0] }),
+    author: { "@type": "Organization", name: "IC SPICY" },
+    image: "https://www.icspicy.app/banner.png",
+    url: `https://www.icspicy.app/cookbook/${encodeURIComponent(recipe.slug)}`,
+    ...(videoId && {
+      video: {
+        "@type": "VideoObject",
+        name: `${recipe.title} tutorial`,
+        description: recipe.description.slice(0, 200),
+        thumbnailUrl: youTubeThumbnailUrl(videoId),
+        embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}`,
+        contentUrl: `https://www.youtube.com/watch?v=${videoId}`,
+      },
+    }),
+  };
+
   return (
     <>
+      <Seo
+        title={`${recipe.title} Recipe — Korean Natural Farming | IC SPICY`}
+        description={recipe.description.slice(0, 160)}
+        path={`/cookbook/${encodeURIComponent(recipe.slug)}`}
+        ogType="article"
+        jsonLd={recipeJsonLd}
+      />
       <style>{`
         @media print {
           body * { visibility: hidden !important; }
@@ -321,6 +376,18 @@ export default function CookbookRecipeDetailPage() {
                   Ask SpicyAI
                 </Button>
               </div>
+
+              {videoId ? (
+                <section aria-label="Video tutorial">
+                  <h2 className="font-display font-bold text-xl mb-3 text-primary">
+                    Watch the tutorial
+                  </h2>
+                  <YouTubeEmbed
+                    videoId={videoId}
+                    title={`${recipe.title} tutorial`}
+                  />
+                </section>
+              ) : null}
 
               <section className="grid md:grid-cols-5 gap-8">
                 <div className="md:col-span-2">

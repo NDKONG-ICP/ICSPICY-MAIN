@@ -82,7 +82,9 @@ export { NimsAnalyticsPanel } from "./NimsAnalyticsPanel";
 export { HarvestSeedsModal } from "./HarvestSeedsModal";
 export { NfcTagLinkModal } from "./NfcTagLinkModal";
 
-export { PlantTimeline } from "./PlantTimeline";
+export { CareStreakHeatmap } from "./CareStreakHeatmap";
+export { NimsHeroStats } from "./NimsHeroStats";
+export { PlantStoryVine } from "./PlantStoryVine";
 
 export { NimsLandingPage } from "./NimsLandingPage";
 export { NimsDemo } from "./NimsDemo";
