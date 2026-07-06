@@ -52,7 +52,10 @@ import {
   useTriggerLifecycleUpgrade,
   useUpdateCellData,
   useUpdatePlantStage,
+  useMintGrowerProvenanceToken,
+  useGenerateCoopClaimToken,
 } from "../hooks/useBackend";
+import { useCoopStatus } from "../hooks/useCoopStatus";
 import { useCreateGerminationSchedule } from "../hooks/usePlantingSchedule";
 import { ProvenanceModal } from "./NImsProvenanceModal";
 import {
@@ -150,6 +153,9 @@ export function CellDetailModal({
   onSeedPlanted,
 }: CellModalProps) {
   const { data: isAdmin } = useIsAdmin();
+  const { isSeatHolder } = useCoopStatus();
+  const mintGrowerNft = useMintGrowerProvenanceToken();
+  const genCoopClaim = useGenerateCoopClaimToken();
   const [provenanceOpen, setProvenanceOpen] = useState(false);
   const [showTransplant, setShowTransplant] = useState(false);
   const [containerOption, setContainerOption] = useState("1gal");
@@ -794,6 +800,70 @@ export function CellDetailModal({
                       Assign RWA Provenance
                     </Button>
                   )}
+
+                  {isSeatHolder &&
+                    !isAdmin &&
+                    (plant.stage === PlantStage.Seedling ||
+                      plant.stage === PlantStage.Mature) &&
+                    (plant.nft_id?.length ?? 0) === 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={mintGrowerNft.isPending}
+                        onClick={() => {
+                          void mintGrowerNft
+                            .mutateAsync(plant.id)
+                            .then((r) =>
+                              toast.success(
+                                r.tokenId?.[0] != null
+                                  ? `Provenance NFT #${r.tokenId[0].toString()} minted`
+                                  : "Provenance NFT minted",
+                              ),
+                            )
+                            .catch((e) =>
+                              toast.error(
+                                e instanceof Error ? e.message : "Mint failed",
+                              ),
+                            );
+                        }}
+                        className="border-emerald-700/40 text-emerald-400 hover:bg-emerald-950/40"
+                        data-ocid="cell-grower-provenance-btn"
+                      >
+                        <Sprout className="w-3.5 h-3.5 mr-1" />
+                        Mint Provenance NFT
+                      </Button>
+                    )}
+
+                  {isSeatHolder &&
+                    (plant.nft_id?.length ?? 0) > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={genCoopClaim.isPending}
+                        onClick={() => {
+                          void genCoopClaim
+                            .mutateAsync(plant.id)
+                            .then((token) => {
+                              toast.success("Claim token ready");
+                              void navigator.clipboard.writeText(
+                                `https://www.icspicy.app/claim/${token}`,
+                              );
+                            })
+                            .catch((e) =>
+                              toast.error(
+                                e instanceof Error
+                                  ? e.message
+                                  : "Claim generation failed",
+                              ),
+                            );
+                        }}
+                        className="border-emerald-700/40 text-emerald-400 hover:bg-emerald-950/40"
+                        data-ocid="cell-grower-claim-btn"
+                      >
+                        <Tag className="w-3.5 h-3.5 mr-1" />
+                        Generate customer QR claim
+                      </Button>
+                    )}
                 </div>
 
                 {/* Cook confirmation */}

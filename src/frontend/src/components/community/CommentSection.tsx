@@ -7,6 +7,7 @@ import {
   MessageCircle,
   Send,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -128,22 +129,51 @@ export function CommentSection({
                     key={c.id.toString()}
                     className="flex gap-2.5 items-start"
                   >
-                    <CommunityAvatar
-                      principalText={c.author.toText()}
-                      username={
-                        c.author_username.length === 1
-                          ? c.author_username[0]
-                          : undefined
-                      }
-                      size="sm"
-                      className="w-7 h-7 text-[11px]"
-                    />
+                    {c.is_anonymous ? (
+                      <CommunityAvatar
+                        principalText={c.author.toText()}
+                        username={
+                          c.author_username.length === 1
+                            ? c.author_username[0]
+                            : undefined
+                        }
+                        size="sm"
+                        className="w-7 h-7 text-[11px]"
+                      />
+                    ) : (
+                      <Link
+                        to="/u/$user"
+                        params={{ user: c.author.toText() }}
+                        aria-label={`View ${getCommentAuthorDisplay(c)}'s profile`}
+                      >
+                        <CommunityAvatar
+                          principalText={c.author.toText()}
+                          username={
+                            c.author_username.length === 1
+                              ? c.author_username[0]
+                              : undefined
+                          }
+                          size="sm"
+                          className="w-7 h-7 text-[11px]"
+                        />
+                      </Link>
+                    )}
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex justify-between gap-2">
                         <p className="text-[11px] text-muted-foreground leading-tight">
-                          <span className="text-foreground font-medium">
-                            {getCommentAuthorDisplay(c)}
-                          </span>{" "}
+                          {c.is_anonymous ? (
+                            <span className="text-foreground font-medium">
+                              {getCommentAuthorDisplay(c)}
+                            </span>
+                          ) : (
+                            <Link
+                              to="/u/$user"
+                              params={{ user: c.author.toText() }}
+                              className="text-foreground font-medium hover:text-primary transition-smooth"
+                            >
+                              {getCommentAuthorDisplay(c)}
+                            </Link>
+                          )}{" "}
                           • {timeAgoNanos(c.created_at)}
                           {c.is_anonymous ? (
                             <span className="ml-2 text-[10px] uppercase tracking-wide px-1.5 rounded border border-border text-muted-foreground">

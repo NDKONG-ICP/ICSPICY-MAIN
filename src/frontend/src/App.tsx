@@ -83,7 +83,7 @@ const ProfilePage = lazy(() => import("./pages/Profile"));
 const DAOPage = lazy(() => import("./pages/DAO"));
 const CommunityPage = lazy(() => import("./pages/Community"));
 const CommunityPostPage = lazy(() => import("./pages/CommunityPost"));
-const CommunityProfilePage = lazy(() => import("./pages/CommunityProfile"));
+const PublicProfilePage = lazy(() => import("./pages/PublicProfile"));
 const AdminPage = lazy(() => import("./pages/Admin"));
 const CheckoutPage = lazy(() => import("./pages/Checkout"));
 const OrdersPage = lazy(() => import("./pages/Orders"));
@@ -91,6 +91,9 @@ const WalletPage = lazy(() => import("./pages/Wallet"));
 const NIMSPage = lazy(() => import("./pages/NIMS"));
 const CookBookPage = lazy(() => import("./pages/CookBook"));
 const VarietyGuidePage = lazy(() => import("./pages/VarietyGuide"));
+const GuidesPage = lazy(() => import("./pages/Guides"));
+const GrowersPage = lazy(() => import("./pages/Growers"));
+const CreditsPage = lazy(() => import("./pages/Credits"));
 const CookbookRecipeDetailPage = lazy(
   () => import("./pages/CookbookRecipeDetail"),
 );
@@ -287,6 +290,7 @@ const rootRoute = createRootRoute({
       </Suspense>
     </Layout>
   ),
+  notFoundComponent: lazy(() => import("./pages/NotFound")),
 });
 
 const indexRoute = createRoute({
@@ -337,10 +341,17 @@ const communityRoute = createRoute({
   component: CommunityPage,
 });
 
+// Legacy path — same component as /u/$user so old links keep working.
 const communityProfileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/profile/$principal",
-  component: CommunityProfilePage,
+  component: PublicProfilePage,
+});
+
+const publicProfileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/u/$user",
+  component: PublicProfilePage,
 });
 
 const adminRoute = createRoute({
@@ -436,6 +447,24 @@ const varietyGuideRoute = createRoute({
   component: VarietyGuidePage,
 });
 
+const guidesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/guides",
+  component: GuidesPage,
+});
+
+const growersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/growers",
+  component: GrowersPage,
+});
+
+const creditsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/credits",
+  component: CreditsPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   marketplaceRoute,
@@ -444,6 +473,7 @@ const routeTree = rootRoute.addChildren([
   plantNfcRoute,
   profileRoute,
   communityProfileRoute,
+  publicProfileRoute,
   daoRoute,
   communityPostRoute,
   communityRoute,
@@ -453,6 +483,9 @@ const routeTree = rootRoute.addChildren([
   walletRoute,
   nimsRoute,
   varietyGuideRoute,
+  guidesRoute,
+  growersRoute,
+  creditsRoute,
   cookbookDetailRoute,
   cookbookRoute,
   scheduleBuilderRoute,

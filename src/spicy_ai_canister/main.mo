@@ -304,7 +304,47 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
     r
   };
 
-  // ── startChat: initiate a new on-chain inference session ────────────────────
+  func buildRetrievalContext(retrieved : RetrievalResult) : Text {
+    if (retrieved.chunks.size() == 0) { return "" };
+    var block = "\n\nRelevant context from IC SPICY knowledge base:\n";
+    for (chunk in retrieved.chunks.vals()) {
+      block #= "---\n" # chunk # "\n";
+    };
+    truncateChars(block, 3500)
+  };
+
+  // Short retrieval query for BM25 — long questions with common words like "feed" are costly
+  // and match too many Pepperpedia chunks. Prefer cultivar names when present.
+  func buildRetrievalQuery(userText : Text) : Text {
+    let lower = Text.toLower(userText);
+    let named : [Text] = [
+      "ghost pepper", "carolina reaper", "pink wendigo", "sugar rush peach",
+      "7 pot primo", "7 pot", "scotch bonnet", "habanero", "jalapeño", "jalapeno",
+    ];
+    for (name in named.vals()) {
+      if (Text.contains(lower, #text name)) {
+        return name;
+      };
+    };
+    truncateChars(userText, 72)
+  };
+
+  func hasVarietySlug(slugs : [Text]) : Bool {
+    Array.find<Text>(slugs, func(s) { Text.startsWith(s, #text "variety-") }) != null
+  };
+
+  func unknownVarietyHint(slugs : [Text]) : Text {
+    if (hasVarietySlug(slugs)) { return "" };
+    " No Pepperpedia VARIETY document matched this query — if the user named a specific cultivar, " #
+    "say it is not in the knowledge base and do NOT invent Scoville numbers, breeders, or descriptions."
+  };
+
+  let VARIETY_KNOWLEDGE_RULES =
+    " When a user asks about a specific pepper or plant variety, answer from VARIETY knowledge documents " #
+    "(Pepperpedia entries beginning with \"VARIETY:\"). Always credit the breeder when known. " #
+    "Offer the in-app growing guide link and mention the variety can be tracked in NIMS. " #
+    "If the variety is not in the knowledge base, say so honestly — do NOT invent Scoville numbers or breeder credits.";
+
   //
   // Performs BM25 retrieval, builds the ChatML prompt, calls llama_cpp.new_chat,
   // stores the session, and returns a chatId the frontend polls via continueChat.
@@ -341,18 +381,14 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
 
     try {
       // BM25 retrieval
-      let retrieved : RetrievalResult = await docs.queryChunks(lastMsg.content, topK);
+      let retrieved : RetrievalResult = await docs.queryChunks(buildRetrievalQuery(lastMsg.content), topK);
 
       // Build minimal ChatML prompt — keep total tokens ≤ 60 to minimise ingestion calls.
       // System: ~15 tokens. Context: ~25 tokens. User: ~20 tokens. Total: ~60 tokens.
-      let ctxBlock : Text = if (retrieved.chunks.size() == 0) {
-        ""
-      } else {
-        // One chunk, 120 chars max (~30 tokens)
-        "\nContext: " # truncateChars(retrieved.chunks[0], 120) # "\n"
-      };
+      let ctxBlock = buildRetrievalContext(retrieved);
 
-      let systemTxt = "You are SpicyAi, IC SPICY's KNF/JADAM hot pepper farming guide. Be concise.";
+      let systemTxt = "You are SpicyAi, IC SPICY's KNF/JADAM hot pepper farming guide. Be concise." #
+        VARIETY_KNOWLEDGE_RULES # unknownVarietyHint(retrieved.slugs) # ctxBlock;
 
       let prompt =
         "<|im_start|>system\n" # systemTxt # ctxBlock # "<|im_end|>\n" #
@@ -551,19 +587,16 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
 
     try {
       let docs  : DocsBackendActor = actor(docsBackendId);
-      let retrieved : RetrievalResult = await docs.queryChunks(lastMsg.content, topK);
+      let retrieved : RetrievalResult = await docs.queryChunks(buildRetrievalQuery(lastMsg.content), topK);
 
-      let ctxBlock : Text = if (retrieved.chunks.size() == 0) {
-        ""
-      } else {
-        "\n\nRelevant context from IC SPICY documents:\n" # truncateChars(retrieved.chunks[0], 400)
-      };
+      let ctxBlock = buildRetrievalContext(retrieved);
 
       let systemTxt = "You are SpicyAi, the official AI assistant for IC SPICY — a Florida specialty pepper nursery on the Internet Computer. " #
         "You are an expert in Korean Natural Farming (KNF), JADAM organic farming, hot pepper cultivation, ICP blockchain, " #
         "and everything about IC SPICY: its NFTs, SPICY token, roadmap, and products. " #
         "Be helpful, accurate, and concise. For questions about current prices or real-time data, " #
-        "note that you may not have the latest information." # ctxBlock;
+        "note that you may not have the latest information." #
+        VARIETY_KNOWLEDGE_RULES # unknownVarietyHint(retrieved.slugs) # ctxBlock;
 
       let llmMessages : [LLM.ChatMessage] = [
         #system_({ content = systemTxt }),

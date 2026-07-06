@@ -11,6 +11,7 @@ module {
     order : RateLimit.Limiter;
     vote : RateLimit.Limiter;
     withdrawal : RateLimit.Limiter;
+    adminNotify : RateLimit.Limiter;
   };
 
   let MINUTE : Int = 60_000_000_000;
@@ -27,6 +28,7 @@ module {
       order = RateLimit.init({ maxCallsPerWindow = 5; windowSizeNanos = MINUTE });
       vote = RateLimit.init({ maxCallsPerWindow = 3; windowSizeNanos = MINUTE });
       withdrawal = RateLimit.init({ maxCallsPerWindow = 3; windowSizeNanos = HOUR });
+      adminNotify = RateLimit.init({ maxCallsPerWindow = 20; windowSizeNanos = HOUR });
     };
   };
 
@@ -40,5 +42,6 @@ module {
     RateLimit.cleanup(bundle.order);
     RateLimit.cleanup(bundle.vote);
     RateLimit.cleanup(bundle.withdrawal);
+    RateLimit.cleanup(bundle.adminNotify);
   };
 };

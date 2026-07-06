@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { SiFacebook, SiInstagram, SiTiktok, SiX } from "react-icons/si";
 import { SOCIAL_LINKS } from "../../types";
+import { CoopPitchCard } from "../coop/GrowerOnboardingWizard";
 import { NimsDemo } from "./NimsDemo";
 
 const FEATURES = [
@@ -29,6 +31,13 @@ const FEATURES = [
     title: "Seed Bank & Breeding",
     description:
       "Catalog your seed collection. Track breeding crosses and generation history.",
+  },
+  {
+    icon: "📖",
+    title: "Growing Guides",
+    description:
+      "AI-generated regenerative guides for 387 varieties — KNF nutrition schedules, planting windows, and pest control, personalized to your zone.",
+    to: "/guides",
   },
   {
     icon: "📱",
@@ -142,15 +151,9 @@ export function NimsLandingPage({ onLogin }: NimsLandingPageProps) {
             Everything you need to grow smarter
           </h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f, i) => (
-              <motion.div
-                key={f.title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <Card className="h-full border-border/80 bg-card/80">
+            {FEATURES.map((f, i) => {
+              const card = (
+                <Card className="h-full border-border/80 bg-card/80 transition-colors group-hover:border-primary/40">
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base font-semibold">
                       <span className="text-xl" aria-hidden>
@@ -165,8 +168,25 @@ export function NimsLandingPage({ onLogin }: NimsLandingPageProps) {
                     </p>
                   </CardContent>
                 </Card>
-              </motion.div>
-            ))}
+              );
+              return (
+                <motion.div
+                  key={f.title}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  {"to" in f ? (
+                    <Link to={f.to} className="group block h-full">
+                      {card}
+                    </Link>
+                  ) : (
+                    card
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -200,33 +220,14 @@ export function NimsLandingPage({ onLogin }: NimsLandingPageProps) {
               </Button>
             </CardContent>
           </Card>
-          <Card className="border-red-500/20 bg-red-950/10">
+          <Card className="border-emerald-500/20 bg-emerald-950/10">
             <CardHeader>
               <CardTitle className="font-display text-xl">
-                🌶️ Professional Nursery
+                🌱 Grower Co-op
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Full inventory management with blockchain provenance</li>
-                <li>Every plant gets an ICRC-7 NFT</li>
-                <li>QR codes for in-person sales with NFT transfer</li>
-                <li>Your plants tell their own story</li>
-              </ul>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto"
-                asChild
-                data-ocid="nims-landing-nursery-cta"
-              >
-                <a
-                  href={SOCIAL_LINKS.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Contact Us
-                </a>
-              </Button>
+            <CardContent>
+              <CoopPitchCard isSeatHolder={false} />
             </CardContent>
           </Card>
         </div>

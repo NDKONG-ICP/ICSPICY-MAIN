@@ -12,8 +12,10 @@ import { recipeCategoryLabel, useGetRecipes } from "../hooks/useCookbook";
 import { useVarieties } from "../hooks/useNims";
 import { useNimsLocation } from "../hooks/useNimsLocation";
 import { Seo } from "../components/Seo";
+import { guideSeoMeta } from "../lib/seo-routes.mjs";
 import { useRavenPerks } from "../hooks/useRavenPerks";
 import { estimateZoneFromLat, useVarietyGuide } from "../hooks/useVarietyGuide";
+import { useVarietyIntro, useVarietyProvenance } from "../hooks/useVarietyProvenance";
 import {
   type GuideConditions,
   type GuideVarietyInput,
@@ -103,6 +105,11 @@ export default function VarietyGuidePage() {
     !recipesLoading,
   );
 
+  const { data: provenance = null } = useVarietyProvenance(
+    varietyId ?? undefined,
+  );
+  const { data: intro = null } = useVarietyIntro(varietyId ?? undefined);
+
   const guideRecipes = useMemo(() => {
     const refSet = new Set(guide.recipeRefs.map((r) => r.toString()));
     return recipePage.filter((r) => refSet.has(r.id.toString()));
@@ -139,12 +146,24 @@ export default function VarietyGuidePage() {
     );
   }
 
+  const seoInput = {
+    id: variety.id,
+    name: variety.name,
+    species: variety.species,
+    scovilleMax: Number(variety.scovilleMax),
+    daysToMaturity:
+      variety.daysToMaturity.length > 0
+        ? Number(variety.daysToMaturity[0])
+        : null,
+  };
+  const seoMeta = guideSeoMeta(seoInput, { provenance, intro });
+
   return (
     <div className="container max-w-3xl px-4 py-6">
       <Seo
-        title={`How to Grow ${variety.name} — Regenerative KNF Guide | IC SPICY`}
-        description={`Free location-personalized growing guide for ${variety.name} (${variety.species}): soil prep, planting windows, stage-by-stage KNF nutrition, natural pest control, and harvest — Korean Natural Farming style.`}
-        path={`/variety/${variety.id.toString()}/guide`}
+        title={seoMeta.title}
+        description={seoMeta.description}
+        path={seoMeta.path}
         ogType="article"
         jsonLd={{
           "@context": "https://schema.org",
@@ -174,6 +193,8 @@ export default function VarietyGuidePage() {
         personalized={personalized && canPersonalize}
         canPersonalize={canPersonalize}
         onApplyConditions={applyConditions}
+        intro={intro}
+        provenance={provenance}
       />
     </div>
   );

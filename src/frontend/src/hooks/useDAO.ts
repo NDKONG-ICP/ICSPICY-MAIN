@@ -224,6 +224,22 @@ export function useCreateProposal() {
   });
 }
 
+export function useCreateGrowerProposal() {
+  const { actor } = useDaoActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateProposalInput) => {
+      const svc = rawService(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.createGrowerProposal(input);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["proposals"] });
+      void qc.invalidateQueries({ queryKey: ["daoStats"] });
+    },
+  });
+}
+
 export function useUpdateProposal() {
   const { actor } = useDaoActor();
   const qc = useQueryClient();

@@ -14,6 +14,7 @@ import MarketTypes "types/marketplace";
 import DAOTypes "types/dao";
 import DAOLegacy "types/dao-legacy";
 import CommunityTypes "types/community";
+import NotificationTypes "types/notification";
 import MembershipTypes "types/membership";
 import RecipeTypes "types/recipes";
 import ClaimTypes "types/claim";
@@ -28,6 +29,8 @@ import PlantsAPI "mixins/plants-api";
 import MarketplaceAPI "mixins/marketplace-api";
 import DAOAPI "mixins/dao-api";
 import CommunityAPI "mixins/community-api";
+import ProfilePageAPI "mixins/profile-page-api";
+import NotificationsAPI "mixins/notifications-api";
 import MembershipAPI "mixins/membership-api";
 import NFTAPI "mixins/nft-api";
 import RecipesAPI "mixins/recipes-api";
@@ -55,16 +58,21 @@ import PaymentAPI "mixins/payment-api";
 import AdminShopAPI "mixins/admin-shop-api";
 import VarietyAPI "mixins/variety-api";
 import VarietyGuideAPI "mixins/variety-guide-api";
+import VarietyProvenanceAPI "mixins/variety-provenance-api";
 import VarietyTypes "types/variety";
 import VarietyGuideTypes "types/variety-guide";
+import ProvenanceTypes "types/variety-provenance";
 import SeedBankTypes "types/seed-bank";
 import NimsAPI "mixins/nims-api";
+import CoopAPI "mixins/coop-api";
+import GrowerProposalMigration "migrations/PhaseGrowerProposal";
 import PlantingScheduleTypes "types/planting-schedule";
 import SeedBankAPI "mixins/seed-bank-api";
 import PlantingScheduleAPI "mixins/planting-schedule-api";
 import NftResaleAPI "mixins/nft-resale-api";
 import ResaleTypes "types/nft-resale";
 import GardenTypes "types/garden";
+import CoopTypes "types/coop";
 import GardenAPI "mixins/garden-api";
 import RateLimits "lib/rate-limits";
 import CanisterHealth "lib/canister-health";
@@ -73,6 +81,7 @@ import Prim "mo:⛔";
 import UsageAnalytics "UsageAnalytics";
 import Iter "mo:base/Iter";
 
+(with migration = GrowerProposalMigration.migration)
 shared(msg) persistent actor class ICSpicy() = Self {
   transient let initialDeployer = msg.caller;
 
@@ -240,6 +249,8 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let nextVarietyId             = { var value : Nat = 1 };
   // AI-generated growing guides, keyed "varietyId:zoneKey"
   let varietyGuides             = Map.empty<Text, VarietyGuideTypes.VarietyGuide>();
+  let varietyProvenance         = Map.empty<Nat, ProvenanceTypes.VarietyProvenance>();
+  let varietyIntros             = Map.empty<Nat, Text>();
   let plantVarietyIds           = Map.empty<Common.PlantId, Nat>();
   let plantOwners               = Map.empty<Common.PlantId, Principal>();
   let plantPrices               = Map.empty<Common.PlantId, Nat>();
@@ -358,6 +369,16 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let communityTips = Map.empty<Nat, CommunityTypes.Tip>();
   let communityBannedUsers = Set.empty<Principal>();
   let nextTipId = { var value : Nat = 1 };
+
+  // Public profile pages (additive side maps — no UserProfile record change)
+  let profileBanners = Map.empty<Principal, Text>();
+  let profileWallpapers = Map.empty<Principal, Text>();
+  let profileTop8 = Map.empty<Principal, [Principal]>();
+
+  // On-chain notification inbox (append-only, capped per user in lib)
+  let notifications = Map.empty<Principal, List.List<NotificationTypes.Notification>>();
+  let notificationLastRead = Map.empty<Principal, Nat>();
+  let nextNotificationId = { var value : Nat = 1 };
 
   // ── Membership state ───────────────────────────────────────────────────────
 
@@ -484,6 +505,15 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // is transferred between wallets to cast multiple votes on the same proposal.
   let daoTokenVotes = Map.empty<Text, Bool>();
 
+  // ── Grower Co-op membership (additive side maps) ───────────────────────────
+  let coopSeats = Map.empty<Nat, CoopTypes.CoopSeat>();
+  let coopDesignatedSeats = Map.empty<Nat, Bool>();
+  let coopPendingSeats = Map.empty<Nat, Principal>();
+  let coopSeatPriceCents = { var value : Nat = 25_000 };
+  let nextGrowerTokenId = { var value : Nat = 100_000 };
+  let growerProvenanceMeta = Map.empty<Nat, CoopTypes.GrowerProvenanceMeta>();
+  let growerMintLimits = Map.empty<Principal, (Nat, Int)>();
+
   // ── RAVEN balance cache ────────────────────────────────────────────────────
   //
   // Maps a principal to their last-known RAVEN balance (queried from the RAVEN
@@ -556,6 +586,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   include PlantsAPI(accessControlState, plants, trays, trayOwners, feedings, stageHistory, weatherRecords, weatherIndex, artworkLayers, rwaTokens, plantNotesLog, nextPlantId, nextTrayId, nextFeedingId, nextWeatherRecordId, nextArtworkLayerId);
   include VarietyAPI(accessControlState, varieties, plantVarietyIds, nextVarietyId);
+  include VarietyProvenanceAPI(accessControlState, varieties, varietyProvenance, varietyIntros);
   include VarietyGuideAPI(accessControlState, varietyGuides);
   include NimsAPI(
     accessControlState,
@@ -628,8 +659,10 @@ shared(msg) persistent actor class ICSpicy() = Self {
     func() : Principal { Principal.fromActor(Self) },
     nextProductId,
     nextOrderId,
+    notifications,
+    nextNotificationId,
   );
-  include DAOAPI(accessControlState, rateLimits, daoProposals, daoVotes, icrc7Balances, linkedWallets, daoTokenVotes, nextProposalId);
+  include DAOAPI(accessControlState, rateLimits, daoProposals, daoVotes, icrc7Balances, linkedWallets, daoTokenVotes, nextProposalId, coopSeats);
   include CommunityAPI(
     accessControlState,
     rateLimits,
@@ -642,6 +675,34 @@ shared(msg) persistent actor class ICSpicy() = Self {
     nextCommentId,
     nextTipId,
     auditLog,
+    notifications,
+    nextNotificationId,
+  );
+  include NotificationsAPI(
+    accessControlState,
+    rateLimits,
+    notifications,
+    notificationLastRead,
+    nextNotificationId,
+    profiles,
+    posts,
+    icrc7Balances,
+    ravenBalanceCache,
+    linkedWallets,
+  );
+  include ProfilePageAPI(
+    accessControlState,
+    rateLimits,
+    profiles,
+    posts,
+    profileBanners,
+    profileWallpapers,
+    profileTop8,
+    icrc7Balances,
+    ravenBalanceCache,
+    linkedWallets,
+    plants,
+    uploadsCanisterPrincipal,
   );
   include MembershipAPI(accessControlState, memberships, nextMembershipId);
   include NFTAPI(plants);
@@ -651,6 +712,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     icrc7Owners,
     icrc7Balances,
     icrc7TokenMetadataRaw,
+    growerProvenanceMeta,
     func() : Principal { Principal.fromActor(Self) },
     collectionName,
     totalSupplyCap,
@@ -720,6 +782,33 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include ArtworkUploadAPI(accessControlState, rateLimits, artworkUploadSession, storedFiles, poolNFTs, selfPrincipalText, uploadsCanisterPrincipal);
   include CommunityVideoAPI(accessControlState, rateLimits, videoUploadSessions, nextVideoUploadId, uploadsCanisterPrincipal);
   include PoolAPI(accessControlState, nftPool, nextPoolProductId);
+  include CoopAPI(
+    accessControlState,
+    callerGuards,
+    rateLimits,
+    coopSeats,
+    coopDesignatedSeats,
+    coopPendingSeats,
+    coopSeatPriceCents,
+    nextGrowerTokenId,
+    growerProvenanceMeta,
+    growerMintLimits,
+    varieties,
+    icrc7Owners,
+    icrc7Balances,
+    icrc37Approvals,
+    linkedWallets,
+    plants,
+    plantOwners,
+    plantVarietyIds,
+    nftTokenPlantIds,
+    nftClaimTokens,
+    nftClaimPlantIds,
+    plantClaimTokens,
+    priceOracleState,
+    func() : Principal { Principal.fromActor(Self) },
+    auditLog,
+  );
   include PaymentAPI(
     accessControlState,
     callerGuards,

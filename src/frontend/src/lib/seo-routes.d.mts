@@ -27,3 +27,51 @@ export function recipeBreadcrumbJsonLd(
 ): object;
 
 export function faqPageJsonLd(faqs: Array<[string, string]>): object | null;
+
+export function guideSeoMeta(
+  variety: {
+    id: bigint | number;
+    name: string;
+    species: string;
+    scovilleMax?: number;
+    daysToMaturity?: number | null;
+  },
+  extras?: {
+    provenance?: {
+      breeder?: [] | [string];
+      origin?: [] | [string];
+      heatClass?: [] | [string];
+    } | null;
+    intro?: string | null;
+  },
+): { title: string; description: string; path: string };
+
+export function guideBreadcrumbJsonLd(variety: {
+  id: bigint | number;
+  name: string;
+}): object;
+
+export function guideHowToJsonLd(
+  variety: {
+    id: bigint | number;
+    name: string;
+    species: string;
+    scovilleMax?: number;
+    daysToMaturity?: number | null;
+  },
+  sections: Array<{ title: string; content: string; timing?: string | null }>,
+  plainTextFn: (content: string) => string,
+  extras?: {
+    provenance?: {
+      breeder?: [] | [string];
+      origin?: [] | [string];
+      heatClass?: [] | [string];
+    } | null;
+    intro?: string | null;
+  },
+): object;
+
+export function itemListJsonLd(
+  name: string,
+  items: Array<{ name: string; url: string }>,
+): object | null;

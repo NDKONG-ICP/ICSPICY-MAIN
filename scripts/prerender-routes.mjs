@@ -32,7 +32,17 @@ import {
   recipeSeoMeta,
   recipeBreadcrumbJsonLd,
   faqPageJsonLd,
+  guideSeoMeta,
+  guideBreadcrumbJsonLd,
+  guideHowToJsonLd,
+  itemListJsonLd,
+  staticRouteSeo,
 } from "../src/frontend/src/lib/seo-routes.mjs";
+import {
+  buildFallbackGuide,
+  guideSectionPlainText,
+  DEFAULT_PRERENDER_CONDITIONS,
+} from "../src/frontend/src/lib/variety-guide-fallback.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = path.join(ROOT, "src", "frontend", "dist");
@@ -74,8 +84,37 @@ const RecipeFull = IDL.Record({
   ingredients: IDL.Vec(Ingredient),
   steps: IDL.Vec(RecipeStep),
   tags: IDL.Vec(IDL.Text),
+  created_at: IDL.Int,
+});
+const VarietyPublic = IDL.Record({
+  id: IDL.Nat,
+  name: IDL.Text,
+  species: IDL.Text,
+  scovilleMin: IDL.Nat,
+  scovilleMax: IDL.Nat,
+  description: IDL.Text,
+  imageUrl: IDL.Opt(IDL.Text),
+  daysToGermination: IDL.Opt(IDL.Nat),
+  daysToMaturity: IDL.Opt(IDL.Nat),
+  createdAt: IDL.Int,
 });
 const FaqPair = IDL.Tuple(IDL.Text, IDL.Text);
+
+const VarietySource = IDL.Record({
+  vendorName: IDL.Text,
+  url: IDL.Text,
+});
+const VarietyProvenancePublic = IDL.Record({
+  variety_id: IDL.Nat,
+  breeder: IDL.Opt(IDL.Text),
+  breederLocation: IDL.Opt(IDL.Text),
+  origin: IDL.Opt(IDL.Text),
+  species: IDL.Opt(IDL.Text),
+  heatClass: IDL.Opt(IDL.Text),
+  sources: IDL.Vec(VarietySource),
+  photoKey: IDL.Opt(IDL.Text),
+  photoCredit: IDL.Opt(IDL.Text),
+});
 
 const prerenderIDL = ({ IDL }) =>
   IDL.Service({
@@ -90,6 +129,17 @@ const prerenderIDL = ({ IDL }) =>
       ["query"],
     ),
     listRecipeVideoUrls: IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Text))],
+      ["query"],
+    ),
+    listVarieties: IDL.Func([], [IDL.Vec(VarietyPublic)], ["query"]),
+    listVarietyProvenance: IDL.Func(
+      [IDL.Nat, IDL.Nat],
+      [IDL.Vec(VarietyProvenancePublic)],
+      ["query"],
+    ),
+    listVarietyIntros: IDL.Func(
       [],
       [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Text))],
       ["query"],
@@ -162,7 +212,7 @@ function jsonLdScript(obj) {
 }
 
 /** Build one prerendered page from the template. */
-function buildPage(template, { title, description, canonicalPath, ogImage, ogImageSize, ogType, jsonLds, crawlHtml }) {
+function buildPage(template, { title, description, canonicalPath, ogImage, ogImageSize, ogType, jsonLds, crawlHtml, noIndex = false }) {
   const url = `${SITE_ORIGIN}${canonicalPath}`;
   let html = template;
   html = setTitle(html, title);
@@ -173,6 +223,9 @@ function buildPage(template, { title, description, canonicalPath, ogImage, ogIma
   html = setMeta(html, "twitter:title", title);
   html = setMeta(html, "twitter:description", description);
   html = setCanonical(html, url);
+  if (noIndex) {
+    html = injectHead(html, '    <meta name="robots" content="noindex, nofollow" />');
+  }
   if (ogType) html = setMeta(html, "og:type", ogType);
   if (ogImage) {
     html = setMeta(html, "og:image", ogImage);
@@ -261,6 +314,203 @@ async function generateOgCard(sharp, slug, title, category) {
   await sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toFile(out);
 }
 
+function formatScoville(max) {
+  if (max >= 1_000_000) return `${(max / 1_000_000).toFixed(1)}M`;
+  if (max >= 1_000) return `${Math.round(max / 1_000)}K`;
+  return String(max);
+}
+
+function guideOgCardSvg(name, scovilleMax) {
+  const lines = wrapTitle(name, 20);
+  const fontSize = lines.length > 2 ? 68 : 80;
+  const lineHeight = fontSize * 1.12;
+  const startY = 300 - ((lines.length - 1) * lineHeight) / 2;
+  const titleSpans = lines
+    .map(
+      (l, i) =>
+        `<text x="80" y="${Math.round(startY + i * lineHeight)}" font-family="Georgia, serif" font-size="${fontSize}" font-weight="900" fill="#fafafa">${esc(l)}</text>`,
+    )
+    .join("\n  ");
+  const badge =
+    scovilleMax > 0
+      ? `${formatScoville(scovilleMax)} SHU · KNF Guide`
+      : "KNF Regenerative Growing Guide";
+  return `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#14532d"/>
+      <stop offset="55%" stop-color="#0c0a09"/>
+      <stop offset="100%" stop-color="#1c0a0a"/>
+    </linearGradient>
+    <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#7f1d1d"/>
+      <stop offset="55%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="8" fill="url(#flame)"/>
+  <text x="80" y="110" font-family="Georgia, serif" font-size="28" font-weight="700" fill="#86efac" letter-spacing="5">IC SPICY GROWING GUIDE</text>
+  <text x="80" y="160" font-family="Georgia, serif" font-size="22" fill="#a1a1aa" letter-spacing="2">${esc(badge.toUpperCase())}</text>
+  ${titleSpans}
+  <text x="80" y="560" font-family="Georgia, serif" font-size="26" fill="#71717a">🌶 icspicy.app — 387 KNF variety guides</text>
+</svg>`;
+}
+
+async function generateGuideOgCard(sharp, varietyId, name, scovilleMax) {
+  const svg = guideOgCardSvg(name, scovilleMax);
+  const out = path.join(DIST, "og", `guide-${varietyId}.png`);
+  await sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toFile(out);
+}
+
+/** Simple bounded-concurrency worker pool. */
+async function poolMap(items, fn, concurrency = 8) {
+  const results = new Array(items.length);
+  let idx = 0;
+  async function worker() {
+    while (idx < items.length) {
+      const i = idx++;
+      results[i] = await fn(items[i], i);
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, worker),
+  );
+  return results;
+}
+
+const RECIPE_TOKEN_RE = /\[recipe:(\d+)\]/g;
+
+function formatGuideContentHtml(content, recipeById) {
+  const placeholders = new Map();
+  let n = 0;
+  let s = content.replace(RECIPE_TOKEN_RE, (match, id) => {
+    const r = recipeById.get(id);
+    if (!r) return "";
+    const key = `\x00R${n++}\x00`;
+    placeholders.set(key, r);
+    return key;
+  });
+  s = esc(s);
+  s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  for (const [key, r] of placeholders) {
+    s = s.replace(
+      key,
+      `<a href="/cookbook/${encodeURIComponent(r.slug)}">${esc(r.title)}</a>`,
+    );
+  }
+  return s
+    .split(/\n\n+/)
+    .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
+    .join("\n");
+}
+
+function varietyToGuideInput(v) {
+  return {
+    id: v.id,
+    name: v.name,
+    species: v.species,
+    scovilleMax: Number(v.scovilleMax),
+    daysToMaturity:
+      v.daysToMaturity.length === 1 ? Number(v.daysToMaturity[0]) : null,
+    description: v.description ?? "",
+  };
+}
+
+function guideCrawlHtml(variety, sections, recipeById) {
+  const scoville = Number(variety.scovilleMax);
+  const days =
+    variety.daysToMaturity.length === 1
+      ? Number(variety.daysToMaturity[0])
+      : null;
+  const stats = [`Species: ${esc(variety.species)}`];
+  if (scoville > 0) stats.push(`Heat: up to ${scoville.toLocaleString()} SHU`);
+  if (days != null) stats.push(`Days to maturity: ~${days}`);
+  const statsHtml = stats.map((s) => `<li>${s}</li>`).join("\n");
+  const sectionsHtml = sections
+    .map((sec) => {
+      const timing = sec.timing
+        ? `<p><em>Timing: ${esc(sec.timing)}</em></p>`
+        : "";
+      return `      <section>
+        <h2>${esc(sec.title)}</h2>
+${timing}
+        ${formatGuideContentHtml(sec.content, recipeById)}
+      </section>`;
+    })
+    .join("\n");
+  return `      <main>
+      <h1>How to Grow ${esc(variety.name)}</h1>
+      <ul>${statsHtml}</ul>
+${sectionsHtml}
+      </main>
+      ${NAV_LINKS}`;
+}
+
+function guidesIndexCrawlHtml(varieties) {
+  const sorted = [...varieties].sort((a, b) => a.name.localeCompare(b.name));
+  const links = sorted
+    .map(
+      (v) =>
+        `        <li><a href="/variety/${v.id.toString()}/guide">${esc(v.name)}</a></li>`,
+    )
+    .join("\n");
+  return `      <main>
+      <h1>387 Regenerative Growing Guides</h1>
+      <p>KNF-powered growing guides for every variety in the NIMS catalog — soil prep, planting, nutrition, pest control, and harvest.</p>
+      <ul>
+${links}
+      </ul>
+      </main>
+      ${NAV_LINKS}`;
+}
+
+function cookbookIndexCrawlHtml(recipes) {
+  const links = recipes
+    .map(
+      (r) =>
+        `        <li><a href="/cookbook/${encodeURIComponent(r.slug)}">${esc(r.title)}</a></li>`,
+    )
+    .join("\n");
+  return `      <main>
+      <h1>IC SPICY Natural Farming CookBook</h1>
+      <p>Free Korean Natural Farming and JADAM recipes for regenerative growing.</p>
+      <ul>
+${links}
+      </ul>
+      </main>
+      ${NAV_LINKS}`;
+}
+
+function buildRssFeed(recipes, seoContent) {
+  const items = recipes
+    .map((r) => {
+      const label = categoryLabel(r.category);
+      const extra = seoContent.get(r.id.toString());
+      const intro = extra?.intro?.length > 0 ? extra.intro : r.description;
+      const link = `${SITE_ORIGIN}/cookbook/${encodeURIComponent(r.slug)}`;
+      return `    <item>
+      <title>${esc(r.title)}</title>
+      <link>${link}</link>
+      <guid isPermaLink="true">${link}</guid>
+      <description>${esc(intro.slice(0, 500))}</description>
+      <category>${esc(label)}</category>
+    </item>`;
+    })
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>IC SPICY CookBook — KNF &amp; JADAM Recipes</title>
+    <link>${SITE_ORIGIN}/cookbook</link>
+    <description>Free Korean Natural Farming and JADAM recipes from IC SPICY.</description>
+    <language>en-us</language>
+${items}
+  </channel>
+</rss>
+`;
+}
+
 // ── Crawlable content blocks ────────────────────────────────────────────────
 const NAV_LINKS = `<nav><ul>
       <li><a href="/">IC SPICY Home</a></li>
@@ -336,6 +586,12 @@ function recipeJsonLdFor(recipe, videoUrl) {
     image: `${SITE_ORIGIN}/og/${recipe.slug}.png`,
     url: `${SITE_ORIGIN}/cookbook/${encodeURIComponent(recipe.slug)}`,
   };
+  if (recipe.created_at != null) {
+    const ms = Number(recipe.created_at) / 1_000_000;
+    if (Number.isFinite(ms) && ms > 0) {
+      ld.datePublished = new Date(ms).toISOString().slice(0, 10);
+    }
+  }
   if (recipe.prep_time.length > 0) ld.prepTime = recipe.prep_time[0];
   if (recipe.total_time.length > 0) ld.totalTime = recipe.total_time[0];
   if (videoUrl) {
@@ -356,25 +612,50 @@ function recipeJsonLdFor(recipe, videoUrl) {
 
 // ── Main ────────────────────────────────────────────────────────────────────
 async function main() {
+  const t0 = performance.now();
   const template = await fs.readFile(path.join(DIST, "index.html"), "utf8");
   let staticCount = 0;
   let recipeCount = 0;
+  let guideCount = 0;
   let ogCount = 0;
+
+  // Skip hub routes — rewritten after live data fetch.
+  const DEFERRED_STATIC = new Set(["/guides", "/cookbook"]);
 
   // 1. Static routes
   for (const entry of STATIC_ROUTE_SEO) {
+    if (DEFERRED_STATIC.has(entry.path)) continue;
     const html = buildPage(template, {
       title: entry.title,
       description: entry.description,
       canonicalPath: entry.path,
-      jsonLds: entry.path === "/" ? [] : [entry.jsonLd], // "/" already has its JSON-LD in the template
+      jsonLds: entry.path === "/" ? entry.jsonLd : [entry.jsonLd],
       crawlHtml: staticCrawlHtml(entry),
     });
     await writeRoute(entry.path, html);
     staticCount++;
   }
 
-  // 2. Recipes (live backend fetch — never break the build)
+  // 404 page (soft-404 mitigation — asset canister still returns 200 for unknown paths)
+  const notFoundHtml = buildPage(template, {
+    title: "Page Not Found | IC SPICY",
+    description: "This page doesn't exist on IC SPICY.",
+    canonicalPath: "/404",
+    noIndex: true,
+    crawlHtml: `      <main>
+      <h1>Page not found</h1>
+      <p>This page doesn't exist on IC SPICY.</p>
+      <nav><ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/guides">Growing Guides</a></li>
+        <li><a href="/cookbook">CookBook</a></li>
+      </ul></nav>
+      </main>`,
+  });
+  await fs.writeFile(path.join(DIST, "404.html"), notFoundHtml, "utf8");
+  staticCount++;
+
+  // 2. Recipes + variety guides (live backend fetch — never break the build)
   try {
     const agent = new HttpAgent({ host: HOST });
     const actor = Actor.createActor(prerenderIDL, {
@@ -454,12 +735,149 @@ async function main() {
       await writeRoute(`/cookbook/${recipe.slug}`, html);
       recipeCount++;
     }
+
+    // CookBook hub with ItemList
+    const cookbookEntry = staticRouteSeo("/cookbook");
+    const cookbookItems = recipes.map((r) => ({
+      name: r.title,
+      url: `${SITE_ORIGIN}/cookbook/${encodeURIComponent(r.slug)}`,
+    }));
+    await writeRoute(
+      "/cookbook",
+      buildPage(template, {
+        title: cookbookEntry.title,
+        description: cookbookEntry.description,
+        canonicalPath: "/cookbook",
+        jsonLds: [
+          cookbookEntry.jsonLd,
+          itemListJsonLd("IC SPICY CookBook Recipes", cookbookItems),
+        ],
+        crawlHtml: cookbookIndexCrawlHtml(recipes),
+      }),
+    );
+    staticCount++;
+
+    // RSS feed
+    await fs.writeFile(
+      path.join(DIST, "feed.xml"),
+      buildRssFeed(recipes, seoContent),
+      "utf8",
+    );
+
+    // 3. Variety guides
+    const varieties = await actor.listVarieties();
+
+    const provenanceById = new Map();
+    try {
+      for (let off = 0; ; off += 500) {
+        const page = await actor.listVarietyProvenance(off, 500);
+        for (const p of page) provenanceById.set(p.variety_id.toString(), p);
+        if (page.length < 500) break;
+      }
+    } catch {
+      console.warn("⚠ listVarietyProvenance unavailable — prerendering without provenance.");
+    }
+
+    const introById = new Map();
+    try {
+      for (const [id, intro] of await actor.listVarietyIntros()) {
+        introById.set(id.toString(), intro);
+      }
+    } catch {
+      console.warn("⚠ listVarietyIntros unavailable — prerendering without intros.");
+    }
+
+    const recipeSummaries = recipes.map((r) => ({
+      id: r.id,
+      title: r.title,
+      category: categoryLabel(r.category),
+    }));
+    const recipeById = new Map(
+      recipes.map((r) => [r.id.toString(), r]),
+    );
+
+    if (sharp) {
+      await poolMap(
+        varieties,
+        async (v) => {
+          try {
+            await generateGuideOgCard(
+              sharp,
+              v.id.toString(),
+              v.name,
+              Number(v.scovilleMax),
+            );
+            ogCount++;
+          } catch (e) {
+            console.warn(`⚠ Guide OG failed for ${v.id}: ${e.message}`);
+          }
+        },
+        8,
+      );
+    }
+
+    await poolMap(
+      varieties,
+      async (v) => {
+        const input = varietyToGuideInput(v);
+        const guide = buildFallbackGuide(
+          input,
+          DEFAULT_PRERENDER_CONDITIONS,
+          recipeSummaries,
+        );
+        const prov = provenanceById.get(v.id.toString()) ?? null;
+        const intro = introById.get(v.id.toString()) ?? null;
+        const seoExtras = { provenance: prov, intro };
+        const meta = guideSeoMeta(input, seoExtras);
+        const ogImage = `${SITE_ORIGIN}/og/guide-${v.id.toString()}.png`;
+        const html = buildPage(template, {
+          title: meta.title,
+          description: meta.description,
+          canonicalPath: meta.path,
+          ogType: "article",
+          ogImage,
+          ogImageSize: [1200, 630],
+          jsonLds: [
+            guideHowToJsonLd(input, guide.sections, guideSectionPlainText, seoExtras),
+            guideBreadcrumbJsonLd(input),
+          ],
+          crawlHtml: guideCrawlHtml(v, guide.sections, recipeById),
+        });
+        await writeRoute(`/variety/${v.id.toString()}/guide`, html);
+      },
+      12,
+    );
+    guideCount = varieties.length;
+
+    // Guides hub with ItemList + crawlable links
+    const guidesEntry = staticRouteSeo("/guides");
+    const guideItems = [...varieties]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((v) => ({
+        name: v.name,
+        url: `${SITE_ORIGIN}/variety/${v.id.toString()}/guide`,
+      }));
+    await writeRoute(
+      "/guides",
+      buildPage(template, {
+        title: guidesEntry.title,
+        description: guidesEntry.description,
+        canonicalPath: "/guides",
+        jsonLds: [
+          guidesEntry.jsonLd,
+          itemListJsonLd("IC SPICY Growing Guides", guideItems),
+        ],
+        crawlHtml: guidesIndexCrawlHtml(varieties),
+      }),
+    );
+    staticCount++;
   } catch (e) {
-    console.warn(`⚠ Recipe prerender skipped (${e.message}) — static routes still written.`);
+    console.warn(`⚠ Live-data prerender skipped (${e.message}) — static routes still written.`);
   }
 
+  const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
   console.log(
-    `✓ prerendered ${staticCount} static routes + ${recipeCount} recipes (${ogCount} OG cards) → dist/`,
+    `✓ prerendered ${staticCount} static + ${recipeCount} recipes + ${guideCount} guides (${ogCount} OG cards) in ${elapsed}s → dist/`,
   );
 }
 

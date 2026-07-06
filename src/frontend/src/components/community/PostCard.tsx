@@ -127,15 +127,21 @@ export function PostCard({
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-start gap-3 min-w-0">
           {authorPidText && !post.is_anonymous ? (
-            <CommunityAvatar
-              principalText={authorPidText}
-              username={
-                post.author_username.length === 1
-                  ? post.author_username[0]
-                  : undefined
-              }
-              size="md"
-            />
+            <Link
+              to="/u/$user"
+              params={{ user: authorPidText }}
+              aria-label={`View ${getPostAuthorDisplayName(post)}'s profile`}
+            >
+              <CommunityAvatar
+                principalText={authorPidText}
+                username={
+                  post.author_username.length === 1
+                    ? post.author_username[0]
+                    : undefined
+                }
+                size="md"
+              />
+            </Link>
           ) : (
             <CommunityAvatar principalText="anonymous" username="?" size="md" />
           )}
@@ -143,8 +149,8 @@ export function PostCard({
             <div className="flex flex-wrap items-center gap-2">
               {authorPidText && !post.is_anonymous ? (
                 <Link
-                  to="/profile/$principal"
-                  params={{ principal: authorPidText }}
+                  to="/u/$user"
+                  params={{ user: authorPidText }}
                   className="text-sm font-semibold text-foreground truncate hover:text-primary transition-smooth"
                 >
                   {getPostAuthorDisplayName(post)}

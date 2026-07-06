@@ -8,6 +8,7 @@ module {
     #CommunityDecision;
     #TreasurySpend;
     #FeatureRequest;
+    #GrowerProposal;
   };
 
   public type ProposalStatus = {

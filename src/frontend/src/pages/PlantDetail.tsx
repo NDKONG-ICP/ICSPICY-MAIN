@@ -23,6 +23,7 @@ import type {
   TransplantInput,
 } from "../backend";
 import { NftPlantFlipCard } from "../components/NftPlantFlipCard";
+import { GrowerCoopPlantActions } from "../components/coop/GrowerCoopPlantActions";
 import {
   HarvestSeedsModal,
   LogFeedingModal,
@@ -350,6 +351,12 @@ export default function PlantDetailPage() {
           <p className="text-xs text-muted-foreground break-all">
             Owner: {plant.created_by.toText()}
           </p>
+
+          <GrowerCoopPlantActions
+            plantId={id}
+            lifecycle={lc}
+            isOwner={canEdit}
+          />
 
           <Card>
             <CardHeader className="pb-2">

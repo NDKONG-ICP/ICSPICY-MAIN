@@ -667,6 +667,17 @@ function NimsDemoShowcase() {
 const FAQ_ITEMS = HOME_FAQ_ITEMS;
 const HOME_SEO = staticRouteSeo("/");
 
+// Featured growing guides — variety IDs verified against the live NIMS
+// catalog (listVarieties, 2026-07).
+const FEATURED_GUIDES = [
+  { varietyId: "7", name: "Carolina Reaper", emoji: "🌶️", tagline: "2.2M SHU superhot" },
+  { varietyId: "5", name: "Ghost Pepper", emoji: "🔥", tagline: "The legendary bhut jolokia" },
+  { varietyId: "10", name: "Red Habanero", emoji: "🧨", tagline: "Fruity Caribbean heat" },
+  { varietyId: "155", name: "Tomato", emoji: "🍅", tagline: "Garden staple, KNF-fed" },
+  { varietyId: "122", name: "Sweet Basil", emoji: "🌿", tagline: "Kitchen herb essential" },
+  { varietyId: "156", name: "Moringa", emoji: "🌳", tagline: "The miracle tree" },
+] as const;
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function HomePage() {
   return (
@@ -1277,6 +1288,72 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ══ GROWING GUIDES ═══════════════════════════════════════════════════ */}
+      <section className="py-20 bg-background" data-ocid="guides-section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <p className="text-fire font-display text-sm tracking-widest uppercase mb-3">
+              📖 Growing Guides
+            </p>
+            <h2 className="font-display font-bold text-3xl sm:text-4xl text-foreground">
+              KNF-Powered, Personalized to Your Zone
+            </h2>
+            <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
+              Step-by-step regenerative guides for 387 varieties — soil prep,
+              planting windows, natural nutrition schedules, and pest control,
+              linked to real CookBook recipes.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {FEATURED_GUIDES.map((g, i) => (
+              <motion.div
+                key={g.varietyId}
+                initial={{ opacity: 0, scale: 0.92 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+              >
+                <Link
+                  to="/variety/$varietyId/guide"
+                  params={{ varietyId: g.varietyId }}
+                  className="group block h-full bg-card border border-border rounded-xl p-4 hover:border-fire transition-smooth text-center"
+                  data-ocid={`home-guide-${g.varietyId}`}
+                >
+                  <div className="text-3xl mb-2" aria-hidden>
+                    {g.emoji}
+                  </div>
+                  <h3 className="font-display font-semibold text-sm text-foreground leading-snug group-hover:text-fire transition-smooth">
+                    {g.name}
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {g.tagline}
+                  </p>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link to="/guides" data-ocid="guides-browse-all-cta">
+              <Button
+                variant="outline"
+                className="border-fire/40 text-fire hover:bg-fire/10 font-display gap-2"
+              >
+                <BookOpen className="w-4 h-4" />
+                Browse all 387 guides →
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ══ ABOUT + FARMING PHILOSOPHY ═══════════════════════════════════════ */}
       <section className="py-24 bg-background" data-ocid="about-section" id="about">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1395,7 +1472,7 @@ export default function HomePage() {
               Join the Fire
             </p>
             <h2 className="font-display font-bold text-3xl sm:text-4xl text-foreground">
-              Grow With Our Community
+              Grow With Our Community Garden
             </h2>
             <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
               Connect with fellow chili enthusiasts, share your grows, vote on

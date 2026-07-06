@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import type { UserProfilePublic } from "../../declarations/backend.did";
 import { CommunityAvatar } from "./CommunityAvatar";
@@ -37,17 +38,28 @@ export function UserProfileCard({
       className="flex gap-3 min-w-0 rounded-xl bg-card border border-border p-3 shadow-subtle"
       data-ocid="community-user-profile-card"
     >
-      <CommunityAvatar
-        principalText={profile.principal_id.toText()}
-        username={profile.username}
-        avatarKey={avatarPath}
-        className={size}
-      />
+      <Link
+        to="/u/$user"
+        params={{ user: profile.principal_id.toText() }}
+        aria-label={`View ${name}'s profile`}
+        className="shrink-0"
+      >
+        <CommunityAvatar
+          principalText={profile.principal_id.toText()}
+          username={profile.username}
+          avatarKey={avatarPath}
+          className={size}
+        />
+      </Link>
       <div className="min-w-0 flex-1 flex flex-col gap-0.5">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-foreground truncate">
+          <Link
+            to="/u/$user"
+            params={{ user: profile.principal_id.toText() }}
+            className="text-sm font-semibold text-foreground truncate hover:text-primary transition-smooth"
+          >
             {name}
-          </span>
+          </Link>
           {profile.is_admin && (
             <Badge
               variant="outline"

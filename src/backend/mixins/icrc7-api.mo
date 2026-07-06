@@ -56,6 +56,8 @@ import NftDiscount "../lib/nft-discount";
 import AdminIcrc7Lib "../lib/admin-icrc7";
 import Icrc37Lib "../lib/icrc37";
 import JsonMini "../lib/json-mini";
+import GrowerProvLib "../lib/grower-provenance";
+import CoopTypes "../types/coop";
 
 mixin (
   accessControlState     : AccessControl.AccessControlState,
@@ -63,6 +65,7 @@ mixin (
   icrc7Owners            : Map.Map<Nat, ICRC7.Account>,
   icrc7Balances          : Map.Map<Principal, Set.Set<Nat>>,
   icrc7TokenMetadataRaw  : Map.Map<Nat, Blob>,
+  growerProvenanceMeta   : Map.Map<Nat, CoopTypes.GrowerProvenanceMeta>,
   selfPrincipal          : () -> Principal,
   collectionName         : Text,
   totalSupplyCap         : Nat,
@@ -225,17 +228,22 @@ mixin (
     Array.map<Nat, ?[(Text, ICRC7.Value)]>(
       token_ids,
       func(id : Nat) : ?[(Text, ICRC7.Value)] {
-        switch (icrc7TokenMetadataRaw.get(id)) {
-          case null null;
-          case (?blob) {
-            // Parse-on-load means this should never #err in practice; safety
-            // net only.
-            switch (JsonMini.parse(blob)) {
-              case (#err _) null;
-              case (#ok value) {
-                switch value {
-                  case (#Map entries) ?entries;
-                  case _              null; // top-level must be object
+        if (GrowerProvLib.isGrowerProvenanceToken(id)) {
+          switch (growerProvenanceMeta.get(id)) {
+            case null null;
+            case (?meta) ?GrowerProvLib.buildMetadataEntries(meta);
+          };
+        } else {
+          switch (icrc7TokenMetadataRaw.get(id)) {
+            case null null;
+            case (?blob) {
+              switch (JsonMini.parse(blob)) {
+                case (#err _) null;
+                case (#ok value) {
+                  switch value {
+                    case (#Map entries) ?entries;
+                    case _              null;
+                  };
                 };
               };
             };

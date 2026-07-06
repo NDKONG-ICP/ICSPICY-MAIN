@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { VarietyPublic } from "../../declarations/backend.did";
+import { useAllVarietyProvenance } from "../../hooks/useVarietyProvenance";
+import {
+  vendorPhotoThumbSrc,
+  vendorPhotoSrc,
+} from "@/lib/vendor-photo";
+import { HeatClassChip, optProvenanceText } from "./VarietyProvenancePanel";
 
 // Cap rendered matches so a 400+ variety catalog stays snappy.
 const MAX_RESULTS = 50;
@@ -35,6 +41,7 @@ export function VarietyPicker({
   onAddFormOpenChange,
   idPrefix = "variety-picker",
 }: VarietyPickerProps) {
+  const { data: provenanceMap = new Map() } = useAllVarietyProvenance();
   const [search, setSearch] = useState("");
   const [showAddForm, setShowAddFormRaw] = useState(false);
   const [newName, setNewName] = useState("");
@@ -148,7 +155,15 @@ export function VarietyPicker({
         onChange={(e) => setSearch(e.target.value)}
       />
       <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border border-border p-1">
-        {shown.map((v) => (
+        {shown.map((v) => {
+          const prov = provenanceMap.get(v.id);
+          const heat = optProvenanceText(prov?.heatClass);
+          const photoKey = optProvenanceText(prov?.photoKey);
+          const thumb =
+            photoKey != null
+              ? vendorPhotoThumbSrc(photoKey) ?? vendorPhotoSrc(photoKey)
+              : null;
+          return (
           <div
             key={v.id.toString()}
             className={`flex w-full items-center gap-1 rounded-md transition hover:bg-muted ${
@@ -159,12 +174,25 @@ export function VarietyPicker({
           >
             <button
               type="button"
-              className="flex min-w-0 flex-1 items-center justify-between px-2 py-2 text-left text-sm"
+              className="flex min-w-0 flex-1 items-center justify-between gap-2 px-2 py-2 text-left text-sm"
               onClick={() => onChange(v.id.toString())}
             >
-              <span className="font-medium">{v.name}</span>
-              <span className="ml-2 truncate text-xs text-muted-foreground">
-                {v.species}
+              {thumb ? (
+                <img
+                  src={thumb}
+                  alt=""
+                  aria-hidden
+                  className="size-8 shrink-0 rounded object-cover select-none"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
+              ) : null}
+              <span className="font-medium truncate">{v.name}</span>
+              <span className="ml-2 flex shrink-0 items-center gap-1.5">
+                <HeatClassChip heatClass={heat} />
+                <span className="truncate text-xs text-muted-foreground max-w-[6rem]">
+                  {v.species}
+                </span>
               </span>
             </button>
             <Link
@@ -177,7 +205,7 @@ export function VarietyPicker({
               <BookOpen className="size-4" aria-hidden />
             </Link>
           </div>
-        ))}
+        );})}
         {shown.length === 0 && (
           <p className="px-2 py-2 text-center text-xs text-muted-foreground">
             No matches in the catalog.

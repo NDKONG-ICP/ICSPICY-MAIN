@@ -44,12 +44,14 @@ import { useAuth } from "../hooks/useAuth";
 import { useIsAdmin } from "../hooks/useBackend";
 import {
   useCreateProposal,
+  useCreateGrowerProposal,
   useDAOStats,
   useHasDAOAccess,
   useHasVoted,
   useProposals,
   useVoteOnProposal,
 } from "../hooks/useDAO";
+import { useCoopStatus } from "../hooks/useCoopStatus";
 import { useMyNftTokenIds, useNftTokenIdsForPrincipal } from "../hooks/useMyNftIds";
 import { Seo } from "../components/Seo";
 import { staticRouteSeo } from "../lib/seo-routes.mjs";
@@ -80,6 +82,10 @@ const CATEGORY_CONFIG: Record<string, { label: string; className: string }> = {
     label: "✨ Feature",
     className: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
   },
+  GrowerProposal: {
+    label: "🌱 Grower",
+    className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+  },
 };
 
 function categoryKey(c: ProposalCategory): string {
@@ -91,6 +97,7 @@ const FILTER_TABS: Array<{ key: FilterType; label: string }> = [
   { key: "VarietyVote", label: "🌶️ Variety" },
   { key: "ProductVote", label: "🧂 Product" },
   { key: "CommunityDecision", label: "📋 General" },
+  { key: "GrowerProposal", label: "🌱 Grower" },
 ];
 
 function getTimeRemaining(endsAt: bigint): string {
@@ -324,12 +331,19 @@ function ProposalCard({
 function CreateProposalModal({
   open,
   onClose,
-}: { open: boolean; onClose: () => void }) {
+  growerOnly = false,
+}: {
+  open: boolean;
+  onClose: () => void;
+  growerOnly?: boolean;
+}) {
   const createProposal = useCreateProposal();
+  const createGrowerProposal = useCreateGrowerProposal();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [categoryKeyState, setCategoryKeyState] =
-    useState<string>("CommunityDecision");
+  const [categoryKeyState, setCategoryKeyState] = useState<string>(
+    growerOnly ? "GrowerProposal" : "CommunityDecision",
+  );
   const [options, setOptions] = useState<Array<{ id: string; value: string }>>([
     { id: "opt-0", value: "" },
     { id: "opt-1", value: "" },
@@ -368,12 +382,16 @@ function CreateProposalModal({
       CommunityDecision: { CommunityDecision: null },
       TreasurySpend: { TreasurySpend: null },
       FeatureRequest: { FeatureRequest: null },
+      GrowerProposal: { GrowerProposal: null },
     };
+    const effectiveCategory = growerOnly
+      ? "GrowerProposal"
+      : categoryKeyState;
     const startsAt = BigInt(Date.now()) * 1_000_000n;
     const input: CreateProposalInput = {
       title: title.trim(),
       description: description.trim(),
-      category: categoryMap[categoryKeyState] ?? { CommunityDecision: null },
+      category: categoryMap[effectiveCategory] ?? { CommunityDecision: null },
       options: validOptions.map((label) => ({
         option_label: label,
         description: [],
@@ -384,12 +402,16 @@ function CreateProposalModal({
     };
 
     try {
-      await createProposal.mutateAsync(input);
+      if (growerOnly || effectiveCategory === "GrowerProposal") {
+        await createGrowerProposal.mutateAsync(input);
+      } else {
+        await createProposal.mutateAsync(input);
+      }
       toast.success("Proposal created! 🗳️");
       onClose();
       setTitle("");
       setDescription("");
-      setCategoryKeyState("CommunityDecision");
+      setCategoryKeyState(growerOnly ? "GrowerProposal" : "CommunityDecision");
       setOptions([
         { id: "opt-0", value: "" },
         { id: "opt-1", value: "" },
@@ -453,6 +475,7 @@ function CreateProposalModal({
           </div>
 
           {/* Type */}
+          {!growerOnly && (
           <div className="space-y-1.5">
             <Label className="text-sm text-foreground font-medium">
               Proposal Type <span className="text-primary">*</span>
@@ -478,6 +501,10 @@ function CreateProposalModal({
               </SelectContent>
             </Select>
           </div>
+          )}
+          {growerOnly && (
+            <p className="text-sm text-emerald-400">Category: 🌱 Grower Proposal</p>
+          )}
 
           {/* Options */}
           <div className="space-y-2">
@@ -720,9 +747,11 @@ export default function DAOPage() {
   );
   const { data: proposals, isLoading: proposalsLoading } = useProposals();
   const { data: isAdmin } = useIsAdmin();
+  const { isSeatHolder } = useCoopStatus();
 
   const [filter, setFilter] = useState<FilterType>("all");
   const [createOpen, setCreateOpen] = useState(false);
+  const [growerCreateOpen, setGrowerCreateOpen] = useState(false);
 
   // Neither II nor OISY is connected — show gate
   if (!isAuthenticated && !isOisyConnected) {
@@ -784,6 +813,17 @@ export default function DAOPage() {
           >
             <Plus className="w-4 h-4 mr-1.5" />
             Create Proposal
+          </Button>
+        )}
+        {isSeatHolder && (
+          <Button
+            onClick={() => setGrowerCreateOpen(true)}
+            variant="outline"
+            className="border-emerald-600/50 text-emerald-300 flex-shrink-0"
+            data-ocid="create-grower-proposal-btn"
+          >
+            <Sprout className="w-4 h-4 mr-1.5" />
+            Grower Proposal
           </Button>
         )}
       </motion.div>
@@ -937,6 +977,11 @@ export default function DAOPage() {
       <CreateProposalModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
+      />
+      <CreateProposalModal
+        open={growerCreateOpen}
+        onClose={() => setGrowerCreateOpen(false)}
+        growerOnly
       />
     </div>
   );

@@ -30,12 +30,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { RecipePublic, VarietyPublic } from "../../declarations/backend.did";
+import type { RecipePublic, VarietyProvenancePublic, VarietyPublic } from "../../declarations/backend.did";
 import { recipeCategoryLabel } from "../../hooks/useCookbook";
 import type {
   GuideConditions,
   GuideSectionDraft,
 } from "../../lib/variety-guide-ai";
+import { VarietyProvenancePanel } from "./VarietyProvenancePanel";
 
 // ── Markdown-lite renderer with [recipe:ID] chips ────────────────────────────
 
@@ -274,6 +275,8 @@ export type VarietyGuideCardProps = {
   personalized: boolean;
   canPersonalize: boolean;
   onApplyConditions: (c: GuideConditions) => void;
+  intro?: string | null;
+  provenance?: VarietyProvenancePublic | null;
 };
 
 export function VarietyGuideCard({
@@ -287,6 +290,8 @@ export function VarietyGuideCard({
   personalized,
   canPersonalize,
   onApplyConditions,
+  intro = null,
+  provenance = null,
 }: VarietyGuideCardProps) {
   const reducedMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState<string>("");
@@ -436,6 +441,12 @@ export function VarietyGuideCard({
           Personalize
         </button>
       </div>
+
+      <VarietyProvenancePanel
+        varietyName={variety.name}
+        intro={intro}
+        provenance={provenance}
+      />
 
       {/* ── Generating state ── */}
       {status !== "ready" && (

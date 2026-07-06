@@ -1,3 +1,4 @@
+import { type Backend, createActor } from "@/backend";
 import { AvatarUpload } from "@/components/community/AvatarUpload";
 import { CommunityAvatar } from "@/components/community/CommunityAvatar";
 import { Badge } from "@/components/ui/badge";
@@ -13,23 +14,38 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { useActor } from "@/hooks/useActor";
+import {
+  usePublicProfileFull,
+  useSetProfileWallpaper,
+} from "@/hooks/usePublicProfilePage";
+import {
+  WALLPAPER_PRESETS,
+  parseWallpaperKey,
+  presetWallpaperValue,
+  type WallpaperPresetId,
+} from "@/lib/profile-wallpapers";
+import { uploadWallpaper } from "@/lib/wallpaper-upload";
 import { Link } from "@tanstack/react-router";
 import {
   Copy,
   Flame,
+  ImagePlus,
   Link2,
   Loader2,
   Save,
   ShoppingBag,
   User,
   Wallet,
+  X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ConnectButton } from "../components/ConnectButton";
 import { useAuth } from "../hooks/useAuth";
 import { useMembership, useProfile, useSaveProfile } from "../hooks/useBackend";
 import { useMyNftTokenIds } from "../hooks/useMyNftIds";
+import { NoIndexSeo } from "../components/NoIndexSeo";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { getNftImageUrl } from "../lib/nft-config";
 
@@ -42,7 +58,12 @@ export default function ProfilePage() {
   usePageTitle("Profile");
 
   const { isAuthenticated, isInitializing, principal } = useAuth();
+  const { actor } = useActor<Backend>(createActor);
   const { data: profile, isPending: profilePending } = useProfile();
+  const { data: profileFull } = usePublicProfileFull(principal ?? undefined);
+  const setWallpaper = useSetProfileWallpaper();
+  const wallpaperInputRef = useRef<HTMLInputElement>(null);
+  const [wallpaperUploading, setWallpaperUploading] = useState(false);
   const { data: membership } = useMembership();
   const { data: tokenIds, isLoading: nftsLoading } = useMyNftTokenIds();
   const saveProfile = useSaveProfile();
@@ -64,6 +85,11 @@ export default function ProfilePage() {
   }, [profile, dirty]);
 
   const pidText = principal?.toText() ?? "";
+  const currentWallpaper =
+    profileFull?.wallpaper_key.length === 1
+      ? profileFull.wallpaper_key[0]
+      : null;
+  const currentWallpaperParsed = parseWallpaperKey(currentWallpaper);
   const displayName =
     profile?.username && profile.username.length > 0
       ? profile.username
@@ -91,6 +117,37 @@ export default function ProfilePage() {
     }
   }
 
+  async function handlePresetWallpaper(id: WallpaperPresetId) {
+    try {
+      await setWallpaper.mutateAsync(presetWallpaperValue(id));
+      toast.success("Wallpaper updated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not set wallpaper");
+    }
+  }
+
+  async function handleClearWallpaper() {
+    try {
+      await setWallpaper.mutateAsync("");
+      toast.success("Wallpaper removed");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not clear wallpaper");
+    }
+  }
+
+  async function handleWallpaperFile(file: File | undefined) {
+    if (!file || !file.type.startsWith("image/")) return;
+    setWallpaperUploading(true);
+    try {
+      await uploadWallpaper(actor, file);
+      toast.success("Wallpaper uploaded");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Wallpaper upload failed");
+    } finally {
+      setWallpaperUploading(false);
+    }
+  }
+
   if (!isInitializing && !isAuthenticated) {
     return (
       <div className="max-w-lg mx-auto py-16 text-center space-y-6 px-4">
@@ -113,6 +170,7 @@ export default function ProfilePage() {
       className="max-w-4xl mx-auto space-y-8 px-4 pb-16"
       data-ocid="profile-page"
     >
+      <NoIndexSeo title="Profile | IC SPICY" path="/profile" />
       <div className="flex flex-col sm:flex-row sm:items-start gap-6">
         {pidText ? (
           <AvatarUpload
@@ -141,6 +199,13 @@ export default function ProfilePage() {
             <Button type="button" variant="ghost" size="sm" onClick={copyPid}>
               <Copy className="h-3 w-3 mr-1" /> Copy
             </Button>
+            {pidText ? (
+              <Button asChild type="button" variant="outline" size="sm">
+                <Link to="/u/$user" params={{ user: pidText }}>
+                  View public profile
+                </Link>
+              </Button>
+            ) : null}
             {membership && (
               <Badge
                 variant="outline"
@@ -228,6 +293,88 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle>Profile wallpaper</CardTitle>
+          <CardDescription>
+            Full-page background on your public profile — presets are free;
+            custom images up to 2 MB.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {WALLPAPER_PRESETS.map((preset) => {
+              const selected =
+                currentWallpaperParsed?.kind === "preset" &&
+                currentWallpaperParsed.id === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className={[
+                    "relative h-20 rounded-lg border-2 overflow-hidden transition-colors",
+                    selected
+                      ? "border-primary ring-2 ring-primary/30"
+                      : "border-border hover:border-primary/50",
+                  ].join(" ")}
+                  style={preset.style}
+                  onClick={() => void handlePresetWallpaper(preset.id)}
+                  disabled={setWallpaper.isPending}
+                  aria-label={`${preset.name} wallpaper`}
+                  aria-pressed={selected ? "true" : "false"}
+                >
+                  <span className="absolute inset-x-0 bottom-0 bg-black/55 text-[10px] text-white font-medium py-0.5">
+                    {preset.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => wallpaperInputRef.current?.click()}
+              disabled={wallpaperUploading}
+            >
+              {wallpaperUploading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ImagePlus className="h-4 w-4" />
+              )}
+              Upload custom
+            </Button>
+            <input
+              ref={wallpaperInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              aria-label="Upload profile wallpaper"
+              title="Upload profile wallpaper"
+              onChange={(e) => {
+                void handleWallpaperFile(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+            {currentWallpaper ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-muted-foreground"
+                onClick={() => void handleClearWallpaper()}
+                disabled={setWallpaper.isPending}
+              >
+                <X className="h-4 w-4" />
+                Remove wallpaper
+              </Button>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
+
       <div>
         <h2 className="font-display text-xl font-semibold mb-4 flex items-center gap-2">
           <Flame className="h-6 w-6 text-red-500" />
@@ -283,7 +430,7 @@ export default function ProfilePage() {
         <Button asChild variant="outline" size="sm">
           <Link to="/community" className="gap-2">
             <Link2 className="h-4 w-4" />
-            Community
+            Community Garden
           </Link>
         </Button>
       </div>

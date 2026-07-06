@@ -18,6 +18,7 @@ import Order "mo:core/Order";
 import Nat   "mo:core/Nat";
 import Char  "mo:core/Char";
 import Iter  "mo:core/Iter";
+import Map   "mo:core/Map";
 
 import Types "../types";
 
@@ -33,6 +34,9 @@ module {
     "it", "its", "this", "that", "these", "those", "i", "we", "you",
     "he", "she", "they", "not", "no", "as", "if", "so", "up", "out",
     "about", "which", "what", "how", "can", "will", "more", "all",
+    // Pepperpedia corpus terms — match nearly every chunk and blow instruction limits.
+    "pepper", "peppers", "chile", "chili", "chilli", "variety", "varieties",
+    "hot", "plant", "plants", "seed", "seeds", "tell", "me",
   ];
 
   func isStopWord(t : Text) : Bool {
@@ -219,19 +223,23 @@ module {
       return { chunks = []; slugs = [] };
     };
 
-    // Score every chunk.
-    let scored = Array.map<Types.ChunkRecord, (Nat, Types.ChunkRecord)>(
-      chunks,
-      func(c) { (scoreChunk(c, queryTerms, docs), c) },
-    );
+    // Index docs by slug once — avoids O(chunks × docs) Array.find per chunk.
+    var docBySlug = Map.empty<Text, Types.DocumentRecord>();
+    for (d in docs.vals()) {
+      Map.add(docBySlug, Text.compare, d.slug, d);
+    };
 
-    // Filter to only positive-scoring chunks and sort descending.
-    let positive = Array.filter<(Nat, Types.ChunkRecord)>(
-      scored,
-      func((s, _)) { s > 0 },
-    );
+    // Score chunks; keep a bounded candidate set without re-sorting the full corpus.
+    let CANDIDATE_CAP : Nat = 48;
+    var candidates : [(Nat, Types.ChunkRecord)] = [];
+    for (c in chunks.vals()) {
+      let s = scoreChunk(c, queryText, queryTerms, docBySlug);
+      if (s == 0) { continue };
+      candidates := insertCandidate(candidates, s, c, CANDIDATE_CAP);
+    };
+
     let sorted = Array.sort<(Nat, Types.ChunkRecord)>(
-      positive,
+      candidates,
       func((a, _), (b, _)) {
         if (a > b) #less else if (a < b) #greater else #equal
       },
@@ -256,15 +264,51 @@ module {
 
   // ── Scoring ──────────────────────────────────────────────────────────────────
 
+  // Inserts (score, chunk) into a bounded candidate list — O(cap) per insert, no full re-sort.
+  func insertCandidate(
+    xs : [(Nat, Types.ChunkRecord)],
+    score : Nat,
+    chunk : Types.ChunkRecord,
+    cap : Nat,
+  ) : [(Nat, Types.ChunkRecord)] {
+    if (xs.size() < cap) {
+      return Array.concat(xs, [(score, chunk)]);
+    };
+    var minIdx : Nat = 0;
+    var minScore = xs[0].0;
+    var i : Nat = 1;
+    while (i < xs.size()) {
+      let (s, _) = xs[i];
+      if (s < minScore) { minScore := s; minIdx := i };
+      i += 1;
+    };
+    if (score <= minScore) { return xs };
+    Array.tabulate<(Nat, Types.ChunkRecord)>(
+      xs.size(),
+      func(j : Nat) { if (j == minIdx) (score, chunk) else xs[j] },
+    )
+  };
+
   func scoreChunk(
     chunk : Types.ChunkRecord,
+    queryText : Text,
     queryTerms : [Text],
-    docs : [Types.DocumentRecord],
+    docBySlug : Map.Map<Text, Types.DocumentRecord>,
   ) : Nat {
     // Find the owning document for title/tag boosts.
-    let docMeta = Array.find<Types.DocumentRecord>(docs, func(d) { d.slug == chunk.slug });
+    let docMeta = Map.get(docBySlug, Text.compare, chunk.slug);
+    let qLower = Text.toLower(queryText);
 
     var score : Nat = 0;
+    switch (docMeta) {
+      case (?meta) {
+        let titleLower = Text.toLower(meta.title);
+        if (titleLower.size() > 4 and Text.contains(qLower, #text titleLower)) {
+          score += 500;
+        };
+      };
+      case null {};
+    };
     for (term in queryTerms.vals()) {
       // Term frequency in chunk body.
       let tfMatch = Array.find<(Text, Nat)>(chunk.terms, func(pair) {
@@ -279,7 +323,7 @@ module {
       switch (docMeta) {
         case (?meta) {
           if (Text.contains(Text.toLower(meta.title), #text term)) {
-            score += 30;
+            score += if (term.size() >= 4) { 70 } else { 30 };
           };
           for (tag in meta.tags.vals()) {
             if (Text.toLower(tag) == term) { score += 20 };

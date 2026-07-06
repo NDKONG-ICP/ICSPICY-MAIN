@@ -21,6 +21,7 @@ import Set "mo:core/Set";
 
 import RateLimits "../lib/rate-limits";
 import RateLimit "../lib/rate-limit";
+import NotificationsLib "../lib/notifications";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
@@ -44,7 +45,20 @@ mixin (
   selfPrincipal : () -> Principal,
   nextProductId : { var value : Nat },
   nextOrderId : { var value : Nat },
+  notifications : NotificationsLib.Inbox,
+  nextNotificationId : { var value : Nat },
 ) {
+  func notifyAdminsOrderPlaced(order : MarketTypes.Order) {
+    let totalDollars = Nat.toText(order.total_cents / 100);
+    let totalCentsRem = order.total_cents % 100;
+    let cents = if (totalCentsRem < 10) "0" # Nat.toText(totalCentsRem) else Nat.toText(totalCentsRem);
+    NotificationsLib.emitToAdmins(
+      notifications, nextNotificationId,
+      AccessControl.listAdmins(accessControlState),
+      #orderPlaced, ?order.buyer, ?Nat.toText(order.id),
+      "New order #" # Nat.toText(order.id) # " — $" # totalDollars # "." # cents,
+    );
+  };
   func toPublic(p : MarketTypes.Product) : MarketTypes.ProductPublic {
     let config = productShippingConfigs.get(p.id);
     MarketLib.toPublicProduct(
@@ -115,6 +129,7 @@ mixin (
       case (#err(e)) Runtime.trap(e);
       case (#ok(order)) {
         nextOrderId.value += 1;
+        notifyAdminsOrderPlaced(order);
         order;
       };
     };

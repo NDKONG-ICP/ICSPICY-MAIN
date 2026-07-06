@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from "url";
 import react from "@vitejs/plugin-react";
+import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 import environment from "vite-plugin-environment";
 
@@ -16,6 +17,20 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: false,
     minify: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("three") || id.includes("@react-three")) return "three-vendor";
+          if (id.includes("leaflet")) return "leaflet-vendor";
+          if (id.includes("recharts")) return "recharts-vendor";
+          if (id.includes("qrcode")) return "qrcode-vendor";
+          if (id.includes("@dfinity") || id.includes("@icp-sdk")) return "icp-vendor";
+          if (id.includes("@ic-pay")) return "icpay-vendor";
+          if (id.includes("motion")) return "motion-vendor";
+        },
+      },
+    },
   },
   css: {
     postcss: "./postcss.config.js",
@@ -40,7 +55,13 @@ export default defineConfig({
     environment("all", { prefix: "DFX_" }),
     environment(["II_URL"]),
     react(),
-  ],
+    process.env.ANALYZE === "1" &&
+      visualizer({
+        open: false,
+        gzipSize: true,
+        filename: "dist/stats.html",
+      }),
+  ].filter(Boolean),
   resolve: {
     alias: [
       {

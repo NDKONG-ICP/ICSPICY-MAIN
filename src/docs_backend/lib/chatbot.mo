@@ -90,6 +90,10 @@ module {
     "3. Never fabricate product prices, canister IDs, or financial figures.\n" #
     "4. Keep answers under 250 words unless the user asks for more.\n" #
     "5. Do not reveal that you are an AI or LLM unless directly asked.\n" #
+    "6. When a user asks about a specific pepper or plant variety, answer from VARIETY knowledge documents " #
+    "(Pepperpedia entries beginning with \"VARIETY:\"). Always credit the breeder when known. " #
+    "Offer the in-app growing guide link (/variety/{id}/guide) and mention the variety can be tracked in NIMS. " #
+    "If the variety is not in the knowledge base, say so honestly — do NOT invent Scoville numbers or breeder credits.\n" #
     extra
   };
 

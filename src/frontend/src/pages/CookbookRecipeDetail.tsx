@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   Bot,
   ChevronRight,
-  Flame,
   Heart,
   Loader2,
   Printer,
@@ -23,6 +22,7 @@ import { motion } from "motion/react";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { Seo } from "../components/Seo";
+import { openSpicyAi } from "../components/SpicyAiWidget";
 import { YouTubeEmbed } from "../components/YouTubeEmbed";
 import type { Ingredient } from "../declarations/backend.did";
 import { useAuth } from "../hooks/useAuth";
@@ -319,7 +319,13 @@ export default function CookbookRecipeDetailPage() {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/15 to-transparent">
-                  <Flame className="w-20 h-20 text-primary opacity-70" />
+                  <img
+                    src="/icon-192.png"
+                    alt="IC SPICY logo"
+                    width={96}
+                    height={96}
+                    className="w-24 h-24 rounded-full opacity-95"
+                  />
                 </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-95" />
@@ -459,11 +465,12 @@ export default function CookbookRecipeDetailPage() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  className="opacity-70 cursor-not-allowed"
                   type="button"
-                  disabled
-                  title="Coming with SpicyAI Phase 8 wiring"
-                  data-ocid="cookbook-spicyai-placeholder"
+                  onClick={() =>
+                    openSpicyAi(`Tell me about the ${recipe.title} recipe.`)
+                  }
+                  title="Ask SpicyAI about this recipe"
+                  data-ocid="cookbook-spicyai-btn"
                 >
                   <Bot className="w-4 h-4 mr-2" />
                   Ask SpicyAI
@@ -609,6 +616,26 @@ export default function CookbookRecipeDetailPage() {
                   </Accordion>
                 </section>
               ) : null}
+
+              <section
+                aria-label="Growing guides"
+                className="rounded-xl border border-border/60 bg-card/50 p-4 flex flex-wrap items-center justify-between gap-3"
+                data-ocid="recipe-guides-hint"
+              >
+                <p className="text-sm text-muted-foreground">
+                  <span className="mr-1" aria-hidden>
+                    📖
+                  </span>
+                  Recipes like this power our variety growing guides —
+                  stage-by-stage KNF schedules personalized to your zone.
+                </p>
+                <Link
+                  to="/guides"
+                  className="text-sm font-semibold text-primary hover:underline whitespace-nowrap"
+                >
+                  Browse growing guides →
+                </Link>
+              </section>
 
               {relatedRecipes.length > 0 ? (
                 <section className="pt-4 border-t border-border/55">

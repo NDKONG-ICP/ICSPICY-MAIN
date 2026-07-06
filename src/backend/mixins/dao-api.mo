@@ -6,6 +6,8 @@ import AccessControl "../lib/access-control";
 import Common "../types/common";
 import DAOTypes "../types/dao";
 import DAOLib "../lib/dao";
+import CoopLib "../lib/coop";
+import CoopTypes "../types/coop";
 
 import RateLimits "../lib/rate-limits";
 import RateLimit "../lib/rate-limit";
@@ -19,6 +21,7 @@ mixin (
   linkedWallets : Map.Map<Principal, [Principal]>,
   daoTokenVotes : Map.Map<Text, Bool>,
   nextProposalId : { var value : Nat },
+  coopSeats : Map.Map<Nat, CoopTypes.CoopSeat>,
 ) {
   // ── Public queries ─────────────────────────────────────────────────────────
 
@@ -83,6 +86,22 @@ mixin (
   };
 
   // ── Admin proposal management ──────────────────────────────────────────────
+
+  public shared ({ caller }) func createGrowerProposal(input : DAOTypes.CreateProposalInput) : async {
+    proposalId : Nat;
+  } {
+    AccessControl.requireAuthenticated(caller);
+    if (not CoopLib.isActiveSeatHolder(caller, linkedWallets, icrc7Balances, coopSeats)) {
+      Runtime.trap("Unauthorized: active co-op seat required");
+    };
+    if (input.category != #GrowerProposal) {
+      Runtime.trap("Category must be #GrowerProposal");
+    };
+    let proposal = DAOLib.createProposal(proposals, nextProposalId.value, caller, input);
+    let id = nextProposalId.value;
+    nextProposalId.value += 1;
+    { proposalId = id };
+  };
 
   public shared ({ caller }) func createProposal(input : DAOTypes.CreateProposalInput) : async { proposalId : Nat } {
     if (not AccessControl.isAdmin(accessControlState, caller)) {

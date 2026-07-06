@@ -1,6 +1,8 @@
 import Map "mo:core/Map";
 import Set "mo:core/Set";
 import Nat "mo:core/Nat";
+import Text "mo:core/Text";
+import Iter "mo:core/Iter";
 import AccessControl "../lib/access-control";
 import AuditLog "../lib/audit-log";
 import Common "../types/common";
@@ -11,6 +13,7 @@ import Time "mo:core/Time";
 
 import RateLimits "../lib/rate-limits";
 import RateLimit "../lib/rate-limit";
+import NotificationsLib "../lib/notifications";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
@@ -24,7 +27,54 @@ mixin (
   nextCommentId : { var value : Nat },
   nextTipId : { var value : Nat },
   auditLog : { var value : AuditLog.AuditLog },
+  notifications : NotificationsLib.Inbox,
+  nextNotificationId : { var value : Nat },
 ) {
+  // ── Notification emission helpers ──────────────────────────────────────────
+
+  func displayNameOf(user : Principal) : Text {
+    switch (profiles.get(user)) {
+      case (?p) if (p.username != "") p.username else shortPid(user);
+      case null shortPid(user);
+    };
+  };
+
+  func shortPid(user : Principal) : Text {
+    let t = user.toText();
+    if (t.size() > 8) { Text.fromIter(t.chars().take(8)) # "…" } else t;
+  };
+
+  /// Notify a post's author (never the acting user themself).
+  func notifyPostAuthor(
+    post_id : Common.PostId,
+    kind : { #like; #comment; #tip },
+    sender : Principal,
+    verb : Text,
+  ) {
+    switch (posts.get(post_id)) {
+      case (?post) {
+        if (post.is_deleted) return;
+        ignore NotificationsLib.emit(
+          notifications, nextNotificationId,
+          post.author,
+          switch (kind) { case (#like) #like; case (#comment) #comment; case (#tip) #tip },
+          ?sender,
+          ?Nat.toText(post_id),
+          displayNameOf(sender) # " " # verb,
+        );
+      };
+      case null {};
+    };
+  };
+
+  func notifyAdmins(kind : { #orderPlaced; #newUser }, sender : Principal, refId : ?Text, message : Text) {
+    NotificationsLib.emitToAdmins(
+      notifications, nextNotificationId,
+      AccessControl.listAdmins(accessControlState),
+      switch (kind) { case (#orderPlaced) #orderPlaced; case (#newUser) #newUser },
+      ?sender, refId, message,
+    );
+  };
   // ── Posts ───────────────────────────────────────────────────────────────────
 
   public shared ({ caller }) func createPost(
@@ -57,7 +107,11 @@ mixin (
 
   public shared ({ caller }) func likePost(post_id : Common.PostId) : async Bool {
     AccessControl.requireAuthenticated(caller);
-    CommunityLib.toggleLikePost(posts, profiles, bannedUsers, post_id, caller);
+    let nowLiked = CommunityLib.toggleLikePost(posts, profiles, bannedUsers, post_id, caller);
+    if (nowLiked) {
+      notifyPostAuthor(post_id, #like, caller, "liked your post");
+    };
+    nowLiked;
   };
 
   public shared ({ caller }) func unlikePost(post_id : Common.PostId) : async Nat {
@@ -80,6 +134,7 @@ mixin (
       comments, posts, profiles, bannedUsers, nextCommentId.value, caller, input,
     );
     nextCommentId.value += 1;
+    notifyPostAuthor(input.post_id, #comment, caller, "commented on your post");
     comment;
   };
 
@@ -95,6 +150,7 @@ mixin (
       { post_id; content; anonymous = is_anonymous },
     );
     nextCommentId.value += 1;
+    notifyPostAuthor(post_id, #comment, caller, "commented on your post");
     comment;
   };
 
@@ -115,7 +171,15 @@ mixin (
 
   public shared ({ caller }) func followUser(target : Principal) : async Bool {
     AccessControl.requireAuthenticated(caller);
-    CommunityLib.toggleFollow(profiles, bannedUsers, caller, target);
+    let nowFollowing = CommunityLib.toggleFollow(profiles, bannedUsers, caller, target);
+    if (nowFollowing) {
+      ignore NotificationsLib.emit(
+        notifications, nextNotificationId,
+        target, #follow, ?caller, null,
+        displayNameOf(caller) # " followed you",
+      );
+    };
+    nowFollowing;
   };
 
   public shared ({ caller }) func unfollowUser(target : Principal) : async () {
@@ -166,29 +230,54 @@ mixin (
           # " amount=" # Nat.toText(input.amount)
           # " block=" # Nat.toText(input.block_index);
       });
+      notifyPostAuthor(input.post_id, #tip, caller, "tipped your post");
     };
     ok;
   };
 
   // ── Profiles ────────────────────────────────────────────────────────────────
 
+  func profileExisted(user : Principal) : Bool {
+    switch (profiles.get(user)) {
+      case null false;
+      case (?_) true;
+    };
+  };
+
+  func notifyIfNewProfile(caller : Principal, wasNew : Bool) {
+    if (wasNew) {
+      notifyAdmins(
+        #newUser, caller, ?caller.toText(),
+        "New grower joined: " # displayNameOf(caller),
+      );
+    };
+  };
+
   public shared ({ caller }) func saveCallerUserProfile(
     input : CommunityTypes.SaveProfileInput,
   ) : async Bool {
     AccessControl.requireAuthenticated(caller);
-    CommunityLib.saveProfile(profiles, caller, input);
+    let wasNew = not profileExisted(caller);
+    let ok = CommunityLib.saveProfile(profiles, caller, input);
+    notifyIfNewProfile(caller, wasNew);
+    ok;
   };
 
   public shared ({ caller }) func saveProfile(
     input : CommunityTypes.SaveProfileInput,
   ) : async Bool {
     AccessControl.requireAuthenticated(caller);
-    CommunityLib.saveProfile(profiles, caller, input);
+    let wasNew = not profileExisted(caller);
+    let ok = CommunityLib.saveProfile(profiles, caller, input);
+    notifyIfNewProfile(caller, wasNew);
+    ok;
   };
 
   public shared ({ caller }) func ensureCallerProfile() : async () {
     AccessControl.requireAuthenticated(caller);
+    let wasNew = not profileExisted(caller);
     CommunityLib.ensureCallerProfile(profiles, caller);
+    notifyIfNewProfile(caller, wasNew);
   };
 
   public query ({ caller }) func getCallerUserProfile() : async ?CommunityTypes.UserProfilePublic {

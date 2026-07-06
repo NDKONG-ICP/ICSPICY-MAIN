@@ -20,6 +20,7 @@ import { useState } from "react";
 import { OrderStatus } from "../backend";
 import { useAuth } from "../hooks/useAuth";
 import { useMyOrders } from "../hooks/useBackend";
+import { NoIndexSeo } from "../components/NoIndexSeo";
 import { usePageTitle } from "../hooks/usePageTitle";
 import type { Order } from "../types/index";
 
@@ -259,6 +260,7 @@ export default function OrdersPage() {
 
   return (
     <div>
+      <NoIndexSeo title="My Orders | IC SPICY" path="/orders" />
       {/* Page header */}
       <div className="flex items-center gap-3 mb-8">
         <Package className="w-7 h-7 text-primary" />

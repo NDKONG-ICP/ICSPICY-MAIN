@@ -40,6 +40,7 @@ import {
 import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
 import { useRavenPerks } from "../hooks/useRavenPerks";
+import { NoIndexSeo } from "../components/NoIndexSeo";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useUsageTracking } from "../hooks/useUsageTracking";
 import {
@@ -882,6 +883,7 @@ export default function CheckoutPage() {
   // ─ Review step ─
   return (
     <div className="max-w-4xl mx-auto" data-ocid="checkout-page">
+      <NoIndexSeo title="Checkout | IC SPICY" path="/checkout" />
       <div className="flex items-center gap-3 mb-8">
         <ShoppingBag className="w-7 h-7 text-primary" />
         <h1 className="font-display font-bold text-3xl text-foreground">

@@ -42,6 +42,7 @@ import { toast } from "sonner";
 import type { Offer, ResaleListingPublic } from "../backend";
 import { OfferStatus, ProductCategory, RarityTier } from "../backend";
 import { NftResaleSection } from "../components/NftResaleSection";
+import { CoopShopCard } from "../components/coop/CoopShopCard";
 import { ShopListingImage } from "../components/ShopListingImage";
 import { ShopPlantsSection } from "../components/ShopPlantsSection";
 import {
@@ -2099,6 +2100,10 @@ export default function MarketplacePage() {
           Live nursery plants from NIMS, plus pods, spices, garden goods, and
           NFT resale — all in one shop.
         </p>
+      </div>
+
+      <div className="mb-8">
+        <CoopShopCard />
       </div>
 
       {/* Primary shop tabs (Phase 6) */}

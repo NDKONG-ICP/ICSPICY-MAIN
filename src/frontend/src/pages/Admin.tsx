@@ -19,6 +19,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { NoIndexSeo } from "@/components/NoIndexSeo";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { BACKEND_CANISTER_ID } from "@/lib/auth-config";
 import {
@@ -61,6 +62,7 @@ import {
   Tag,
   Trash2,
   Upload,
+  UserCircle,
   Users,
   Vote,
   Wallet,
@@ -91,6 +93,7 @@ import { AdminCommunityTab } from "../components/admin/AdminCommunityTab";
 import { AdminNFTPoolTab } from "../components/admin/AdminNFTPoolTab";
 import { AdminOrdersTab } from "../components/admin/AdminOrdersTab";
 import { AdminQRLabelsTab } from "../components/admin/AdminQRLabelsTab";
+import { AdminUsersTab } from "../components/admin/AdminUsersTab";
 import { AdminUsageTab } from "../components/admin/AdminUsageTab";
 import { useNewOrderCountAdmin } from "../hooks/useAdminShop";
 import { useAuth } from "../hooks/useAuth";
@@ -5017,6 +5020,7 @@ export default function AdminPage() {
 
   return (
     <div data-ocid="admin-panel">
+      <NoIndexSeo title="IC SPICY Admin" path="/admin" />
       <div className="mb-8">
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -5175,6 +5179,14 @@ export default function AdminPage() {
               Founders
             </TabsTrigger>
             <TabsTrigger
+              value="users"
+              className="text-xs gap-1.5 flex-1"
+              data-ocid="admin-tab-users"
+            >
+              <UserCircle className="w-3.5 h-3.5" />
+              Users
+            </TabsTrigger>
+            <TabsTrigger
               value="community"
               className="text-xs gap-1.5 flex-1"
               data-ocid="admin-tab-community"
@@ -5244,6 +5256,9 @@ export default function AdminPage() {
           </TabsContent>
           <TabsContent value="founders">
             <FoundersCollectionTab />
+          </TabsContent>
+          <TabsContent value="users">
+            <AdminUsersTab />
           </TabsContent>
           <TabsContent value="community">
             <AdminCommunityTab />

@@ -20,9 +20,11 @@ type SeoProps = {
   /** Path beginning with "/" — canonical resolves against icspicy.app. */
   path: string;
   ogImage?: string;
-  ogType?: "website" | "article" | "product";
+  ogType?: "website" | "article" | "product" | "profile";
   /** One or more schema.org objects rendered as JSON-LD script tags. */
   jsonLd?: object | object[];
+  /** When true, injects `<meta name="robots" content="noindex, nofollow">`. */
+  noIndex?: boolean;
 };
 
 function upsertMeta(attr: "name" | "property", key: string, content: string) {
@@ -62,6 +64,21 @@ function setJsonLd(serialized: string | undefined) {
   document.head.appendChild(script);
 }
 
+function upsertRobots(noIndex: boolean) {
+  let el = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
+  if (noIndex) {
+    if (!el) {
+      el = document.createElement("meta");
+      el.setAttribute("name", "robots");
+      el.setAttribute("data-seo", "dynamic");
+      document.head.appendChild(el);
+    }
+    el.setAttribute("content", "noindex, nofollow");
+  } else if (el?.getAttribute("data-seo") === "dynamic") {
+    el.remove();
+  }
+}
+
 export function Seo({
   title,
   description,
@@ -69,6 +86,7 @@ export function Seo({
   ogImage = DEFAULT_OG_IMAGE,
   ogType = "website",
   jsonLd,
+  noIndex = false,
 }: SeoProps) {
   // Serialize outside the effect so object-identity churn from inline
   // jsonLd props doesn't re-run the effect every render.
@@ -97,8 +115,10 @@ export function Seo({
     upsertMeta("name", "twitter:description", description);
     upsertMeta("name", "twitter:image", ogImage);
 
+    upsertRobots(noIndex);
+
     setJsonLd(jsonLdStr);
-  }, [title, description, path, ogImage, ogType, jsonLdStr]);
+  }, [title, description, path, ogImage, ogType, jsonLdStr, noIndex]);
 
   return null;
 }

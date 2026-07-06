@@ -22,6 +22,7 @@ import {
   useRedeemClaim,
   useTokenMetadata,
 } from "../hooks/useBackend";
+import { NoIndexSeo } from "../components/NoIndexSeo";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { getNftImageUrl } from "../lib/nft-config";
 
@@ -164,9 +165,16 @@ function NftImage({ tokenId }: { tokenId: bigint }) {
 
 // ── Page Shell ────────────────────────────────────────────────────────────────
 
-function PageShell({ children }: { children: React.ReactNode }) {
+function PageShell({
+  children,
+  path,
+}: {
+  children: React.ReactNode;
+  path: string;
+}) {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-10">
+      <NoIndexSeo title="Claim NFT | IC SPICY" path={path} />
       <div className="mb-8 text-center select-none">
         <Flame className="mx-auto h-9 w-9 text-red-500 mb-2" />
         <span className="font-display text-xl font-bold tracking-tight text-foreground">
@@ -202,7 +210,7 @@ export default function ClaimPage() {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <PageShell>
+      <PageShell path={`/claim/${claimToken ?? ""}`}>
         <Card className="border-border bg-card shadow-lg">
           <CardContent className="pt-6 pb-8 space-y-5">
             <Skeleton className="aspect-square w-full rounded-2xl" />
@@ -220,7 +228,7 @@ export default function ClaimPage() {
   // ── Invalid token ──────────────────────────────────────────────────────────
   if (!claimInfo) {
     return (
-      <PageShell>
+      <PageShell path={`/claim/${claimToken ?? ""}`}>
         <Card className="border-border bg-card shadow-lg">
           <CardContent className="pt-10 pb-10 text-center space-y-3">
             <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground/60" />
@@ -240,7 +248,7 @@ export default function ClaimPage() {
   // ── Already redeemed (and not currently succeeded in this session) ─────────
   if (claimInfo.redeemed && !redeem.isSuccess) {
     return (
-      <PageShell>
+      <PageShell path={`/claim/${claimToken ?? ""}`}>
         <Card className="border-border bg-card shadow-lg">
           <CardContent className="pt-6 pb-8 space-y-5">
             <NftImage tokenId={claimInfo.tokenId} />
@@ -284,7 +292,7 @@ export default function ClaimPage() {
   if (redeem.isSuccess) {
     const wonTokenId = redeem.data.tokenId ?? claimInfo.tokenId;
     return (
-      <PageShell>
+      <PageShell path={`/claim/${claimToken ?? ""}`}>
         <div className="relative w-full">
           <Confetti />
           <Card className="border-emerald-500/30 bg-emerald-500/5 shadow-lg shadow-emerald-900/10">
@@ -352,7 +360,7 @@ export default function ClaimPage() {
   }
 
   return (
-    <PageShell>
+    <PageShell path={`/claim/${claimToken ?? ""}`}>
       <Card className="border-border bg-card shadow-lg">
         <CardContent className="pt-6 pb-8 space-y-5">
           {/* NFT preview */}

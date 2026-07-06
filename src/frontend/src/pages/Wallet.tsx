@@ -49,6 +49,7 @@ import {
 } from "../hooks/useBackend";
 import { useNftDiscount } from "../hooks/useNftDiscount";
 import { useMyNftTokenIds, useNftTokenIdsForPrincipal } from "../hooks/useMyNftIds";
+import { NoIndexSeo } from "../components/NoIndexSeo";
 import { usePageTitle } from "../hooks/usePageTitle";
 import {
   type TokenBalanceRow,
@@ -687,6 +688,7 @@ export default function WalletPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 px-4 pb-16" data-ocid="wallet-page">
+      <NoIndexSeo title="Wallet | IC SPICY" path="/wallet" />
       {/* ── Header ── */}
       <div className="space-y-2">
         <h1 className="font-display text-3xl font-bold text-foreground flex items-center gap-2">

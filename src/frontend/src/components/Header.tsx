@@ -1,4 +1,5 @@
 import { ConnectButton } from "@/components/ConnectButton";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,16 +32,20 @@ const PRIMARY_NAV = [
   { label: "Home", to: "/" },
   { label: "Shop", to: "/marketplace" },
   { label: "NIMS", to: "/nims" },
-  { label: "Community", to: "/community" },
+  { label: "Community Garden", to: "/community" },
   { label: "CookBook", to: "/cookbook" },
 ] as const;
 
 const MORE_NAV_ALWAYS = [
   { label: "Garden (Beta)", to: "/garden" },
+  { label: "📖 Growing Guides", to: "/guides" },
+  { label: "🌱 Grower Directory", to: "/growers" },
   { label: "Schedule Builder", to: "/schedule-builder" },
   { label: "DAO", to: "/dao" },
   { label: "🐦‍⬛ Membership Tiers", to: "/tiers" },
 ] as const;
+
+const DOCS_URL = "https://pr3bu-6aaaa-aaaao-ba5ba-cai.icp0.io";
 
 const SOCIAL_ICONS = [
   { href: SOCIAL_LINKS.facebook, Icon: SiFacebook, label: "Facebook" },
@@ -176,6 +181,16 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                 )}
+                <DropdownMenuItem asChild>
+                  <a
+                    href={DOCS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-ocid="header-docs-link"
+                  >
+                    📚 Docs
+                  </a>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </nav>
@@ -220,6 +235,9 @@ export function Header() {
                 </span>
               </Link>
             )}
+
+            {/* Notifications */}
+            {isAuthenticated && <NotificationBell />}
 
             {/* Wallet */}
             <Link
@@ -358,7 +376,17 @@ export function Header() {
               })}
 
               <div className="pt-3 border-t border-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <a
+                    href={DOCS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-muted-foreground hover:text-primary transition-smooth px-1"
+                    data-ocid="header-docs-link-mobile"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    📚 Docs
+                  </a>
                   {SOCIAL_ICONS.map(({ href, Icon, label }) => (
                     <a
                       key={label}

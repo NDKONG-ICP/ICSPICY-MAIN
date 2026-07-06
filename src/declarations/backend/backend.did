@@ -69,6 +69,11 @@ type WateringEntry =
    phLevel: opt float64;
    timestamp: Timestamp;
  };
+type VarietySource = 
+ record {
+   url: text;
+   vendorName: text;
+ };
 type VarietyPublic = 
  record {
    createdAt: Timestamp;
@@ -81,6 +86,38 @@ type VarietyPublic =
    scovilleMax: nat;
    scovilleMin: nat;
    species: text;
+ };
+type VarietyProvenancePublic = 
+ record {
+   breeder: opt text;
+   breederLocation: opt text;
+   heatClass: opt text;
+   origin: opt text;
+   photoCredit: opt text;
+   photoKey: opt text;
+   sources: vec VarietySource;
+   species: opt text;
+   variety_id: nat;
+ };
+type VarietyProvenance = 
+ record {
+   breeder: opt text;
+   breederLocation: opt text;
+   heatClass: opt text;
+   origin: opt text;
+   photoCredit: opt text;
+   photoKey: opt text;
+   sources: vec VarietySource;
+   species: opt text;
+ };
+type VarietyGuide = 
+ record {
+   generatedAt: Timestamp;
+   recipeRefs: vec nat;
+   sections: vec GuideSection;
+   varietyId: nat;
+   version: nat;
+   zone: text;
  };
 type Value = 
  variant {
@@ -336,6 +373,12 @@ type TransferArgs =
    to: Account;
    token_id: nat;
  };
+type Top8Entry = 
+ record {
+   avatar_key: opt text;
+   principal_id: principal;
+   username: text;
+ };
 type TokenPrice = 
  record {
    last_updated: Timestamp;
@@ -586,6 +629,23 @@ type PurchasePlantResult =
    nftTokenId: opt nat;
    success: bool;
  };
+type PurchaseCoopSeatResult = 
+ record {
+   message: text;
+   success: bool;
+   tokenId: opt nat;
+ };
+type PublicProfileFull = 
+ record {
+   banner_key: opt text;
+   is_pepperhead: bool;
+   is_raven: bool;
+   nft_count: nat;
+   plants_growing: nat;
+   profile: UserProfilePublic;
+   top8: vec Top8Entry;
+   wallpaper_key: opt text;
+ };
 type ProposalStatus = 
  variant {
    Active;
@@ -638,6 +698,7 @@ type ProposalCategory =
  variant {
    CommunityDecision;
    FeatureRequest;
+   GrowerProposal;
    ProductVote;
    TreasurySpend;
    VarietyVote;
@@ -911,6 +972,7 @@ type PestEntry =
 type PaymentToken = 
  variant {
    ICP;
+   RAVEN;
    ckBTC;
    ckETH;
    ckUSDC;
@@ -1000,6 +1062,26 @@ type Offer =
    status: OfferStatus;
    updated_at: Timestamp;
  };
+type NotificationPublic = 
+ record {
+   created_at: int;
+   id: nat;
+   kind: NotificationKind;
+   message: text;
+   read: bool;
+   ref_id: opt text;
+   sender: opt principal;
+ };
+type NotificationKind = 
+ variant {
+   airdrop;
+   comment;
+   follow;
+   like;
+   newUser;
+   orderPlaced;
+   tip;
+ };
 type NftListingPublic = 
  record {
    isActive: bool;
@@ -1021,6 +1103,12 @@ type MintRWAProvenanceInput =
    custom_notes: text;
    plant_id: PlantId;
    rarity_tier: nat;
+ };
+type MintGrowerProvenanceResult = 
+ record {
+   message: text;
+   success: bool;
+   tokenId: opt nat;
  };
 type MintDesignNftResult = record {nftTokenId: nat;};
 type MembershipTier = 
@@ -1169,8 +1257,13 @@ type ICSpicy =
       });
    adminDeleteComment: (comment_id: CommentId) -> (bool);
    adminDeletePost: (post_id: PostId) -> (bool);
+   adminDeleteVarietyGuide: (varietyId: nat, zone: text) -> (bool);
+   adminListUsers: (offset: nat, limit: nat, search: text) ->
+    (AdminUserPage) query;
    adminReturnToPool: (tokenId: nat) -> (TransferResult);
+   adminRevokeSeat: (tokenId: nat, reason: text) -> (bool);
    adminRunDailyWeatherCapture: () -> (nat);
+   adminSendNotification: (recipient: principal, message: text) -> (bool);
    adminSubmitToDAB: (collectionName: text, collectionDescription: text,
     standard: text, canisterIdOverride: opt text) ->
     (variant {
@@ -1215,6 +1308,7 @@ type ICSpicy =
    batchWater: (plantIds: vec PlantId, amountMl: nat, phLevel: opt float64,
     notes: opt text) -> (nat);
    beginArtworkUpload: (totalChunks: nat) -> ();
+   beginVideoUpload: (contentType: text, totalSize: nat) -> (nat);
    bulkCreateProducts: (inputs: vec CreateProductInput) ->
     (vec BulkCreateResult);
    buyListedNft: (tokenId: nat, token: PaymentToken, amount: nat) ->
@@ -1232,6 +1326,7 @@ type ICSpicy =
                                                  err: text;
                                                  ok;
                                                });
+   cancelVideoUpload: (uploadId: nat) -> ();
    castVote: (proposalId: ProposalId, optionId: nat) -> (bool);
    clearArtworkFiles: () -> ();
    closeProposal: (id: ProposalId) -> (bool);
@@ -1253,6 +1348,8 @@ type ICSpicy =
    createDAOProposal: (input: CreateProposalInput) -> (ProposalPublic);
    createGardenDesign: (input: GardenDesignInput) ->
     (CreateGardenDesignResult);
+   createGrowerProposal: (input: CreateProposalInput) ->
+    (record {proposalId: nat;});
    createNimsTray: (name: text, date: Timestamp, varietyId: opt nat) ->
     (TrayId);
    createOrder: (buyer: principal, input: CreateOrderInput) -> (OrderPublic);
@@ -1278,12 +1375,20 @@ type ICSpicy =
    deleteTray: (tray_id: TrayId) -> ();
    delistNft: (tokenId: nat) -> (bool);
    delistPlant: (plantId: PlantId) -> (bool);
+   designateCoopSeats: (tokenIds: vec nat) ->
+    (record {
+       designated: nat;
+       messages: vec text;
+       skipped: nat;
+     });
    editPost: (post_id: PostId, new_content: text) -> (bool);
    ensureAdminProfile: () -> ();
    ensureCallerProfile: () -> ();
    feedEntireTray: (trayId: TrayId, productName: text, nutrientType: 
     text, dosage: text, notes: opt text) -> (nat);
    finalizeArtworkUpload: () -> (UploadResult);
+   finishVideoUpload: (uploadId: nat, poster: opt blob) ->
+    (FinishVideoUploadResult);
    fixTransplantedPlant: (plantId: PlantId, newContainer: ContainerSize,
     duplicatePlantId: opt PlantId) -> (bool);
    followUser: (target: principal) -> (bool);
@@ -1294,6 +1399,7 @@ type ICSpicy =
            claimToken: text;
            tokenId: nat;
          });
+   generateCoopClaimToken: (plantId: PlantId) -> (text);
    generatePickupQRPayload: (plant_id: PlantId) -> (text) query;
    getActiveResaleListings: () -> (vec ResaleListingPublic) query;
    getAdminInventory: (stage: opt PlantStage, varietyId: opt nat, forSale:
@@ -1329,6 +1435,11 @@ type ICSpicy =
         variety: opt text;
       }) query;
    getCommunityImageFile: (path: text) -> (opt ShopListingFile) query;
+   getCoopSeatPriceCents: () -> (nat) query;
+   getCoopSeatsRemaining: () -> (record {
+                                   available: nat;
+                                   total: nat;
+                                 }) query;
    /// Admin: backend cycle balance (AGENTS.md hygiene).
    getCycleBalance: () -> (nat) query;
    getDAOProposal: (proposal_id: ProposalId) -> (opt ProposalPublic) query;
@@ -1353,15 +1464,21 @@ type ICSpicy =
    getGardenDesign: (designId: nat) -> (opt GardenDesign) query;
    getGardenDesignForUser: (designId: nat) -> (opt GardenDesign) query;
    getGlobalFeed: (offset: nat, limit: nat) -> (vec PostPublic) query;
+   getGrowerProvenanceMeta: (tokenId: nat) ->
+    (opt GrowerProvenanceMeta) query;
    getIcrc7PoolStatsAdmin: () -> (Icrc7PoolStats) query;
    getLatestNurseryWeather: () -> (opt WeatherSnapshot) query;
+   getLinkedWallets: () -> (vec principal) query;
    getListedNfts: (pepperHeadOnly: opt bool) -> (vec NftListingPublic) query;
    getLoadedMetadataCount: () -> (nat) query;
    getMembershipPriceInToken: (token: OracleToken) -> (nat) query;
+   getMyCoopStatus: () -> (opt CoopStatus) query;
    getMyCrosses: () -> (vec BreedingCrossPublic) query;
    getMyDesigns: () -> (vec GardenDesign) query;
    getMyFavorites: (offset: nat, limit: nat) -> (vec RecipePublic) query;
    getMyNftListings: () -> (vec NftListingPublic) query;
+   getMyNotifications: (offset: nat, limit: nat) ->
+    (vec NotificationPublic) query;
    getMyOffers: () -> (vec Offer) query;
    getMyPlantsNims: () -> (vec PlantLifecycle);
    getMyResaleListings: () -> (vec ResaleListingPublic) query;
@@ -1411,6 +1528,8 @@ type ICSpicy =
     offset: nat, limit: nat) -> (vec ProposalPublic) query;
    getPublicDesigns: (offset: nat, limit: nat) -> (vec GardenDesign) query;
    getPublicProfile: (user: principal) -> (opt UserProfilePublic) query;
+   getPublicProfileFull: (user: principal) -> (opt PublicProfileFull) query;
+   getRavenDiscountPercent: () -> (nat) query;
    getRecentActivity: (limit: nat) -> (vec ActivityEntry) query;
    getRecipe: (id: RecipeId) -> (opt RecipePublic) query;
    getRecipeBySlug: (slug: text) -> (opt RecipePublic) query;
@@ -1418,6 +1537,15 @@ type ICSpicy =
                                      RecipeCategory;
                                      nat;
                                    }) query;
+   getRecipeSeoContent: (id: RecipeId) ->
+    (record {
+       faqs: vec record {
+                   text;
+                   text;
+                 };
+       intro: opt text;
+     }) query;
+   getRecipeVideoUrl: (id: RecipeId) -> (opt text) query;
    getRecipes: (category: opt RecipeCategory, search: opt text, offset: 
     nat, limit: nat) -> (vec RecipePublic) query;
    getScheduleByShareToken: (share_token: text) -> (opt SavedSchedule) query;
@@ -1434,14 +1562,21 @@ type ICSpicy =
    getTreasuryBalances: () -> (vec TreasuryBalance) query;
    getTreasuryLedger: () -> (vec TreasuryTransaction) query;
    getTrendingPosts: (limit: nat) -> (vec PostPublic) query;
+   getUnreadCount: () -> (nat) query;
    getUpcomingEvents: () -> (vec PlantingEvent) query;
    getUpgradeHistory: (plant_id: PlantId) ->
     (vec LifecycleUpgradeEvent) query;
    getUploadsCanisterId: () -> (opt text) query;
    getUsageRollups: (days: nat) -> (vec DailyFeatureStat) query;
+   getUserPlantsPublic: (user: principal, offset: nat, limit: nat) ->
+    (vec PlantPublic) query;
    getUserPosts: (user: principal, offset: nat, limit: nat) ->
     (vec PostPublic) query;
    getVariety: (id: nat) -> (opt VarietyPublic) query;
+   getVarietyGuide: (varietyId: nat, zone: text) -> (opt VarietyGuide) query;
+   getVarietyIntro: (varietyId: nat) -> (opt text) query;
+   getVarietyProvenance: (varietyId: nat) ->
+    (opt VarietyProvenancePublic) query;
    getWeatherDebug: () ->
     (record {
        activeCount: nat;
@@ -1520,6 +1655,7 @@ type ICSpicy =
                              });
    isCallerAdmin: () -> (bool) query;
    isFollowing: (target: principal) -> (bool) query;
+   isGrowerProvenanceToken: (tokenId: nat) -> (bool) query;
    isPepperHead: (tokenId: nat) -> (bool) query;
    isPepperHeadAvailable: () -> (nat) query;
    isUserBanned: (user: principal) -> (bool) query;
@@ -1530,12 +1666,8 @@ type ICSpicy =
       ICRC37;
     }) -> (MembershipNFTPublic);
    likeComment: (comment_id: CommentId) -> (bool);
-   linkWallet: (walletPrincipal: principal) -> (bool);
-   getLinkedWallets: () -> (vec principal) query;
-   unlinkWallet: (walletPrincipal: principal) -> (bool);
-   refreshRavenBalance: () -> ();
-   getRavenDiscountPercent: () -> (nat) query;
    likePost: (post_id: PostId) -> (bool);
+   linkWallet: (walletPrincipal: principal) -> (bool);
    listAllOrdersAdmin: (filter: AdminOrderStatusFilter) ->
     (vec AdminOrderPublic) query;
    listAllPostsAdmin: (offset: nat, limit: nat) -> (vec PostPublic) query;
@@ -1548,6 +1680,7 @@ type ICSpicy =
     (vec ClaimTokenAdminPublic) query;
    listCommentsByPost: (post_id: PostId) -> (vec CommentPublic) query;
    listDAOProposals: () -> (vec ProposalPublic) query;
+   listGrowerDirectory: () -> (vec GrowerDirectoryEntry) query;
    listIcrc7PoolTokensAdmin: (filter: Icrc7TokenFilter, offset: nat, limit:
     nat) -> (vec Icrc7TokenAdminPublic) query;
    listMyPlants: () -> (vec PlantPublic);
@@ -1567,10 +1700,29 @@ type ICSpicy =
    listProducts: () -> (vec ProductPublic) query;
    listProductsByCategory: (category: ProductCategory) ->
     (vec ProductPublic) query;
+   listRecipeSeoContent: () ->
+    (vec record {
+           RecipeId;
+           text;
+           vec record {
+                 text;
+                 text;
+               };
+         }) query;
+   listRecipeVideoUrls: () -> (vec record {
+                                     RecipeId;
+                                     text;
+                                   }) query;
    listRecipes: () -> (vec RecipePublic) query;
    listRecipesAdmin: () -> (vec RecipePublic) query;
    listTrays: () -> (vec TrayPublic) query;
    listVarieties: () -> (vec VarietyPublic) query;
+   listVarietyIntros: () -> (vec record {
+                                   nat;
+                                   text;
+                                 }) query;
+   listVarietyProvenance: (offset: nat, limit: nat) ->
+    (vec VarietyProvenancePublic) query;
    loadStaticMetadata: (entries: vec record {
                                        nat;
                                        blob;
@@ -1585,6 +1737,7 @@ type ICSpicy =
     notes: opt text, _photoUrl: opt text) -> (bool);
    markCellGerminated: (trayId: TrayId, cellPosition: nat, date:
     opt Timestamp) -> (AddPlantResult);
+   markNotificationsRead: (upToId: nat) -> ();
    markOrdersSeen: (upToOrderId: OrderId) -> ();
    markPlantDead: (plantId: PlantId, cause: DeathCause, notes: opt text,
     photoUrl: opt text) -> (bool);
@@ -1596,6 +1749,8 @@ type ICSpicy =
           text;
           text;
         }) -> (text);
+   mintGrowerProvenanceToken: (plantId: PlantId) ->
+    (MintGrowerProvenanceResult);
    mintHederaNFT: (_plant_id: PlantId, _image_key: opt text, _attributes:
     vec record {
           text;
@@ -1623,6 +1778,9 @@ type ICSpicy =
    pruneUsageData: () -> ();
    publishProposal: (id: ProposalId) -> (bool);
    publishRecipe: (id: RecipeId) -> (bool);
+   purchaseCoopSeat: (paymentId: text) -> (PurchaseCoopSeatResult);
+   purchaseCoopSeatDirect: (ledgerCanisterId: text, amount: nat) ->
+    (PurchaseCoopSeatResult);
    purchasePepperHead: (paymentId: text) ->
     (record {
        message: text;
@@ -1656,6 +1814,7 @@ type ICSpicy =
        success: bool;
        tokenId: opt nat;
      });
+   refreshRavenBalance: () -> ();
    refreshTokenPrices: () -> (bool);
    rejectOffer: (offerId: text) -> (Offer);
    removeAdmin: (p: principal) -> ();
@@ -1669,21 +1828,36 @@ type ICSpicy =
                                     err: text;
                                     ok: text;
                                   });
+   resolveUsername: (username: text) -> (opt principal) query;
    revivePlant: (plantId: PlantId) -> (bool);
    revokeClaimTokenAdmin: (token: text) -> (bool);
    runDailyWeatherCapture: () -> (nat);
    saveCallerUserProfile: (input: SaveProfileInput) -> (bool);
    saveProfile: (input: SaveProfileInput) -> (bool);
    saveSchedule: (stage: text, inputs: vec text) -> (ScheduleId);
+   saveVarietyGuide: (varietyId: nat, zone: text, sections: vec GuideSection,
+    recipeRefs: vec nat) -> (bool);
    searchRecipes: (searchText: text, limit: nat) -> (vec RecipePublic) query;
    searchUsers: (search: text, limit: nat) -> (vec UserProfilePublic) query;
-   /// Per-principal rate limiters for cycle-drain protection (CDA).
    searchVarieties: (searchQuery: text) -> (vec VarietyPublic) query;
    seedDefaultRecipes: () -> ();
+   setCoopSeatPriceCents: (cents: nat) -> ();
    setForSale: (plant_id: PlantId, for_sale: bool) -> ();
    setICPaySecretKey: (key: text) -> ();
    setPlantNFT: (plant_id: PlantId, nft_id: text) -> ();
+   setProfileBanner: (key: text) -> ();
+   setProfileWallpaper: (value: text) -> ();
+   setRecipeFaqs: (id: RecipeId, faqs: vec record {
+                                             text;
+                                             text;
+                                           }) -> (bool);
+   setRecipeIntro: (id: RecipeId, intro: text) -> (bool);
+   setRecipeVideoUrl: (id: RecipeId, videoUrl: opt text) -> (bool);
+   setTop8: (friends: vec principal) -> ();
    setUploadsCanisterId: (canisterId: text) -> ();
+   setVarietyIntro: (varietyId: nat, intro: text) -> (bool);
+   setVarietyProvenance: (varietyId: nat, provenance: VarietyProvenance) ->
+    (bool);
    storeArtworkFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
    storeAvatarFile: (data: vec nat8) -> (text);
@@ -1691,6 +1865,8 @@ type ICSpicy =
     (StoredFile);
    storeNimsPhotoFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
+   storeProfileBannerFile: (data: vec nat8) -> (text);
+   storeProfileWallpaperFile: (data: vec nat8) -> (text);
    submitOffer: (input: SubmitOfferInput) -> (Offer);
    toggleCooked: (plant_id: PlantId) -> ();
    toggleFavorite: (recipe_id: RecipeId) -> (bool);
@@ -1708,8 +1884,11 @@ type ICSpicy =
    unbanUser: (user: principal) -> ();
    unfollowUser: (target: principal) -> ();
    unlikePost: (post_id: PostId) -> (nat);
+   unlinkWallet: (walletPrincipal: principal) -> (bool);
    updateCellData: (input: UpdateCellDataInput) -> ();
    updateGardenDesign: (designId: nat, input: GardenDesignInput) -> (bool);
+   updateMyGrowerProfile: (name: text, location: text, license: text) ->
+    (bool);
    updateNimsPlantStage: (plantId: PlantId, newStage: PlantStage) -> (bool);
    updateOrderStatus: (order_id: OrderId, status: OrderStatus) -> ();
    updateOrderStatusAdmin: (order_id: OrderId, status: OrderStatus) -> ();
@@ -1718,6 +1897,7 @@ type ICSpicy =
    updatePlantStage: (plant_id: PlantId, new_stage: PlantStage, notes:
     text) -> ();
    updatePlantingEvent: (input: UpdatePlantingEventInput) -> (PlantingEvent);
+   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    updateProduct: (input: UpdateProductInput) -> ();
    updateProposal: (id: ProposalId, input: UpdateProposalInput) -> (bool);
    updateRecipe: (input: UpdateRecipeInput) -> (bool);
@@ -1735,6 +1915,7 @@ type ICSpicy =
        err: text;
        ok;
      });
+   uploadVideoChunk: (uploadId: nat, chunkIndex: nat, data: blob) -> ();
    validateGardenDesign: (designId: nat) -> (vec ValidationWarning) query;
    validateGardenDesignInput: (input: GardenDesignInput) ->
     (vec ValidationWarning) query;
@@ -1753,6 +1934,32 @@ type Health =
    heapSize: nat;
    isHealthy: bool;
    memoryUsed: nat;
+ };
+type GuideSection = 
+ record {
+   content: text;
+   icon: text;
+   id: text;
+   timing: opt text;
+   title: text;
+ };
+type GrowerProvenanceMeta = 
+ record {
+   grower: principal;
+   growerName: text;
+   mintedAt: int;
+   plantId: nat;
+   variety: text;
+ };
+type GrowerDirectoryEntry = 
+ record {
+   growerLocation: opt text;
+   growerName: text;
+   memberSince: int;
+   plantCount: nat;
+   profilePrincipal: principal;
+   provenanceMinted: nat;
+   tokenId: nat;
  };
 type GardenDesignInput = 
  record {
@@ -1803,6 +2010,11 @@ type FleetEntry =
    isHealthy: bool;
    memorySize: nat;
    name: text;
+ };
+type FinishVideoUploadResult = 
+ record {
+   posterKey: opt text;
+   videoKey: text;
  };
 type FeedingPublic = 
  record {
@@ -1958,6 +2170,19 @@ type CounterOfferInput =
    counter_amount: nat;
    counter_token: OfferToken;
    offer_id: text;
+ };
+type CoopStatus = 
+ record {
+   seat: CoopSeatPublic;
+   tokenId: nat;
+ };
+type CoopSeatPublic = 
+ record {
+   activatedAt: int;
+   growerLocation: opt text;
+   growerName: opt text;
+   licenseInfo: opt text;
+   revoked: bool;
  };
 type ContainerSize = 
  variant {
@@ -2140,6 +2365,23 @@ type AdminWithdrawTokensResult =
    blockIndex: opt nat;
    message: text;
    success: bool;
+ };
+type AdminUserRow = 
+ record {
+   avatar_key: opt text;
+   created_at: int;
+   follower_count: nat;
+   last_active: opt int;
+   location: opt text;
+   nft_count: nat;
+   principal_id: principal;
+   raven_tier: text;
+   username: text;
+ };
+type AdminUserPage = 
+ record {
+   rows: vec AdminUserRow;
+   total: nat;
  };
 type AdminOrderStatusFilter = 
  variant {

@@ -76,7 +76,11 @@ import { useUsageTracking } from "../hooks/useUsageTracking";
 import { useWeather } from "../hooks/useWeather";
 import { exportPlantInventoryCsv } from "../lib/nims-export-mappers";
 import { downloadTextFile, plantTagLinksCsv } from "../lib/plant-nfc-url";
-import { useRavenPerks } from "../hooks/useRavenPerks";
+import { useEffectiveRavenPerks, useCoopStatus } from "../hooks/useCoopStatus";
+import {
+  GrowerOnboardingWizard,
+  CoopPitchCard,
+} from "../components/coop/GrowerOnboardingWizard";
 
 type NimsTab =
   | "trays"
@@ -130,7 +134,9 @@ export default function NIMSPage() {
   const navigate = useNavigate();
   const { isAuthenticated, login } = useAuth();
   const { data: isAdmin } = useIsAdmin();
-  const ravenPerks = useRavenPerks();
+  const ravenPerks = useEffectiveRavenPerks();
+  const { isSeatHolder, growerName, needsOnboarding } = useCoopStatus();
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const nimsLocation = useNimsLocation();
   const { data: weather, isLoading: weatherLoading } = useWeather(
     nimsLocation.coordinates.lat,
@@ -275,9 +281,21 @@ export default function NIMSPage() {
       </div>
 
       <div className="container max-w-2xl px-3 py-4 space-y-4">
+        {needsOnboarding && !onboardingDone ? (
+          <GrowerOnboardingWizard onComplete={() => setOnboardingDone(true)} />
+        ) : null}
+
         <NimsHeroStats plants={myPlants} />
+        <CoopPitchCard isSeatHolder={isSeatHolder} />
         <div className="flex items-center justify-between gap-2">
-          <h1 className="text-xl font-display font-bold">NIMS</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl font-display font-bold">NIMS</h1>
+            {isSeatHolder && (
+              <span className="text-xs rounded-full border border-emerald-500/40 bg-emerald-950/40 px-2 py-0.5 text-emerald-300">
+                🌱 Co-op Grower{growerName ? ` · ${growerName}` : ""}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             {isAdmin && (
               <Button
@@ -439,7 +457,9 @@ export default function NIMSPage() {
                 variant="outline"
                 onClick={() => {
                   if (!ravenPerks.hasCsvExport && !isAdmin) {
-                    toast.error("CSV export requires Raven Member (100K $RAVEN). Get $RAVEN on ICPSwap!");
+                    toast.error(
+                      "CSV export requires Raven Member or a Grower Co-op seat.",
+                    );
                     return;
                   }
                   const list =
@@ -551,7 +571,7 @@ export default function NIMSPage() {
                 <span className="text-3xl">🐦‍⬛</span>
                 <p className="text-white font-semibold text-sm">Raven Member Feature</p>
                 <p className="text-zinc-400 text-xs text-center max-w-xs">
-                  Hold 100K $RAVEN to unlock advanced NIMS analytics, CSV export, and unlimited weather history.
+                  Hold 100K $RAVEN or join the Grower Co-op to unlock analytics, CSV export, and unlimited weather history.
                 </p>
                 <a
                   href="https://app.icpswap.com/swap?input=ryjl3-tyaaa-aaaaa-aaaba-cai&output=4k7jk-vyaaa-aaaam-qcyaa-cai"

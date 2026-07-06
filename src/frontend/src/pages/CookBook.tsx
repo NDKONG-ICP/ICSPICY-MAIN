@@ -376,9 +376,14 @@ export default function CookBookPage() {
                         />
                       ) : (
                         <div className="flex items-center justify-center h-full bg-gradient-to-br from-primary/10 to-background">
-                          <span className="font-display font-black text-4xl text-primary/60">
-                            {recipe.title.slice(0, 1)}
-                          </span>
+                          <img
+                            src="/icon-192.png"
+                            alt="IC SPICY logo"
+                            width={56}
+                            height={56}
+                            loading="lazy"
+                            className="w-14 h-14 rounded-full opacity-90"
+                          />
                         </div>
                       )}
                       <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-background via-background/80 to-transparent pt-14">

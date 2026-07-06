@@ -27,9 +27,9 @@ export default function CommunityPostPage() {
 
   usePageTitle(
     data?.post
-      ? `${getPostAuthorDisplayName(data.post)} · Community`
+      ? `${getPostAuthorDisplayName(data.post)} · Community Garden`
       : postId !== undefined
-        ? "Community Post"
+        ? "Community Garden Post"
         : "Post not found",
   );
 
@@ -46,7 +46,7 @@ export default function CommunityPostPage() {
         <Button asChild variant="outline" size="sm">
           <Link to="/community">
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Community
+            Back to Community Garden
           </Link>
         </Button>
       </div>
@@ -65,7 +65,7 @@ export default function CommunityPostPage() {
           data-ocid="community-post-back"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Community
+          Back to Community Garden
         </Link>
       </div>
 
@@ -86,7 +86,7 @@ export default function CommunityPostPage() {
           <Button asChild size="sm" className="bg-primary">
             <Link to="/community">
               <ArrowLeft className="w-4 h-4 mr-1" />
-              Back to Community
+              Back to Community Garden
             </Link>
           </Button>
         </div>

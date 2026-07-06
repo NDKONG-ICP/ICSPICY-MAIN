@@ -1,0 +1,10 @@
+
+> ic-spicy-frontend@0.0.0 build /Users/williambeck/IC SPICY MAIN/src/frontend
+> node ../../scripts/generate-sitemap.mjs && vite build && pnpm copy:env && node ../../scripts/prerender-routes.mjs
+
+✓ sitemap.xml written: 12 static + 57 recipes + 1130 variety guides = 1199 URLs
+
+> ic-spicy-frontend@0.0.0 copy:env /Users/williambeck/IC SPICY MAIN/src/frontend
+> cp env.json dist/
+
+✓ prerendered 11 static + 57 recipes + 1130 guides (1187 OG cards) in 21.7s → dist/

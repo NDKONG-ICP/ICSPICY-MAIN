@@ -181,11 +181,11 @@ export default function CommunityPage() {
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <h1 className="font-display font-bold text-2xl sm:text-3xl text-foreground mb-1">
-              🌶️ IC SPICY <span className="text-fire">Community</span>
+              🌶️ IC SPICY{" "}
+              <span className="text-fire">Community Garden</span>
             </h1>
             <p className="text-muted-foreground text-sm">
-              Connect with fellow pepper growers — share harvests, tips, and
-              wins.
+              Growers helping growers.
             </p>
           </div>
           {isAuthenticated ? (

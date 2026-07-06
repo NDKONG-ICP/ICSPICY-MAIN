@@ -38,7 +38,8 @@ const FOOTER_LINKS = [
     links: [
       { label: "Plant NFTs", to: "/plants" },
       { label: "DAO Governance", to: "/dao" },
-      { label: "Community", to: "/community" },
+      { label: "Community Garden", to: "/community" },
+      { label: "Photo & Seed Credits", to: "/credits" },
       { label: "My Orders", to: "/orders" },
       { label: "Profile", to: "/profile" },
     ],

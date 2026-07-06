@@ -23,7 +23,6 @@ import type {
   CreatePlantInput,
   CreatePostInput,
   CreateProductInput,
-  CreateProposalInput,
   CreateTrayInput,
   MembershipTier,
   MintRWAProvenanceInput,
@@ -701,18 +700,6 @@ export function useProposal(proposalId: ProposalId | undefined) {
       return actor.getDAOProposal(proposalId);
     },
     enabled: !!actor && !isFetching && proposalId !== undefined,
-  });
-}
-
-export function useCreateProposal() {
-  const { actor } = useBackendActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: CreateProposalInput) => {
-      if (!actor) throw new Error("Not connected");
-      return actor.createDAOProposal(input);
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["proposals"] }),
   });
 }
 
@@ -2530,5 +2517,90 @@ export function useFleetCanisterHealth() {
     },
     enabled: !!actor && actorReady && isAdmin,
     refetchInterval: 60_000,
+  });
+}
+
+// ─── Grower Co-op ───────────────────────────────────────────────────────────
+
+export function usePurchaseCoopSeatDirect() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      ledgerCanisterId,
+      amount,
+    }: {
+      ledgerCanisterId: string;
+      amount: bigint;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      const a = actor as typeof actor & {
+        purchaseCoopSeatDirect: (
+          ledger: string,
+          amt: bigint,
+        ) => Promise<{ success: boolean; tokenId: [] | [bigint]; message: string }>;
+      };
+      const result = await a.purchaseCoopSeatDirect(ledgerCanisterId, amount);
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["coopStatus"] });
+      qc.invalidateQueries({ queryKey: ["coopSeatsRemaining"] });
+      qc.invalidateQueries({ queryKey: ["icrc7Owner"] });
+    },
+  });
+}
+
+export function useUpdateGrowerProfile() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { name: string; location: string; license: string }) => {
+      if (!actor) throw new Error("Not connected");
+      const a = actor as typeof actor & {
+        updateMyGrowerProfile: (n: string, l: string, lic: string) => Promise<boolean>;
+      };
+      return a.updateMyGrowerProfile(input.name, input.location, input.license);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["coopStatus"] });
+      qc.invalidateQueries({ queryKey: ["growerDirectory"] });
+    },
+  });
+}
+
+export function useMintGrowerProvenanceToken() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (plantId: bigint) => {
+      if (!actor) throw new Error("Not connected");
+      const a = actor as typeof actor & {
+        mintGrowerProvenanceToken: (
+          id: bigint,
+        ) => Promise<{ success: boolean; tokenId: [] | [bigint]; message: string }>;
+      };
+      const result = await a.mintGrowerProvenanceToken(plantId);
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plantLifecycle"] });
+      qc.invalidateQueries({ queryKey: ["icrc7Owner"] });
+    },
+  });
+}
+
+export function useGenerateCoopClaimToken() {
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (plantId: bigint) => {
+      if (!actor) throw new Error("Not connected");
+      const a = actor as typeof actor & {
+        generateCoopClaimToken: (id: bigint) => Promise<string>;
+      };
+      return a.generateCoopClaimToken(plantId);
+    },
   });
 }
