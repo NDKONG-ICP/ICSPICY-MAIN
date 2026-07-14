@@ -20,6 +20,7 @@ import {
   Minus,
   Package,
   Plus,
+  RefreshCw,
   ShoppingBag,
   Trash2,
 } from "lucide-react";
@@ -28,14 +29,22 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PlantCheckoutPanel } from "../components/PlantCheckoutPanel";
+import { PayPalCheckoutPanel } from "../components/PayPalCheckoutPanel";
+import {
+  PostPaymentOnboarding,
+  type PaidVia,
+} from "../components/checkout/PostPaymentOnboarding";
 import {
   TokenPaymentPanel,
   useTokenPaymentState,
 } from "../components/TokenPaymentPanel";
 import { useAuth } from "../hooks/useAuth";
 import {
+  useBackendActor,
   useConfirmOrderPaymentDirect,
+  useConfirmPayPalOrderPayment,
   usePlaceOrder,
+  usePurchasePepperHeadPayPal,
 } from "../hooks/useBackend";
 import { useCart } from "../hooks/useCart";
 import { useNftDiscount } from "../hooks/useNftDiscount";
@@ -43,6 +52,7 @@ import { useRavenPerks } from "../hooks/useRavenPerks";
 import { NoIndexSeo } from "../components/NoIndexSeo";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useUsageTracking } from "../hooks/useUsageTracking";
+import { useActorReady } from "../hooks/useActorReady";
 import {
   PICKUP_ADDRESS,
   USPS_SMALL_FLAT_RATE_CENTS,
@@ -51,6 +61,13 @@ import {
   toOptionalNatBigInt,
 } from "../lib/cart-utils";
 import { discountAmountCents, formatRarityLabel } from "../lib/discount-utils";
+import { paypalCustomIds } from "../lib/paypal";
+import { fetchOrderPaymentAssets } from "../lib/order-payment-assets";
+import {
+  clearPendingPayPalSettlement,
+  getPendingPayPalSettlement,
+  storePendingPayPalSettlement,
+} from "../lib/pending-paypal-settlement";
 import { oisyIcrc2Approve, oisyPaymentAmount } from "../lib/oisy-payment";
 import {
   PAYMENT_LEDGERS,
@@ -339,6 +356,62 @@ function EmptyCart() {
   );
 }
 
+// ─── PepperHead checkout ($25 USD) ───────────────────────────────────────────
+
+const PEPPERHEAD_PRICE_CENTS = 2500n;
+
+function PepperHeadCheckoutPanel() {
+  const { isAuthenticated, login } = useAuth();
+  const purchasePayPal = usePurchasePepperHeadPayPal();
+  const [purchasedTokenId, setPurchasedTokenId] = useState<bigint | null>(null);
+
+  if (purchasedTokenId != null) {
+    return (
+      <div className="text-center py-12 space-y-4">
+        <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
+        <h2 className="text-2xl font-bold">PepperHead Purchased!</h2>
+        <p className="text-muted-foreground">
+          NFT #{purchasedTokenId.toString()} is in your wallet.
+        </p>
+        <Link to="/wallet">
+          <Button>View in Wallet</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Button className="w-full" onClick={() => login()}>
+        Sign in to purchase PepperHead
+      </Button>
+    );
+  }
+
+  return (
+    <div className="max-w-lg mx-auto space-y-6">
+      <div className="rounded-xl border border-border p-6 space-y-2 text-center">
+        <h2 className="text-xl font-bold">PepperHead Membership</h2>
+        <p className="text-2xl font-bold text-primary">$25.00 USD</p>
+        <p className="text-sm text-muted-foreground">
+          Lifetime shop discounts, DAO voting access, and member perks.
+        </p>
+      </div>
+      <PayPalCheckoutPanel
+        usdCents={PEPPERHEAD_PRICE_CENTS}
+        customId={paypalCustomIds.pepperhead}
+        disabled={purchasePayPal.isPending}
+        onApproved={async (paypalOrderId) => {
+          const result = await purchasePayPal.mutateAsync(paypalOrderId);
+          if (result.tokenId != null) setPurchasedTokenId(result.tokenId);
+          toast.success(result.message);
+        }}
+        onError={(msg) => toast.error(msg)}
+      />
+    </div>
+  );
+}
+
 // ─── Payment step ─────────────────────────────────────────────────────────────
 
 type OisyOrderInput = {
@@ -374,8 +447,11 @@ function PaymentStep({
   oisyOrderInput: OisyOrderInput;
 }) {
   const { isAuthenticated, login, principal } = useAuth();
+  const { actor } = useBackendActor();
   const clearCart = useCart((s) => s.clearCart);
   const confirmDirect = useConfirmOrderPaymentDirect();
+  const confirmPayPal = useConfirmPayPalOrderPayment();
+  const placeOrder = usePlaceOrder();
   const navigate = useNavigate();
   const [payingToken, setPayingToken] = useTokenPaymentState();
   const { isOisyConnected, oisyAgent, oisyBackendActor } = useOisyWallet();
@@ -384,8 +460,134 @@ function PaymentStep({
   const [claimTokens, setClaimTokens] = useState<string[]>([]);
   const [nftTokenIds, setNftTokenIds] = useState<bigint[]>([]);
   const [paid, setPaid] = useState(false);
+  const [paidVia, setPaidVia] = useState<PaidVia>("ii");
+  const [payableOrderId, setPayableOrderId] = useState<bigint | null>(
+    orderId === 0n ? null : orderId,
+  );
+  const [orderPrepError, setOrderPrepError] = useState<string | null>(null);
+  const [settlementError, setSettlementError] = useState<string | null>(null);
+  const [pendingPayPal, setPendingPayPal] = useState(
+    () => getPendingPayPalSettlement(),
+  );
 
   const usdAmount = Number(finalTotal) / 100;
+
+  const effectiveOrderId =
+    payableOrderId ?? (orderId !== 0n ? orderId : null);
+
+  async function finishPayPalSuccess(
+    paypalOrderId: string,
+    icOrderId: bigint,
+  ) {
+    const assets = await fetchOrderPaymentAssets(actor, icOrderId);
+    setClaimTokens(assets.claimTokens);
+    setNftTokenIds(assets.nftTokenIds);
+    clearCart();
+    clearPendingPayPalSettlement();
+    setPendingPayPal(null);
+    setSettlementError(null);
+    setPaidVia("paypal");
+    setPaid(true);
+    toast.success("PayPal payment confirmed!");
+    void paypalOrderId;
+  }
+
+  async function handlePayPalApproved(paypalOrderId: string) {
+    if (effectiveOrderId == null) {
+      toast.error("Order not ready yet — wait a moment and try again.");
+      return;
+    }
+    storePendingPayPalSettlement({
+      orderId: effectiveOrderId.toString(),
+      paypalOrderId,
+      totalCents: finalTotal.toString(),
+    });
+    setPendingPayPal(getPendingPayPalSettlement());
+    try {
+      await confirmPayPal.mutateAsync({
+        orderId: effectiveOrderId,
+        paypalOrderId,
+      });
+      await finishPayPalSuccess(paypalOrderId, effectiveOrderId);
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "PayPal settlement failed";
+      setSettlementError(msg);
+      toast.error(
+        `PayPal payment received. Order #${effectiveOrderId.toString()} — tap Retry below.`,
+      );
+    }
+  }
+
+  async function handleRetryPayPalSettlement() {
+    const pending = getPendingPayPalSettlement();
+    if (!pending || effectiveOrderId == null) return;
+    try {
+      await confirmPayPal.mutateAsync({
+        orderId: effectiveOrderId,
+        paypalOrderId: pending.paypalOrderId,
+      });
+      await finishPayPalSuccess(pending.paypalOrderId, effectiveOrderId);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Retry failed";
+      setSettlementError(msg);
+      toast.error(msg);
+    }
+  }
+
+  const showPayPalRetry =
+    settlementError != null &&
+    pendingPayPal != null &&
+    effectiveOrderId != null &&
+    pendingPayPal.orderId === effectiveOrderId.toString();
+
+  useEffect(() => {
+    if (orderId !== 0n) {
+      setPayableOrderId(orderId);
+      setOrderPrepError(null);
+      return;
+    }
+    if (!isAuthenticated || orderItems.length === 0) return;
+
+    let cancelled = false;
+    setOrderPrepError(null);
+    void (async () => {
+      try {
+        const order = await placeOrder.mutateAsync({
+          pickup: oisyOrderInput.pickup,
+          shipping: oisyOrderInput.shipping
+            ? {
+                full_name: oisyOrderInput.shipping.full_name,
+                street_line1: oisyOrderInput.shipping.street_line1,
+                street_line2: oisyOrderInput.shipping.street_line2,
+                city: oisyOrderInput.shipping.city,
+                state: oisyOrderInput.shipping.state,
+                zip: oisyOrderInput.shipping.zip,
+                phone: oisyOrderInput.shipping.phone,
+              }
+            : undefined,
+          items: orderItems.map((item) => ({
+            product_id: toNatBigInt(item.product_id),
+            plant_id: toOptionalNatBigInt(item.plant_id),
+            price_cents: BigInt(item.unit_price_cents),
+            quantity: BigInt(item.quantity),
+          })),
+        });
+        if (cancelled) return;
+        if (!order?.id) throw new Error("placeOrder returned no order id");
+        setPayableOrderId(order.id);
+      } catch (err) {
+        if (cancelled) return;
+        setOrderPrepError(
+          err instanceof Error ? err.message : "Could not prepare order",
+        );
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId, isAuthenticated, orderItems, oisyOrderInput]);
 
   const handlePay = async ({
     ledgerCanisterId,
@@ -395,14 +597,22 @@ function PaymentStep({
     ledgerCanisterId: string;
     amount: bigint;
   }) => {
+    if (effectiveOrderId == null) {
+      toast.error(
+        orderPrepError ??
+          "Order is still being prepared — wait a moment and try again.",
+      );
+      return;
+    }
     const result = await confirmDirect.mutateAsync({
-      orderId,
+      orderId: effectiveOrderId,
       ledgerCanisterId,
       amount,
     });
     setClaimTokens(result.claim_tokens);
     setNftTokenIds(result.nft_token_ids);
     clearCart();
+    setPaidVia("ii");
     setPaid(true);
     toast.success("Purchase complete!");
   };
@@ -464,6 +674,7 @@ function PaymentStep({
     setClaimTokens(result.claim_tokens);
     setNftTokenIds(result.nft_token_ids);
     clearCart();
+    setPaidVia("oisy");
     setPaid(true);
     toast.success("OISY purchase complete! NFT custodied in OISY.");
   };
@@ -496,139 +707,19 @@ function PaymentStep({
     );
   }
 
-  if (paid) {
+  if (paid && effectiveOrderId != null) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="space-y-6 py-4"
-        data-ocid="payment-success"
-      >
-        <div className="text-center space-y-2">
-          <CheckCircle2 className="w-14 h-14 text-emerald-400 mx-auto" />
-          <p className="font-display font-bold text-foreground text-xl">
-            Purchase Complete!
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Order #{orderId.toString()} · ${usdAmount.toFixed(2)}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-4 space-y-3 text-left">
-          <p className="text-sm font-semibold text-foreground">Your items</p>
-          {purchasedItems.map((item, index) => {
-            const nftId = nftTokenIds[index];
-            const linePrice = formatLinePrice(
-              item.unit_price_cents,
-              item.quantity,
-              item.weight_based,
-              item.unit_label,
-            );
-            return (
-              <div
-                key={item.line_id}
-                className="border-t border-border pt-3 first:border-t-0 first:pt-0 space-y-2"
-              >
-                <div className="flex justify-between gap-3 text-sm">
-                  <span className="text-foreground font-medium">
-                    {item.name}
-                  </span>
-                  <span className="text-foreground font-semibold flex-shrink-0">
-                    {linePrice}
-                  </span>
-                </div>
-                {nftId != null && (
-                  <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 space-y-2">
-                    <p className="text-xs text-foreground">
-                      🎨 IC SPICY #{nftId.toString()} is now in your wallet
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <Link
-                        to="/nft/$tokenId"
-                        params={{ tokenId: nftId.toString() }}
-                      >
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs"
-                        >
-                          View NFT
-                        </Button>
-                      </Link>
-                      <Link to="/wallet">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs"
-                        >
-                          View in Wallet
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-4 space-y-2 text-left">
-          <p className="text-sm font-semibold text-foreground">Fulfillment</p>
-          {isPickup ? (
-            <div className="space-y-2">
-              <p className="text-sm text-foreground flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
-                Local Pickup — Port Charlotte, FL
-              </p>
-              {claimTokens.length > 0 ? (
-                <div className="rounded-lg bg-muted/50 p-3 space-y-1">
-                  <p className="text-xs text-muted-foreground">
-                    Show this code at pickup:
-                  </p>
-                  {claimTokens.map((t) => (
-                    <p
-                      key={t}
-                      className="text-xs font-mono break-all text-foreground"
-                    >
-                      {t}
-                    </p>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Pick up at {PICKUP_ADDRESS} when your order is ready.
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground flex items-start gap-2">
-                <Package className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                Your order is paid and will ship to the address you provided.
-              </p>
-              <ShippingSuccessNotice />
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleContinueShopping}
-            data-ocid="payment-continue-shopping-btn"
-          >
-            Continue Shopping
-          </Button>
-          <Button
-            className="w-full"
-            onClick={handleViewOrders}
-            data-ocid="payment-view-orders-btn"
-          >
-            View My Orders
-          </Button>
-        </div>
-      </motion.div>
+      <PostPaymentOnboarding
+        orderId={effectiveOrderId}
+        totalCents={finalTotal}
+        claimTokens={claimTokens}
+        nftTokenIds={nftTokenIds}
+        isPickup={isPickup}
+        purchasedItems={purchasedItems}
+        paidVia={paidVia}
+        onContinueShopping={handleContinueShopping}
+        onViewOrders={handleViewOrders}
+      />
     );
   }
 
@@ -643,7 +734,52 @@ function PaymentStep({
       className="space-y-6"
       data-ocid="checkout-payment-step"
     >
-      {orderId !== 0n && (
+      {effectiveOrderId != null && (
+        <div
+          className="rounded-xl border border-primary/40 bg-primary/10 px-4 py-4 text-center space-y-1"
+          data-ocid="checkout-order-id-banner"
+        >
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Your IC SPICY order number
+          </p>
+          <p className="font-display font-bold text-3xl text-primary">
+            #{effectiveOrderId.toString()}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Created on-chain — complete payment to confirm
+          </p>
+        </div>
+      )}
+
+      {showPayPalRetry && (
+        <div
+          className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 space-y-3"
+          data-ocid="checkout-paypal-retry"
+        >
+          <p className="text-sm font-semibold text-foreground">
+            PayPal payment received for Order #{effectiveOrderId.toString()}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Your bank was charged but settlement did not finish: {settlementError}
+          </p>
+          <Button
+            className="w-full"
+            disabled={confirmPayPal.isPending}
+            onClick={() => void handleRetryPayPalSettlement()}
+          >
+            {confirmPayPal.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry order settlement
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {isAuthenticated && orderId !== 0n && (
         <div className="flex items-center gap-2">
           <Lock className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">
@@ -654,7 +790,11 @@ function PaymentStep({
       {orderId === 0n && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
-            Choose a payment method — order will be placed when you confirm
+            {effectiveOrderId != null
+              ? `Order #${effectiveOrderId.toString()} ready — choose a payment method`
+              : isAuthenticated
+                ? "Preparing your order for payment…"
+                : "Choose a payment method — order will be placed when you confirm"}
           </span>
         </div>
       )}
@@ -700,6 +840,46 @@ function PaymentStep({
       )}
 
       <div
+        className="rounded-xl border border-border bg-card p-5 space-y-3"
+        data-ocid="checkout-paypal-options"
+      >
+        {!isAuthenticated ? (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">
+              Pay with PayPal or Venmo
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Sign in with Internet Identity to pay with PayPal or Venmo.
+            </p>
+            <Button size="sm" onClick={login} data-ocid="checkout-paypal-login-btn">
+              Sign in for PayPal
+            </Button>
+          </div>
+        ) : effectiveOrderId == null ? (
+          <div className="space-y-2" data-ocid="checkout-paypal-preparing">
+            <p className="text-sm font-medium text-foreground">
+              Pay with PayPal or Venmo
+            </p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Preparing order for PayPal…
+            </div>
+            {orderPrepError && (
+              <p className="text-xs text-amber-400/90">{orderPrepError}</p>
+            )}
+          </div>
+        ) : (
+          <PayPalCheckoutPanel
+            usdCents={finalTotal}
+            customId={paypalCustomIds.order(effectiveOrderId)}
+            disabled={confirmPayPal.isPending}
+            onApproved={handlePayPalApproved}
+            onError={(msg) => toast.error(msg)}
+          />
+        )}
+      </div>
+
+      <div
         className="rounded-xl border border-border bg-card p-5"
         data-ocid="checkout-payment-options"
       >
@@ -733,18 +913,14 @@ export default function CheckoutPage() {
     typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("plantId")
       : null;
-
-  if (plantIdParam) {
-    return (
-      <div className="container max-w-2xl py-8 px-4">
-        <h1 className="text-2xl font-display font-bold mb-6">Plant Checkout</h1>
-        <PlantCheckoutPanel plantId={BigInt(plantIdParam)} />
-      </div>
-    );
-  }
+  const pepperHeadParam =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("pepperHead")
+      : null;
 
   const { isAuthenticated, login } = useAuth();
   const { isOisyConnected, oisyBackendActor } = useOisyWallet();
+  const { actorReady } = useActorReady();
   const { items, removeItem, updateQuantity, subtotalCents } = useCart();
   const { discountPercent: nftDiscountPct, rarity } = useNftDiscount();
   const { discount: ravenDiscountPct } = useRavenPerks();
@@ -776,6 +952,30 @@ export default function CheckoutPage() {
       form.zip.trim() !== "" &&
       form.phone.trim() !== "");
 
+  useEffect(() => {
+    if (pendingOrderId !== null) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [pendingOrderId]);
+
+  if (plantIdParam) {
+    return (
+      <div className="container max-w-2xl py-8 px-4">
+        <h1 className="text-2xl font-display font-bold mb-6">Plant Checkout</h1>
+        <PlantCheckoutPanel plantId={BigInt(plantIdParam)} />
+      </div>
+    );
+  }
+
+  if (pepperHeadParam === "1") {
+    return (
+      <div className="container max-w-2xl py-8 px-4">
+        <h1 className="text-2xl font-display font-bold mb-6">PepperHead Checkout</h1>
+        <PepperHeadCheckoutPanel />
+      </div>
+    );
+  }
+
   const updateField =
     (key: keyof ShippingForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -787,7 +987,18 @@ export default function CheckoutPage() {
       return;
     }
     setSubmitted(true);
-    if (!isFormValid) return;
+    if (!isFormValid) {
+      toast.error(
+        wantsShipping
+          ? "Complete the shipping address to continue."
+          : "Check your order details and try again.",
+      );
+      return;
+    }
+    if (isAuthenticated && !actorReady && !isOisyConnected) {
+      toast.error("Still connecting to IC SPICY — wait a moment and try again.");
+      return;
+    }
 
     try {
       const shippingData = wantsShipping
@@ -857,10 +1068,12 @@ export default function CheckoutPage() {
 
   // ─ Guards ─
   if (!isAuthenticated && !isOisyConnected) return <AuthGate login={login} />;
-  if (items.length === 0 && !pendingOrderId) return <EmptyCart />;
+  if (items.length === 0 && pendingOrderId === null) return <EmptyCart />;
+
+  const sessionConnecting = isAuthenticated && !actorReady && !isOisyConnected;
 
   // ─ Payment step ─
-  if (pendingOrderId) {
+  if (pendingOrderId !== null) {
     return (
       <div className="max-w-xl mx-auto" data-ocid="checkout-payment">
         <div className="flex items-center gap-3 mb-8">
@@ -1231,13 +1444,18 @@ export default function CheckoutPage() {
               <Button
                 type="submit"
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
-                disabled={placeOrder.isPending}
+                disabled={placeOrder.isPending || sessionConnecting}
                 data-ocid="checkout-submit-btn"
               >
                 {placeOrder.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Placing Order…
+                  </>
+                ) : sessionConnecting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Connecting…
                   </>
                 ) : (
                   <>

@@ -32,6 +32,8 @@ const PRIMARY_NAV = [
   { label: "Home", to: "/" },
   { label: "Shop", to: "/marketplace" },
   { label: "NIMS", to: "/nims" },
+  { label: "Games", to: "/games", badge: "🌶️" as const },
+  { label: "Masterclass", to: "/masterclass" },
   { label: "Community Garden", to: "/community" },
   { label: "CookBook", to: "/cookbook" },
 ] as const;
@@ -119,13 +121,23 @@ export function Header() {
             className="hidden md:flex items-center gap-1"
             data-ocid="header-nav"
           >
-            {PRIMARY_NAV.map(({ label, to }) => (
+            {PRIMARY_NAV.map(({ label, to, ...rest }) => (
               <Link
                 key={to}
                 to={to}
                 className={navLinkClasses(currentPath === to)}
               >
-                {label}
+                <span className="inline-flex items-center gap-1">
+                  {label}
+                  {"badge" in rest && rest.badge != null && (
+                    <span
+                      className="text-[10px] leading-none opacity-90"
+                      aria-hidden
+                    >
+                      {rest.badge}
+                    </span>
+                  )}
+                </span>
               </Link>
             ))}
 

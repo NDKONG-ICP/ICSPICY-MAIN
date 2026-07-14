@@ -22,6 +22,7 @@ import {
   useRedeemClaim,
   useTokenMetadata,
 } from "../hooks/useBackend";
+import { unwrapOpt } from "../hooks/useSeedBank";
 import { NoIndexSeo } from "../components/NoIndexSeo";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { getNftImageUrl } from "../lib/nft-config";
@@ -290,7 +291,7 @@ export default function ClaimPage() {
 
   // ── Success ────────────────────────────────────────────────────────────────
   if (redeem.isSuccess) {
-    const wonTokenId = redeem.data.tokenId ?? claimInfo.tokenId;
+    const wonTokenId = unwrapOpt(redeem.data.tokenId) ?? claimInfo.tokenId;
     return (
       <PageShell path={`/claim/${claimToken ?? ""}`}>
         <div className="relative w-full">

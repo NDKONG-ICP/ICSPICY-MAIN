@@ -1,0 +1,288 @@
+/**
+ * Shared carnival / state-fair design tokens and surfaces.
+ * Import in hub, GameShell, results, popups, and leaderboard (via arcade-leaderboard.css).
+ */
+@import url("https://fonts.googleapis.com/css2?family=Rye&display=swap");
+
+:root {
+  --arcade-ink: #2c1810;
+  --arcade-ink-muted: rgba(44, 24, 16, 0.88);
+  --arcade-cream: #e8dcc8;
+  --arcade-cream-dark: #ddd0b8;
+  --arcade-wood: #3d2817;
+  --arcade-wood-dark: #2a1810;
+  --arcade-brass: #b8860b;
+  --arcade-brass-light: #d4a84b;
+  --arcade-amber-glow: rgba(255, 185, 85, 0.35);
+  --arcade-font: "Rye", "Rockwell", Georgia, serif;
+  --arcade-bulb-cycle: 12s;
+  --arcade-bulb-step: 1s;
+}
+
+.arcade-theme {
+  font-family: var(--arcade-font);
+  color: var(--arcade-ink-muted);
+}
+
+/* Painted fairground lettering */
+.arcade-painted-text {
+  color: var(--arcade-ink-muted);
+  font-family: var(--arcade-font);
+  font-weight: 500;
+  text-shadow:
+    0.5px 0.5px 0 rgba(255, 235, 200, 0.15),
+    0 1px 2px rgba(60, 30, 10, 0.35);
+}
+
+.arcade-painted-text--hero {
+  font-size: clamp(1.1rem, 5cqi, 1.65rem);
+  color: var(--arcade-ink);
+}
+
+/* Wood + brass texture — always scrimmed for readability */
+.arcade-wood-brass {
+  position: relative;
+  background-color: var(--arcade-wood-dark);
+  background-image: url("/games/arcade/wood-brass-texture.webp");
+  background-size: cover;
+  background-position: center;
+}
+
+.arcade-wood-brass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 10, 4, 0.72) 0%,
+    rgba(30, 16, 8, 0.58) 45%,
+    rgba(22, 12, 6, 0.68) 100%
+  );
+  backdrop-filter: blur(1px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.arcade-wood-brass > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Cream slat panel (menus, stats) */
+.arcade-slat-panel {
+  background: linear-gradient(
+    180deg,
+    #ebe0cc 0%,
+    #ddd0b8 48%,
+    #cfc0a4 100%
+  );
+  border: 1px solid rgba(61, 40, 23, 0.35);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 235, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.28);
+}
+
+/* Midway full-bleed */
+.arcade-midway {
+  position: relative;
+  min-height: calc(100vh - 4rem);
+  overflow: hidden;
+}
+
+.arcade-midway__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none;
+}
+
+.arcade-midway__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 4, 2, 0.35) 0%,
+    rgba(12, 6, 3, 0.15) 35%,
+    rgba(10, 5, 2, 0.25) 70%,
+    rgba(6, 3, 1, 0.55) 100%
+  );
+  pointer-events: none;
+}
+
+.arcade-midway__content {
+  position: relative;
+  z-index: 1;
+  margin-inline: auto;
+  max-width: 42rem;
+  padding: 1rem 0.75rem 2.5rem;
+}
+
+/* Accessible bulb glow — shared mixin (≤0.08 flashes/s per point at 12s cycle) */
+.arcade-bulb-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.arcade-bulb-glow {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 220, 150, 0.55) 0%,
+    rgba(255, 185, 90, 0.35) 30%,
+    rgba(255, 145, 55, 0.12) 55%,
+    transparent 72%
+  );
+  will-change: opacity, transform, filter;
+  animation: arcade-marquee-chase var(--bulb-cycle, var(--arcade-bulb-cycle)) ease-in-out infinite;
+  animation-delay: var(--bulb-delay, 0s);
+}
+
+.arcade-bulb-glow::after {
+  content: "";
+  position: absolute;
+  inset: -15%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 170, 70, 0.3) 0%,
+    rgba(255, 130, 45, 0.1) 50%,
+    transparent 72%
+  );
+  opacity: 0;
+  animation: arcade-marquee-bloom var(--bulb-cycle, var(--arcade-bulb-cycle)) ease-in-out infinite;
+  animation-delay: var(--bulb-delay, 0s);
+}
+
+@keyframes arcade-marquee-chase {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.9);
+    filter: brightness(0.82) saturate(0.85);
+    box-shadow: none;
+    background: radial-gradient(
+      circle,
+      rgba(160, 100, 45, 0.12) 0%,
+      rgba(50, 25, 8, 0.18) 40%,
+      transparent 68%
+    );
+  }
+  6% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(0.98);
+    filter: brightness(0.95) saturate(0.95);
+    box-shadow: 0 0 4px 2px rgba(255, 170, 70, 0.2);
+    background: radial-gradient(
+      circle,
+      rgba(255, 200, 120, 0.4) 0%,
+      rgba(255, 160, 70, 0.2) 38%,
+      transparent 70%
+    );
+  }
+  12% {
+    opacity: 0.82;
+    transform: translate(-50%, -50%) scale(1.08);
+    filter: brightness(1.12) saturate(1.08);
+    box-shadow: 0 0 8px 3px rgba(255, 185, 85, 0.35);
+    background: radial-gradient(
+      circle,
+      rgba(255, 225, 160, 0.6) 0%,
+      rgba(255, 180, 90, 0.28) 35%,
+      transparent 68%
+    );
+  }
+  18% {
+    opacity: 0.72;
+    transform: translate(-50%, -50%) scale(1.02);
+    filter: brightness(1.02) saturate(1);
+    box-shadow: 0 0 5px 2px rgba(255, 170, 70, 0.22);
+  }
+  28%,
+  99% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.9);
+    filter: brightness(0.82) saturate(0.85);
+    box-shadow: none;
+    background: radial-gradient(
+      circle,
+      rgba(160, 100, 45, 0.12) 0%,
+      rgba(50, 25, 8, 0.18) 40%,
+      transparent 68%
+    );
+  }
+}
+
+@keyframes arcade-marquee-bloom {
+  0%,
+  5% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  12% {
+    opacity: 0.35;
+    transform: scale(1.05);
+  }
+  20% {
+    opacity: 0.12;
+    transform: scale(1);
+  }
+  28%,
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+.arcade-new-best-banner {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border: 2px solid rgba(251, 191, 36, 0.55);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #7f1d1d 0%, #5c1010 100%);
+  color: #fef3c7;
+  font-family: var(--arcade-font);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 12px rgba(234, 88, 12, 0.25);
+}
+
+.arcade-btn {
+  font-family: var(--arcade-font);
+  letter-spacing: 0.04em;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
+  border-radius: 4px;
+  border: 1px solid rgba(184, 134, 11, 0.45);
+  background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%);
+  color: #fef3c7;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.75rem;
+  transition: opacity 0.15s, filter 0.15s;
+}
+
+.arcade-btn:hover {
+  filter: brightness(1.08);
+}
+
+.arcade-btn--ghost {
+  background: rgba(30, 16, 8, 0.55);
+  border-color: rgba(180, 130, 80, 0.35);
+  color: rgba(254, 235, 200, 0.88);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arcade-bulb-glow,
+  .arcade-bulb-glow::after {
+    animation: none;
+    opacity: 0.35;
+  }
+}

@@ -26,6 +26,7 @@ import {
   type WallpaperPresetId,
 } from "@/lib/profile-wallpapers";
 import { uploadWallpaper } from "@/lib/wallpaper-upload";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
   Copy,
@@ -39,7 +40,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { ConnectButton } from "../components/ConnectButton";
 import { useAuth } from "../hooks/useAuth";
@@ -47,7 +48,9 @@ import { useMembership, useProfile, useSaveProfile } from "../hooks/useBackend";
 import { useMyNftTokenIds } from "../hooks/useMyNftIds";
 import { NoIndexSeo } from "../components/NoIndexSeo";
 import { usePageTitle } from "../hooks/usePageTitle";
-import { getNftImageUrl } from "../lib/nft-config";
+import { resolveNftImageUrl } from "../lib/nft-config";
+import { requireBackendRaw } from "@/lib/backend-raw";
+import { useQuery } from "@tanstack/react-query";
 
 function truncatePid(p: string, head = 6, tail = 6) {
   if (p.length <= head + tail + 3) return p;
@@ -62,10 +65,27 @@ export default function ProfilePage() {
   const { data: profile, isPending: profilePending } = useProfile();
   const { data: profileFull } = usePublicProfileFull(principal ?? undefined);
   const setWallpaper = useSetProfileWallpaper();
+  const qc = useQueryClient();
   const wallpaperInputRef = useRef<HTMLInputElement>(null);
   const [wallpaperUploading, setWallpaperUploading] = useState(false);
   const { data: membership } = useMembership();
   const { data: tokenIds, isLoading: nftsLoading } = useMyNftTokenIds();
+  const { data: badges = [] } = useQuery({
+    queryKey: ["achievements", "badges", principal?.toText()],
+    queryFn: async () => {
+      if (!principal) return [];
+      const raw = requireBackendRaw(actor);
+      return raw.getBadgesByPrincipal(principal);
+    },
+    enabled: !!actor && !!principal,
+  });
+  const badgeTypeByTokenId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const b of badges) {
+      map.set(b.tokenId.toString(), b.badgeType);
+    }
+    return map;
+  }, [badges]);
   const saveProfile = useSaveProfile();
 
   const [username, setUsername] = useState("");
@@ -140,6 +160,7 @@ export default function ProfilePage() {
     setWallpaperUploading(true);
     try {
       await uploadWallpaper(actor, file);
+      void qc.invalidateQueries({ queryKey: ["profile", "full"] });
       toast.success("Wallpaper uploaded");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Wallpaper upload failed");
@@ -399,7 +420,10 @@ export default function ProfilePage() {
               >
                 <div className="aspect-square bg-muted">
                   <img
-                    src={getNftImageUrl(id)}
+                    src={resolveNftImageUrl(
+                      id,
+                      badgeTypeByTokenId.get(id.toString()),
+                    )}
                     alt=""
                     className="w-full h-full object-cover"
                     loading="lazy"

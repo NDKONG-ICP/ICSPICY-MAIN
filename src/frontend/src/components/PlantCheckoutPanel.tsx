@@ -16,8 +16,11 @@ import {
   usePlantLifecycle,
   usePurchasePlant,
   usePurchasePlantICPay,
+  usePurchasePlantPayPal,
 } from "../hooks/useNims";
 import { StageBadge } from "./ui/StageBadge";
+import { PayPalCheckoutPanel } from "./PayPalCheckoutPanel";
+import { paypalCustomIds } from "../lib/paypal";
 
 type StableToken = "ckUSDC" | "ckUSDT";
 
@@ -25,6 +28,7 @@ export function PlantCheckoutPanel({ plantId }: { plantId: bigint }) {
   const { data: lc, isLoading } = usePlantLifecycle(plantId);
   const purchase = usePurchasePlant();
   const purchaseICPay = usePurchasePlantICPay();
+  const purchasePayPal = usePurchasePlantPayPal();
   const icpay = useICPay({
     onSuccess: async (paymentId) => {
       try {
@@ -112,6 +116,26 @@ export function PlantCheckoutPanel({ plantId }: { plantId: bigint }) {
         </Button>
       ) : (
         <>
+          <PayPalCheckoutPanel
+            usdCents={priceCents}
+            customId={paypalCustomIds.plant(plantId)}
+            disabled={purchasePayPal.isPending}
+            onApproved={async (paypalOrderId) => {
+              const result = await purchasePayPal.mutateAsync({
+                plantId,
+                paypalOrderId,
+              });
+              setClaimToken(
+                result.claimToken && result.claimToken.length > 0
+                  ? (result.claimToken[0] ?? null)
+                  : null,
+              );
+              setDone(true);
+              toast.success(result.message);
+            }}
+            onError={(msg) => toast.error(msg)}
+          />
+
           <div className="space-y-2">
             <Label>Pay with stablecoin</Label>
             <div className="flex gap-2">

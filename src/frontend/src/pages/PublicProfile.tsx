@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { slicerBadgeLabel } from "@/games/slicer/slicer-badges";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,19 +34,25 @@ import {
   useResolvedProfilePrincipal,
   useUserPlantsPublic,
 } from "@/hooks/usePublicProfilePage";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { uploadBanner } from "@/lib/banner-upload";
 import {
   downloadProfileShareCard,
   renderProfileShareCard,
 } from "@/lib/profile-share-card";
-import { getNftImageUrl } from "@/lib/nft-config";
+import {
+  getBadgeImageUrl,
+  resolveNftImageUrl,
+} from "@/lib/nft-config";
 import { uploadsUrl } from "@/lib/uploads-canister";
+import { requireBackendRaw } from "@/lib/backend-raw";
 import type { ActorSubclass } from "@dfinity/agent";
 import type { Principal } from "@icp-sdk/core/principal";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  Award,
   CalendarDays,
   Camera,
   Coins,
@@ -57,9 +64,30 @@ import {
   Share2,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { Seo } from "../components/Seo";
+
+type BadgePublic = {
+  tokenId: bigint;
+  badgeType: string;
+  tier: string;
+  earnedAt: bigint;
+  owner: Principal;
+  metadataJson: string;
+  source: { masterclass: null } | { game: null };
+};
+
+function badgeSourceLabel(source: BadgePublic["source"]): string {
+  return "masterclass" in source ? "Masterclass" : "Game";
+}
+
+function formatBadgeDate(nanos: bigint): string {
+  return new Date(Number(nanos / 1_000_000n)).toLocaleDateString(undefined, {
+    month: "short",
+    year: "numeric",
+  });
+}
 
 function rawService(actor: Backend | null): ActorSubclass<_SERVICE> | null {
   if (!actor) return null;
@@ -97,6 +125,7 @@ export default function PublicProfilePage() {
   const userParam = params.user ?? params.principal;
   const { principal: callerPrincipal, isAuthenticated } = useAuth();
   const { actor } = useActor<Backend>(createActor);
+  const { track, USAGE } = useUsageTracking();
   const qc = useQueryClient();
 
   const { principal, isResolving, notFound } =
@@ -106,6 +135,23 @@ export default function PublicProfilePage() {
   const { data: plants = [], isPending: plantsPending } =
     useUserPlantsPublic(principal);
   const { data: nftIds = [] } = useNftTokenIdsForPrincipal(principal);
+  const { data: badges = [] } = useQuery({
+    queryKey: ["achievements", "badges", principal?.toText()],
+    queryFn: async (): Promise<BadgePublic[]> => {
+      if (!principal) return [];
+      const raw = requireBackendRaw(actor);
+      return (await raw.getBadgesByPrincipal(principal)) as BadgePublic[];
+    },
+    enabled: !!actor && !!principal,
+  });
+  const hasAchievementBadges = badges.length > 0;
+  const badgeTypeByTokenId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const b of badges) {
+      map.set(b.tokenId.toString(), b.badgeType);
+    }
+    return map;
+  }, [badges]);
 
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const [bannerUploading, setBannerUploading] = useState(false);
@@ -132,6 +178,7 @@ export default function PublicProfilePage() {
   const profileUrl = `https://www.icspicy.app/u/${principal?.toText() ?? ""}`;
 
   const handleShareLink = async () => {
+    track(USAGE.SHARE.CLICK.feature, USAGE.SHARE.CLICK.action, "profile:link");
     const shareData = {
       title: `${name} on IC SPICY`,
       text: bioText || `Check out ${name}'s grower profile on IC SPICY`,
@@ -151,6 +198,7 @@ export default function PublicProfilePage() {
 
   const handleDownloadShareCard = async () => {
     if (!principal || !profile || !full) return;
+    track(USAGE.SHARE.CLICK.feature, USAGE.SHARE.CLICK.action, "profile:card");
     setShareCardLoading(true);
     try {
       const dataUrl = await renderProfileShareCard({
@@ -235,9 +283,12 @@ export default function PublicProfilePage() {
       : `${name} grows with IC SPICY — regenerative farming, on-chain provenance, and the community CookBook.`;
 
   return (
-    <div className="relative min-h-screen" data-ocid="public-profile-page">
+    <div
+      className="relative isolate min-h-screen"
+      data-ocid="public-profile-page"
+    >
       <ProfileWallpaperLayer wallpaperKey={wallpaperKey} />
-      <div className="max-w-3xl mx-auto pb-20 relative">
+      <div className="relative z-10 max-w-3xl mx-auto pb-20">
       <Seo
         title={seoTitle}
         description={seoDescription}
@@ -318,12 +369,38 @@ export default function PublicProfilePage() {
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-end justify-between gap-3 flex-wrap">
-            <CommunityAvatar
-              principalText={principal.toText()}
-              username={name}
-              avatarKey={avatarKey}
-              className="w-24 h-24 sm:w-28 sm:h-28 text-2xl ring-4 ring-background"
-            />
+            <div
+              className={
+                hasAchievementBadges
+                  ? "relative rounded-full p-[3px] bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 shadow-[0_0_0_1px_rgba(251,146,60,0.35)]"
+                  : undefined
+              }
+              title={
+                hasAchievementBadges
+                  ? "Holds soulbound achievement badges"
+                  : undefined
+              }
+            >
+              <CommunityAvatar
+                principalText={principal.toText()}
+                username={name}
+                avatarKey={avatarKey}
+                className="w-24 h-24 sm:w-28 sm:h-28 text-2xl ring-4 ring-background"
+              />
+              {hasAchievementBadges ? (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
+                  {badges.slice(0, 3).map((b) => (
+                    <img
+                      key={b.tokenId.toString()}
+                      src={getBadgeImageUrl(b.badgeType)}
+                      alt={slicerBadgeLabel(b.badgeType)}
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full ring-2 ring-background object-cover"
+                      loading="lazy"
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
             <div className="flex gap-2 flex-wrap items-center pb-1">
               {isOwnProfile ? (
                 <>
@@ -457,6 +534,55 @@ export default function PublicProfilePage() {
             ) : null}
           </div>
         </motion.div>
+
+        {/* ── Certifications & Honors (soulbound achievement badges) ───────── */}
+        {hasAchievementBadges ? (
+          <section className="mt-8" aria-label="Certifications and honors">
+            <h2 className="font-display font-semibold mb-1 flex items-center gap-2">
+              <Award className="w-4 h-4 text-amber-500" />
+              Certifications &amp; Honors
+            </h2>
+            <p className="text-xs text-muted-foreground mb-3">
+              Soulbound on-chain badges — distinct from PepperHead / Raven
+              membership.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {badges.map((b) => (
+                <div
+                  key={b.tokenId.toString()}
+                  className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card/60 to-orange-500/5 backdrop-blur px-4 py-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={getBadgeImageUrl(b.badgeType)}
+                      alt={slicerBadgeLabel(b.badgeType)}
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg object-cover shrink-0 ring-1 ring-amber-500/30"
+                      loading="lazy"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-display font-semibold text-sm">
+                            {slicerBadgeLabel(b.badgeType)}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {b.tier || "Standard"} · {badgeSourceLabel(b.source)}
+                          </p>
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wide text-amber-600/90 shrink-0">
+                          #{b.tokenId.toString()}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-2">
+                        Earned {formatBadgeDate(b.earnedAt)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {/* ── Top 8 ─────────────────────────────────────────────────────────── */}
         {full.top8.length > 0 ? (
@@ -593,7 +719,10 @@ export default function PublicProfilePage() {
                     className="rounded-lg border border-border overflow-hidden aspect-square hover:border-primary/40 transition-colors"
                   >
                     <img
-                      src={getNftImageUrl(id)}
+                      src={resolveNftImageUrl(
+                        id,
+                        badgeTypeByTokenId.get(id.toString()),
+                      )}
                       alt={`NFT #${id.toString()}`}
                       className="w-full h-full object-cover"
                       loading="lazy"

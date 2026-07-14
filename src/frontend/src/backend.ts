@@ -960,6 +960,7 @@ export interface backendInterface {
     clearArtworkFiles(): Promise<void>;
     confirmICPayPayment(orderId: bigint, paymentId: string): Promise<{ message: string; success: boolean }>;
     confirmOrderPaymentDirect(orderId: bigint, ledgerCanisterId: string, amount: bigint): Promise<{ claim_tokens: string[]; message: string; nft_token_ids: bigint[]; success: boolean }>;
+    confirmPayPalOrderPayment(orderId: bigint, paypalOrderId: string): Promise<{ message: string; success: boolean }>;
     adminWithdrawTokens(ledgerCanisterId: string, to: Principal, amount: bigint): Promise<{ blockIndex: bigint | null; message: string; success: boolean }>;
     getCanisterTreasuryBalances(): Promise<Array<{ ledgerCanisterId: string; symbol: string; balance: bigint }>>;
     getAuditLog(offset: bigint, limit: bigint): Promise<Array<{ ts: bigint; admin: Principal; action: string; detail: string }>>;
@@ -1033,6 +1034,8 @@ export interface backendInterface {
     getOffersForNft(nftId: string): Promise<Array<Offer>>;
     getOffersReceived(): Promise<Array<Offer>>;
     getOrder(order_id: OrderId): Promise<OrderPublic | null>;
+    getOrderPickupClaimTokens(order_id: OrderId): Promise<string[]>;
+    getPayPalCheckoutConfig(): Promise<{ enabled: boolean; clientId: string; sandbox: boolean }>;
     getPlant(plant_id: PlantId): Promise<PlantPublic | null>;
     getPlantLifecycle(plant_id: PlantId): Promise<import("./declarations/backend.did").PlantLifecycle | null>;
     getPlantByNft(nftTokenId: bigint): Promise<import("./declarations/backend.did").PlantLifecycle | null>;
@@ -1070,6 +1073,7 @@ export interface backendInterface {
     createNimsTray(name: string, date: bigint, varietyId: bigint | null): Promise<TrayId>;
     purchasePlant(plantId: PlantId, token: import("./declarations/backend.did").PaymentToken, amount: bigint): Promise<import("./declarations/backend.did").PurchasePlantResult>;
     purchasePlantICPay(plantId: PlantId, paymentId: string): Promise<import("./declarations/backend.did").PurchasePlantResult>;
+    purchasePlantPayPal(plantId: PlantId, paypalOrderId: string): Promise<import("./declarations/backend.did").PurchasePlantResult>;
     getNftPoolStatus(): Promise<{ available: bigint; total: bigint }>;
     getPlantTimeline(plant_id: PlantId): Promise<PlantTimeline | null>;
     getPoolDashboard(): Promise<PoolDashboard>;
@@ -1144,9 +1148,18 @@ export interface backendInterface {
     placeOrder(input: CreateOrderInput): Promise<OrderPublic>;
     purchasePepperHead(paymentId: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }>;
     purchasePepperHeadDirect(ledgerCanisterId: string, amount: bigint): Promise<{ tokenId: bigint | null; message: string; success: boolean }>;
+    purchasePepperHeadPayPal(paypalOrderId: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }>;
+    purchaseCoopSeatPayPal(paypalOrderId: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }>;
     preGenerateNFTPool(layerCount: bigint, layerFileCounts: Array<bigint>): Promise<{
         ok: boolean;
         total: bigint;
+    }>;
+    prepareCoopPayPalCheckout(): Promise<{
+        tokenId: bigint | null;
+        customId: string | null;
+        message: string;
+        usdCents: bigint;
+        success: boolean;
     }>;
     priceOracleTransform(input: TransformationInput): Promise<TransformationOutput>;
     redeemBatchClaim(token_id: ClaimTokenId): Promise<{
@@ -2411,6 +2424,16 @@ export class Backend implements backendInterface {
             return from_candid_opt_n142(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getOrderPickupClaimTokens(arg0: OrderId): Promise<string[]> {
+        if (this.processError) {
+            try { return await this.actor.getOrderPickupClaimTokens(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getOrderPickupClaimTokens(arg0); }
+    }
+    async getPayPalCheckoutConfig(): Promise<{ enabled: boolean; clientId: string; sandbox: boolean }> {
+        if (this.processError) {
+            try { return await this.actor.getPayPalCheckoutConfig(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getPayPalCheckoutConfig(); }
+    }
     async getPlant(arg0: PlantId): Promise<PlantPublic | null> {
         if (this.processError) {
             try {
@@ -2626,6 +2649,17 @@ export class Backend implements backendInterface {
             } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else {
             const r = await this.actor.purchasePlantICPay(arg0, arg1);
+            return { ...r, nftTokenId: r.nftTokenId.length > 0 ? r.nftTokenId[0] : null, claimToken: r.claimToken.length > 0 ? r.claimToken[0] : null };
+        }
+    }
+    async purchasePlantPayPal(arg0: PlantId, arg1: string): Promise<import("./declarations/backend.did").PurchasePlantResult> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.purchasePlantPayPal(arg0, arg1);
+                return { ...r, nftTokenId: r.nftTokenId.length > 0 ? r.nftTokenId[0] : null, claimToken: r.claimToken.length > 0 ? r.claimToken[0] : null };
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.purchasePlantPayPal(arg0, arg1);
             return { ...r, nftTokenId: r.nftTokenId.length > 0 ? r.nftTokenId[0] : null, claimToken: r.claimToken.length > 0 ? r.claimToken[0] : null };
         }
     }
@@ -3380,6 +3414,31 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async prepareCoopPayPalCheckout(): Promise<{
+        tokenId: bigint | null;
+        customId: string | null;
+        message: string;
+        usdCents: bigint;
+        success: boolean;
+    }> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.prepareCoopPayPalCheckout();
+                return {
+                    ...r,
+                    tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null,
+                    customId: r.customId.length > 0 ? r.customId[0] : null,
+                };
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.prepareCoopPayPalCheckout();
+            return {
+                ...r,
+                tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null,
+                customId: r.customId.length > 0 ? r.customId[0] : null,
+            };
+        }
+    }
     async priceOracleTransform(arg0: TransformationInput): Promise<TransformationOutput> {
         if (this.processError) {
             try {
@@ -3969,6 +4028,11 @@ export class Backend implements backendInterface {
             try { return await this.actor.confirmOrderPaymentDirect(arg0, arg1, arg2); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.confirmOrderPaymentDirect(arg0, arg1, arg2); }
     }
+    async confirmPayPalOrderPayment(arg0: bigint, arg1: string): Promise<{ message: string; success: boolean }> {
+        if (this.processError) {
+            try { return await this.actor.confirmPayPalOrderPayment(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.confirmPayPalOrderPayment(arg0, arg1); }
+    }
     async adminWithdrawTokens(arg0: string, arg1: Principal, arg2: bigint): Promise<{ blockIndex: bigint | null; message: string; success: boolean }> {
         if (this.processError) {
             try {
@@ -4009,6 +4073,28 @@ export class Backend implements backendInterface {
             } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else {
             const r = await this.actor.purchasePepperHeadDirect(arg0, arg1);
+            return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
+        }
+    }
+    async purchasePepperHeadPayPal(arg0: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.purchasePepperHeadPayPal(arg0);
+                return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.purchasePepperHeadPayPal(arg0);
+            return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
+        }
+    }
+    async purchaseCoopSeatPayPal(arg0: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }> {
+        if (this.processError) {
+            try {
+                const r = await this.actor.purchaseCoopSeatPayPal(arg0);
+                return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
+            } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else {
+            const r = await this.actor.purchaseCoopSeatPayPal(arg0);
             return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
         }
     }

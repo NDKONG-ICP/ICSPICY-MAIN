@@ -65,7 +65,6 @@ import ProvenanceTypes "types/variety-provenance";
 import SeedBankTypes "types/seed-bank";
 import NimsAPI "mixins/nims-api";
 import CoopAPI "mixins/coop-api";
-import GrowerProposalMigration "migrations/PhaseGrowerProposal";
 import PlantingScheduleTypes "types/planting-schedule";
 import SeedBankAPI "mixins/seed-bank-api";
 import PlantingScheduleAPI "mixins/planting-schedule-api";
@@ -74,6 +73,21 @@ import ResaleTypes "types/nft-resale";
 import GardenTypes "types/garden";
 import CoopTypes "types/coop";
 import GardenAPI "mixins/garden-api";
+import GamesAPI "mixins/games-api";
+import GamesLib "lib/games";
+import SlicerTelemetry "lib/slicer-telemetry";
+import CrafterAPI "mixins/crafter-api";
+import PepperPatchAPI "mixins/pepper-patch-api";
+import IngredientInventoryAPI "mixins/ingredient-inventory-api";
+import AchievementsAPI "mixins/achievements-api";
+import MasterclassAPI "mixins/masterclass-api";
+import GamesTypes "types/games";
+import GameSessionsTypes "types/game-sessions";
+import AchievementTypes "types/achievements";
+import MasterclassTypes "types/masterclass";
+import CrafterRecipesTypes "types/crafter-recipes";
+import GardenStateTypes "types/garden-state";
+import IngredientInventoryTypes "types/ingredient-inventory";
 import RateLimits "lib/rate-limits";
 import CanisterHealth "lib/canister-health";
 import Timer "mo:core/Timer";
@@ -81,7 +95,6 @@ import Prim "mo:⛔";
 import UsageAnalytics "UsageAnalytics";
 import Iter "mo:base/Iter";
 
-(with migration = GrowerProposalMigration.migration)
 shared(msg) persistent actor class ICSpicy() = Self {
   transient let initialDeployer = msg.caller;
 
@@ -396,6 +409,42 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let recipeIntros = Map.empty<Common.RecipeId, Text>();
   let recipeFaqs = Map.empty<Common.RecipeId, [(Text, Text)]>();
 
+  // ICSPICY Games — per-player scores + cached leaderboards (additive side maps).
+  let gameScores = Map.empty<Text, GamesTypes.GamePlayerStats>();
+  let gameLeaderboardCache = Map.empty<Text, [GamesTypes.LeaderboardEntry]>();
+  // Principals hidden from public leaderboards (explicit overrides + admins by default).
+  let leaderboardExcluded = Map.empty<Principal, Bool>();
+  // Ranked game sessions (Phase 1 anti-cheat substrate). Ephemeral — same pattern.
+  let gameSessions = Map.empty<Text, GameSessionsTypes.GameSession>();
+  let nextGameSessionCounter = { var value : Nat = 1 };
+  let savedCrafterRecipes = Map.empty<Principal, [CrafterRecipesTypes.SavedCrafterRecipe]>();
+  let gardenStates = Map.empty<Principal, GardenStateTypes.GardenStateBlob>();
+  // Soft-bridge pantry (Grow → Slice → Craft). Additive side map — same
+  // ephemeral-let + wasm_memory_persistence:keep pattern as gardenStates.
+  let ingredientInventory = Map.empty<Principal, IngredientInventoryTypes.IngredientInventoryBlob>();
+
+  // Soulbound achievement badges (token IDs ≥ 200_000). Additive side maps —
+  // same ephemeral-let + wasm_memory_persistence:keep pattern. Append-only;
+  // do not reorder relative to earlier declarations.
+  let badgeRegistry = Map.empty<Nat, AchievementTypes.BadgeRecord>();
+  let badgeByOwnerType = Map.empty<Text, Nat>();
+  let nextAchievementTokenId = { var value : Nat = 200_000 };
+
+  // Masterclass quiz progress (Principal → JSON blob). Additive side map —
+  // same ephemeral-let + wasm_memory_persistence:keep pattern. Append-only.
+  let masterclassProgress = Map.empty<Principal, MasterclassTypes.ProgressBlob>();
+
+  // Slicer submit rejection telemetry (append-only — must not insert above).
+  let slicerRejectCounts = SlicerTelemetry.empty();
+
+  // Ghost — corrupt EOP slot from mid-block insert (Jul 2026 outage). Do not use.
+  // Fresh counter appended below; GamesAPI wired to sessionCounter.
+  // let nextGameSessionCounter left in place above at original slot.
+
+  // Append-only replacement after Jul 2026 wasm_memory_persistence slot corruption.
+  let sessionCounter = { var value : Nat = 1 };
+  let sessionStore = Map.empty<Text, GameSessionsTypes.GameSession>();
+
   // ── Claim token state (QR label → NFT claim flow) ─────────────────────────
 
   let claimTokens    = Map.empty<Common.ClaimTokenId, ClaimTypes.ClaimToken>();
@@ -547,6 +596,10 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   let icpaySecretKey         : { var value : Text }              = { var value = "" };
   let icpaySessionsConsumed  : Map.Map<Text, Nat>                = Map.empty<Text, Nat>();
+  let paypalClientId         : { var value : Text }              = { var value = "" };
+  let paypalClientSecret     : { var value : Text }              = { var value = "" };
+  let paypalSandbox          : { var value : Bool }              = { var value = false };
+  let paypalOrdersConsumed   : Map.Map<Text, Nat>                = Map.empty<Text, Nat>();
   let auditLog               : { var value : AuditLog.AuditLog } = { var value = AuditLog.empty() };
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -713,6 +766,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     icrc7Balances,
     icrc7TokenMetadataRaw,
     growerProvenanceMeta,
+    badgeRegistry,
     func() : Principal { Principal.fromActor(Self) },
     collectionName,
     totalSupplyCap,
@@ -830,6 +884,10 @@ shared(msg) persistent actor class ICSpicy() = Self {
     func() : Principal { Principal.fromActor(Self) },
     icpaySecretKey,
     icpaySessionsConsumed,
+    paypalClientId,
+    paypalClientSecret,
+    paypalSandbox,
+    paypalOrdersConsumed,
     auditLog,
     plants,
     feedings,
@@ -845,6 +903,10 @@ shared(msg) persistent actor class ICSpicy() = Self {
     plantPhotoLog,
     plantWeatherSnapshots,
     priceOracleState,
+    coopSeats,
+    coopDesignatedSeats,
+    coopPendingSeats,
+    coopSeatPriceCents,
   );
   include AdminShopAPI(
     accessControlState,
@@ -865,11 +927,90 @@ shared(msg) persistent actor class ICSpicy() = Self {
     func() : Principal { Principal.fromActor(Self) },
     auditLog,
   );
+  include CrafterAPI(
+    accessControlState,
+    rateLimits,
+    savedCrafterRecipes,
+  );
+  include PepperPatchAPI(
+    accessControlState,
+    rateLimits,
+    gardenStates,
+  );
+  include IngredientInventoryAPI(
+    accessControlState,
+    rateLimits,
+    ingredientInventory,
+  );
+  include AchievementsAPI(
+    accessControlState,
+    icrc7Owners,
+    icrc7Balances,
+    badgeRegistry,
+    badgeByOwnerType,
+    nextAchievementTokenId,
+    linkedWallets,
+    walletToIdentity,
+  );
+  include MasterclassAPI(
+    accessControlState,
+    rateLimits,
+    masterclassProgress,
+    icrc7Owners,
+    icrc7Balances,
+    badgeRegistry,
+    badgeByOwnerType,
+    nextAchievementTokenId,
+    linkedWallets,
+    walletToIdentity,
+  );
 
   // ── Usage analytics (daily rollups) ─────────────────────────────────────────
 
   stable var usageRollupEntries : [(Text, Nat)] = [];
   stable var usageUniqueEntries : [(Text, [(Text, Bool)])] = [];
+
+  /// Frontend asset canister for share-time OG HTML publish (append-only slot).
+  stable var frontendCanisterIdStable : ?Text = ?"7rukv-hqaaa-aaaao-ba6ma-cai";
+
+  func frontendCanisterPrincipal() : Principal {
+    switch (frontendCanisterIdStable) {
+      case null Principal.fromText("7rukv-hqaaa-aaaao-ba6ma-cai");
+      case (?id) Principal.fromText(id);
+    };
+  };
+
+  public shared ({ caller }) func setFrontendCanisterId(canisterId : Text) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin only");
+    };
+    frontendCanisterIdStable := ?canisterId;
+  };
+
+  public query func getFrontendCanisterId() : async ?Text {
+    frontendCanisterIdStable;
+  };
+
+  include GamesAPI(
+    accessControlState,
+    rateLimits,
+    profiles,
+    gameScores,
+    gameLeaderboardCache,
+    leaderboardExcluded,
+    sessionStore,
+    slicerRejectCounts,
+    sessionCounter,
+    nextAchievementTokenId,
+    icrc7Owners,
+    icrc7Balances,
+    badgeRegistry,
+    badgeByOwnerType,
+    linkedWallets,
+    walletToIdentity,
+    frontendCanisterPrincipal,
+    uploadsCanisterPrincipal,
+  );
 
   var _usageState : UsageAnalytics.UsageState = UsageAnalytics.newState();
 
@@ -1044,7 +1185,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   system func inspect({
     caller : Principal;
-    arg    : Blob;
+    arg : Blob;
   }) : Bool {
     if (arg.size() > MAX_INGRESS_BYTES) { return false };
     not caller.isAnonymous();
@@ -1087,5 +1228,12 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
     Cert.setCertifiedData(certStore);
     startDailyWeatherTimer<system>();
+    // Re-filter leaderboards so admin/test principals are hidden after upgrade.
+    GamesLib.rebuildAllLeaderboardCaches(
+      gameScores,
+      gameLeaderboardCache,
+      leaderboardExcluded,
+      accessControlState,
+    );
   };
 };

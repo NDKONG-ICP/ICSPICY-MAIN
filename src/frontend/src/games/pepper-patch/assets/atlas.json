@@ -1,0 +1,261 @@
+{
+  "version": 1,
+  "atlas": "atlas.webp",
+  "pack": "shelf",
+  "mode": "trim-only",
+  "game": "pepper-patch",
+  "width": 1361,
+  "height": 1550,
+  "frames": {
+    "stage_seedling": {
+      "x": 2,
+      "y": 2,
+      "w": 167,
+      "h": 256,
+      "stem": "stage_seedling"
+    },
+    "stage_vegetative": {
+      "x": 171,
+      "y": 2,
+      "w": 164,
+      "h": 256,
+      "stem": "stage_vegetative"
+    },
+    "stage_flowering": {
+      "x": 337,
+      "y": 2,
+      "w": 174,
+      "h": 256,
+      "stem": "stage_flowering"
+    },
+    "stage_wilted": {
+      "x": 513,
+      "y": 2,
+      "w": 164,
+      "h": 256,
+      "stem": "stage_wilted"
+    },
+    "soil_empty": {
+      "x": 679,
+      "y": 2,
+      "w": 256,
+      "h": 172,
+      "stem": "soil_empty"
+    },
+    "soil_dry": {
+      "x": 937,
+      "y": 2,
+      "w": 256,
+      "h": 159,
+      "stem": "soil_dry"
+    },
+    "soil_moist": {
+      "x": 2,
+      "y": 260,
+      "w": 256,
+      "h": 192,
+      "stem": "soil_moist"
+    },
+    "soil_mulched": {
+      "x": 260,
+      "y": 260,
+      "w": 256,
+      "h": 189,
+      "stem": "soil_mulched"
+    },
+    "fruiting_green": {
+      "x": 518,
+      "y": 260,
+      "w": 156,
+      "h": 256,
+      "stem": "fruiting_green"
+    },
+    "fruiting_yellow": {
+      "x": 676,
+      "y": 260,
+      "w": 171,
+      "h": 256,
+      "stem": "fruiting_yellow"
+    },
+    "fruiting_orange": {
+      "x": 849,
+      "y": 260,
+      "w": 161,
+      "h": 256,
+      "stem": "fruiting_orange"
+    },
+    "fruiting_red": {
+      "x": 1012,
+      "y": 260,
+      "w": 172,
+      "h": 256,
+      "stem": "fruiting_red"
+    },
+    "fruiting_superhot": {
+      "x": 1186,
+      "y": 260,
+      "w": 158,
+      "h": 256,
+      "stem": "fruiting_superhot"
+    },
+    "icon_water": {
+      "x": 2,
+      "y": 518,
+      "w": 256,
+      "h": 240,
+      "stem": "icon_water"
+    },
+    "icon_feed": {
+      "x": 260,
+      "y": 518,
+      "w": 205,
+      "h": 256,
+      "stem": "icon_feed"
+    },
+    "icon_light": {
+      "x": 467,
+      "y": 518,
+      "w": 252,
+      "h": 256,
+      "stem": "icon_light"
+    },
+    "icon_heatreserve": {
+      "x": 721,
+      "y": 518,
+      "w": 123,
+      "h": 256,
+      "stem": "icon_heatreserve"
+    },
+    "icon_smallbatch": {
+      "x": 846,
+      "y": 518,
+      "w": 132,
+      "h": 256,
+      "stem": "icon_smallbatch"
+    },
+    "fx_water": {
+      "x": 980,
+      "y": 518,
+      "w": 205,
+      "h": 256,
+      "stem": "fx_water"
+    },
+    "fx_sparkle": {
+      "x": 1187,
+      "y": 518,
+      "w": 172,
+      "h": 256,
+      "stem": "fx_sparkle"
+    },
+    "fx_harvest": {
+      "x": 2,
+      "y": 776,
+      "w": 160,
+      "h": 256,
+      "stem": "fx_harvest"
+    },
+    "fx_microbes": {
+      "x": 164,
+      "y": 776,
+      "w": 223,
+      "h": 256,
+      "stem": "fx_microbes"
+    },
+    "wx_rain": {
+      "x": 389,
+      "y": 776,
+      "w": 256,
+      "h": 186,
+      "stem": "wx_rain"
+    },
+    "wx_storm": {
+      "x": 647,
+      "y": 776,
+      "w": 256,
+      "h": 239,
+      "stem": "wx_storm"
+    },
+    "input_fpj": {
+      "x": 905,
+      "y": 776,
+      "w": 208,
+      "h": 256,
+      "stem": "input_fpj"
+    },
+    "input_ohn": {
+      "x": 1115,
+      "y": 776,
+      "w": 167,
+      "h": 256,
+      "stem": "input_ohn"
+    },
+    "input_jlf": {
+      "x": 2,
+      "y": 1034,
+      "w": 234,
+      "h": 256,
+      "stem": "input_jlf"
+    },
+    "input_calcium": {
+      "x": 238,
+      "y": 1034,
+      "w": 166,
+      "h": 256,
+      "stem": "input_calcium"
+    },
+    "input_imo": {
+      "x": 406,
+      "y": 1034,
+      "w": 238,
+      "h": 256,
+      "stem": "input_imo"
+    },
+    "shed": {
+      "x": 646,
+      "y": 1034,
+      "w": 238,
+      "h": 256,
+      "stem": "shed"
+    },
+    "season_dial": {
+      "x": 886,
+      "y": 1034,
+      "w": 254,
+      "h": 256,
+      "stem": "season_dial"
+    },
+    "upgrade_sprinkler": {
+      "x": 1142,
+      "y": 1034,
+      "w": 172,
+      "h": 256,
+      "stem": "upgrade_sprinkler"
+    },
+    "upgrade_growlight": {
+      "x": 2,
+      "y": 1292,
+      "w": 204,
+      "h": 256,
+      "stem": "upgrade_growlight"
+    },
+    "upgrade_compost": {
+      "x": 208,
+      "y": 1292,
+      "w": 209,
+      "h": 256,
+      "stem": "upgrade_compost"
+    },
+    "plot_frame": {
+      "x": 419,
+      "y": 1292,
+      "w": 173,
+      "h": 256,
+      "stem": "plot_frame"
+    }
+  },
+  "standalone": {
+    "bg_garden": "bg_garden.webp"
+  },
+  "heldForV2": [],
+  "generatedAt": "2026-07-11T01:38:25.520Z"
+}

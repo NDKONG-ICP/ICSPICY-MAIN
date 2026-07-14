@@ -1,0 +1,555 @@
+@import "./arcade-theme.css";
+
+.sign-board {
+  --sign-ink: var(--arcade-ink);
+  --sign-ink-muted: var(--arcade-ink-muted);
+  --sign-cream: var(--arcade-cream);
+  --sign-wood: var(--arcade-wood);
+  --sign-wood-dark: var(--arcade-wood-dark);
+  --font-sign: var(--arcade-font);
+  font-family: var(--font-sign);
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .sign-board {
+    max-width: min(100%, 36rem);
+    padding-inline: 1rem;
+  }
+}
+
+.sign-stage {
+  width: 100%;
+}
+
+.sign-canvas {
+  position: relative;
+  width: 100%;
+  container-type: inline-size;
+  overflow: hidden;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (min-width: 640px) {
+  .sign-canvas {
+    border-radius: 0.25rem;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  }
+}
+
+.sign-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ── Painted row overlays (top 8 on photo) ── */
+
+.sign-rows {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.sign-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+  transform: translateY(-50%) rotate(var(--sign-rotate, 0deg));
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  font-size: clamp(0.88rem, 3.8cqi, 1.22rem);
+  font-weight: 500;
+  color: var(--sign-ink-muted);
+  text-shadow:
+    0.5px 0.5px 0 rgba(255, 235, 200, 0.15),
+    0 1px 2px rgba(60, 30, 10, 0.35);
+}
+
+.sign-row__rank,
+.sign-row__name,
+.sign-row__score {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  line-height: 1;
+}
+
+.sign-row__rank {
+  text-align: center;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sign-row__name {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-right: 0.5%;
+}
+
+.sign-row__score {
+  text-align: right;
+  font-weight: 500;
+  padding-right: 5%;
+  font-variant-numeric: tabular-nums;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sign-row--first .sign-row__rank {
+  color: #4a2808;
+  text-shadow:
+    0 0 1px rgba(180, 120, 40, 0.4),
+    0 1px 2px rgba(60, 30, 10, 0.4);
+}
+
+.sign-row--you {
+  background: linear-gradient(
+    90deg,
+    transparent 8%,
+    rgba(234, 120, 40, 0.12) 18%,
+    rgba(234, 120, 40, 0.14) 82%,
+    transparent 92%
+  );
+  border-radius: 2px;
+}
+
+.sign-row__you-tag {
+  display: none;
+}
+
+.sign-name-link {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.sign-name-link:hover {
+  opacity: 0.78;
+}
+
+.sign-name-link__label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  letter-spacing: 0.01em;
+}
+
+.sign-name-link__skeleton {
+  display: inline-block;
+  width: 6em;
+  height: 0.85em;
+  background: rgba(44, 24, 16, 0.12);
+  border-radius: 1px;
+}
+
+.sign-player {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.35em;
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.sign-player:hover {
+  opacity: 0.78;
+}
+
+.sign-player__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sign-player__skeleton {
+  display: inline-block;
+  width: 4em;
+  height: 0.75em;
+  background: rgba(44, 24, 16, 0.12);
+  border-radius: 1px;
+}
+
+/* ── Bulb marquee chase (photo bulbs already lit) ── */
+
+.sign-bulbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.sign-board--lite .arcade-bulb-glow,
+.sign-board--lite .arcade-bulb-glow::after {
+  animation-duration: 14s;
+}
+
+.sign-board--static .sign-bulbs,
+.sign-board--static .sign-vignette,
+.sign-board--static .sign-embers {
+  display: none;
+}
+
+/* ── Fairground atmosphere ── */
+
+.sign-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(
+    ellipse 85% 90% at 50% 45%,
+    transparent 42%,
+    rgba(80, 35, 8, 0.18) 78%,
+    rgba(40, 15, 4, 0.32) 100%
+  );
+  animation: sign-vignette-pulse 6s ease-in-out infinite;
+}
+
+.sign-embers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.sign-ember {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 200, 100, 0.85) 0%,
+    rgba(255, 140, 50, 0.4) 55%,
+    transparent 100%
+  );
+  box-shadow: 0 0 6px rgba(255, 160, 60, 0.35);
+  will-change: transform, opacity;
+  animation: sign-ember-drift 9s ease-in-out infinite;
+}
+
+@keyframes sign-vignette-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes sign-ember-drift {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(0.6);
+  }
+  12% {
+    opacity: 0.55;
+  }
+  70% {
+    opacity: 0.35;
+    transform: translateY(-18vh) translateX(6px) scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-28vh) translateX(-4px) scale(0.5);
+  }
+}
+
+/* ── Ticket slats (ranks 9–100) ── */
+
+.sign-tickets {
+  margin-top: 0.65rem;
+  max-height: min(42vh, 360px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-inline: 0.75rem;
+  padding-right: 0.9rem;
+}
+
+@media (min-width: 640px) {
+  .sign-tickets {
+    padding-inline: 0.15rem;
+    padding-right: 0.15rem;
+  }
+}
+
+.sign-tickets__label,
+.sign-pinned__label {
+  margin-bottom: 0.45rem;
+  text-align: center;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(232, 220, 200, 0.55);
+}
+
+.sign-tickets__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sign-ticket {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  background: linear-gradient(
+    180deg,
+    #ebe0cc 0%,
+    #ddd0b8 48%,
+    #cfc0a4 100%
+  );
+  border: 1px solid rgba(61, 40, 23, 0.35);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 235, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.28);
+  font-size: 0.72rem;
+  color: var(--sign-ink);
+  text-shadow: 0.5px 0.5px 0 rgba(255, 235, 200, 0.2);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.sign-ticket__rank {
+  width: 1.75rem;
+  flex-shrink: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.sign-ticket__name {
+  min-width: 0;
+  flex: 1;
+}
+
+.sign-ticket__score {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
+.sign-ticket__you-tag {
+  flex-shrink: 0;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8b4018;
+}
+
+.sign-ticket--you {
+  border-color: rgba(200, 90, 30, 0.55);
+  box-shadow:
+    inset 0 0 8px rgba(234, 120, 40, 0.15),
+    0 0 10px rgba(234, 88, 12, 0.18);
+}
+
+.sign-ticket--top1 {
+  border-color: rgba(160, 110, 30, 0.5);
+}
+
+.sign-ticket--top2,
+.sign-ticket--top3 {
+  border-color: rgba(100, 70, 40, 0.45);
+}
+
+.sign-pinned {
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  padding-inline: 0.75rem;
+  border-top: 1px solid rgba(180, 130, 80, 0.25);
+}
+
+@media (min-width: 640px) {
+  .sign-pinned {
+    padding-inline: 0;
+  }
+}
+
+/* ── Tabs & chrome ── */
+
+.sign-tab {
+  font-family: var(--font-sign);
+  letter-spacing: 0.04em;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+.sign-board > [role="tablist"] {
+  padding-inline: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .sign-board > [role="tablist"] {
+    padding-inline: 0;
+  }
+}
+
+.sign-tab--active {
+  background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%);
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fef3c7;
+}
+
+.sign-caption {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: rgba(232, 210, 170, 0.65);
+  line-height: 1.45;
+  padding-inline: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.sign-caption strong {
+  color: rgba(254, 235, 200, 0.88);
+  font-weight: 400;
+}
+
+.sign-auth-hint {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.68rem;
+  color: rgba(232, 210, 170, 0.5);
+  font-family: system-ui, sans-serif;
+  padding-inline: 0.75rem;
+  padding-bottom: 1.5rem;
+}
+
+.sign-empty {
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: 64%;
+  margin: 0;
+  text-align: center;
+  font-size: clamp(0.68rem, 3.4cqi, 0.9rem);
+  font-weight: 500;
+  color: var(--sign-ink-muted);
+  text-shadow: 0 1px 2px rgba(255, 235, 200, 0.25);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.sign-loading {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sign-loading__row {
+  position: absolute;
+  left: 16%;
+  right: 22%;
+  border-radius: 2px;
+  background: rgba(44, 24, 16, 0.08) !important;
+}
+
+/* ── Dev alignment debug (?lbDebug=1) ── */
+
+.sign-debug {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.sign-debug__divider {
+  position: absolute;
+  width: 1px;
+  background: rgba(0, 200, 255, 0.7);
+}
+
+.sign-debug__col {
+  position: absolute;
+  border: 1px dashed rgba(255, 80, 80, 0.65);
+  background: rgba(255, 80, 80, 0.06);
+}
+
+.sign-debug__col--name {
+  border-color: rgba(80, 200, 120, 0.65);
+  background: rgba(80, 200, 120, 0.06);
+}
+
+.sign-debug__col--score {
+  border-color: rgba(200, 160, 80, 0.65);
+  background: rgba(200, 160, 80, 0.06);
+}
+
+.sign-debug__row {
+  position: absolute;
+  left: 15%;
+  right: 22%;
+  border: 1px solid rgba(0, 180, 255, 0.75);
+  background: rgba(0, 180, 255, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sign-bulb-glow {
+    animation: none;
+    opacity: 0.2;
+  }
+
+  .sign-vignette,
+  .sign-ember {
+    animation: none;
+  }
+
+  .sign-vignette {
+    opacity: 0.65;
+  }
+
+  .sign-embers {
+    display: none;
+  }
+
+  .sign-row,
+  .sign-ticket {
+    transition: none !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .sign-board {
+    max-width: 100%;
+  }
+
+  .sign-row {
+    font-size: clamp(0.82rem, 3.5cqi, 1.02rem);
+    font-weight: 500;
+  }
+
+  .sign-ticket {
+    font-size: 0.68rem;
+    padding: 0.4rem 0.5rem;
+  }
+}

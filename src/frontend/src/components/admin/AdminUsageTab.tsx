@@ -38,6 +38,9 @@ interface DayAgg {
   spicyai: number;
   community: number;
   dao: number;
+  games: number;
+  masterclass: number;
+  share: number;
 }
 
 const FEATURE_COLORS: Record<string, string> = {
@@ -48,6 +51,9 @@ const FEATURE_COLORS: Record<string, string> = {
   spicyai: "#06b6d4",
   community: "#ec4899",
   dao: "#64748b",
+  games: "#f97316",
+  masterclass: "#a855f7",
+  share: "#14b8a6",
 };
 
 const FEATURE_KEYS = [
@@ -58,6 +64,9 @@ const FEATURE_KEYS = [
   "spicyai",
   "community",
   "dao",
+  "games",
+  "masterclass",
+  "share",
 ] as const;
 
 type FeatureKey = (typeof FEATURE_KEYS)[number];
@@ -124,6 +133,9 @@ export function AdminUsageTab() {
           spicyai: 0,
           community: 0,
           dao: 0,
+          games: 0,
+          masterclass: 0,
+          share: 0,
         });
       }
       const agg = map.get(day)!;

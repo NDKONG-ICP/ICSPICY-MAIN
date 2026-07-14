@@ -1,0 +1,196 @@
+{
+  "atlasBytes": 195028,
+  "atlasKb": 190.5,
+  "passing": [
+    {
+      "stem": "chili_whole",
+      "kind": "chili",
+      "half": "whole",
+      "removedPct": 59.2,
+      "size": "172x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "chili_left",
+      "kind": "chili",
+      "half": "left",
+      "removedPct": 53.7,
+      "size": "129x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "chili_right",
+      "kind": "chili",
+      "half": "right",
+      "removedPct": 73.7,
+      "size": "189x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "superhot_whole",
+      "kind": "rare_chili",
+      "half": "whole",
+      "removedPct": 55.8,
+      "size": "172x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "superhot_left",
+      "kind": "rare_chili",
+      "half": "left",
+      "removedPct": 32.3,
+      "size": "172x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "superhot_right",
+      "kind": "rare_chili",
+      "half": "right",
+      "removedPct": 44.7,
+      "size": "165x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "onion_whole",
+      "kind": "onion",
+      "half": "whole",
+      "removedPct": 54.6,
+      "size": "218x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "onion_left",
+      "kind": "onion",
+      "half": "left",
+      "removedPct": 54,
+      "size": "213x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "onion_right",
+      "kind": "onion",
+      "half": "right",
+      "removedPct": 54.3,
+      "size": "189x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "mango_whole",
+      "kind": "mango",
+      "half": "whole",
+      "removedPct": 36.8,
+      "size": "170x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "mango_left",
+      "kind": "mango",
+      "half": "left",
+      "removedPct": 25.9,
+      "size": "176x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "mango_right",
+      "kind": "mango",
+      "half": "right",
+      "removedPct": 43.5,
+      "size": "234x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "garlic_whole",
+      "kind": "garlic",
+      "half": "whole",
+      "removedPct": 58.7,
+      "size": "174x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "garlic_left",
+      "kind": "garlic",
+      "half": "left",
+      "removedPct": 34.8,
+      "size": "172x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "garlic_right",
+      "kind": "garlic",
+      "half": "right",
+      "removedPct": 61,
+      "size": "201x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "tomato_whole",
+      "kind": "tomato",
+      "half": "whole",
+      "removedPct": 58.5,
+      "size": "244x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "tomato_left",
+      "kind": "tomato",
+      "half": "left",
+      "removedPct": 58,
+      "size": "256x224",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "tomato_right",
+      "kind": "tomato",
+      "half": "right",
+      "removedPct": 65.3,
+      "size": "238x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "lime_whole",
+      "kind": "lime",
+      "half": "whole",
+      "removedPct": 63.6,
+      "size": "256x238",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "lime_left",
+      "kind": "lime",
+      "half": "left",
+      "removedPct": 32.2,
+      "size": "172x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    },
+    {
+      "stem": "lime_right",
+      "kind": "lime",
+      "half": "right",
+      "removedPct": 57.7,
+      "size": "255x256",
+      "hitRadius": 25,
+      "visual": "pass"
+    }
+  ],
+  "failed": []
+}

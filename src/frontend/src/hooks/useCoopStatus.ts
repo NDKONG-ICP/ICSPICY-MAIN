@@ -70,10 +70,11 @@ export function useCoopSeatsRemaining() {
   return useQuery({
     queryKey: ["coopSeatsRemaining"],
     queryFn: async () => {
-      if (!svc) return { total: 88, available: 0 };
+      if (!svc) throw new Error("Backend not ready");
       return svc.getCoopSeatsRemaining();
     },
     staleTime: 30_000,
+    retry: 2,
   });
 }
 

@@ -27,6 +27,8 @@ module {
   // ── Tokenizer ────────────────────────────────────────────────────────────────
 
   // Minimal English stop words — keeps query signal clean.
+  // Also drop brand/corpus-wide tokens ("ic", "spicy") that match almost every doc
+  // and inflate queryChunks instruction cost without adding ranking signal.
   let STOP_WORDS : [Text] = [
     "a", "an", "the", "and", "or", "but", "in", "on", "at", "to",
     "for", "of", "with", "by", "from", "is", "are", "was", "were",
@@ -34,10 +36,25 @@ module {
     "it", "its", "this", "that", "these", "those", "i", "we", "you",
     "he", "she", "they", "not", "no", "as", "if", "so", "up", "out",
     "about", "which", "what", "how", "can", "will", "more", "all",
+    "why", "when", "where", "who", "whom", "whose", "please", "just",
+    "really", "something", "anything", "someone", "anyone", "into",
+    "over", "under", "again", "also", "than", "then", "too", "very",
+    "my", "our", "your", "their", "should", "would", "could", "may",
+    "might", "must", "shall", "need", "want", "like", "get", "got",
+    "make", "made", "using", "use", "used",
+    // Brand / corpus-wide — pure cost, no signal on this index.
+    "ic", "spicy", "ics",
     // Pepperpedia corpus terms — match nearly every chunk and blow instruction limits.
     "pepper", "peppers", "chile", "chili", "chilli", "variety", "varieties",
     "hot", "plant", "plants", "seed", "seeds", "tell", "me",
   ];
+
+  // Hard cap on scored query terms. Cost ≈ terms × chunks × meta Text.contains.
+  // Empirically 6 terms × ~1219 chunks exceeded the 5B instruction limit;
+  // 3–4 terms stay safe with headroom for ~1300+ chunks.
+  let MAX_QUERY_TERMS : Nat = 4;
+  // Soft budget: if terms × chunks would exceed this, drop to fewer terms.
+  let SAFE_TERM_CHUNK_PRODUCT : Nat = 4500;
 
   func isStopWord(t : Text) : Bool {
     Array.find<Text>(STOP_WORDS, func(s) { s == t }) != null
@@ -194,19 +211,47 @@ module {
     ("sea",     ["seawater", "fermented"]),
   ];
 
-  func expandAcronyms(terms : [Text]) : [Text] {
-    var expanded = terms;
-    for ((acronym, expansion) in ACRONYM_MAP.vals()) {
-      if (Array.find<Text>(terms, func(t) { t == acronym }) != null) {
-        // Add expansion terms that are not already present.
-        for (expTerm in expansion.vals()) {
-          if (Array.find<Text>(expanded, func(t) { t == expTerm }) == null) {
-            expanded := Array.concat(expanded, [expTerm]);
-          };
-        };
-      };
+  // Acronym map kept for documentation. Expansion into full phrases is disabled
+  // in expandAcronyms — injected words like "plant"/"oriental" match too broadly.
+  let _ACRONYM_MAP_DOCS : [(Text, [Text])] = ACRONYM_MAP;
+
+  func expandAcronyms(terms : [Text], maxTerms : Nat) : [Text] {
+    ignore _ACRONYM_MAP_DOCS;
+    takeTerms(terms, maxTerms)
+  };
+
+  func takeTerms(terms : [Text], max : Nat) : [Text] {
+    if (terms.size() <= max) { terms }
+    else {
+      Array.tabulate<Text>(max, func(i) { terms[i] })
+    }
+  };
+
+  // Cap query terms for instruction-budget safety given corpus size.
+  // At ~1265 chunks, 3 terms stays under 4500; 4 does not.
+  func budgetedMaxTerms(chunkCount : Nat) : Nat {
+    if (chunkCount == 0) { return MAX_QUERY_TERMS };
+    var maxT = MAX_QUERY_TERMS;
+    while (maxT > 1 and maxT * chunkCount > SAFE_TERM_CHUNK_PRODUCT) {
+      maxT -= 1;
     };
-    expanded
+    maxT
+  };
+
+  type DocBoostCache = {
+    titleLower : Text;
+    subtitleLower : Text;
+    tagsLower : [Text];
+  };
+
+  func buildDocBoost(meta : Types.DocumentRecord) : DocBoostCache {
+    {
+      titleLower = Text.toLower(meta.title);
+      subtitleLower = Text.toLower(meta.subtitle);
+      // Intentionally omit summary — Text.contains over ~1200 long summaries per
+      // query term was a major instruction-cost driver.
+      tagsLower = Array.map<Text, Text>(meta.tags, func(t) { Text.toLower(t) });
+    }
   };
 
   // Returns the text of the top-K chunks most relevant to the query,
@@ -217,23 +262,36 @@ module {
     docs : [Types.DocumentRecord],
     topK : Nat,
   ) : { chunks : [Text]; slugs : [Text] } {
-    let rawTerms = tokenize(queryText);
-    let queryTerms = expandAcronyms(rawTerms);
+    let maxTerms = budgetedMaxTerms(chunks.size());
+    let rawTerms = takeTerms(tokenize(queryText), maxTerms);
+    let queryTerms = expandAcronyms(rawTerms, maxTerms);
     if (queryTerms.size() == 0) {
       return { chunks = []; slugs = [] };
     };
 
-    // Index docs by slug once — avoids O(chunks × docs) Array.find per chunk.
-    var docBySlug = Map.empty<Text, Types.DocumentRecord>();
+    // Precompute lowered meta once per doc — title/tags/subtitle only.
+    let boostBySlug = Map.empty<Text, DocBoostCache>();
+    let qLower = Text.toLower(queryText);
     for (d in docs.vals()) {
-      Map.add(docBySlug, Text.compare, d.slug, d);
+      Map.add(boostBySlug, Text.compare, d.slug, buildDocBoost(d));
+    };
+
+    // Precompute per-doc boost score once (same for all chunks of a slug).
+    let docScoreBySlug = Map.empty<Text, Nat>();
+    for (d in docs.vals()) {
+      switch (Map.get(boostBySlug, Text.compare, d.slug)) {
+        case (?boost) {
+          Map.add(docScoreBySlug, Text.compare, d.slug, scoreDocBoost(boost, qLower, queryTerms));
+        };
+        case null {};
+      };
     };
 
     // Score chunks; keep a bounded candidate set without re-sorting the full corpus.
     let CANDIDATE_CAP : Nat = 48;
     var candidates : [(Nat, Types.ChunkRecord)] = [];
     for (c in chunks.vals()) {
-      let s = scoreChunk(c, queryText, queryTerms, docBySlug);
+      let s = scoreChunk(c, queryTerms, docScoreBySlug);
       if (s == 0) { continue };
       candidates := insertCandidate(candidates, s, c, CANDIDATE_CAP);
     };
@@ -289,55 +347,52 @@ module {
     )
   };
 
-  func scoreChunk(
-    chunk : Types.ChunkRecord,
-    queryText : Text,
+  func scoreDocBoost(
+    boost : DocBoostCache,
+    qLower : Text,
     queryTerms : [Text],
-    docBySlug : Map.Map<Text, Types.DocumentRecord>,
   ) : Nat {
-    // Find the owning document for title/tag boosts.
-    let docMeta = Map.get(docBySlug, Text.compare, chunk.slug);
-    let qLower = Text.toLower(queryText);
-
     var score : Nat = 0;
-    switch (docMeta) {
-      case (?meta) {
-        let titleLower = Text.toLower(meta.title);
-        if (titleLower.size() > 4 and Text.contains(qLower, #text titleLower)) {
-          score += 500;
-        };
-      };
-      case null {};
+    if (boost.titleLower.size() > 4 and Text.contains(qLower, #text (boost.titleLower))) {
+      score += 500;
     };
     for (term in queryTerms.vals()) {
-      // Term frequency in chunk body.
+      if (Text.contains(boost.titleLower, #text term)) {
+        score += if (term.size() >= 4) { 70 } else { 30 };
+      };
+      for (tag in boost.tagsLower.vals()) {
+        if (tag == term) { score += 20 };
+      };
+      if (Text.contains(boost.subtitleLower, #text term)) {
+        score += 15;
+      };
+    };
+    score
+  };
+
+  func scoreChunk(
+    chunk : Types.ChunkRecord,
+    queryTerms : [Text],
+    docScoreBySlug : Map.Map<Text, Nat>,
+  ) : Nat {
+    var tfScore : Nat = 0;
+    for (term in queryTerms.vals()) {
       let tfMatch = Array.find<(Text, Nat)>(chunk.terms, func(pair) {
         let (t, _) = pair; t == term
       });
       switch (tfMatch) {
-        case (?(_, freq)) { score += freq * 10 };
-        case null {};
-      };
-
-      // Title and tag boosts.
-      switch (docMeta) {
-        case (?meta) {
-          if (Text.contains(Text.toLower(meta.title), #text term)) {
-            score += if (term.size() >= 4) { 70 } else { 30 };
-          };
-          for (tag in meta.tags.vals()) {
-            if (Text.toLower(tag) == term) { score += 20 };
-          };
-          if (Text.contains(Text.toLower(meta.subtitle), #text term)) {
-            score += 15;
-          };
-          if (Text.contains(Text.toLower(meta.summary), #text term)) {
-            score += 5;
-          };
-        };
+        case (?(_, freq)) { tfScore += freq * 10 };
         case null {};
       };
     };
-    score
+    let docScore = switch (Map.get(docScoreBySlug, Text.compare, chunk.slug)) {
+      case (?s) s;
+      case null 0;
+    };
+    // Skip chunks with no body hit unless the full title matched the query
+    // (docScore >= 500). Prevents common title-substring matches from scoring
+    // every chunk of weakly related docs into the candidate heap.
+    if (tfScore == 0 and docScore < 500) { return 0 };
+    tfScore + docScore
   };
 };

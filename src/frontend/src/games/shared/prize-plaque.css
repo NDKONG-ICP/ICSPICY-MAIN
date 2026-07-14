@@ -1,0 +1,103 @@
+.arcade-prize-plaque {
+  width: 100%;
+  max-width: 20rem;
+  margin-inline: auto;
+}
+
+.arcade-prize-plaque__banner {
+  display: block;
+  width: fit-content;
+  margin: 0 auto 0.65rem;
+  text-align: center;
+}
+
+.arcade-prize-plaque__frame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  background: #0a0604;
+}
+
+.arcade-prize-plaque__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none;
+}
+
+/* Cream panel — positioned via prize-plaque-map.ts (% of image) */
+.arcade-prize-plaque__panel {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.12em;
+  padding: 0.35em 0.5em;
+  box-sizing: border-box;
+  container-type: size;
+  overflow: hidden;
+}
+
+.arcade-prize-plaque__label {
+  font-family: var(--arcade-font);
+  font-size: clamp(0.42rem, 11cqh, 0.62rem);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--arcade-ink-muted);
+  line-height: 1.2;
+  flex-shrink: 0;
+  text-shadow:
+    0.5px 0.5px 0 rgba(255, 235, 200, 0.15),
+    0 1px 2px rgba(60, 30, 10, 0.35);
+}
+
+.arcade-prize-plaque__value {
+  font-family: var(--arcade-font);
+  font-size: clamp(1.1rem, 38cqw, 2.4rem);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--arcade-ink);
+  max-width: 92%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow:
+    0.5px 0.5px 0 rgba(255, 235, 200, 0.2),
+    0 1px 3px rgba(60, 30, 10, 0.4);
+}
+
+/* ── Dev alignment debug (?plaqueDebug=1) ── */
+
+.plaque-debug {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.plaque-debug__panel {
+  position: absolute;
+  border: 2px dashed rgba(80, 200, 120, 0.75);
+  background: rgba(80, 200, 120, 0.08);
+  box-sizing: border-box;
+}
+
+@media (max-width: 390px) {
+  .arcade-prize-plaque__value {
+    font-size: clamp(1rem, 36cqw, 2rem);
+  }
+
+  .arcade-prize-plaque__label {
+    font-size: clamp(0.38rem, 10cqh, 0.55rem);
+    letter-spacing: 0.16em;
+  }
+}

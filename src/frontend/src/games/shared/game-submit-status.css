@@ -1,0 +1,67 @@
+.game-submit-status {
+  max-width: 18rem;
+  margin-inline: auto;
+  padding: 0.7rem 0.85rem;
+  border-radius: 6px;
+  text-align: center;
+  font-family: system-ui, sans-serif;
+}
+
+.game-submit-status__celebration {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fde68a;
+}
+
+.game-submit-status__headline {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.game-submit-status__detail {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.game-submit-status__detail strong {
+  font-weight: 700;
+  color: inherit;
+}
+
+.game-submit-status__run-score {
+  margin: 0.4rem 0 0;
+  font-size: 0.65rem;
+  opacity: 0.85;
+}
+
+.game-submit-status--ok {
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  background: rgba(6, 78, 59, 0.35);
+  color: #bbf7d0;
+}
+
+.game-submit-status--pending {
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(69, 26, 3, 0.35);
+  color: #fde68a;
+}
+
+.game-submit-status--warn {
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  background: rgba(69, 26, 3, 0.3);
+  color: #fde68a;
+}
+
+.game-submit-status--error {
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  background: rgba(69, 10, 10, 0.35);
+  color: #fecaca;
+}
+
+.game-submit-status--error .game-submit-status__headline {
+  color: #fca5a5;
+}

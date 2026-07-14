@@ -1,0 +1,98 @@
+.arcade-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 22rem;
+  margin-inline: auto;
+  padding-bottom: 1rem;
+}
+
+.arcade-results__title {
+  text-align: center;
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  color: rgba(254, 235, 200, 0.92);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+.arcade-results__stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.arcade-results__stat-label {
+  display: block;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--arcade-ink-muted);
+}
+
+.arcade-results__stat-value {
+  display: block;
+  font-size: 1.05rem;
+  margin-top: 0.15rem;
+  color: var(--arcade-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.arcade-results__signin {
+  max-width: 18rem;
+  margin-inline: auto;
+  text-align: center;
+  padding: 0.65rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid rgba(184, 134, 11, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.arcade-results__signin-text {
+  font-family: system-ui, sans-serif;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: rgba(254, 235, 200, 0.88);
+}
+
+.arcade-results__submitted {
+  text-align: center;
+  font-size: 0.72rem;
+  color: #4ade80;
+  font-family: system-ui, sans-serif;
+}
+
+.arcade-results__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.arcade-results__lb {
+  margin-top: 0.25rem;
+}
+
+.arcade-badge-celebration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 22rem;
+  margin-inline: auto;
+  padding: 1rem 0 1.5rem;
+}
+
+.arcade-badge-celebration__title {
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+  color: rgba(254, 235, 200, 0.95);
+}
+
+.arcade-badge-celebration__plaque {
+  width: 100%;
+}
+
+.arcade-badge-celebration__queue {
+  margin-top: 0.25rem;
+}

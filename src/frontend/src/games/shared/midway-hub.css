@@ -1,0 +1,128 @@
+.arcade-midway-header {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.arcade-midway-header__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  border-radius: 999px;
+  background: rgba(120, 40, 10, 0.45);
+  color: rgba(254, 215, 170, 0.95);
+  font-family: var(--arcade-font);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.arcade-midway-header__title {
+  font-size: clamp(1.35rem, 6vw, 1.85rem);
+  color: rgba(254, 240, 210, 0.95);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+  letter-spacing: 0.04em;
+}
+
+.arcade-midway-header__sub {
+  margin-top: 0.45rem;
+  font-size: 0.78rem;
+  color: rgba(232, 210, 170, 0.75);
+  font-family: system-ui, sans-serif;
+  line-height: 1.45;
+}
+
+.arcade-midway-header__all-lb {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.75rem;
+  text-decoration: none;
+}
+
+.arcade-midway-provisions-wrap {
+  max-width: 16rem;
+  margin: 0 auto 1.5rem;
+  text-align: center;
+}
+
+.arcade-provisions-chit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px dashed rgba(184, 134, 11, 0.55);
+  border-radius: 3px;
+  background: linear-gradient(
+    180deg,
+    rgba(235, 224, 204, 0.92) 0%,
+    rgba(221, 208, 184, 0.88) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 235, 0.65),
+    0 2px 6px rgba(0, 0, 0, 0.22);
+  font-family: var(--arcade-font);
+  color: var(--arcade-ink);
+}
+
+.arcade-provisions-chit__label {
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--arcade-ink-muted);
+}
+
+.arcade-provisions-chit__counts {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.arcade-midway-provisions__signin {
+  margin-top: 0.45rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.62rem;
+  color: rgba(232, 210, 170, 0.78);
+  line-height: 1.4;
+}
+
+.arcade-midway-provisions__signin-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: rgba(254, 230, 190, 0.95);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.arcade-midway-provisions {
+  max-width: 16rem;
+  margin: 0 auto 1.5rem;
+}
+
+.arcade-midway-booths {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .arcade-midway__content {
+    max-width: 52rem;
+  }
+
+  .arcade-midway-booths {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+    gap: 1rem 0.75rem;
+  }
+
+  .arcade-midway-booth {
+    margin-bottom: 0;
+  }
+}

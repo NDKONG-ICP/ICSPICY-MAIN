@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node ../../scripts/generate-sitemap.mjs && vite build && pnpm copy:env && node ../../scripts/prerender-routes.mjs",
+    "build": "node ../../scripts/build-masterclass-lessons.mjs && node ../../scripts/generate-sitemap.mjs && vite build && pnpm copy:env && node ../../scripts/prerender-routes.mjs",
     "copy:env": "cp env.json dist/",
     "typecheck": "tsc --noEmit",
     "check": "biome check src",
@@ -51,6 +51,7 @@
     "@ic-pay/icpay-widget": "^1.2.157",
     "@icp-sdk/core": "~4.1.0",
     "@nfid/identitykit": "^1.0.18",
+    "@paypal/react-paypal-js": "^10.1.1",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-aspect-ratio": "^1.1.0",

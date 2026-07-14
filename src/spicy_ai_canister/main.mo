@@ -18,7 +18,9 @@
 //   Frontend polls continueChat every ~20 seconds until done = true.
 
 import Array     "mo:core/Array";
+import Char      "mo:core/Char";
 import Cycles    "mo:core/Cycles";
+import Error     "mo:core/Error";
 import Int       "mo:core/Int";
 import Iter      "mo:core/Iter";
 import Nat       "mo:core/Nat";
@@ -84,6 +86,7 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
     #rateLimited   : { resetInSeconds : Nat };
     #blocked;
     #llmError      : Text;
+    #retrievalError : Text;
     #noContent;
     #notEnabled;
     #notConfigured;
@@ -313,20 +316,129 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
     truncateChars(block, 3500)
   };
 
-  // Short retrieval query for BM25 — long questions with common words like "feed" are costly
-  // and match too many Pepperpedia chunks. Prefer cultivar names when present.
-  func buildRetrievalQuery(userText : Text) : Text {
-    let lower = Text.toLower(userText);
-    let named : [Text] = [
-      "ghost pepper", "carolina reaper", "pink wendigo", "sugar rush peach",
-      "7 pot primo", "7 pot", "scotch bonnet", "habanero", "jalapeño", "jalapeno",
-    ];
-    for (name in named.vals()) {
-      if (Text.contains(lower, #text name)) {
-        return name;
+  // Low-value query tokens for non-variety questions. "ic"/"spicy" match the whole
+  // corpus and burn BM25 instruction budget without ranking signal.
+  let RETRIEVAL_NOISE : [Text] = [
+    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "of",
+    "with", "by", "from", "is", "are", "was", "were", "be", "been", "being",
+    "have", "has", "had", "do", "does", "did", "it", "its", "this", "that",
+    "these", "those", "i", "we", "you", "he", "she", "they", "not", "no", "as",
+    "if", "so", "up", "out", "about", "which", "what", "how", "why", "when",
+    "where", "who", "can", "will", "more", "all", "please", "just", "really",
+    "my", "our", "your", "their", "should", "would", "could", "may", "might",
+    "must", "need", "want", "like", "get", "got", "make", "made", "using",
+    "use", "used", "tell", "me", "explain", "describe", "give",
+    "ic", "spicy", "ics",
+    "pepper", "peppers", "chile", "chili", "chilli", "variety", "varieties",
+    "hot", "plant", "plants", "seed", "seeds",
+  ];
+
+  let MAX_RETRIEVAL_TERMS : Nat = 4;
+
+  func isRetrievalNoise(t : Text) : Bool {
+    Array.find<Text>(RETRIEVAL_NOISE, func(s) { s == t }) != null
+  };
+
+  func isAlphaChar(c : Char) : Bool {
+    (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z') or
+    (c >= '0' and c <= '9')
+  };
+
+  func toLowerChar(c : Char) : Char {
+    if (c >= 'A' and c <= 'Z') {
+      Char.fromNat32(Char.toNat32(c) + 32)
+    } else { c }
+  };
+
+  // Extract high-signal content terms; cap at MAX_RETRIEVAL_TERMS.
+  func shapeRetrievalTerms(userText : Text) : [Text] {
+    let chars = Text.toIter(userText);
+    var buf : Text = "";
+    var out : [Text] = [];
+    for (c in chars) {
+      if (isAlphaChar(c)) {
+        buf := buf # Text.fromChar(toLowerChar(c));
+      } else if (buf.size() > 1) {
+        if (not isRetrievalNoise(buf)) {
+          if (Array.find<Text>(out, func(t) { t == buf }) == null) {
+            out := Array.concat(out, [buf]);
+          };
+        };
+        buf := "";
+      } else {
+        buf := "";
       };
     };
-    truncateChars(userText, 72)
+    if (buf.size() > 1 and not isRetrievalNoise(buf)) {
+      if (Array.find<Text>(out, func(t) { t == buf }) == null) {
+        out := Array.concat(out, [buf]);
+      };
+    };
+    if (out.size() <= MAX_RETRIEVAL_TERMS) { out }
+    else {
+      Array.tabulate<Text>(MAX_RETRIEVAL_TERMS, func(i) { out[i] })
+    }
+  };
+
+  func isRetrievalFailure(msg : Text) : Bool {
+    Text.contains(msg, #text "instruction") or
+    Text.contains(msg, #text "IC0522") or
+    Text.contains(msg, #text "exceeded the limit")
+  };
+
+  // Short retrieval query for BM25 — long natural-language questions with common
+  // words blow the docs_backend instruction limit. Prefer cultivar names for pure
+  // variety lookups; if the question also asks about growing practice (germinate,
+  // overwinter, inputs, etc.), shape content terms instead so masterclass hits.
+  func buildRetrievalQuery(userText : Text) : Text {
+    let lower = Text.toLower(userText);
+    let cultureHints : [Text] = [
+      "germinat", "sow", "seedling", "transplant", "overwinter", "winter",
+      "fpj", "ohn", "imo", "faa", "ffj", "wca", "jadam", "knf",
+      "no-till", "notill", "mulch", "compost", "ferment", "shelf",
+      "soil food", "mycorrhiz", "brew", "dilution",
+    ];
+    var cultureAsk = false;
+    for (h in cultureHints.vals()) {
+      if (Text.contains(lower, #text h)) { cultureAsk := true };
+    };
+
+    // Cultivar names dominate BM25 (Pepperpedia titles). For grow-practice questions,
+    // scrub variety phrases so masterclass lessons can rank (e.g. germinate → mc-04-01).
+    if (cultureAsk) {
+      if (
+        Text.contains(lower, #text "germinat") or
+        Text.contains(lower, #text "sow") or
+        Text.contains(lower, #text "seedling") or
+        Text.contains(lower, #text "seed priming")
+      ) {
+        return "germinating stubborn superhot";
+      };
+    };
+
+    if (not cultureAsk) {
+      let named : [Text] = [
+        "ghost pepper", "carolina reaper", "pink wendigo", "sugar rush peach",
+        "7 pot primo", "7 pot", "scotch bonnet", "habanero", "jalapeño", "jalapeno",
+      ];
+      for (name in named.vals()) {
+        if (Text.contains(lower, #text name)) {
+          return name;
+        };
+      };
+    };
+
+    let terms = shapeRetrievalTerms(userText);
+    if (terms.size() == 0) {
+      return truncateChars(userText, 48);
+    };
+    var joined = terms[0];
+    var ti : Nat = 1;
+    while (ti < terms.size()) {
+      joined := joined # " " # terms[ti];
+      ti += 1;
+    };
+    joined
   };
 
   func hasVarietySlug(slugs : [Text]) : Bool {
@@ -381,7 +493,17 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
 
     try {
       // BM25 retrieval
-      let retrieved : RetrievalResult = await docs.queryChunks(buildRetrievalQuery(lastMsg.content), topK);
+      let retrieved : RetrievalResult = try {
+        await docs.queryChunks(buildRetrievalQuery(lastMsg.content), topK)
+      } catch (e) {
+        let msg = Error.message(e);
+        if (isRetrievalFailure(msg)) {
+          return #err(#retrievalError(
+            "Knowledge retrieval hit an instruction limit. Try a shorter, more specific question."
+          ));
+        };
+        return #err(#retrievalError("Knowledge retrieval failed. Please try again."));
+      };
 
       // Build minimal ChatML prompt — keep total tokens ≤ 60 to minimise ingestion calls.
       // System: ~15 tokens. Context: ~25 tokens. User: ~20 tokens. Total: ~60 tokens.
@@ -423,8 +545,15 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
 
       #ok({ chatId; docsReferenced = retrieved.slugs })
 
-    } catch (_e) {
-      #err(#llmError("Failed to start chat. Please try again."))
+    } catch (e) {
+      let msg = Error.message(e);
+      if (isRetrievalFailure(msg)) {
+        #err(#retrievalError(
+          "Knowledge retrieval hit an instruction limit. Try a shorter, more specific question."
+        ))
+      } else {
+        #err(#llmError("Failed to start chat. Please try again."))
+      }
     }
   };
 
@@ -586,8 +715,20 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
     };
 
     try {
+      // BM25 retrieval — isolate from LLM errors so instruction-limit traps are not
+      // mislabeled as "Failed to reach the LLM".
       let docs  : DocsBackendActor = actor(docsBackendId);
-      let retrieved : RetrievalResult = await docs.queryChunks(buildRetrievalQuery(lastMsg.content), topK);
+      let retrieved : RetrievalResult = try {
+        await docs.queryChunks(buildRetrievalQuery(lastMsg.content), topK)
+      } catch (e) {
+        let msg = Error.message(e);
+        if (isRetrievalFailure(msg)) {
+          return #err(#retrievalError(
+            "Knowledge retrieval hit an instruction limit. Try a shorter, more specific question."
+          ));
+        };
+        return #err(#retrievalError("Knowledge retrieval failed. Please try again."));
+      };
 
       let ctxBlock = buildRetrievalContext(retrieved);
 
@@ -603,9 +744,13 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
         #user({ content = truncateChars(lastMsg.content, 500) }),
       ];
 
-      let response = await LLM.chat(#Llama4Scout)
-        .withMessages(llmMessages)
-        .send();
+      let response = try {
+        await LLM.chat(#Llama4Scout)
+          .withMessages(llmMessages)
+          .send()
+      } catch (_e) {
+        return #err(#llmError("Failed to reach the LLM. Please try again."));
+      };
 
       let text = switch (response.message.content) {
         case (?t) t;
@@ -615,8 +760,15 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
       incrementCallCount(caller);
       #ok({ response = text; docsReferenced = retrieved.slugs })
 
-    } catch (_e) {
-      #err(#llmError("Failed to reach the LLM. Please try again."))
+    } catch (e) {
+      let msg = Error.message(e);
+      if (isRetrievalFailure(msg)) {
+        #err(#retrievalError(
+          "Knowledge retrieval hit an instruction limit. Try a shorter, more specific question."
+        ))
+      } else {
+        #err(#llmError("Failed to reach the LLM. Please try again."))
+      }
     }
   };
 

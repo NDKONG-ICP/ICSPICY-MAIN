@@ -1,0 +1,95 @@
+.carnival-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: auto;
+  background: #050202;
+  overflow: hidden;
+}
+
+.carnival-boot__bulbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.carnival-boot__bulb {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 210, 120, 0.7) 0%,
+    rgba(255, 150, 50, 0.25) 55%,
+    transparent 75%
+  );
+  opacity: 0.35;
+  animation: carnival-boot-bulb-swell 0.45s ease-out forwards;
+}
+
+.carnival-boot__bulb--left {
+  left: 4%;
+}
+
+.carnival-boot__bulb--right {
+  right: 4%;
+}
+
+.carnival-boot__iris {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  clip-path: circle(0% at 50% 50%);
+  animation: carnival-boot-iris 0.35s ease-in 0.35s forwards;
+}
+
+.carnival-boot__fade {
+  position: absolute;
+  inset: 0;
+  background: #050202;
+  opacity: 0;
+  animation: carnival-boot-fade-out 0.2s ease-out 0.55s forwards;
+}
+
+@keyframes carnival-boot-bulb-swell {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.8);
+    filter: brightness(0.9);
+  }
+  40% {
+    opacity: 0.85;
+    transform: scale(1.25);
+    filter: brightness(1.2);
+  }
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+    filter: brightness(0.95);
+  }
+}
+
+@keyframes carnival-boot-iris {
+  to {
+    clip-path: circle(150% at 50% 50%);
+  }
+}
+
+@keyframes carnival-boot-fade-out {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carnival-boot__bulb,
+  .carnival-boot__iris,
+  .carnival-boot__fade {
+    animation: none;
+  }
+
+  .carnival-boot__fade {
+    opacity: 1;
+  }
+}

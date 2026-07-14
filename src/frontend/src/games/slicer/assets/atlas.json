@@ -1,0 +1,229 @@
+{
+  "version": 1,
+  "atlas": "atlas.webp",
+  "pack": "shelf",
+  "width": 1381,
+  "height": 1034,
+  "frames": {
+    "chili_whole": {
+      "x": 2,
+      "y": 2,
+      "w": 172,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "chili",
+      "half": "whole",
+      "stem": "chili_whole"
+    },
+    "chili_left": {
+      "x": 176,
+      "y": 2,
+      "w": 129,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "chili",
+      "half": "left",
+      "stem": "chili_left"
+    },
+    "chili_right": {
+      "x": 307,
+      "y": 2,
+      "w": 189,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "chili",
+      "half": "right",
+      "stem": "chili_right"
+    },
+    "rare_chili_whole": {
+      "x": 498,
+      "y": 2,
+      "w": 172,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "rare_chili",
+      "half": "whole",
+      "stem": "superhot_whole"
+    },
+    "rare_chili_left": {
+      "x": 672,
+      "y": 2,
+      "w": 172,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "rare_chili",
+      "half": "left",
+      "stem": "superhot_left"
+    },
+    "rare_chili_right": {
+      "x": 846,
+      "y": 2,
+      "w": 165,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "rare_chili",
+      "half": "right",
+      "stem": "superhot_right"
+    },
+    "onion_whole": {
+      "x": 1013,
+      "y": 2,
+      "w": 218,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "onion",
+      "half": "whole",
+      "stem": "onion_whole"
+    },
+    "onion_left": {
+      "x": 2,
+      "y": 260,
+      "w": 213,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "onion",
+      "half": "left",
+      "stem": "onion_left"
+    },
+    "onion_right": {
+      "x": 217,
+      "y": 260,
+      "w": 189,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "onion",
+      "half": "right",
+      "stem": "onion_right"
+    },
+    "mango_whole": {
+      "x": 408,
+      "y": 260,
+      "w": 170,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "mango",
+      "half": "whole",
+      "stem": "mango_whole"
+    },
+    "mango_left": {
+      "x": 580,
+      "y": 260,
+      "w": 176,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "mango",
+      "half": "left",
+      "stem": "mango_left"
+    },
+    "mango_right": {
+      "x": 758,
+      "y": 260,
+      "w": 234,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "mango",
+      "half": "right",
+      "stem": "mango_right"
+    },
+    "garlic_whole": {
+      "x": 994,
+      "y": 260,
+      "w": 174,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "garlic",
+      "half": "whole",
+      "stem": "garlic_whole"
+    },
+    "garlic_left": {
+      "x": 1170,
+      "y": 260,
+      "w": 172,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "garlic",
+      "half": "left",
+      "stem": "garlic_left"
+    },
+    "garlic_right": {
+      "x": 2,
+      "y": 518,
+      "w": 201,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "garlic",
+      "half": "right",
+      "stem": "garlic_right"
+    },
+    "tomato_whole": {
+      "x": 205,
+      "y": 518,
+      "w": 244,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "tomato",
+      "half": "whole",
+      "stem": "tomato_whole"
+    },
+    "tomato_left": {
+      "x": 451,
+      "y": 518,
+      "w": 256,
+      "h": 224,
+      "hitRadius": 25,
+      "kind": "tomato",
+      "half": "left",
+      "stem": "tomato_left"
+    },
+    "tomato_right": {
+      "x": 709,
+      "y": 518,
+      "w": 238,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "tomato",
+      "half": "right",
+      "stem": "tomato_right"
+    },
+    "lime_whole": {
+      "x": 949,
+      "y": 518,
+      "w": 256,
+      "h": 238,
+      "hitRadius": 25,
+      "kind": "lime",
+      "half": "whole",
+      "stem": "lime_whole"
+    },
+    "lime_left": {
+      "x": 1207,
+      "y": 518,
+      "w": 172,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "lime",
+      "half": "left",
+      "stem": "lime_left"
+    },
+    "lime_right": {
+      "x": 2,
+      "y": 776,
+      "w": 255,
+      "h": 256,
+      "hitRadius": 25,
+      "kind": "lime",
+      "half": "right",
+      "stem": "lime_right"
+    }
+  },
+  "hitRadii": {
+    "chili": 25,
+    "rare_chili": 25,
+    "onion": 25,
+    "mango": 25,
+    "garlic": 25,
+    "tomato": 25,
+    "lime": 25
+  },
+  "generatedAt": "2026-07-09T22:12:17.616Z"
+}

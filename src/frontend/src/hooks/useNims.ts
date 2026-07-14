@@ -21,6 +21,7 @@ import {
   refreshAllTrayGrids,
   refreshNimsDashboardStats,
 } from "../lib/nims-query";
+import { requireBackendRaw } from "../lib/backend-raw";
 import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
@@ -295,6 +296,29 @@ export function usePurchasePlantICPay() {
     }) => {
       if (!actor) throw new Error("Not connected");
       return actor.purchasePlantICPay(plantId, paymentId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plantsForSale"] });
+      qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
+    },
+  });
+}
+
+export function usePurchasePlantPayPal() {
+  const actor = useNimsActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      plantId,
+      paypalOrderId,
+    }: {
+      plantId: PlantId;
+      paypalOrderId: string;
+    }) => {
+      const raw = requireBackendRaw(actor);
+      const result = await raw.purchasePlantPayPal(plantId, paypalOrderId);
+      if (!result.success) throw new Error(result.message);
+      return result;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plantsForSale"] });

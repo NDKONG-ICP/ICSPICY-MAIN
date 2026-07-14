@@ -10,12 +10,19 @@ import {
   useTokenPaymentState,
 } from "@/components/TokenPaymentPanel";
 import { useAuth } from "@/hooks/useAuth";
-import { usePurchaseCoopSeatDirect } from "@/hooks/useBackend";
+import {
+  usePrepareCoopPayPalCheckout,
+  usePurchaseCoopSeatDirect,
+  usePurchaseCoopSeatPayPal,
+} from "@/hooks/useBackend";
 import {
   useCoopSeatPrice,
   useCoopSeatsRemaining,
 } from "@/hooks/useCoopStatus";
 import { useTokenPrices } from "@/hooks/useTokenPrices";
+import { PayPalCheckoutPanel } from "@/components/PayPalCheckoutPanel";
+import { isPayPalCheckoutEnabled } from "@/lib/paypal";
+import { usePayPalCheckoutConfig } from "@/hooks/useBackend";
 
 const BENEFITS = [
   "Pro NIMS — mint unlimited grower provenance NFTs",
@@ -28,13 +35,24 @@ const BENEFITS = [
 export function CoopShopCard() {
   const { isAuthenticated, login } = useAuth();
   const purchase = usePurchaseCoopSeatDirect();
-  const { data: seats } = useCoopSeatsRemaining();
+  const prepareCoopPayPal = usePrepareCoopPayPalCheckout();
+  const purchaseCoopPayPal = usePurchaseCoopSeatPayPal();
+  const { data: paypalConfig } = usePayPalCheckoutConfig();
+  const {
+    data: seats,
+    isLoading: seatsLoading,
+    isError: seatsError,
+  } = useCoopSeatsRemaining();
   const { data: priceCents } = useCoopSeatPrice();
   const [payingToken, setPayingToken] = useTokenPaymentState();
   const { dataUpdatedAt } = useTokenPrices();
   const [purchasedId, setPurchasedId] = useState<bigint | null>(null);
+  const [coopPayPalCheckout, setCoopPayPalCheckout] = useState<{
+    customId: string;
+    usdCents: bigint;
+  } | null>(null);
 
-  const available = seats?.available ?? 0;
+  const available = seats?.available;
   const total = seats?.total ?? 88;
   const usdCents = priceCents ?? 25_000n;
 
@@ -69,7 +87,11 @@ export function CoopShopCard() {
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground">
-          {available} of {total} founding seats remaining
+          {seatsLoading
+            ? "Loading seat availability…"
+            : seatsError
+              ? "Seat availability unavailable — try again shortly"
+              : `${available ?? 0} of ${total} founding seats remaining`}
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -78,10 +100,56 @@ export function CoopShopCard() {
             <li key={b}>✓ {b}</li>
           ))}
         </ul>
-        {available === 0 ? (
+        {seatsError ? (
+          <p className="text-sm text-amber-400">
+            Co-op shop is temporarily unavailable. Refresh the page in a moment.
+          </p>
+        ) : seatsLoading ? null : available != null && available === 0n ? (
           <p className="text-sm text-amber-400">All founding seats are sold or reserved.</p>
         ) : isAuthenticated ? (
-          <TokenPaymentPanel
+          <div className="space-y-4">
+            {isPayPalCheckoutEnabled(paypalConfig) && (
+              <div className="space-y-2">
+                {!coopPayPalCheckout ? (
+                  <Button
+                    variant="secondary"
+                    className="w-full"
+                    disabled={prepareCoopPayPal.isPending}
+                    onClick={async () => {
+                      try {
+                        const reserved = await prepareCoopPayPal.mutateAsync();
+                        setCoopPayPalCheckout({
+                          customId: reserved.customId,
+                          usdCents: reserved.usdCents,
+                        });
+                      } catch (e) {
+                        toast.error(
+                          e instanceof Error ? e.message : "Could not reserve seat",
+                        );
+                      }
+                    }}
+                  >
+                    Reserve seat — Pay with PayPal / Venmo
+                  </Button>
+                ) : (
+                  <PayPalCheckoutPanel
+                    usdCents={coopPayPalCheckout.usdCents}
+                    customId={coopPayPalCheckout.customId}
+                    disabled={purchaseCoopPayPal.isPending}
+                    onApproved={async (paypalOrderId) => {
+                      const result =
+                        await purchaseCoopPayPal.mutateAsync(paypalOrderId);
+                      if (result.tokenId?.[0] != null) {
+                        setPurchasedId(result.tokenId[0]);
+                      }
+                      toast.success("Welcome to the Grower Co-op!");
+                    }}
+                    onError={(msg) => toast.error(msg)}
+                  />
+                )}
+              </div>
+            )}
+            <TokenPaymentPanel
             usdCents={usdCents}
             payingToken={payingToken}
             setPayingToken={setPayingToken}
@@ -94,6 +162,7 @@ export function CoopShopCard() {
             }}
             dataOcid="coop-seat-payment"
           />
+          </div>
         ) : (
           <Button onClick={() => login()} className="w-full">
             Sign in to become a Founding Grower

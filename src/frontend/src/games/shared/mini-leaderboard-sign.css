@@ -1,0 +1,39 @@
+.mini-lb-sign {
+  width: 100%;
+  max-width: 16.5rem;
+  margin-inline: auto;
+}
+
+.mini-lb-sign__label {
+  margin-bottom: 0.45rem;
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(254, 235, 200, 0.72);
+  font-family: system-ui, sans-serif;
+}
+
+.mini-lb-sign__stage {
+  width: 100%;
+}
+
+.mini-lb-sign__canvas {
+  border-radius: 3px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+}
+
+.mini-lb-sign__canvas .sign-row {
+  font-size: clamp(0.58rem, 3.0cqi, 0.78rem);
+}
+
+.mini-lb-sign__link {
+  margin-top: 0.45rem;
+  width: 100%;
+  color: rgba(254, 230, 190, 0.82);
+}
+
+.mini-lb-sign__link:hover {
+  color: rgba(254, 240, 210, 0.95);
+}

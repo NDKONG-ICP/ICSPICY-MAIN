@@ -57,7 +57,9 @@ import AdminIcrc7Lib "../lib/admin-icrc7";
 import Icrc37Lib "../lib/icrc37";
 import JsonMini "../lib/json-mini";
 import GrowerProvLib "../lib/grower-provenance";
+import AchievementsLib "../lib/achievements";
 import CoopTypes "../types/coop";
+import AchievementTypes "../types/achievements";
 
 mixin (
   accessControlState     : AccessControl.AccessControlState,
@@ -66,6 +68,7 @@ mixin (
   icrc7Balances          : Map.Map<Principal, Set.Set<Nat>>,
   icrc7TokenMetadataRaw  : Map.Map<Nat, Blob>,
   growerProvenanceMeta   : Map.Map<Nat, CoopTypes.GrowerProvenanceMeta>,
+  badgeRegistry          : Map.Map<Nat, AchievementTypes.BadgeRecord>,
   selfPrincipal          : () -> Principal,
   collectionName         : Text,
   totalSupplyCap         : Nat,
@@ -228,7 +231,12 @@ mixin (
     Array.map<Nat, ?[(Text, ICRC7.Value)]>(
       token_ids,
       func(id : Nat) : ?[(Text, ICRC7.Value)] {
-        if (GrowerProvLib.isGrowerProvenanceToken(id)) {
+        if (AchievementsLib.isAchievementToken(id)) {
+          switch (badgeRegistry.get(id)) {
+            case null null;
+            case (?rec) ?AchievementsLib.buildMetadataEntries(id, rec);
+          };
+        } else if (GrowerProvLib.isGrowerProvenanceToken(id)) {
           switch (growerProvenanceMeta.get(id)) {
             case null null;
             case (?meta) ?GrowerProvLib.buildMetadataEntries(meta);
@@ -364,6 +372,14 @@ mixin (
     caller : Principal,
     now    : Nat,
   ) : ICRC7.TransferResult {
+    // Soulbound: achievement badges (tokenId ≥ 200_000) are non-transferable.
+    if (AchievementsLib.isAchievementToken(arg.token_id)) {
+      return #Err(#GenericError {
+        error_code = 200_000;
+        message = "soulbound: achievement badges are non-transferable";
+      });
+    };
+
     let currentOwner = icrc7Owners.get(arg.token_id);
 
     // Phase 3.4: caller may be the direct owner OR an approved spender.
@@ -449,6 +465,14 @@ mixin (
     };
 
     try {
+      // Soulbound: achievement badges cannot leave via pool distribution either.
+      if (AchievementsLib.isAchievementToken(tokenId)) {
+        return #Err(#GenericError {
+          error_code = 200_000;
+          message = "soulbound: achievement badges are non-transferable";
+        });
+      };
+
       let currentOwner = switch (icrc7Owners.get(tokenId)) {
         case null { return #Err(#NonExistingTokenId) };
         case (?o) o;
@@ -615,6 +639,14 @@ mixin (
     caller : Principal,
     now    : Nat,
   ) : ICRC37.TransferFromResult {
+    // Soulbound: achievement badges (tokenId ≥ 200_000) are non-transferable.
+    if (AchievementsLib.isAchievementToken(arg.token_id)) {
+      return #Err(#GenericError {
+        error_code = 200_000;
+        message = "soulbound: achievement badges are non-transferable";
+      });
+    };
+
     let currentOwner = icrc7Owners.get(arg.token_id);
     let isApprovedSpender = Icrc37Lib.isApproved(icrc37Approvals, arg.token_id, caller, now);
 

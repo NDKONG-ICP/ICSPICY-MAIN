@@ -28,6 +28,36 @@ const DFX_NETWORK = process.env.DFX_NETWORK ?? import.meta.env.DFX_NETWORK;
 // invalid ids never hit the actor.
 const TOKEN_ID_MIN = 1n;
 const TOKEN_ID_MAX = 8888n;
+export const ACHIEVEMENT_TOKEN_START = 200_000n;
+
+export function isAchievementTokenId(tokenId: bigint | number): boolean {
+  const id = typeof tokenId === "bigint" ? tokenId : BigInt(tokenId);
+  return id >= ACHIEVEMENT_TOKEN_START;
+}
+
+export function getBadgeImageUrl(badgeType: string): string {
+  const canisterId = getNftAssetsCanisterId();
+  const file = `${badgeType}.webp`;
+  if (DFX_NETWORK === "local") {
+    return `http://${canisterId}.localhost:4943/badges/${file}`;
+  }
+  return `https://${canisterId}.icp0.io/badges/${file}`;
+}
+
+export function getBadgeFallbackImageUrl(): string {
+  return getBadgeImageUrl("genesis");
+}
+
+/** Resolve display image for any ICRC-7 token (collection NFT or achievement badge). */
+export function resolveNftImageUrl(
+  tokenId: bigint | number,
+  badgeType?: string,
+): string {
+  if (isAchievementTokenId(tokenId)) {
+    return badgeType ? getBadgeImageUrl(badgeType) : getBadgeFallbackImageUrl();
+  }
+  return getNftImageUrl(tokenId);
+}
 
 export function getNftImageUrl(tokenId: bigint | number): string {
   const id = typeof tokenId === "bigint" ? tokenId.toString() : String(tokenId);
@@ -38,9 +68,23 @@ export function getNftImageUrl(tokenId: bigint | number): string {
   return `https://${canisterId}.icp0.io/images/nft_${id}.png`;
 }
 
-// Returns the parsed bigint id when valid, or null when the input is not
-// a positive decimal integer in [1, 8888]. Rejects scientific notation,
-// floats, hex, leading "+", and signed integers.
+// Returns the parsed bigint id when valid for the NFT detail route:
+// collection IDs 1–8888 or soulbound achievement badges ≥ 200_000.
+export function parseNftRouteTokenId(raw: string | undefined): bigint | null {
+  if (!raw) return null;
+  if (!/^\d+$/.test(raw)) return null;
+  let n: bigint;
+  try {
+    n = BigInt(raw);
+  } catch {
+    return null;
+  }
+  if (n >= TOKEN_ID_MIN && n <= TOKEN_ID_MAX) return n;
+  if (n >= ACHIEVEMENT_TOKEN_START) return n;
+  return null;
+}
+
+// Returns the parsed bigint id when valid for the ICRC-7 collection pool only.
 export function isValidTokenId(raw: string | undefined): bigint | null {
   if (!raw) return null;
   if (!/^\d+$/.test(raw)) return null;

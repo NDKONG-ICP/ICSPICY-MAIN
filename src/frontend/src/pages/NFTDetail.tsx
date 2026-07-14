@@ -35,7 +35,9 @@ import {
 } from "../hooks/useBackend";
 import { usePlantByNft } from "../hooks/useNims";
 import { usePageTitle } from "../hooks/usePageTitle";
-import { getNftImageUrl, isValidTokenId } from "../lib/nft-config";
+import { getNftImageUrl, getBadgeImageUrl, isAchievementTokenId, parseNftRouteTokenId } from "../lib/nft-config";
+import { slicerBadgeLabel } from "@/games/slicer/slicer-badges";
+import { useBadgeByTokenId } from "../hooks/useBackend";
 
 // ── Metadata helpers ────────────────────────────────────────────────────────
 
@@ -243,6 +245,30 @@ function HexBlob({
   );
 }
 
+function BadgeImage({ badgeType, alt }: { badgeType: string; alt: string }) {
+  const [errored, setErrored] = useState(false);
+  if (errored) {
+    return (
+      <div
+        className="aspect-square w-full rounded-md bg-muted flex flex-col items-center justify-center gap-2 text-muted-foreground"
+        data-ocid="badge-image-fallback"
+      >
+        <ShieldCheck className="h-12 w-12" />
+        <span className="text-sm">Badge art unavailable</span>
+      </div>
+    );
+  }
+  return (
+    <img
+      src={getBadgeImageUrl(badgeType)}
+      alt={alt}
+      className="aspect-square w-full rounded-md object-cover bg-muted"
+      onError={() => setErrored(true)}
+      data-ocid="badge-image"
+    />
+  );
+}
+
 function NFTImage({ tokenId, alt }: { tokenId: bigint; alt: string }) {
   const [errored, setErrored] = useState(false);
   if (errored) {
@@ -265,6 +291,207 @@ function NFTImage({ tokenId, alt }: { tokenId: bigint; alt: string }) {
       onError={() => setErrored(true)}
       data-ocid="nft-image"
     />
+  );
+}
+
+interface ParsedBadgeMeta {
+  game?: string;
+  milestone?: string;
+  threshold?: number;
+  score?: number;
+  seed?: number;
+  sessionId?: string;
+  sliceLogHash?: string;
+  earnedAt?: number;
+}
+
+function parseBadgeMetadataJson(raw: string): ParsedBadgeMeta {
+  if (!raw.trim()) return {};
+  try {
+    return JSON.parse(raw) as ParsedBadgeMeta;
+  } catch {
+    return {};
+  }
+}
+
+function badgeSourceLabel(source: { game?: null } | { masterclass?: null }): string {
+  if ("game" in source) return "Game achievement";
+  if ("masterclass" in source) return "Masterclass";
+  return "Achievement";
+}
+
+function AchievementBadgeDetail({ tokenId }: { tokenId: bigint }) {
+  const { data: badge, isPending: loadingBadge } = useBadgeByTokenId(tokenId);
+  const { data: owner, isLoading: loadingOwner } = useTokenOwner(tokenId);
+
+  usePageTitle(
+    badge
+      ? `Badge · ${slicerBadgeLabel(badge.badgeType)}`
+      : `Badge #${tokenId.toString()}`,
+  );
+
+  if (!loadingBadge && !badge) {
+    return (
+      <NotFound
+        title="Badge Not Found"
+        message={`Achievement badge #${tokenId.toString()} is not registered on-chain.`}
+      />
+    );
+  }
+
+  const meta = badge ? parseBadgeMetadataJson(badge.metadataJson) : {};
+  const name = badge
+    ? slicerBadgeLabel(badge.badgeType)
+    : `Badge #${tokenId.toString()}`;
+  const ownerText = owner?.owner.toString() ?? badge?.owner.toString() ?? "";
+  const earnedDate =
+    badge && badge.earnedAt > 0n
+      ? new Date(Number(badge.earnedAt / 1_000_000n)).toLocaleString()
+      : meta.earnedAt
+        ? new Date(meta.earnedAt / 1_000_000).toLocaleString()
+        : "—";
+
+  return (
+    <div className="min-h-screen bg-background" data-ocid="badge-detail">
+      <div className="bg-card border-b border-border">
+        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
+          >
+            <Link to="/marketplace">
+              <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to collection
+            </Link>
+          </Button>
+          <div className="flex flex-wrap items-start gap-3">
+            <ShieldCheck className="mt-1 h-7 w-7 text-primary shrink-0" />
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-3 mb-1">
+                <h1 className="font-display text-3xl font-bold text-foreground leading-tight">
+                  {name}
+                </h1>
+                <Badge variant="outline" className="bg-amber-100 text-amber-800">
+                  Soulbound
+                </Badge>
+                {badge?.tier ? (
+                  <Badge variant="outline" className="capitalize">
+                    {badge.tier}
+                  </Badge>
+                ) : null}
+              </div>
+              <p className="text-muted-foreground font-mono text-sm">
+                Achievement Badge #{tokenId.toString()} · non-transferable
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-1 space-y-4">
+            <Card className="border-border bg-card">
+              <CardContent className="p-3">
+                {loadingBadge || !badge ? (
+                  <Skeleton className="aspect-square w-full rounded-2xl" />
+                ) : (
+                  <BadgeImage badgeType={badge.badgeType} alt={name} />
+                )}
+              </CardContent>
+            </Card>
+            <div className="flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              <span>Soulbound — cannot be transferred or sold</span>
+            </div>
+          </div>
+
+          <div className="lg:col-span-2 space-y-4">
+            <Card className="border-border bg-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="font-display text-base font-bold">
+                  Badge Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingBadge ? (
+                  <Skeleton className="h-32 w-full" />
+                ) : badge ? (
+                  <>
+                    <InfoRow label="Type" value={badge.badgeType} />
+                    <InfoRow label="Tier" value={badge.tier || "—"} />
+                    <InfoRow
+                      label="Source"
+                      value={badgeSourceLabel(badge.source)}
+                    />
+                    <InfoRow label="Earned" value={earnedDate} />
+                    <InfoRow
+                      label="Owner"
+                      value={
+                        loadingOwner ? (
+                          <Skeleton className="h-4 w-32 inline-block" />
+                        ) : ownerText ? (
+                          <CopyPrincipal principal={ownerText} />
+                        ) : (
+                          "—"
+                        )
+                      }
+                    />
+                  </>
+                ) : null}
+              </CardContent>
+            </Card>
+
+            <Card className="border-border bg-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="font-display text-base font-bold">
+                  On-chain Provenance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-0">
+                {loadingBadge ? (
+                  <Skeleton className="h-24 w-full" />
+                ) : (
+                  <>
+                    {meta.game ? <InfoRow label="Game" value={meta.game} /> : null}
+                    {meta.milestone ? (
+                      <InfoRow label="Milestone" value={meta.milestone} />
+                    ) : null}
+                    {meta.score != null ? (
+                      <InfoRow
+                        label="Score"
+                        value={`${meta.score.toLocaleString("en-US")} SHU`}
+                      />
+                    ) : null}
+                    {meta.threshold != null ? (
+                      <InfoRow label="Threshold" value={String(meta.threshold)} />
+                    ) : null}
+                    {meta.seed != null ? (
+                      <InfoRow label="Seed" value={String(meta.seed)} />
+                    ) : null}
+                    {meta.sessionId ? (
+                      <InfoRow label="Session ID" value={meta.sessionId} />
+                    ) : null}
+                    {meta.sliceLogHash ? (
+                      <InfoRow label="Slice log hash" value={meta.sliceLogHash} />
+                    ) : null}
+                    {!meta.game &&
+                    !meta.milestone &&
+                    meta.score == null &&
+                    !meta.sliceLogHash ? (
+                      <p className="text-sm text-muted-foreground py-2">
+                        No extended provenance metadata for this badge type.
+                      </p>
+                    ) : null}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -656,26 +883,32 @@ function NotFound({
 
 export default function NFTDetailPage() {
   const { tokenId: rawId } = useParams({ from: "/nft/$tokenId" });
-  // Validate BEFORE calling hooks. isValidTokenId returns null for "0",
-  // "9999", "abc", floats, hex, etc. — the four ICRC hooks then short-
-  // circuit via their `enabled` gate, never firing a network call.
-  const id = isValidTokenId(rawId);
+  const id = parseNftRouteTokenId(rawId);
+  const isAchievement = id != null && isAchievementTokenId(id);
+  const collectionId = id != null && !isAchievement ? id : null;
 
   usePageTitle(
-    id !== null && id !== undefined
-      ? `NFT #${id.toString()}`
-      : rawId?.trim().length
-        ? `NFT · ${rawId}`
-        : "NFT",
+    isAchievement && id != null
+      ? `Badge #${id.toString()}`
+      : collectionId != null
+        ? `NFT #${collectionId.toString()}`
+        : rawId?.trim().length
+          ? `NFT · ${rawId}`
+          : "NFT",
   );
 
-  const { data: metadata, isLoading: loadingMetadata } = useTokenMetadata(id);
-  const { data: owner, isLoading: loadingOwner } = useTokenOwner(id);
-  const { data: isPepperHead } = useIsPepperHead(id);
+  const { data: metadata, isLoading: loadingMetadata } =
+    useTokenMetadata(collectionId);
+  const { data: owner, isLoading: loadingOwner } = useTokenOwner(collectionId);
+  const { data: isPepperHead } = useIsPepperHead(collectionId);
   const { data: certified, isLoading: loadingCertified } =
-    useTokenCertified(id);
+    useTokenCertified(collectionId);
   const { data: linkedPlant, isLoading: loadingLinkedPlant } =
-    usePlantByNft(id);
+    usePlantByNft(collectionId);
+
+  if (id !== null && isAchievement) {
+    return <AchievementBadgeDetail tokenId={id} />;
+  }
 
   if (id === null) {
     return (
@@ -683,7 +916,7 @@ export default function NFTDetailPage() {
         title="Invalid Token ID"
         message={
           rawId
-            ? `"${rawId}" is not a valid token id. Token IDs are integers between 1 and 8888.`
+            ? `"${rawId}" is not a valid token id. Use collection IDs 1–8888 or achievement badge IDs ≥ 200000.`
             : "No token id provided."
         }
       />

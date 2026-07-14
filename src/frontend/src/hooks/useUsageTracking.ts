@@ -30,6 +30,26 @@ export const USAGE = {
   DAO: {
     VOTE: { feature: "dao", action: "vote_cast" },
   },
+  GAMES: {
+    SLICER_PLAY: { feature: "games", action: "slicer_play" },
+    PEPPER_PATCH_PLAY: { feature: "games", action: "pepper_patch_play" },
+    CRAFTER_PLAY: { feature: "games", action: "crafter_play" },
+    LEADERBOARD_VIEW: { feature: "games", action: "leaderboard_view" },
+    GAME_OVER: { feature: "games", action: "game_over" },
+    BADGE_EARNED: { feature: "games", action: "badge_earned" },
+  },
+  MASTERCLASS: {
+    LESSON_VIEW: { feature: "masterclass", action: "lesson_view" },
+    QUIZ_START: { feature: "masterclass", action: "quiz_start" },
+    QUIZ_PASS: { feature: "masterclass", action: "quiz_pass" },
+    MODULE_BADGE_EARNED: {
+      feature: "masterclass",
+      action: "module_badge_earned",
+    },
+  },
+  SHARE: {
+    CLICK: { feature: "share", action: "share_click" },
+  },
 } as const;
 
 export function useUsageTracking() {
@@ -46,11 +66,15 @@ export function useUsageTracking() {
       }
 
       try {
-        void actor.recordUsageEvent(feature, action).catch(() => {
-          /* analytics must never break the app */
+        void actor.recordUsageEvent(feature, action).catch((e) => {
+          if (import.meta.env.DEV) {
+            console.warn("usage analytics failed", feature, action, e);
+          }
         });
-      } catch {
-        /* ignore */
+      } catch (e) {
+        if (import.meta.env.DEV) {
+          console.warn("usage analytics failed", feature, action, e);
+        }
       }
     },
     [actor, isAuthenticated],

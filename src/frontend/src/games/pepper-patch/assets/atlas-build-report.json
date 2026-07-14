@@ -1,0 +1,226 @@
+{
+  "game": "pepper-patch",
+  "mode": "trim-only",
+  "atlasBytes": 300930,
+  "atlasKb": 293.9,
+  "standalone": [
+    {
+      "stem": "bg_garden",
+      "bytes": 37838
+    }
+  ],
+  "heldForV2": [],
+  "passing": [
+    {
+      "stem": "stage_seedling",
+      "modeUsed": "trim-only",
+      "alphaPct": 58.2,
+      "size": "167x256"
+    },
+    {
+      "stem": "stage_vegetative",
+      "modeUsed": "trim-only",
+      "alphaPct": 55,
+      "size": "164x256"
+    },
+    {
+      "stem": "stage_flowering",
+      "modeUsed": "trim-only",
+      "alphaPct": 57,
+      "size": "174x256"
+    },
+    {
+      "stem": "stage_wilted",
+      "modeUsed": "trim-only",
+      "alphaPct": 57.6,
+      "size": "164x256"
+    },
+    {
+      "stem": "soil_empty",
+      "modeUsed": "trim-only",
+      "alphaPct": 70.3,
+      "size": "256x172"
+    },
+    {
+      "stem": "soil_dry",
+      "modeUsed": "trim-only",
+      "alphaPct": 72.2,
+      "size": "256x159"
+    },
+    {
+      "stem": "soil_moist",
+      "modeUsed": "trim-only",
+      "alphaPct": 65.1,
+      "size": "256x192"
+    },
+    {
+      "stem": "soil_mulched",
+      "modeUsed": "trim-only",
+      "alphaPct": 73,
+      "size": "256x189"
+    },
+    {
+      "stem": "fruiting_green",
+      "modeUsed": "trim-only",
+      "alphaPct": 66.5,
+      "size": "156x256"
+    },
+    {
+      "stem": "fruiting_yellow",
+      "modeUsed": "trim-only",
+      "alphaPct": 58.2,
+      "size": "171x256"
+    },
+    {
+      "stem": "fruiting_orange",
+      "modeUsed": "trim-only",
+      "alphaPct": 55,
+      "size": "161x256"
+    },
+    {
+      "stem": "fruiting_red",
+      "modeUsed": "trim-only",
+      "alphaPct": 57.7,
+      "size": "172x256"
+    },
+    {
+      "stem": "fruiting_superhot",
+      "modeUsed": "trim-only",
+      "alphaPct": 66,
+      "size": "158x256"
+    },
+    {
+      "stem": "icon_water",
+      "modeUsed": "trim-only",
+      "alphaPct": 76.9,
+      "size": "256x240"
+    },
+    {
+      "stem": "icon_feed",
+      "modeUsed": "trim-only",
+      "alphaPct": 54.5,
+      "size": "205x256"
+    },
+    {
+      "stem": "icon_light",
+      "modeUsed": "trim-only",
+      "alphaPct": 55.8,
+      "size": "252x256"
+    },
+    {
+      "stem": "icon_heatreserve",
+      "modeUsed": "trim-only",
+      "alphaPct": 66.3,
+      "size": "123x256"
+    },
+    {
+      "stem": "icon_smallbatch",
+      "modeUsed": "trim-only",
+      "alphaPct": 52,
+      "size": "132x256"
+    },
+    {
+      "stem": "fx_water",
+      "modeUsed": "trim-only",
+      "alphaPct": 69.8,
+      "size": "205x256"
+    },
+    {
+      "stem": "fx_sparkle",
+      "modeUsed": "trim-only",
+      "alphaPct": 18.9,
+      "size": "172x256"
+    },
+    {
+      "stem": "fx_harvest",
+      "modeUsed": "trim-only",
+      "alphaPct": 87.3,
+      "size": "160x256"
+    },
+    {
+      "stem": "fx_microbes",
+      "modeUsed": "trim-only",
+      "alphaPct": 67.9,
+      "size": "223x256"
+    },
+    {
+      "stem": "wx_rain",
+      "modeUsed": "trim-only",
+      "alphaPct": 72.1,
+      "size": "256x186"
+    },
+    {
+      "stem": "wx_storm",
+      "modeUsed": "trim-only",
+      "alphaPct": 72.2,
+      "size": "256x239"
+    },
+    {
+      "stem": "input_fpj",
+      "modeUsed": "trim-only",
+      "alphaPct": 51,
+      "size": "208x256"
+    },
+    {
+      "stem": "input_ohn",
+      "modeUsed": "trim-only",
+      "alphaPct": 48,
+      "size": "167x256"
+    },
+    {
+      "stem": "input_jlf",
+      "modeUsed": "trim-only",
+      "alphaPct": 48.3,
+      "size": "234x256"
+    },
+    {
+      "stem": "input_calcium",
+      "modeUsed": "trim-only",
+      "alphaPct": 18.9,
+      "size": "166x256"
+    },
+    {
+      "stem": "input_imo",
+      "modeUsed": "trim-only",
+      "alphaPct": 58.1,
+      "size": "238x256"
+    },
+    {
+      "stem": "shed",
+      "modeUsed": "trim-only",
+      "alphaPct": 61.3,
+      "size": "238x256"
+    },
+    {
+      "stem": "season_dial",
+      "modeUsed": "trim-only",
+      "alphaPct": 53,
+      "size": "254x256"
+    },
+    {
+      "stem": "upgrade_sprinkler",
+      "modeUsed": "trim-only",
+      "alphaPct": 71.3,
+      "size": "172x256"
+    },
+    {
+      "stem": "upgrade_growlight",
+      "modeUsed": "trim-only",
+      "alphaPct": 70.2,
+      "size": "204x256"
+    },
+    {
+      "stem": "upgrade_compost",
+      "modeUsed": "trim-only",
+      "alphaPct": 66.6,
+      "size": "209x256"
+    },
+    {
+      "stem": "plot_frame",
+      "modeUsed": "trim-only",
+      "alphaPct": 26.4,
+      "size": "173x256"
+    }
+  ],
+  "failed": []
+}

@@ -1,0 +1,199 @@
+{
+  "REVIEW_REQUIRED": true,
+  "quizVersion": 1,
+  "lessonId": "m1-l4",
+  "moduleId": "module-01-soil-biology",
+  "badgeId": "masterclass-soil-biology",
+  "title": "1.4 Feeding the Biology — Checkpoint",
+  "drawCount": 6,
+  "passCorrect": 5,
+  "note": "Phase 2b reviewed bank — William approval required before engine swap.",
+  "questions": [
+    {
+      "id": "m1-l4-q01",
+      "lessonId": "m1-l4",
+      "type": "mc",
+      "prompt": "What does feeding the biology prioritize over bare beds?",
+      "choices": [
+        "Carbon and mulch strategies that pay the microbial workforce",
+        "Leaving Florida sand uncovered all summer",
+        "Daily salt fertilizer pulses only",
+        "Removing all organic matter"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l4-q02",
+      "lessonId": "m1-l4",
+      "type": "mc",
+      "prompt": "Sugar / molasses drenches should be used how?",
+      "choices": [
+        "As an unlimited daily flood on bare sand",
+        "Instead of any water",
+        "Restrained — a tip to existing biology, not a substitute for mulch and compost",
+        "Only when beds have zero organic cover"
+      ],
+      "correctIndex": 2,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l4-q03",
+      "lessonId": "m1-l4",
+      "type": "mc",
+      "prompt": "Bare beds in hot Zone 10a sun mainly do what to the microbial workforce?",
+      "choices": [
+        "Starve and stress them — you canceled payroll",
+        "Pay them overtime",
+        "Guarantee peak heat genetics",
+        "Create permanent mycorrhizae"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l4-q04",
+      "lessonId": "m1-l4",
+      "type": "mc",
+      "prompt": "Woody mulch on top vs raw wood chips mixed into the seedling root zone — which matches the lesson?",
+      "choices": [
+        "Mulch on top builds fungal housing; raw high-carbon material in the root zone can steal nitrogen from seedlings",
+        "Mix raw chips into every planting hole for faster fungi",
+        "Both are identical for peppers",
+        "Wood chips should never touch pepper beds"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l4-q05",
+      "lessonId": "m1-l4",
+      "type": "mc",
+      "prompt": "A grower's 'feeding program' is only bottles with no carbon on the surface. What does the lesson call that?",
+      "choices": [
+        "Elite regenerative practice",
+        "Required for superhot genetics",
+        "Better than any mulch",
+        "Tipping ghosts — the workforce has no desk"
+      ],
+      "correctIndex": 3,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l4-q06",
+      "lessonId": "m1-l4",
+      "type": "mc",
+      "prompt": "Which pairing does the lesson recommend for most growers starting payroll?",
+      "choices": [
+        "All five CookBook compost tools running tomorrow",
+        "Molasses drench only — skip mulch",
+        "One surface carbon habit (mulch) plus one bulk compost path that matches your labor",
+        "Thermophilic windrow only — no surface cover"
+      ],
+      "correctIndex": 2,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l4-q07",
+      "lessonId": "m1-l4",
+      "type": "mc",
+      "prompt": "Fresh manure / soft greens vs wood chips differ mainly in C:N tendency how?",
+      "choices": [
+        "Wood chips mineralize nitrogen fastest in the root zone",
+        "Soft greens and manures tend lower C:N (faster mineralization); wood chips tend higher C:N (slower fungal build)",
+        "C:N never affects pepper beds",
+        "Only hydroponic salts matter for C:N"
+      ],
+      "correctIndex": 1,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l4-q08",
+      "lessonId": "m1-l4",
+      "type": "mc",
+      "prompt": "You want a restrained sugar tip on a bed that already has organic cover. Which CookBook tool fits?",
+      "choices": [
+        "Unlimited molasses flood on naked sand",
+        "Raw wood chips tilled into every seedling hole",
+        "Skip carbon and use syrup instead of mulch",
+        "Molasses–microbe field drench per CookBook — sparingly on existing biology"
+      ],
+      "correctIndex": 3,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l4-q09",
+      "lessonId": "m1-l4",
+      "type": "mc",
+      "prompt": "Soil organic matter (SOM) in this lesson is framed as what?",
+      "choices": [
+        "Optional decoration for social posts",
+        "The carbon bank that funds the workforce — build slow, destroy fast with tillage and bare soil",
+        "Irrelevant in Florida sand",
+        "Replaced entirely by bottled inputs in Module 2"
+      ],
+      "correctIndex": 1,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l4-q10",
+      "lessonId": "m1-l4",
+      "type": "mc",
+      "prompt": "Bokashi pre-compost in the payroll toolkit is for what job?",
+      "choices": [
+        "Replacing all mulch in pepper rows",
+        "Fermenting kitchen/farm scraps before they hit a pile wrong",
+        "Sterilizing beds with heat",
+        "Raising SHU overnight"
+      ],
+      "correctIndex": 1,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l4-q11",
+      "lessonId": "m1-l4",
+      "type": "sa",
+      "prompt": "Name one carbon strategy that feeds soil life instead of leaving beds bare.",
+      "acceptedKeywords": [
+        "mulch",
+        "compost",
+        "carbon",
+        "cover",
+        "organic",
+        "litter",
+        "bokashi",
+        "windrow",
+        "biochar",
+        "leaf"
+      ],
+      "minKeywords": 1,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l4-q12",
+      "lessonId": "m1-l4",
+      "type": "sa",
+      "prompt": "In this lesson's metaphor, mulch and compost are payroll — what are bottled tonics like FPJ best described as?",
+      "acceptedKeywords": [
+        "tip",
+        "bonus",
+        "tool",
+        "tools"
+      ],
+      "minKeywords": 1,
+      "explanationSlug": "module-01-soil-biology/04-feeding-the-biology",
+      "difficulty": 2
+    }
+  ]
+}

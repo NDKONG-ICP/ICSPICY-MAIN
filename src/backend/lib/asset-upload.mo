@@ -62,6 +62,31 @@ module {
     };
   };
 
+  public func storeToCanister(
+    canister : Principal,
+    path : Text,
+    data : [Nat8],
+    mimeType : Text,
+  ) : async () {
+    let assets : AssetCanister = actor (Principal.toText(canister));
+    let key = assetKey(path);
+    let size = data.size();
+    if (size == 0) {
+      Runtime.trap("Cannot store empty file");
+    };
+    if (size <= maxSingleStoreBytes) {
+      await assets.store({
+        key = key;
+        content_type = mimeType;
+        content_encoding = "identity";
+        content = Blob.fromArray(data);
+        sha256 = null;
+      });
+    } else {
+      await storeLarge(assets, key, data, mimeType);
+    };
+  };
+
   public func storeToUploadsCanister(
     uploadsCanister : ?Principal,
     path : Text,
@@ -75,23 +100,7 @@ module {
         );
       };
       case (?principal) {
-        let assets : AssetCanister = actor (Principal.toText(principal));
-        let key = assetKey(path);
-        let size = data.size();
-        if (size == 0) {
-          Runtime.trap("Cannot store empty file");
-        };
-        if (size <= maxSingleStoreBytes) {
-          await assets.store({
-            key = key;
-            content_type = mimeType;
-            content_encoding = "identity";
-            content = Blob.fromArray(data);
-            sha256 = null;
-          });
-        } else {
-          await storeLarge(assets, key, data, mimeType);
-        };
+        await storeToCanister(principal, path, data, mimeType);
       };
     };
   };

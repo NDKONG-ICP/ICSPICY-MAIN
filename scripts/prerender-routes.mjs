@@ -314,6 +314,47 @@ async function generateOgCard(sharp, slug, title, category) {
   await sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toFile(out);
 }
 
+const SLICER_TIER_OG = [
+  { slug: "mild", label: "Mild Batch", accent: "#fbbf24" },
+  { slug: "craft", label: "Craft Batch", accent: "#f97316" },
+  { slug: "reserve", label: "Reserve Batch", accent: "#ef4444" },
+  { slug: "legendary", label: "Legendary", accent: "#dc2626" },
+];
+
+function slicerTierOgSvg(tierLabel, accent) {
+  return `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#18181b"/>
+      <stop offset="70%" stop-color="#0c0a09"/>
+      <stop offset="100%" stop-color="#1c0a0a"/>
+    </linearGradient>
+    <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#7f1d1d"/>
+      <stop offset="55%" stop-color="${accent}"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="8" fill="url(#flame)"/>
+  <circle cx="1050" cy="500" r="260" fill="${accent}" opacity="0.12"/>
+  <text x="80" y="120" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#f97316" letter-spacing="6">ICSPICY SLICER</text>
+  <text x="80" y="170" font-family="Georgia, serif" font-size="24" fill="#a1a1aa" letter-spacing="2">ARCADE · ON-CHAIN SCORES</text>
+  <text x="80" y="320" font-family="Georgia, serif" font-size="96" font-weight="900" fill="#fafafa">${esc(tierLabel)}</text>
+  <text x="80" y="400" font-family="Georgia, serif" font-size="36" fill="#d4d4d8">Verified SHU · Replay-validated on ICP</text>
+  <text x="80" y="560" font-family="Georgia, serif" font-size="26" fill="#71717a">🌶 icspicy.app/games/slicer — bet you can't beat it</text>
+</svg>`;
+}
+
+async function generateSlicerTierOgCards(sharp) {
+  await fs.mkdir(path.join(DIST, "og", "slicer"), { recursive: true });
+  for (const tier of SLICER_TIER_OG) {
+    const svg = slicerTierOgSvg(tier.label, tier.accent);
+    const out = path.join(DIST, "og", "slicer", `${tier.slug}.png`);
+    await sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toFile(out);
+  }
+}
+
 function formatScoville(max) {
   if (max >= 1_000_000) return `${(max / 1_000_000).toFixed(1)}M`;
   if (max >= 1_000) return `${Math.round(max / 1_000)}K`;
@@ -654,6 +695,15 @@ async function main() {
   });
   await fs.writeFile(path.join(DIST, "404.html"), notFoundHtml, "utf8");
   staticCount++;
+
+  // Slicer tier OG cards (static — share HTML references /og/slicer/{tier}.png)
+  try {
+    const sharp = (await import("sharp")).default;
+    await generateSlicerTierOgCards(sharp);
+    ogCount += SLICER_TIER_OG.length;
+  } catch (e) {
+    console.warn(`⚠ Slicer tier OG cards skipped (${e.message})`);
+  }
 
   // 2. Recipes + variety guides (live backend fetch — never break the build)
   try {

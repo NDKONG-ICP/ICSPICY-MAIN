@@ -37,12 +37,14 @@ import {
 } from "@/hooks/useAdminShop";
 import { createActor, type Backend } from "@/backend";
 import { useActor } from "@/hooks/useActor";
+import { requireBackendRaw } from "@/lib/backend-raw";
 import { exportRowsToCsv, datedCsvFilename } from "@/lib/nims-csv-export";
 import type { ActorSubclass } from "@dfinity/agent";
 import { Principal } from "@icp-sdk/core/principal";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
+  Award,
   ChevronLeft,
   ChevronRight,
   Copy,
@@ -324,9 +326,110 @@ function AdminUserNotifyDialog({
   );
 }
 
+function AdminUserMintBadgeDialog({
+  row,
+  open,
+  onOpenChange,
+}: {
+  row: AdminUserRow;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const { actor } = useActor<Backend>(createActor);
+  const [badgeType, setBadgeType] = useState("masterclass_soil_biology");
+  const [tier, setTier] = useState("completed");
+  const [metadataJson, setMetadataJson] = useState("{}");
+
+  const mint = useMutation({
+    mutationFn: async () => {
+      const raw = requireBackendRaw(actor);
+      const result = await raw.mintAchievementBadge(
+        row.principal_id,
+        badgeType.trim(),
+        tier.trim(),
+        metadataJson.trim() || "{}",
+      );
+      if ("err" in result) {
+        throw new Error(result.err);
+      }
+      return result.ok;
+    },
+    onSuccess: (tokenId) => {
+      toast.success(
+        `Badge minted as #${tokenId.toString()} for ${displayName(row)}`,
+      );
+      onOpenChange(false);
+    },
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : "Mint failed"),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Mint masterclass badge</DialogTitle>
+          <DialogDescription className="text-xs">
+            Soulbound achievement NFT (≥200K) for {displayName(row)}. Mints to
+            their canonical II principal if wallets are linked.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="badge-type">Badge type</Label>
+            <Input
+              id="badge-type"
+              value={badgeType}
+              onChange={(e) => setBadgeType(e.target.value)}
+              className="mt-1"
+              placeholder="masterclass_soil_biology"
+            />
+          </div>
+          <div>
+            <Label htmlFor="badge-tier">Tier</Label>
+            <Input
+              id="badge-tier"
+              value={tier}
+              onChange={(e) => setTier(e.target.value)}
+              className="mt-1"
+              placeholder="completed"
+            />
+          </div>
+          <div>
+            <Label htmlFor="badge-meta">Metadata JSON</Label>
+            <Textarea
+              id="badge-meta"
+              value={metadataJson}
+              onChange={(e) => setMetadataJson(e.target.value)}
+              className="mt-1 font-mono text-xs"
+              rows={3}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            size="sm"
+            onClick={() => mint.mutate()}
+            disabled={mint.isPending || badgeType.trim().length === 0}
+            className="gap-1.5"
+          >
+            {mint.isPending ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Award className="w-3.5 h-3.5" />
+            )}
+            Mint badge
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function UserRowActions({ row }: { row: AdminUserRow }) {
   const [airdropOpen, setAirdropOpen] = useState(false);
   const [notifyOpen, setNotifyOpen] = useState(false);
+  const [badgeOpen, setBadgeOpen] = useState(false);
   const pid = row.principal_id.toText();
 
   return (
@@ -350,6 +453,15 @@ function UserRowActions({ row }: { row: AdminUserRow }) {
         size="sm"
         variant="outline"
         className="h-7 text-xs gap-1"
+        onClick={() => setBadgeOpen(true)}
+      >
+        <Award className="w-3 h-3" />
+        Badge
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-7 text-xs gap-1"
         onClick={() => setNotifyOpen(true)}
       >
         <MessageSquare className="w-3 h-3" />
@@ -359,6 +471,11 @@ function UserRowActions({ row }: { row: AdminUserRow }) {
         row={row}
         open={airdropOpen}
         onOpenChange={setAirdropOpen}
+      />
+      <AdminUserMintBadgeDialog
+        row={row}
+        open={badgeOpen}
+        onOpenChange={setBadgeOpen}
       />
       <AdminUserNotifyDialog
         row={row}

@@ -26,6 +26,11 @@ const HOST = "https://icp-api.io";
 const STATIC_ROUTES = [
   { path: "/", priority: "1.0", changefreq: "weekly" },
   { path: "/nims", priority: "0.9", changefreq: "weekly" },
+  { path: "/games", priority: "0.8", changefreq: "weekly" },
+  { path: "/games/leaderboard", priority: "0.75", changefreq: "weekly" },
+  { path: "/games/slicer", priority: "0.75", changefreq: "weekly" },
+  { path: "/games/crafter", priority: "0.75", changefreq: "weekly" },
+  { path: "/games/pepper-patch", priority: "0.85", changefreq: "weekly" },
   { path: "/cookbook", priority: "0.9", changefreq: "weekly" },
   { path: "/garden", priority: "0.9", changefreq: "monthly" },
   { path: "/guides", priority: "0.8", changefreq: "weekly" },

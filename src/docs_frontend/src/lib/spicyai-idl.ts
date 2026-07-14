@@ -20,6 +20,7 @@ export const spicyAiIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
     rateLimited: IDL.Record({ resetInSeconds: IDL.Nat }),
     blocked: IDL.Null,
     llmError: IDL.Text,
+    retrievalError: IDL.Text,
     noContent: IDL.Null,
     notEnabled: IDL.Null,
     notConfigured: IDL.Null,
@@ -110,6 +111,7 @@ export interface SpicyAiChatError {
   rateLimited?: { resetInSeconds: bigint };
   blocked?: null;
   llmError?: string;
+  retrievalError?: string;
   noContent?: null;
   notEnabled?: null;
   notConfigured?: null;
@@ -301,6 +303,7 @@ export function chatErrorToString(err: SpicyAiChatError): string {
   if (err.notConfigured) return "DeepSeek not configured yet.";
   if (err.sessionActive) return "A previous chat is still in progress.";
   if (err.sessionNotFound) return "Chat session not found.";
+  if (err.retrievalError) return err.retrievalError;
   if (err.llmError) return err.llmError;
   if (err.blocked) return "Blocked.";
   return "Unknown error.";

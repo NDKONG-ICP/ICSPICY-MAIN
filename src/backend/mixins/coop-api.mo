@@ -178,6 +178,29 @@ mixin (
     coopSeatPriceCents.value := cents;
   };
 
+  public shared ({ caller }) func adminGrantCoopSeat(
+    tokenId : Nat,
+    recipient : Principal,
+  ) : async CoopTypes.PurchaseCoopSeatResult {
+    AccessControl.requireAdmin(accessControlState, caller);
+    switch (coopDesignatedSeats.get(tokenId)) {
+      case null {
+        return { success = false; tokenId = null; message = "Token not designated as co-op seat" };
+      };
+      case (?_) {};
+    };
+    if (switch (coopSeats.get(tokenId)) { case null false; case (?_) true }) {
+      return { success = false; tokenId = null; message = "Seat already sold" };
+    };
+    if (switch (coopPendingSeats.get(tokenId)) { case null false; case (?_) true }) {
+      return { success = false; tokenId = null; message = "Seat pending purchase" };
+    };
+    if (not CoopLib.canisterOwnsPepperHead(icrc7Owners, selfPrincipal(), tokenId)) {
+      return { success = false; tokenId = null; message = "Canister does not own token" };
+    };
+    transferDesignatedSeatToBuyer(tokenId, recipient, "admin_grant");
+  };
+
   public shared ({ caller }) func adminRevokeSeat(tokenId : Nat, reason : Text) : async Bool {
     AccessControl.requireAdmin(accessControlState, caller);
     switch (coopSeats.get(tokenId)) {
@@ -213,6 +236,21 @@ mixin (
       coopDesignatedSeats, coopSeats, coopPendingSeats, icrc7Owners, selfPrincipal(),
     );
     { total = if (total > 88) total else 88; available };
+  };
+
+  /// Admin-only: exact token IDs in `coopDesignatedSeats` (sorted ascending).
+  public query ({ caller }) func adminListCoopDesignatedSeats() : async [Nat] {
+    assert AccessControl.isAdmin(accessControlState, caller);
+    var out : [Nat] = [];
+    for ((tokenId, _) in coopDesignatedSeats.entries()) {
+      out := Array.concat(out, [tokenId]);
+    };
+    Array.sort<Nat>(
+      out,
+      func(a, b) {
+        if (a < b) #less else if (a > b) #greater else #equal;
+      },
+    );
   };
 
   public query ({ caller }) func getMyCoopStatus() : async ?CoopTypes.CoopStatus {
@@ -493,6 +531,9 @@ mixin (
         let tokenId = switch (NimsLib.nftTokenIdOf(plant)) {
           case null Runtime.trap("Plant has no provenance NFT — mint one first");
           case (?t) t;
+        };
+        if (not GrowerProvLib.isGrowerProvenanceToken(tokenId)) {
+          Runtime.trap("Only grower provenance NFTs can be claimed via co-op handoff");
         };
         let claimToken = NftClaim.registerClaimToken(
           nftClaimTokens,

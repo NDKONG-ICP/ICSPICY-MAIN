@@ -1030,6 +1030,29 @@ export const mockBackend = {
   updateZoneNotes: async () => undefined,
   // Phase 4 payment stubs
   confirmICPayPayment: async () => ({ message: "Mock paid", success: true }),
+  confirmPayPalOrderPayment: async () => ({ message: "Mock PayPal paid", success: true }),
+  getPayPalCheckoutConfig: async () => ({
+    enabled: true,
+    clientId: "mock-paypal-client-id",
+    sandbox: true,
+  }),
+  prepareCoopPayPalCheckout: async () => ({
+    success: true,
+    tokenId: [7891n] as [bigint],
+    customId: ["icspicy:coop:7891"] as [string],
+    usdCents: 25000n,
+    message: "Reserved",
+  }),
+  purchaseCoopSeatPayPal: async () => ({
+    success: true,
+    tokenId: [7891n] as [bigint],
+    message: "Mock coop seat",
+  }),
+  purchasePepperHeadPayPal: async () => ({
+    success: true,
+    tokenId: [7839n] as [bigint],
+    message: "Mock PepperHead",
+  }),
   confirmOrderPaymentDirect: async () => ({
     message: "Mock paid",
     success: true,
@@ -1159,6 +1182,12 @@ export const mockBackend = {
   purchasePlantICPay: async () => ({
     success: true,
     message: "Mock purchased",
+    claimToken: [],
+    nftTokenId: [],
+  }),
+  purchasePlantPayPal: async () => ({
+    success: true,
+    message: "Mock purchased via PayPal",
     claimToken: [],
     nftTokenId: [],
   }),

@@ -127,6 +127,22 @@ export interface AuditEntry {
   'admin' : Principal,
   'detail' : string,
 }
+export interface BadgeEarned {
+  'tokenId' : bigint,
+  'badgeType' : string,
+  'isNew' : boolean,
+}
+export interface BadgePublic {
+  'tokenId' : bigint,
+  'source' : BadgeSource,
+  'owner' : Principal,
+  'badgeType' : string,
+  'tier' : string,
+  'metadataJson' : string,
+  'earnedAt' : bigint,
+}
+export type BadgeSource = { 'game' : null } |
+  { 'masterclass' : null };
 export interface BatchGiftPackPublic {
   'id' : string,
   'creator' : Principal,
@@ -388,6 +404,17 @@ export interface FoundersMintResult {
   'recipient' : Principal,
   'standard' : NFTStandard,
 }
+export interface GamePlayerStatsPublic {
+  'lastPlayed' : bigint,
+  'displayData' : string,
+  'bestScore' : bigint,
+  'totalPlays' : bigint,
+}
+export interface GameRankPublic {
+  'displayData' : string,
+  'rank' : bigint,
+  'score' : bigint,
+}
 export interface GardenDesign {
   'id' : bigint,
   'structures' : Array<StructurePlacement>,
@@ -518,11 +545,22 @@ export interface ICSpicy {
   'adminDeleteComment' : ActorMethod<[CommentId], boolean>,
   'adminDeletePost' : ActorMethod<[PostId], boolean>,
   'adminDeleteVarietyGuide' : ActorMethod<[bigint, string], boolean>,
+  'adminGetGameStats' : ActorMethod<
+    [string, Principal],
+    [] | [GamePlayerStatsPublic]
+  >,
+  'adminGrantCoopSeat' : ActorMethod<
+    [bigint, Principal],
+    PurchaseCoopSeatResult
+  >,
+  'adminListCoopDesignatedSeats' : ActorMethod<[], Array<bigint>>,
   'adminListUsers' : ActorMethod<[bigint, bigint, string], AdminUserPage>,
+  'adminRemoveGameScore' : ActorMethod<[string, Principal], boolean>,
   'adminReturnToPool' : ActorMethod<[bigint], TransferResult>,
   'adminRevokeSeat' : ActorMethod<[bigint, string], boolean>,
   'adminRunDailyWeatherCapture' : ActorMethod<[], bigint>,
   'adminSendNotification' : ActorMethod<[Principal, string], boolean>,
+  'adminSetLeaderboardExcluded' : ActorMethod<[Principal, boolean], undefined>,
   'adminSubmitToDAB' : ActorMethod<
     [string, string, string, [] | [string]],
     { 'ok' : string } |
@@ -594,6 +632,7 @@ export interface ICSpicy {
   >,
   'cancelVideoUpload' : ActorMethod<[bigint], undefined>,
   'castVote' : ActorMethod<[ProposalId, bigint], boolean>,
+  'claimGameAchievement' : ActorMethod<[string, string], Result_5>,
   'clearArtworkFiles' : ActorMethod<[], undefined>,
   'closeProposal' : ActorMethod<[ProposalId], boolean>,
   'completeEvent' : ActorMethod<[bigint], PlantingEvent>,
@@ -604,6 +643,10 @@ export interface ICSpicy {
   'confirmOrderPaymentDirect' : ActorMethod<
     [bigint, string, bigint],
     ConfirmOrderPaymentDirectResult
+  >,
+  'confirmPayPalOrderPayment' : ActorMethod<
+    [bigint, string],
+    { 'message' : string, 'success' : boolean }
   >,
   'counterOffer' : ActorMethod<[CounterOfferInput], Offer>,
   'createBatchGiftPack' : ActorMethod<
@@ -685,11 +728,16 @@ export interface ICSpicy {
   >,
   'getAdminOrder' : ActorMethod<[OrderId], [] | [AdminOrderPublic]>,
   'getAdmins' : ActorMethod<[], Array<Principal>>,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'getArtworkFile' : ActorMethod<[string], [] | [Uint8Array | number[]]>,
   'getArtworkUploadResult' : ActorMethod<[], UploadResult>,
   'getArtworkUploadStatus' : ActorMethod<[], UploadSessionStatus>,
   'getAuditLog' : ActorMethod<[bigint, bigint], Array<AuditEntry>>,
   'getAvatarFile' : ActorMethod<[string], [] | [Uint8Array | number[]]>,
+  'getBadgeByTokenId' : ActorMethod<[bigint], [] | [BadgePublic]>,
+  'getBadgesByPrincipal' : ActorMethod<[Principal], Array<BadgePublic>>,
   'getBatchGiftPack' : ActorMethod<[ClaimTokenId], [] | [BatchGiftPackPublic]>,
   'getCallerDaoNftCount' : ActorMethod<[], bigint>,
   'getCallerDiscount' : ActorMethod<[], CallerDiscount>,
@@ -757,6 +805,8 @@ export interface ICSpicy {
   'getFollowingCount' : ActorMethod<[Principal], bigint>,
   'getFollowingFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
   'getForSalePlants' : ActorMethod<[], Array<PlantPublic>>,
+  'getFrontendCanisterId' : ActorMethod<[], [] | [string]>,
+  'getGameLeaderboard' : ActorMethod<[string, bigint], Array<LeaderboardEntry>>,
   'getGardenDesign' : ActorMethod<[bigint], [] | [GardenDesign]>,
   'getGardenDesignForUser' : ActorMethod<[bigint], [] | [GardenDesign]>,
   'getGlobalFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
@@ -766,14 +816,22 @@ export interface ICSpicy {
   >,
   'getIcrc7PoolStatsAdmin' : ActorMethod<[], Icrc7PoolStats>,
   'getLatestNurseryWeather' : ActorMethod<[], [] | [WeatherSnapshot]>,
+  'getLessonQuiz' : ActorMethod<[string], [] | [QuizPublic]>,
   'getLinkedWallets' : ActorMethod<[], Array<Principal>>,
   'getListedNfts' : ActorMethod<[[] | [boolean]], Array<NftListingPublic>>,
   'getLoadedMetadataCount' : ActorMethod<[], bigint>,
   'getMembershipPriceInToken' : ActorMethod<[OracleToken], bigint>,
+  'getMyBadges' : ActorMethod<[], Array<BadgePublic>>,
   'getMyCoopStatus' : ActorMethod<[], [] | [CoopStatus]>,
+  'getMyCrafterRecipes' : ActorMethod<[], Array<SavedCrafterRecipe>>,
   'getMyCrosses' : ActorMethod<[], Array<BreedingCrossPublic>>,
   'getMyDesigns' : ActorMethod<[], Array<GardenDesign>>,
   'getMyFavorites' : ActorMethod<[bigint, bigint], Array<RecipePublic>>,
+  'getMyGameRank' : ActorMethod<[string], [] | [GameRankPublic]>,
+  'getMyGameStats' : ActorMethod<[string], [] | [GamePlayerStatsPublic]>,
+  'getMyGardenState' : ActorMethod<[], [] | [string]>,
+  'getMyIngredientInventory' : ActorMethod<[], [] | [string]>,
+  'getMyMasterclassProgress' : ActorMethod<[], string>,
   'getMyNftListings' : ActorMethod<[], Array<NftListingPublic>>,
   'getMyNotifications' : ActorMethod<
     [bigint, bigint],
@@ -786,6 +844,9 @@ export interface ICSpicy {
   'getMySchedules' : ActorMethod<[], Array<SavedSchedule>>,
   'getMySeedBank' : ActorMethod<[], Array<SeedLotPublic>>,
   'getMyTrays' : ActorMethod<[], Array<TrayPublic>>,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
   'getMyVendors' : ActorMethod<[], Array<SeedVendorPublic>>,
   'getMyWeatherRecords' : ActorMethod<[bigint], Array<WeatherRecord>>,
   'getNewOrderCount' : ActorMethod<[], bigint>,
@@ -801,6 +862,7 @@ export interface ICSpicy {
   'getOrder' : ActorMethod<[OrderId], [] | [OrderPublic]>,
   'getOrderPickupClaimTokens' : ActorMethod<[OrderId], Array<string>>,
   'getOverdueEvents' : ActorMethod<[], Array<PlantingEvent>>,
+  'getPayPalCheckoutConfig' : ActorMethod<[], PayPalCheckoutConfig>,
   'getPlant' : ActorMethod<[PlantId], [] | [PlantPublic]>,
   'getPlantByNft' : ActorMethod<[bigint], [] | [PlantLifecycle]>,
   'getPlantClaimToken' : ActorMethod<[PlantId], [] | [string]>,
@@ -855,6 +917,9 @@ export interface ICSpicy {
   'getSeedBankStats' : ActorMethod<[], SeedBankStats>,
   'getSeedLotsByVariety' : ActorMethod<[bigint], Array<SeedLotPublic>>,
   'getShopListingFile' : ActorMethod<[string], [] | [ShopListingFile]>,
+  'getSlicerSharePublic' : ActorMethod<[Principal], [] | [SlicerSharePublic]>,
+  'getSlicerSubmitRejectionStats' : ActorMethod<[], Array<[string, bigint]>>,
+  'getSpawnSequence' : ActorMethod<[bigint, bigint], Array<SpawnEvent>>,
   'getTokenPriceInIcp' : ActorMethod<[OracleToken], bigint>,
   'getTokenPrices' : ActorMethod<[], Array<TokenPrice>>,
   'getTray' : ActorMethod<[TrayId], [] | [TrayPublic]>,
@@ -886,6 +951,7 @@ export interface ICSpicy {
   >,
   'getZoneCalendar' : ActorMethod<[string], ZoneCalendar>,
   'getZoneSchedule' : ActorMethod<[string, bigint], ZoneSchedule>,
+  'gradeQuizCheckpoint' : ActorMethod<[string, string], Result_1>,
   'harvestSeeds' : ActorMethod<[PlantId, [] | [bigint], [] | [string]], bigint>,
   'hasDAOAccess' : ActorMethod<[], boolean>,
   'hasLikedPost' : ActorMethod<[PostId], boolean>,
@@ -974,6 +1040,9 @@ export interface ICSpicy {
     { 'skipped' : bigint, 'initialized' : bigint }
   >,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  /**
+   * / ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
+   */
   'isFollowing' : ActorMethod<[Principal], boolean>,
   'isGrowerProvenanceToken' : ActorMethod<[bigint], boolean>,
   'isPepperHead' : ActorMethod<[bigint], boolean>,
@@ -1076,8 +1145,16 @@ export interface ICSpicy {
     boolean
   >,
   'markPlantGerminated' : ActorMethod<[PlantId, Timestamp], undefined>,
+  'mintAchievementBadge' : ActorMethod<
+    [Principal, string, string, string],
+    Result_7
+  >,
   'mintDesignAsNft' : ActorMethod<[bigint], MintDesignNftResult>,
   'mintEXT' : ActorMethod<[bigint, string, Array<[string, string]>], string>,
+  'mintGameSeasonalBadge' : ActorMethod<
+    [Principal, string, string, string],
+    Result_7
+  >,
   'mintGrowerProvenanceToken' : ActorMethod<
     [PlantId],
     MintGrowerProvenanceResult
@@ -1091,6 +1168,14 @@ export interface ICSpicy {
     string
   >,
   'mintRWAProvenance' : ActorMethod<[MintRWAProvenanceInput], string>,
+  'paypalOAuthTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
+  'paypalTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
   'placeOrder' : ActorMethod<[CreateOrderInput], OrderPublic>,
   'plantSeed' : ActorMethod<
     [TrayId, bigint, bigint, [] | [Timestamp]],
@@ -1100,6 +1185,16 @@ export interface ICSpicy {
     [bigint, Array<bigint>],
     { 'ok' : boolean, 'total' : bigint }
   >,
+  'prepareCoopPayPalCheckout' : ActorMethod<
+    [],
+    {
+      'tokenId' : [] | [bigint],
+      'customId' : [] | [string],
+      'message' : string,
+      'usdCents' : bigint,
+      'success' : boolean,
+    }
+  >,
   'priceOracleTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
@@ -1107,11 +1202,13 @@ export interface ICSpicy {
   'pruneUsageData' : ActorMethod<[], undefined>,
   'publishProposal' : ActorMethod<[ProposalId], boolean>,
   'publishRecipe' : ActorMethod<[RecipeId], boolean>,
+  'publishSlicerSharePage' : ActorMethod<[string], Result_6>,
   'purchaseCoopSeat' : ActorMethod<[string], PurchaseCoopSeatResult>,
   'purchaseCoopSeatDirect' : ActorMethod<
     [string, bigint],
     PurchaseCoopSeatResult
   >,
+  'purchaseCoopSeatPayPal' : ActorMethod<[string], PurchaseCoopSeatResult>,
   'purchasePepperHead' : ActorMethod<
     [string],
     { 'tokenId' : [] | [bigint], 'message' : string, 'success' : boolean }
@@ -1120,11 +1217,16 @@ export interface ICSpicy {
     [string, bigint],
     { 'tokenId' : [] | [bigint], 'message' : string, 'success' : boolean }
   >,
+  'purchasePepperHeadPayPal' : ActorMethod<
+    [string],
+    { 'tokenId' : [] | [bigint], 'message' : string, 'success' : boolean }
+  >,
   'purchasePlant' : ActorMethod<
     [PlantId, PaymentToken, bigint],
     PurchasePlantResult
   >,
   'purchasePlantICPay' : ActorMethod<[PlantId, string], PurchasePlantResult>,
+  'purchasePlantPayPal' : ActorMethod<[PlantId, string], PurchasePlantResult>,
   'recordCross' : ActorMethod<
     [
       string,
@@ -1170,6 +1272,12 @@ export interface ICSpicy {
   'revokeClaimTokenAdmin' : ActorMethod<[string], boolean>,
   'runDailyWeatherCapture' : ActorMethod<[], bigint>,
   'saveCallerUserProfile' : ActorMethod<[SaveProfileInput], boolean>,
+  'saveCrafterRecipe' : ActorMethod<
+    [string, Array<[string, bigint]>, bigint, bigint],
+    Result_5
+  >,
+  'saveGardenState' : ActorMethod<[string], Result_5>,
+  'saveIngredientInventory' : ActorMethod<[string], Result_5>,
   'saveProfile' : ActorMethod<[SaveProfileInput], boolean>,
   'saveSchedule' : ActorMethod<[string, Array<string>], ScheduleId>,
   'saveVarietyGuide' : ActorMethod<
@@ -1182,7 +1290,9 @@ export interface ICSpicy {
   'seedDefaultRecipes' : ActorMethod<[], undefined>,
   'setCoopSeatPriceCents' : ActorMethod<[bigint], undefined>,
   'setForSale' : ActorMethod<[PlantId, boolean], undefined>,
+  'setFrontendCanisterId' : ActorMethod<[string], undefined>,
   'setICPaySecretKey' : ActorMethod<[string], undefined>,
+  'setPayPalCredentials' : ActorMethod<[string, string, boolean], undefined>,
   'setPlantNFT' : ActorMethod<[PlantId, string], undefined>,
   'setProfileBanner' : ActorMethod<[string], undefined>,
   'setProfileWallpaper' : ActorMethod<[string], undefined>,
@@ -1193,11 +1303,15 @@ export interface ICSpicy {
   'setUploadsCanisterId' : ActorMethod<[string], undefined>,
   'setVarietyIntro' : ActorMethod<[bigint, string], boolean>,
   'setVarietyProvenance' : ActorMethod<[bigint, VarietyProvenance], boolean>,
+  'startGameSession' : ActorMethod<[string], Result_4>,
   'storeArtworkFile' : ActorMethod<
     [string, Uint8Array | number[], string],
     StoredFile
   >,
   'storeAvatarFile' : ActorMethod<[Uint8Array | number[]], string>,
+  /**
+   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   */
   'storeCommunityImage' : ActorMethod<
     [string, Uint8Array | number[], string],
     StoredFile
@@ -1207,8 +1321,15 @@ export interface ICSpicy {
     StoredFile
   >,
   'storeProfileBannerFile' : ActorMethod<[Uint8Array | number[]], string>,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'storeProfileWallpaperFile' : ActorMethod<[Uint8Array | number[]], string>,
+  'storeSlicerShareOgImage' : ActorMethod<[Uint8Array | number[]], Result_3>,
+  'submitGameScore' : ActorMethod<[string, bigint, string], Result_2>,
   'submitOffer' : ActorMethod<[SubmitOfferInput], Offer>,
+  'submitQuizResult' : ActorMethod<[string, string], Result_1>,
+  'submitSlicerRun' : ActorMethod<[string, string], Result>,
   'toggleCooked' : ActorMethod<[PlantId], undefined>,
   'toggleFavorite' : ActorMethod<[RecipeId], boolean>,
   'toggleRecipeFeatured' : ActorMethod<[RecipeId], boolean>,
@@ -1247,9 +1368,6 @@ export interface ICSpicy {
     [UpdatePlantingEventInput],
     PlantingEvent
   >,
-  /**
-   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
-   */
   'updateProduct' : ActorMethod<[UpdateProductInput], undefined>,
   'updateProposal' : ActorMethod<[ProposalId, UpdateProposalInput], boolean>,
   'updateRecipe' : ActorMethod<[UpdateRecipeInput], boolean>,
@@ -1354,6 +1472,11 @@ export interface LayerSummary {
   'file_names' : Array<string>,
   'layer' : string,
   'file_count' : bigint,
+}
+export interface LeaderboardEntry {
+  'principal' : Principal,
+  'displayData' : string,
+  'score' : bigint,
 }
 export interface LifecycleUpgradeEvent {
   'new_stage' : string,
@@ -1487,6 +1610,11 @@ export type OrderStatus = { 'PickedUp' : null } |
   { 'Cancelled' : null } |
   { 'Shipped' : null } |
   { 'Pending' : null };
+export interface PayPalCheckoutConfig {
+  'sandbox' : boolean,
+  'clientId' : string,
+  'enabled' : boolean,
+}
 export type PaymentToken = { 'ICP' : null } |
   { 'ckBTC' : null } |
   { 'ckETH' : null } |
@@ -1770,6 +1898,7 @@ export interface PublicProfileFull {
   'is_pepperhead' : boolean,
   'profile' : UserProfilePublic,
 }
+export interface PublishSlicerShareOk { 'url' : string, 'score' : bigint }
 export interface PurchaseCoopSeatResult {
   'tokenId' : [] | [bigint],
   'message' : string,
@@ -1784,6 +1913,28 @@ export interface PurchasePlantResult {
 export interface QRAssignmentResult {
   'claimTokenId' : string,
   'nftId' : bigint,
+}
+export interface QuestionGrade { 'id' : string, 'correct' : boolean }
+export type QuestionKind = { 'mc' : null } |
+  { 'sa' : null };
+export interface QuestionPublic {
+  'id' : string,
+  'lessonId' : string,
+  'kind' : QuestionKind,
+  'difficulty' : bigint,
+  'explanationSlug' : string,
+  'prompt' : string,
+  'choices' : Array<string>,
+}
+export interface QuizPublic {
+  'moduleId' : string,
+  'lessonId' : string,
+  'title' : string,
+  'drawCount' : bigint,
+  'badgeId' : string,
+  'questions' : Array<QuestionPublic>,
+  'quizVersion' : bigint,
+  'passCorrect' : bigint,
 }
 export type RarityTier = { 'Rare' : null } |
   { 'Founder' : null } |
@@ -1849,6 +2000,22 @@ export interface ResaleListingPublic {
   'listed_at' : Timestamp,
   'plant_id' : PlantId,
 }
+export type Result = { 'ok' : SubmitRunOk } |
+  { 'err' : string };
+export type Result_1 = { 'ok' : SubmitQuizOk } |
+  { 'err' : string };
+export type Result_2 = { 'ok' : SubmitScoreOk } |
+  { 'err' : string };
+export type Result_3 = { 'ok' : string } |
+  { 'err' : string };
+export type Result_4 = { 'ok' : StartSessionOk } |
+  { 'err' : string };
+export type Result_5 = { 'ok' : null } |
+  { 'err' : string };
+export type Result_6 = { 'ok' : PublishSlicerShareOk } |
+  { 'err' : string };
+export type Result_7 = { 'ok' : bigint } |
+  { 'err' : string };
 export interface RevokeTokenApprovalArg {
   'token_id' : bigint,
   'memo' : [] | [Uint8Array | number[]],
@@ -1874,6 +2041,14 @@ export interface SaveProfileInput {
   'avatar_key' : [] | [string],
   'location' : [] | [string],
 }
+export interface SavedCrafterRecipe {
+  'shu' : bigint,
+  'created' : bigint,
+  'name' : string,
+  'harmony' : bigint,
+  'ingredients' : Array<SavedIngredient>,
+}
+export interface SavedIngredient { 'name' : string, 'amount' : bigint }
 export interface SavedSchedule {
   'id' : ScheduleId,
   'owner' : Principal,
@@ -1940,11 +2115,29 @@ export interface ShopListingFile {
   'data' : Uint8Array | number[],
   'mime_type' : string,
 }
+export interface SlicerSharePublic {
+  'lastPlayed' : bigint,
+  'principal' : Principal,
+  'username' : string,
+  'displayData' : string,
+  'tierSlug' : string,
+  'rank' : bigint,
+  'bestScore' : bigint,
+  'rankedTotal' : bigint,
+}
+export interface SpawnEvent {
+  'isFrenzy' : boolean,
+  'kind' : bigint,
+  'objectId' : bigint,
+  'spawnTimeMs' : bigint,
+  'index' : bigint,
+}
 export interface StageHistory {
   'stage' : PlantStage,
   'notes' : string,
   'timestamp' : Timestamp,
 }
+export interface StartSessionOk { 'seed' : bigint, 'sessionId' : string }
 export interface StoredFile {
   'data' : Uint8Array | number[],
   'path' : string,
@@ -1969,6 +2162,32 @@ export interface SubmitOfferInput {
   'nft_id' : string,
   'offered_token' : OfferToken,
   'offered_amount' : bigint,
+}
+export interface SubmitQuizOk {
+  'scorePct' : bigint,
+  'total' : bigint,
+  'moduleBadgeMinted' : [] | [bigint],
+  'questionResults' : Array<QuestionGrade>,
+  'correct' : bigint,
+  'lessonPassed' : boolean,
+  'progressJson' : string,
+  'recorded' : boolean,
+  'passed' : boolean,
+  'capstoneBadgeMinted' : [] | [bigint],
+}
+export interface SubmitRunOk {
+  'bestCombo' : bigint,
+  'tier' : string,
+  'bestScore' : bigint,
+  'score' : bigint,
+  'rareChilisSliced' : bigint,
+  'isNewBest' : boolean,
+  'badgesEarned' : Array<BadgeEarned>,
+}
+export interface SubmitScoreOk {
+  'bestScore' : bigint,
+  'totalPlays' : bigint,
+  'isNewBest' : boolean,
 }
 export type Time = bigint;
 export type Timestamp = bigint;

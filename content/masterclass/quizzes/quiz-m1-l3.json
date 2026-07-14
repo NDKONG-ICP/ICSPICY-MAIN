@@ -1,0 +1,211 @@
+{
+  "REVIEW_REQUIRED": true,
+  "quizVersion": 1,
+  "lessonId": "m1-l3",
+  "moduleId": "module-01-soil-biology",
+  "badgeId": "masterclass-soil-biology",
+  "title": "1.3 Reading Your Soil — Checkpoint",
+  "drawCount": 6,
+  "passCorrect": 5,
+  "note": "Phase 2b reviewed bank — William approval required before engine swap.",
+  "questions": [
+    {
+      "id": "m1-l3-q01",
+      "lessonId": "m1-l3",
+      "type": "mc",
+      "prompt": "What is a jar test mainly useful for at home?",
+      "choices": [
+        "A texture sketch to compare beds — not decimal-precision certification",
+        "Certified particle-size lab replacement",
+        "Measuring SHU of a dried pod",
+        "Counting exact nematode species"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l3-q02",
+      "lessonId": "m1-l3",
+      "type": "mc",
+      "prompt": "When is a lab soil test most worth the fee?",
+      "choices": [
+        "When home observations cannot explain a stubborn problem or you need mineral baselines",
+        "After every watering",
+        "Never — smell alone is always enough",
+        "Only to decorate a social post"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l3-q03",
+      "lessonId": "m1-l3",
+      "type": "mc",
+      "prompt": "A bed smells sour or like rotten eggs at field moisture. What does this lesson suggest?",
+      "choices": [
+        "Anaerobic pockets or putrefaction — investigate before you inoculate or dose",
+        "Add more salt fertilizer to green it up",
+        "Perfect aerobic biology — ignore it",
+        "Time to rototill deeper immediately"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l3-q04",
+      "lessonId": "m1-l3",
+      "type": "mc",
+      "prompt": "Most fertilizer mistakes in this lesson start as what?",
+      "choices": [
+        "Using too much compost tea",
+        "Choosing the wrong pepper variety",
+        "Waiting too long to harvest",
+        "Observation failures — treating the plant symptom before reading the soil"
+      ],
+      "correctIndex": 3,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l3-q05",
+      "lessonId": "m1-l3",
+      "type": "mc",
+      "prompt": "You observe a post-chemical, biology-flatlined bed. Which CookBook path matches the lesson's diagnosis table?",
+      "choices": [
+        "Revenge salt fertilizer dump to green it up fast",
+        "Soil biology recovery program — phased carbon and gentle inoculum",
+        "Skip observation and order DNA biology panel first",
+        "Bare the soil through summer to 'sanitize' it"
+      ],
+      "correctIndex": 1,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l3-q06",
+      "lessonId": "m1-l3",
+      "type": "mc",
+      "prompt": "Florida native sand vs a built compost-mulch bed should be read how?",
+      "choices": [
+        "As identical — one smell fits all",
+        "Sand never needs observation",
+        "Separately — they behave like different 'cuisine' even when both smell acceptable",
+        "Built beds never need lab tests"
+      ],
+      "correctIndex": 2,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l3-q07",
+      "lessonId": "m1-l3",
+      "type": "mc",
+      "prompt": "Crumb structure when you squeeze a handful at field moisture indicates what?",
+      "choices": [
+        "Only chemical fertilizer history",
+        "Guaranteed 2,000,000 SHU genetics",
+        "That a jar test is unnecessary forever",
+        "Biology and organic matter doing soil architecture"
+      ],
+      "correctIndex": 3,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l3-q08",
+      "lessonId": "m1-l3",
+      "type": "mc",
+      "prompt": "A bed smells sweet-earthy or forest-floor at field moisture. What does this lesson suggest?",
+      "choices": [
+        "Add more salt fertilizer immediately",
+        "Usually aerobic and alive biology",
+        "Time to rototill deeper",
+        "Skip all observation — order a DNA panel first"
+      ],
+      "correctIndex": 1,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l3-q09",
+      "lessonId": "m1-l3",
+      "type": "mc",
+      "prompt": "You want fungal-leaning litter and long carbon without a full tea brewer. Which tool fits?",
+      "choices": [
+        "Hot salt starter on bare sand",
+        "Daily rototilling to aerate",
+        "Leaf-mold understory path",
+        "Expensive DNA panel before any field notes"
+      ],
+      "correctIndex": 2,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l3-q10",
+      "lessonId": "m1-l3",
+      "type": "sa",
+      "prompt": "Name one simple at-home soil observation from this lesson (smell, structure, cover, jar, or life signs).",
+      "acceptedKeywords": [
+        "jar",
+        "smell",
+        "structure",
+        "cover",
+        "mulch",
+        "crumb",
+        "texture",
+        "worm",
+        "worms",
+        "castings",
+        "fungal",
+        "hyphae",
+        "observation"
+      ],
+      "minKeywords": 1,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l3-q11",
+      "lessonId": "m1-l3",
+      "type": "sa",
+      "prompt": "In this lesson's chili-pot metaphor, what are you supposed to read before you dose?",
+      "acceptedKeywords": [
+        "soil",
+        "bed",
+        "pot",
+        "observe",
+        "observation",
+        "baseline",
+        "senses",
+        "smell",
+        "texture"
+      ],
+      "minKeywords": 1,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l3-q12",
+      "lessonId": "m1-l3",
+      "type": "sa",
+      "prompt": "If a jar smells like a swamp and the surface is crusted bare, what should come first per the recovery guidance?",
+      "acceptedKeywords": [
+        "biology",
+        "recovery",
+        "structure",
+        "carbon",
+        "inoculum",
+        "cover",
+        "mulch",
+        "organic"
+      ],
+      "minKeywords": 1,
+      "explanationSlug": "module-01-soil-biology/03-reading-your-soil",
+      "difficulty": 2
+    }
+  ]
+}

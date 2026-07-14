@@ -27,6 +27,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Seo } from "../components/Seo";
+import { UnclaimedNftBanner } from "../components/UnclaimedNftBanner";
 import { HOME_FAQ_ITEMS, staticRouteSeo } from "../lib/seo-routes.mjs";
 import { CHILI_VARIETIES, SOCIAL_LINKS } from "../types";
 
@@ -688,6 +689,10 @@ export default function HomePage() {
         path="/"
         jsonLd={HOME_SEO.jsonLd ?? undefined}
       />
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 -mb-4 mt-4 relative z-20">
+        <UnclaimedNftBanner />
+      </div>
 
       {/* ══ HERO ══ Gardener-first, NIMS demo ═══════════════════════════════ */}
       <section

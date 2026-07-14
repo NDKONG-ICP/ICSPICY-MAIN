@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "mopsTomlDepsHash": "105dfc17f7f2082ff41d8716560743ade86b4a39e2c6f9b18e6d853606105abd",
+  "mopsTomlDepsHash": "6232db61d95bcff12d3cdad05c34964d0945cd9a0a48eadae6afc7cbbe0d36ec",
   "deps": {
     "core": "2.2.0",
     "llm": "2.1.0",
@@ -11,7 +11,8 @@
     "cbor@4": "4.1.0",
     "core@1": "1.0.0",
     "xtended-numbers@2": "2.1.0",
-    "buffer@0": "0.1.0"
+    "buffer@0": "0.1.0",
+    "sha2": "0.1.6"
   },
   "hashes": {
     "core@2.2.0": {

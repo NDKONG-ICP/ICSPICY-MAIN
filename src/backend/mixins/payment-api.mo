@@ -54,6 +54,9 @@ import Error "mo:core/Error";
 import IC "ic:aaaaa-aa";
 import RateLimits "../lib/rate-limits";
 import RateLimit "../lib/rate-limit";
+import PayPalPayment "../lib/paypal-payment";
+import CoopLib "../lib/coop";
+import CoopTypes "../types/coop";
 
 mixin (
   accessControlState      : AccessControl.AccessControlState,
@@ -76,6 +79,10 @@ mixin (
   selfPrincipal           : () -> Principal,
   icpaySecretKey          : { var value : Text },
   icpaySessionsConsumed   : Map.Map<Text, Nat>,
+  paypalClientId          : { var value : Text },
+  paypalClientSecret      : { var value : Text },
+  paypalSandbox           : { var value : Bool },
+  paypalOrdersConsumed    : Map.Map<Text, Nat>,
   auditLog                : { var value : AuditLog.AuditLog },
   // Phase 6 plant purchase settlement state
   plants                  : Map.Map<Common.PlantId, PlantTypes.Plant>,
@@ -92,6 +99,10 @@ mixin (
   plantPhotoLog           : Map.Map<Common.PlantId, List.List<PlantTypes.PlantPhotoEntry>>,
   plantWeatherSnapshots   : Map.Map<Common.PlantId, List.List<PlantTypes.WeatherSnapshot>>,
   priceOracleState        : PriceOracleTypes.PriceOracleState,
+  coopSeats               : Map.Map<Nat, CoopTypes.CoopSeat>,
+  coopDesignatedSeats     : Map.Map<Nat, Bool>,
+  coopPendingSeats        : Map.Map<Nat, Principal>,
+  coopSeatPriceCents      : { var value : Nat },
 ) {
 
   // ── Admin key provisioning ─────────────────────────────────────────────────
@@ -348,7 +359,7 @@ mixin (
     };
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     try {
       let result = await doConfirmICPay(caller, orderId, paymentId);
@@ -386,7 +397,7 @@ mixin (
     // Verify via ICPay (HTTPS outcall)
     switch (await verifyICPayPayment(paymentId)) {
       case (#err(e)) return { success = false; message = e };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     // Post-await: double-check idempotency — a concurrent call may have settled
     // this paymentId during our await window.
@@ -451,7 +462,7 @@ mixin (
     AccessControl.requireAuthenticated(caller);
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     try {
       let result = await doConfirmOrderPaymentDirect(
@@ -643,7 +654,7 @@ mixin (
     };
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     try {
       let result = await doAdminWithdrawTokens(caller, ledgerCanisterId, to, amount);
@@ -760,14 +771,14 @@ mixin (
     let buyerAccount : ICRC7.Account = { owner = caller; subaccount = null };
     switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?canisterAccount, reservedAccount)) {
       case (#err(e)) return { success = false; tokenId = null; message = "Reserve failed: " # e };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, buyerAccount)) {
       case (#err(e)) {
         ignore ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, canisterAccount);
         return { success = false; tokenId = null; message = "Transfer failed: " # e };
       };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     ignore ICRC37Lib.removeAllApprovals(icrc37Approvals, tokenId);
     auditLog.value := AuditLog.append(auditLog.value, {
@@ -798,7 +809,7 @@ mixin (
     };
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     try {
       let result = await doPurchasePepperHead(caller, paymentId);
@@ -821,7 +832,7 @@ mixin (
     };
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     try {
       let result = await doPurchasePepperHeadDirect(caller, ledgerCanisterId, amount);
@@ -894,7 +905,7 @@ mixin (
     };
     switch (await verifyICPayPayment(paymentId)) {
       case (#err(e)) return { success = false; tokenId = null; message = e };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     switch (icpaySessionsConsumed.get(paymentId)) {
       case (?_) return { success = false; tokenId = null; message = "ICPay payment already used" };
@@ -924,7 +935,7 @@ mixin (
     let buyerAccount    : ICRC7.Account = { owner = caller;   subaccount = null };
     switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?canisterAccount, reservedAccount)) {
       case (#err(e)) return { success = false; tokenId = null; message = "Reserve failed: " # e };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     icpaySessionsConsumed.add(paymentId, tokenId);
     switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, buyerAccount)) {
@@ -933,7 +944,7 @@ mixin (
         ignore icpaySessionsConsumed.delete(paymentId);
         return { success = false; tokenId = null; message = "Transfer failed: " # e };
       };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     ignore ICRC37Lib.removeAllApprovals(icrc37Approvals, tokenId);
     auditLog.value := AuditLog.append(auditLog.value, {
@@ -961,7 +972,7 @@ mixin (
     AccessControl.requireAdmin(accessControlState, caller);
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     try {
       let result = doUnstickOrder(caller, orderId);
@@ -1007,7 +1018,7 @@ mixin (
     AccessControl.requireAdmin(accessControlState, caller);
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     try {
       let result = doUnstickPepperHead(caller, tokenId);
@@ -1044,7 +1055,7 @@ mixin (
     // Return to open pool: reserved subaccount → canister (no subaccount).
     switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, openAccount)) {
       case (#err(e)) return { success = false; message = "assignOwnership failed: " # e };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     // Clear any lingering approvals on this token.
     ignore ICRC37Lib.removeAllApprovals(icrc37Approvals, tokenId);
@@ -1089,7 +1100,7 @@ mixin (
     };
     switch (CallerGuard.acquire(callerGuards, caller)) {
       case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     try {
       let result = await doPurchasePlantICPay(caller, plantId, paymentId);
@@ -1112,7 +1123,7 @@ mixin (
     };
     switch (await verifyICPayPayment(paymentId)) {
       case (#err(e)) return { success = false; nftTokenId = null; claimToken = null; message = e };
-      case (#ok) {};
+      case (#ok(_)) {};
     };
     switch (icpaySessionsConsumed.get(paymentId)) {
       case (?_) return { success = false; nftTokenId = null; claimToken = null; message = "Payment already used" };
@@ -1140,5 +1151,671 @@ mixin (
         };
       };
     };
+  };
+
+  // ── PayPal admin + HTTPS transform ────────────────────────────────────────
+
+  public shared ({ caller }) func setPayPalCredentials(
+    clientId : Text,
+    clientSecret : Text,
+    sandbox : Bool,
+  ) : async () {
+    AccessControl.requireAdmin(accessControlState, caller);
+    if (Text.size(clientId) == 0 or Text.size(clientSecret) == 0) {
+      Runtime.trap("PayPal clientId and clientSecret must be non-empty");
+    };
+    paypalClientId.value := clientId;
+    paypalClientSecret.value := clientSecret;
+    paypalSandbox.value := sandbox;
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "paypal_credentials_set";
+      detail = "clientIdLen=" # Nat.toText(Text.size(clientId)) #
+        " secretLen=" # Nat.toText(Text.size(clientSecret)) #
+        " sandbox=" # (if sandbox "true" else "false");
+    });
+  };
+
+  public query func paypalTransform({
+    context : Blob;
+    response : IC.http_request_result;
+  }) : async IC.http_request_result {
+    ignore context;
+    let PARSE_FAILED : Blob =
+      "{\"error\":\"parse_failed\"}".encodeUtf8();
+    let out : {
+      var id : Text;
+      var status : Text;
+      var customId : Text;
+      var amount : Text;
+    } = { var id = ""; var status = ""; var customId = ""; var amount = "" };
+    switch (JsonMini.parse(response.body)) {
+      case (#err(_)) {
+        return { response with headers = []; body = PARSE_FAILED };
+      };
+      case (#ok(#Map(entries))) {
+        PayPalPayment.absorbOrderFields(entries, out);
+      };
+      case (_) {
+        return { response with headers = []; body = PARSE_FAILED };
+      };
+    };
+    let deterministicBody = concatAll([
+      Char.toText('{'),
+      "\"id\":\"", escapeJsonSegment(out.id), "\",",
+      "\"status\":\"", escapeJsonSegment(out.status), "\",",
+      "\"custom_id\":\"", escapeJsonSegment(out.customId), "\",",
+      "\"amount\":\"", escapeJsonSegment(out.amount), "\"",
+      Char.toText('}'),
+    ]);
+    { response with headers = []; body = deterministicBody.encodeUtf8() };
+  };
+
+  public query func paypalOAuthTransform({
+    context : Blob;
+    response : IC.http_request_result;
+  }) : async IC.http_request_result {
+    ignore context;
+    let PARSE_FAILED : Blob =
+      "{\"access_token\":\"\"}".encodeUtf8();
+    var token = "";
+    switch (JsonMini.parse(response.body)) {
+      case (#ok(#Map(entries))) {
+        switch (getTextField(entries, "access_token")) {
+          case (?t) token := t;
+          case null {};
+        };
+      };
+      case (_) {
+        return { response with headers = []; body = PARSE_FAILED };
+      };
+    };
+    let bodyBlob = (
+      "{\"access_token\":\"" # escapeJsonSegment(token) # "\"}"
+    ).encodeUtf8();
+    { response with headers = []; body = bodyBlob };
+  };
+
+  func paypalConfigured() : Bool {
+    paypalClientId.value.size() > 0 and paypalClientSecret.value.size() > 0;
+  };
+
+  public type PayPalCheckoutConfig = {
+    enabled : Bool;
+    clientId : Text;
+    sandbox : Bool;
+  };
+
+  /// Public client ID for PayPal JS SDK — secret never exposed.
+  public query func getPayPalCheckoutConfig() : async PayPalCheckoutConfig {
+    {
+      enabled = paypalConfigured();
+      clientId = if (paypalConfigured()) paypalClientId.value else "";
+      sandbox = paypalSandbox.value;
+    };
+  };
+
+  func paypalConfig() : PayPalPayment.PayPalConfig {
+    {
+      clientId = paypalClientId.value;
+      clientSecret = paypalClientSecret.value;
+      sandbox = paypalSandbox.value;
+    };
+  };
+
+  func paypalHttpGet(url : Text, token : Text) : async Result.Result<IC.http_request_result, Text> {
+    try {
+      #ok(await (with cycles = 231_000_000_000) IC.http_request({
+        url;
+        max_response_bytes = ?(16_384 : Nat64);
+        headers = [
+          { name = "Authorization"; value = "Bearer " # token },
+          { name = "Accept"; value = "application/json" },
+        ];
+        body = null;
+        method = #get;
+        transform = ?{ function = paypalTransform; context = Blob.fromArray([]) };
+        is_replicated = null;
+      }));
+    } catch (e) {
+      #err("PayPal http GET failed: " # Error.message(e));
+    };
+  };
+
+  func paypalHttpPost(
+    url : Text,
+    token : Text,
+    bodyText : Text,
+  ) : async Result.Result<IC.http_request_result, Text> {
+    try {
+      #ok(await (with cycles = 231_000_000_000) IC.http_request({
+        url;
+        max_response_bytes = ?(16_384 : Nat64);
+        headers = [
+          { name = "Authorization"; value = "Bearer " # token },
+          { name = "Accept"; value = "application/json" },
+          { name = "Content-Type"; value = "application/json" },
+        ];
+        body = ?bodyText.encodeUtf8();
+        method = #post;
+        transform = ?{ function = paypalTransform; context = Blob.fromArray([]) };
+        is_replicated = null;
+      }));
+    } catch (e) {
+      #err("PayPal http POST failed: " # Error.message(e));
+    };
+  };
+
+  func fetchPayPalAccessToken() : async Result.Result<Text, Text> {
+    if (not paypalConfigured()) return #err("PayPal not configured");
+    let cfg = paypalConfig();
+    let url = PayPalPayment.oauthTokenUrl(cfg.sandbox);
+    try {
+      let httpResult = await (with cycles = 231_000_000_000) IC.http_request({
+        url;
+        max_response_bytes = ?(4_096 : Nat64);
+        headers = [
+          {
+            name = "Authorization";
+            value = PayPalPayment.basicAuthHeader(cfg.clientId, cfg.clientSecret);
+          },
+          { name = "Accept"; value = "application/json" },
+          { name = "Content-Type"; value = "application/x-www-form-urlencoded" },
+        ];
+        body = ?"grant_type=client_credentials".encodeUtf8();
+        method = #post;
+        transform = ?{ function = paypalOAuthTransform; context = Blob.fromArray([]) };
+        is_replicated = null;
+      });
+      PayPalPayment.parseAccessToken(httpResult.body);
+    } catch (e) {
+      #err("PayPal OAuth failed: " # Error.message(e));
+    };
+  };
+
+  func orderStatusFromBody(body : Blob) : ?Text {
+    switch (JsonMini.parse(body)) {
+      case (#ok(#Map(entries))) getTextField(entries, "status");
+      case (_) null;
+    };
+  };
+
+  func verifyPayPalOrder(
+    paypalOrderId : Text,
+    expectedCents : Nat,
+    expectedCustomId : ?Text,
+  ) : async Result.Result<PayPalPayment.VerifiedOrder, Text> {
+    if (not paypalConfigured()) return #err("PayPal not configured");
+    let cfg = paypalConfig();
+    let token = switch (await fetchPayPalAccessToken()) {
+      case (#err(e)) return #err(e);
+      case (#ok(t)) t;
+    };
+    let getUrl = PayPalPayment.orderUrl(cfg.sandbox, paypalOrderId);
+    let getResult = switch (await paypalHttpGet(getUrl, token)) {
+      case (#err(e)) return #err(e);
+      case (#ok(r)) r;
+    };
+    if (getResult.status != 200 and getResult.status != 201) {
+      return #err("PayPal order lookup failed: HTTP " # Nat.toText(getResult.status));
+    };
+    var body = getResult.body;
+    switch (orderStatusFromBody(body)) {
+      case null return #err("PayPal order missing status");
+      case (?status) {
+        if (status == "APPROVED") {
+          let captureUrl = PayPalPayment.captureUrl(cfg.sandbox, paypalOrderId);
+          let capResult = switch (await paypalHttpPost(captureUrl, token, "{}")) {
+            case (#err(e)) return #err(e);
+            case (#ok(r)) r;
+          };
+          if (capResult.status != 200 and capResult.status != 201) {
+            return #err("PayPal capture failed: HTTP " # Nat.toText(capResult.status));
+          };
+          body := capResult.body;
+        };
+      };
+    };
+    let verified = switch (PayPalPayment.parseOrderVerification(body)) {
+      case (#err(e)) return #err(e);
+      case (#ok(v)) v;
+    };
+    if (verified.paypalOrderId != paypalOrderId) {
+      return #err("PayPal order id mismatch");
+    };
+    switch (expectedCustomId) {
+      case null {
+        if (verified.amountCents != expectedCents) {
+          return #err("PayPal amount mismatch");
+        };
+      };
+      case (?customId) {
+        switch (PayPalPayment.verifyExpected(verified, expectedCents, customId)) {
+          case (#err(e)) return #err(e);
+          case (#ok(_)) {};
+        };
+      };
+    };
+    #ok(verified);
+  };
+
+  func reserveCoopSeatForBuyer(buyer : Principal) : ?Nat {
+    switch (
+      CoopLib.pickNextAvailableSeat(
+        coopDesignatedSeats, coopSeats, coopPendingSeats, icrc7Owners, selfPrincipal(),
+      )
+    ) {
+      case null null;
+      case (?tokenId) {
+        coopPendingSeats.add(tokenId, buyer);
+        ?tokenId;
+      };
+    };
+  };
+
+  func activateCoopSeat(tokenId : Nat) {
+    coopSeats.add(tokenId, {
+      activatedAt = Time.now();
+      growerName = null;
+      growerLocation = null;
+      licenseInfo = null;
+      revoked = false;
+    });
+    ignore coopDesignatedSeats.delete(tokenId);
+  };
+
+  func transferCoopSeatToBuyer(
+    tokenId : Nat,
+    buyer : Principal,
+    auditRef : Text,
+  ) : CoopTypes.PurchaseCoopSeatResult {
+    let canister = selfPrincipal();
+    let canisterAccount : ICRC7.Account = { owner = canister; subaccount = null };
+    let reservedAccount : ICRC7.Account = { owner = canister; subaccount = ?Blob.fromArray([0x00]) };
+    let buyerAccount : ICRC7.Account = { owner = buyer; subaccount = null };
+    switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?canisterAccount, reservedAccount)) {
+      case (#err(e)) {
+        ignore coopPendingSeats.delete(tokenId);
+        return { success = false; tokenId = null; message = "Reserve failed: " # e };
+      };
+      case (#ok(_)) {};
+    };
+    switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, buyerAccount)) {
+      case (#err(e)) {
+        ignore ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, canisterAccount);
+        ignore coopPendingSeats.delete(tokenId);
+        return { success = false; tokenId = null; message = "Transfer failed: " # e };
+      };
+      case (#ok(_)) {};
+    };
+    ignore ICRC37Lib.removeAllApprovals(icrc37Approvals, tokenId);
+    ignore coopPendingSeats.delete(tokenId);
+    activateCoopSeat(tokenId);
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = buyer;
+      action = "coop_seat_purchased";
+      detail = "tokenId=" # Nat.toText(tokenId) #
+        " buyer=" # Principal.toText(buyer) #
+        " ref=" # auditRef;
+    });
+    { success = true; tokenId = ?tokenId; message = "Founding Grower seat #" # Nat.toText(tokenId) # " activated" };
+  };
+
+  // ── PayPal cart order confirmation ────────────────────────────────────────
+
+  public shared ({ caller }) func confirmPayPalOrderPayment(
+    orderId : Nat,
+    paypalOrderId : Text,
+  ) : async { success : Bool; message : Text } {
+    AccessControl.requireAuthenticated(caller);
+    if (not RateLimit.check(rateLimits.paypal, caller)) {
+      return { success = false; message = "Rate limited. Try again in a minute." };
+    };
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok(_)) {};
+    };
+    try {
+      let result = await doConfirmPayPalOrder(caller, orderId, paypalOrderId);
+      CallerGuard.release(callerGuards, caller);
+      result;
+    } catch (_) {
+      CallerGuard.release(callerGuards, caller);
+      { success = false; message = "Unexpected error during PayPal verification" };
+    };
+  };
+
+  func doConfirmPayPalOrder(
+    caller : Principal,
+    orderId : Nat,
+    paypalOrderId : Text,
+  ) : async { success : Bool; message : Text } {
+    switch (paypalOrdersConsumed.get(paypalOrderId)) {
+      case (?_) return { success = false; message = "PayPal order already used" };
+      case null {};
+    };
+    let order = switch (orders.get(orderId)) {
+      case null return { success = false; message = "Order not found" };
+      case (?o) o;
+    };
+    if (not Principal.equal(order.buyer, caller) and
+        not AccessControl.isAdmin(accessControlState, caller)) {
+      return { success = false; message = "Not your order" };
+    };
+    let expectedCustomId = PayPalPayment.customIdOrder(orderId);
+    switch (await verifyPayPalOrder(paypalOrderId, order.total_cents, ?expectedCustomId)) {
+      case (#err(e)) return { success = false; message = e };
+      case (#ok(_)) {};
+    };
+    switch (paypalOrdersConsumed.get(paypalOrderId)) {
+      case (?_) return { success = false; message = "PayPal order already used" };
+      case null {};
+    };
+    paypalOrdersConsumed.add(paypalOrderId, orderId);
+    let canister = selfPrincipal();
+    switch (
+      ProductNft.settleOrderLineItems(
+        orderId, order, products, productNftTokenIds, productInventoryRemaining, productShippingConfigs, plants, nimsSideMaps(),
+        icrc7Owners, icrc7Balances, icrc37Approvals,
+        nftClaimTokens, nftClaimPlantIds, plantClaimTokens, nftTokenPlantIds,
+        order.buyer, canister,
+      )
+    ) {
+      case (#err(e)) {
+        ignore paypalOrdersConsumed.delete(paypalOrderId);
+        return { success = false; message = e };
+      };
+      case (#ok(settlements)) {
+        var tokenIds : [Nat] = [];
+        var claimTokens : [Text] = [];
+        for (s in settlements.vals()) {
+          tokenIds := Array.concat(tokenIds, [s.tokenId]);
+          switch (s.pickup_claim_token) {
+            case (?t) claimTokens := Array.concat(claimTokens, [t]);
+            case null {};
+          };
+        };
+        orderLineNftTokenIds.add(orderId, tokenIds);
+        if (claimTokens.size() > 0) {
+          orderPickupClaimTokens.add(orderId, claimTokens);
+        };
+      };
+    };
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "payment_confirmed";
+      detail = "order=" # Nat.toText(orderId) # " ref=paypal:" # paypalOrderId;
+    });
+    { success = true; message = "PayPal payment confirmed" };
+  };
+
+  // ── PayPal plant purchase ─────────────────────────────────────────────────
+
+  public shared ({ caller }) func purchasePlantPayPal(
+    plantId : Common.PlantId,
+    paypalOrderId : Text,
+  ) : async PlantTypes.PurchasePlantResult {
+    AccessControl.requireAuthenticated(caller);
+    if (not RateLimit.check(rateLimits.paypal, caller)) {
+      return {
+        success = false;
+        nftTokenId = null;
+        claimToken = null;
+        message = "Rate limited. Try again in a minute.";
+      };
+    };
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok(_)) {};
+    };
+    try {
+      let result = await doPurchasePlantPayPal(caller, plantId, paypalOrderId);
+      CallerGuard.release(callerGuards, caller);
+      result;
+    } catch (_) {
+      CallerGuard.release(callerGuards, caller);
+      { success = false; nftTokenId = null; claimToken = null; message = "Purchase failed" };
+    };
+  };
+
+  func doPurchasePlantPayPal(
+    caller : Principal,
+    plantId : Common.PlantId,
+    paypalOrderId : Text,
+  ) : async PlantTypes.PurchasePlantResult {
+    switch (paypalOrdersConsumed.get(paypalOrderId)) {
+      case (?_) return { success = false; nftTokenId = null; claimToken = null; message = "PayPal order already used" };
+      case null {};
+    };
+    let priceCents = switch (plantPrices.get(plantId)) {
+      case null return { success = false; nftTokenId = null; claimToken = null; message = "Plant price not set" };
+      case (?p) p;
+    };
+    let expectedCustomId = PayPalPayment.customIdPlant(plantId);
+    switch (await verifyPayPalOrder(paypalOrderId, priceCents, ?expectedCustomId)) {
+      case (#err(e)) return { success = false; nftTokenId = null; claimToken = null; message = e };
+      case (#ok(_)) {};
+    };
+    switch (paypalOrdersConsumed.get(paypalOrderId)) {
+      case (?_) return { success = false; nftTokenId = null; claimToken = null; message = "PayPal order already used" };
+      case null {};
+    };
+    let canister = selfPrincipal();
+    switch (NimsLib.settlePlantPurchase(
+      plants, nimsSideMaps(), icrc7Owners, icrc7Balances, icrc37Approvals,
+      nftClaimTokens, plantClaimTokens, canister, caller, plantId,
+    )) {
+      case (#err(e)) return { success = false; nftTokenId = null; claimToken = null; message = e };
+      case (#ok(settled)) {
+        paypalOrdersConsumed.add(paypalOrderId, plantId);
+        auditLog.value := AuditLog.append(auditLog.value, {
+          ts = Time.now();
+          admin = caller;
+          action = "plant_purchased_paypal";
+          detail = "plantId=" # Nat.toText(plantId) # " ref=paypal:" # paypalOrderId;
+        });
+        {
+          success = true;
+          nftTokenId = ?settled.nftTokenId;
+          claimToken = ?settled.claimToken;
+          message = "Plant purchased via PayPal";
+        };
+      };
+    };
+  };
+
+  // ── PayPal PepperHead purchase ────────────────────────────────────────────
+
+  public shared ({ caller }) func purchasePepperHeadPayPal(
+    paypalOrderId : Text,
+  ) : async { success : Bool; tokenId : ?Nat; message : Text } {
+    AccessControl.requireAuthenticated(caller);
+    if (not RateLimit.check(rateLimits.paypal, caller)) {
+      return { success = false; tokenId = null; message = "Rate limited. Try again in a minute." };
+    };
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok(_)) {};
+    };
+    try {
+      let result = await doPurchasePepperHeadPayPal(caller, paypalOrderId);
+      CallerGuard.release(callerGuards, caller);
+      result;
+    } catch (_) {
+      CallerGuard.release(callerGuards, caller);
+      { success = false; tokenId = null; message = "Unexpected error during PepperHead purchase" };
+    };
+  };
+
+  func doPurchasePepperHeadPayPal(
+    caller : Principal,
+    paypalOrderId : Text,
+  ) : async { success : Bool; tokenId : ?Nat; message : Text } {
+    switch (paypalOrdersConsumed.get(paypalOrderId)) {
+      case (?_) return { success = false; tokenId = null; message = "PayPal order already used" };
+      case null {};
+    };
+    switch (await verifyPayPalOrder(paypalOrderId, PH_PRICE_CENTS, ?PayPalPayment.CUSTOM_ID_PEPPERHEAD)) {
+      case (#err(e)) return { success = false; tokenId = null; message = e };
+      case (#ok(_)) {};
+    };
+    switch (paypalOrdersConsumed.get(paypalOrderId)) {
+      case (?_) return { success = false; tokenId = null; message = "PayPal order already used" };
+      case null {};
+    };
+    let canister = selfPrincipal();
+    var nextTokenId : ?Nat = null;
+    var scanId = PH_START;
+    label search while (scanId < PH_END) {
+      switch (icrc7Owners.get(scanId)) {
+        case (?(acc)) {
+          if (Principal.equal(acc.owner, canister) and acc.subaccount == null) {
+            nextTokenId := ?scanId;
+            break search;
+          };
+        };
+        case null {};
+      };
+      scanId += 1;
+    };
+    let tokenId = switch nextTokenId {
+      case null return { success = false; tokenId = null; message = "No PepperHead NFTs available" };
+      case (?t) t;
+    };
+    let canisterAccount : ICRC7.Account = { owner = canister; subaccount = null };
+    let reservedAccount : ICRC7.Account = { owner = canister; subaccount = ?Blob.fromArray([0x00]) };
+    let buyerAccount : ICRC7.Account = { owner = caller; subaccount = null };
+    switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?canisterAccount, reservedAccount)) {
+      case (#err(e)) return { success = false; tokenId = null; message = "Reserve failed: " # e };
+      case (#ok(_)) {};
+    };
+    paypalOrdersConsumed.add(paypalOrderId, tokenId);
+    switch (ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, buyerAccount)) {
+      case (#err(e)) {
+        ignore ICRC7Lib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?reservedAccount, canisterAccount);
+        ignore paypalOrdersConsumed.delete(paypalOrderId);
+        return { success = false; tokenId = null; message = "Transfer failed: " # e };
+      };
+      case (#ok(_)) {};
+    };
+    ignore ICRC37Lib.removeAllApprovals(icrc37Approvals, tokenId);
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "pepperhead_purchased";
+      detail = "tokenId=" # Nat.toText(tokenId) #
+        " buyer=" # Principal.toText(caller) #
+        " ref=paypal:" # paypalOrderId;
+    });
+    { success = true; tokenId = ?tokenId; message = "PepperHead #" # Nat.toText(tokenId) # " is yours" };
+  };
+
+  // ── PayPal Grower Co-op seat ──────────────────────────────────────────────
+
+  public shared ({ caller }) func prepareCoopPayPalCheckout() : async {
+    success : Bool;
+    tokenId : ?Nat;
+    customId : ?Text;
+    usdCents : Nat;
+    message : Text;
+  } {
+    AccessControl.requireAuthenticated(caller);
+    if (not RateLimit.check(rateLimits.paypal, caller)) {
+      return {
+        success = false;
+        tokenId = null;
+        customId = null;
+        usdCents = coopSeatPriceCents.value;
+        message = "Rate limited. Try again in a minute.";
+      };
+    };
+    let reserved = switch (reserveCoopSeatForBuyer(caller)) {
+      case null {
+        return {
+          success = false;
+          tokenId = null;
+          customId = null;
+          usdCents = coopSeatPriceCents.value;
+          message = "No founding seats available";
+        };
+      };
+      case (?t) t;
+    };
+    {
+      success = true;
+      tokenId = ?reserved;
+      customId = ?PayPalPayment.customIdCoop(reserved);
+      usdCents = coopSeatPriceCents.value;
+      message = "Seat reserved for PayPal checkout";
+    };
+  };
+
+  public shared ({ caller }) func purchaseCoopSeatPayPal(
+    paypalOrderId : Text,
+  ) : async CoopTypes.PurchaseCoopSeatResult {
+    AccessControl.requireAuthenticated(caller);
+    if (not RateLimit.check(rateLimits.paypal, caller)) {
+      return { success = false; tokenId = null; message = "Rate limited. Try again in a minute." };
+    };
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok(_)) {};
+    };
+    try {
+      let result = await doPurchaseCoopSeatPayPal(caller, paypalOrderId);
+      CallerGuard.release(callerGuards, caller);
+      result;
+    } catch (_) {
+      CallerGuard.release(callerGuards, caller);
+      { success = false; tokenId = null; message = "Unexpected error during seat purchase" };
+    };
+  };
+
+  func parseCoopTokenFromCustomId(customId : Text) : ?Nat {
+    let prefix = "icspicy:coop:";
+    if (not Text.startsWith(customId, #text prefix)) return null;
+    switch (Text.stripStart(customId, #text prefix)) {
+      case null null;
+      case (?rest) Nat.fromText(rest);
+    };
+  };
+
+  func doPurchaseCoopSeatPayPal(
+    caller : Principal,
+    paypalOrderId : Text,
+  ) : async CoopTypes.PurchaseCoopSeatResult {
+    switch (paypalOrdersConsumed.get(paypalOrderId)) {
+      case (?_) return { success = false; tokenId = null; message = "PayPal order already used" };
+      case null {};
+    };
+    let price = coopSeatPriceCents.value;
+    let verified = switch (await verifyPayPalOrder(paypalOrderId, price, null)) {
+      case (#err(e)) return { success = false; tokenId = null; message = e };
+      case (#ok(v)) v;
+    };
+    let tokenId = switch (parseCoopTokenFromCustomId(verified.customId)) {
+      case null return { success = false; tokenId = null; message = "Invalid coop custom_id" };
+      case (?t) t;
+    };
+    if (verified.customId != PayPalPayment.customIdCoop(tokenId)) {
+      return { success = false; tokenId = null; message = "Coop custom_id mismatch" };
+    };
+    switch (coopPendingSeats.get(tokenId)) {
+      case null return { success = false; tokenId = null; message = "No pending reservation for this seat" };
+      case (?buyer) {
+        if (not Principal.equal(buyer, caller)) {
+          return { success = false; tokenId = null; message = "Seat reserved by another buyer" };
+        };
+      };
+    };
+    switch (paypalOrdersConsumed.get(paypalOrderId)) {
+      case (?_) return { success = false; tokenId = null; message = "PayPal order already used" };
+      case null {};
+    };
+    paypalOrdersConsumed.add(paypalOrderId, tokenId);
+    transferCoopSeatToBuyer(tokenId, caller, "paypal:" # paypalOrderId);
   };
 };

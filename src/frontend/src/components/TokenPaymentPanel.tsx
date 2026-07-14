@@ -201,23 +201,23 @@ export function TokenPaymentPanel({
           return (
             <Button
               key={token}
-              className="w-full justify-between h-auto py-3"
+              className="w-full h-auto py-3 px-3 gap-1.5 flex flex-col items-stretch sm:flex-row sm:items-center sm:justify-between"
               disabled={disabled}
               onClick={() => void handlePay(token)}
               data-ocid={`pay-${token.toLowerCase()}-btn`}
             >
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2 min-w-0">
                 <span
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${display.bgClass} ${display.colorClass}`}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${display.bgClass} ${display.colorClass}`}
                 >
                   {display.symbol}
                 </span>
                 <span className="font-semibold">{token}</span>
               </span>
               {isPaying ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin self-end sm:self-center" />
               ) : (
-                <span className="text-xs text-muted-foreground text-right max-w-[55%] leading-snug">
+                <span className="text-xs text-primary-foreground/90 w-full sm:w-auto sm:max-w-[48%] sm:text-right leading-snug break-words">
                   {subtitle}
                 </span>
               )}
@@ -281,24 +281,24 @@ export function TokenPaymentPanel({
                   return (
                     <Button
                       key={token}
-                      className="w-full justify-between h-auto py-3 border-orange-500/30 hover:border-orange-500/60"
+                      className="w-full h-auto py-3 px-3 gap-1.5 flex flex-col items-stretch sm:flex-row sm:items-center sm:justify-between border-orange-500/30 hover:border-orange-500/60"
                       variant="outline"
                       disabled={disabled}
                       onClick={() => void handleOisyPay(token)}
                       data-ocid={`oisy-pay-${token.toLowerCase()}-btn`}
                     >
-                      <span className="flex items-center gap-2">
+                      <span className="flex items-center gap-2 min-w-0">
                         <span
-                          className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${display.bgClass} ${display.colorClass}`}
+                          className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${display.bgClass} ${display.colorClass}`}
                         >
                           {display.symbol}
                         </span>
                         <span className="font-semibold">{token}</span>
                       </span>
                       {isPaying ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin self-end sm:self-center" />
                       ) : (
-                        <span className="text-xs text-muted-foreground text-right max-w-[55%] leading-snug">
+                        <span className="text-xs text-muted-foreground w-full sm:w-auto sm:max-w-[48%] sm:text-right leading-snug break-words">
                           {subtitle}
                         </span>
                       )}

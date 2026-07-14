@@ -26,7 +26,7 @@ alwaysApply: true
 ## Project Owner / Admin Principal
 
 `gqkko-43bbx-nwsp4-it2rg-pc2dy-w2pt2-fa5om-4y6es-oyhz2-5i5oh-5ae`  
-dfx identity: `ic_deploy` (keyring-backed post Phase 2)
+dfx identity: `ic_deploy` (keyring-backed post Phase 2) or `ic_deploy_plain` (plaintext PEM for CI/automation)
 
 ## Cycles Wallet
 
@@ -84,3 +84,25 @@ See full patterns in `PROJECT_CONTEXT.md` → "Stable Memory Migration Patterns"
 2. **Variants in `var` fields are invariant** — `OrderStatus` is locked; use side maps instead.
 3. **Stable variables cannot be dropped silently** — keep ghost declarations until explicit migration.
 4. **`wasm_memory_persistence: keep` required** — must be in `dfx.json` for `persistent actor class`.
+
+## EOP Ephemeral Memory Layout (CRITICAL)
+
+With `wasm_memory_persistence: keep` (enhanced orthogonal persistence), the **declaration order** of actor-level `let`/`var` bindings determines ephemeral memory slot layout. Inserting a new binding **between** existing ones shifts every subsequent slot — those bindings then read garbage bytes from the wrong type (e.g. a `Nat` counter reading `Map` bytes → `Natural subtraction underflow` trap on `+= 1`).
+
+**Rules:**
+- New actor-level ephemeral state **MUST be appended at the END** of the declaration block. Never insert mid-list.
+- If a mid-block insert already shipped, do **not** only move the binding — append **fresh** replacements (`sessionCounter`, `sessionStore`, etc.) and wire APIs to the new bindings. Ghost the corrupt slots in place.
+- The **stable-interface check does NOT catch this** — it validates stable types only, not EOP slot layout. A CLEAN stable-check is **not** proof the deploy is healthy.
+- `postupgrade` heal code that touches corrupt slots can **trap during upgrade** — avoid iterating or assigning to bindings whose heap type may be wrong.
+
+## Post-Deploy Smoke Test (REQUIRED)
+
+Every backend deploy must be followed by a **live mainnet (or local) smoke test** of at least one method per subsystem touched — not only the new method.
+
+Minimum Slicer smoke after any games-backend change:
+```bash
+TERM=xterm-256color dfx canister --network ic call backend startGameSession '("slicer")'
+node scripts/slicer-tail-fix-verify.mjs --network ic --identity ic_deploy_plain
+```
+
+"It compiled and stable-check was clean" is **not** verification.

@@ -392,6 +392,35 @@ type TokenApproval =
  };
 type Timestamp = int;
 type Time = int;
+type SubmitScoreOk = 
+ record {
+   bestScore: nat;
+   isNewBest: bool;
+   totalPlays: nat;
+ };
+type SubmitRunOk = 
+ record {
+   badgesEarned: vec BadgeEarned;
+   bestCombo: nat;
+   bestScore: nat;
+   isNewBest: bool;
+   rareChilisSliced: nat;
+   score: nat;
+   tier: text;
+ };
+type SubmitQuizOk = 
+ record {
+   capstoneBadgeMinted: opt nat;
+   correct: nat;
+   lessonPassed: bool;
+   moduleBadgeMinted: opt nat;
+   passed: bool;
+   progressJson: text;
+   questionResults: vec QuestionGrade;
+   recorded: bool;
+   scorePct: nat;
+   total: nat;
+ };
 type SubmitOfferInput = 
  record {
    nft_id: text;
@@ -420,11 +449,35 @@ type StoredFile =
    size: nat;
    uploaded_at: Timestamp;
  };
+type StartSessionOk = 
+ record {
+   seed: nat;
+   sessionId: text;
+ };
 type StageHistory = 
  record {
    notes: text;
    stage: PlantStage;
    timestamp: Timestamp;
+ };
+type SpawnEvent = 
+ record {
+   index: nat;
+   isFrenzy: bool;
+   kind: nat;
+   objectId: nat;
+   spawnTimeMs: nat;
+ };
+type SlicerSharePublic = 
+ record {
+   bestScore: nat;
+   displayData: text;
+   lastPlayed: int;
+   "principal": principal;
+   rank: nat;
+   rankedTotal: nat;
+   tierSlug: text;
+   username: text;
  };
 type ShopListingFile = 
  record {
@@ -506,6 +559,19 @@ type SavedSchedule =
    share_token: text;
    stage: text;
  };
+type SavedIngredient = 
+ record {
+   amount: nat;
+   name: text;
+ };
+type SavedCrafterRecipe = 
+ record {
+   created: int;
+   harmony: nat;
+   ingredients: vec SavedIngredient;
+   name: text;
+   shu: nat;
+ };
 type SaveProfileInput = 
  record {
    avatar_key: opt text;
@@ -542,6 +608,46 @@ type RevokeTokenApprovalArg =
    memo: opt blob;
    spender: opt Account;
    token_id: nat;
+ };
+type Result_7 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_6 = 
+ variant {
+   err: text;
+   ok: PublishSlicerShareOk;
+ };
+type Result_5 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: StartSessionOk;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: SubmitScoreOk;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: SubmitQuizOk;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: SubmitRunOk;
  };
 type ResaleListingPublic = 
  record {
@@ -617,6 +723,37 @@ type RarityTier =
    Rare;
    Uncommon;
  };
+type QuizPublic = 
+ record {
+   badgeId: text;
+   drawCount: nat;
+   lessonId: text;
+   moduleId: text;
+   passCorrect: nat;
+   questions: vec QuestionPublic;
+   quizVersion: nat;
+   title: text;
+ };
+type QuestionPublic = 
+ record {
+   choices: vec text;
+   difficulty: nat;
+   explanationSlug: text;
+   id: text;
+   kind: QuestionKind;
+   lessonId: text;
+   prompt: text;
+ };
+type QuestionKind = 
+ variant {
+   mc;
+   sa;
+ };
+type QuestionGrade = 
+ record {
+   correct: bool;
+   id: text;
+ };
 type QRAssignmentResult = 
  record {
    claimTokenId: text;
@@ -634,6 +771,11 @@ type PurchaseCoopSeatResult =
    message: text;
    success: bool;
    tokenId: opt nat;
+ };
+type PublishSlicerShareOk = 
+ record {
+   score: nat;
+   url: text;
  };
 type PublicProfileFull = 
  record {
@@ -978,6 +1120,12 @@ type PaymentToken =
    ckUSDC;
    ckUSDT;
  };
+type PayPalCheckoutConfig = 
+ record {
+   clientId: text;
+   enabled: bool;
+   sandbox: bool;
+ };
 type OrderStatus = 
  variant {
    Cancelled;
@@ -1150,6 +1298,12 @@ type LifecycleUpgradeEvent =
    plant_id: PlantId;
    upgraded_at: Timestamp;
  };
+type LeaderboardEntry = 
+ record {
+   displayData: text;
+   "principal": principal;
+   score: nat;
+ };
 type LayerSummary = 
  record {
    file_count: nat;
@@ -1258,12 +1412,20 @@ type ICSpicy =
    adminDeleteComment: (comment_id: CommentId) -> (bool);
    adminDeletePost: (post_id: PostId) -> (bool);
    adminDeleteVarietyGuide: (varietyId: nat, zone: text) -> (bool);
+   adminGetGameStats: (gameId: text, "principal": principal) ->
+    (opt GamePlayerStatsPublic) query;
+   adminGrantCoopSeat: (tokenId: nat, recipient: principal) ->
+    (PurchaseCoopSeatResult);
+   adminListCoopDesignatedSeats: () -> (vec nat) query;
    adminListUsers: (offset: nat, limit: nat, search: text) ->
     (AdminUserPage) query;
+   adminRemoveGameScore: (gameId: text, "principal": principal) -> (bool);
    adminReturnToPool: (tokenId: nat) -> (TransferResult);
    adminRevokeSeat: (tokenId: nat, reason: text) -> (bool);
    adminRunDailyWeatherCapture: () -> (nat);
    adminSendNotification: (recipient: principal, message: text) -> (bool);
+   adminSetLeaderboardExcluded: ("principal": principal, excluded: bool) ->
+    ();
    adminSubmitToDAB: (collectionName: text, collectionDescription: text,
     standard: text, canisterIdOverride: opt text) ->
     (variant {
@@ -1328,6 +1490,7 @@ type ICSpicy =
                                                });
    cancelVideoUpload: (uploadId: nat) -> ();
    castVote: (proposalId: ProposalId, optionId: nat) -> (bool);
+   claimGameAchievement: (gameId: text, achievementId: text) -> (Result_5);
    clearArtworkFiles: () -> ();
    closeProposal: (id: ProposalId) -> (bool);
    completeEvent: (event_id: nat) -> (PlantingEvent);
@@ -1338,6 +1501,11 @@ type ICSpicy =
      });
    confirmOrderPaymentDirect: (orderId: nat, ledgerCanisterId: text, amount:
     nat) -> (ConfirmOrderPaymentDirectResult);
+   confirmPayPalOrderPayment: (orderId: nat, paypalOrderId: text) ->
+    (record {
+       message: text;
+       success: bool;
+     });
    counterOffer: (input: CounterOfferInput) -> (Offer);
    createBatchGiftPack: (plant_ids: vec PlantId) ->
     (variant {
@@ -1406,11 +1574,14 @@ type ICSpicy =
     opt bool) -> (vec PlantLifecycle) query;
    getAdminOrder: (order_id: OrderId) -> (opt AdminOrderPublic) query;
    getAdmins: () -> (vec principal) query;
+   /// Per-principal rate limiters for cycle-drain protection (CDA).
    getArtworkFile: (path: text) -> (opt vec nat8);
    getArtworkUploadResult: () -> (UploadResult) query;
    getArtworkUploadStatus: () -> (UploadSessionStatus) query;
    getAuditLog: (offset: nat, limit: nat) -> (vec AuditEntry) query;
    getAvatarFile: (key: text) -> (opt vec nat8) query;
+   getBadgeByTokenId: (tokenId: nat) -> (opt BadgePublic) query;
+   getBadgesByPrincipal: (p: principal) -> (vec BadgePublic) query;
    getBatchGiftPack: (claim_token_id: ClaimTokenId) ->
     (opt BatchGiftPackPublic) query;
    getCallerDaoNftCount: () -> (nat) query;
@@ -1461,6 +1632,9 @@ type ICSpicy =
    getFollowingCount: (user: principal) -> (nat) query;
    getFollowingFeed: (offset: nat, limit: nat) -> (vec PostPublic) query;
    getForSalePlants: () -> (vec PlantPublic) query;
+   getFrontendCanisterId: () -> (opt text) query;
+   getGameLeaderboard: (gameId: text, limit: nat) ->
+    (vec LeaderboardEntry) query;
    getGardenDesign: (designId: nat) -> (opt GardenDesign) query;
    getGardenDesignForUser: (designId: nat) -> (opt GardenDesign) query;
    getGlobalFeed: (offset: nat, limit: nat) -> (vec PostPublic) query;
@@ -1468,14 +1642,22 @@ type ICSpicy =
     (opt GrowerProvenanceMeta) query;
    getIcrc7PoolStatsAdmin: () -> (Icrc7PoolStats) query;
    getLatestNurseryWeather: () -> (opt WeatherSnapshot) query;
+   getLessonQuiz: (lessonId: text) -> (opt QuizPublic) query;
    getLinkedWallets: () -> (vec principal) query;
    getListedNfts: (pepperHeadOnly: opt bool) -> (vec NftListingPublic) query;
    getLoadedMetadataCount: () -> (nat) query;
    getMembershipPriceInToken: (token: OracleToken) -> (nat) query;
+   getMyBadges: () -> (vec BadgePublic) query;
    getMyCoopStatus: () -> (opt CoopStatus) query;
+   getMyCrafterRecipes: () -> (vec SavedCrafterRecipe) query;
    getMyCrosses: () -> (vec BreedingCrossPublic) query;
    getMyDesigns: () -> (vec GardenDesign) query;
    getMyFavorites: (offset: nat, limit: nat) -> (vec RecipePublic) query;
+   getMyGameRank: (gameId: text) -> (opt GameRankPublic) query;
+   getMyGameStats: (gameId: text) -> (opt GamePlayerStatsPublic) query;
+   getMyGardenState: () -> (opt text) query;
+   getMyIngredientInventory: () -> (opt text) query;
+   getMyMasterclassProgress: () -> (text) query;
    getMyNftListings: () -> (vec NftListingPublic) query;
    getMyNotifications: (offset: nat, limit: nat) ->
     (vec NotificationPublic) query;
@@ -1487,6 +1669,7 @@ type ICSpicy =
    getMySchedules: () -> (vec SavedSchedule);
    getMySeedBank: () -> (vec SeedLotPublic) query;
    getMyTrays: () -> (vec TrayPublic) query;
+   /// Uploads asset canister — user images served via HTTP from this canister.
    getMyVendors: () -> (vec SeedVendorPublic) query;
    getMyWeatherRecords: (limit: nat) -> (vec WeatherRecord);
    getNewOrderCount: () -> (nat) query;
@@ -1502,6 +1685,7 @@ type ICSpicy =
    getOrder: (order_id: OrderId) -> (opt OrderPublic) query;
    getOrderPickupClaimTokens: (order_id: OrderId) -> (vec text) query;
    getOverdueEvents: () -> (vec PlantingEvent) query;
+   getPayPalCheckoutConfig: () -> (PayPalCheckoutConfig) query;
    getPlant: (plant_id: PlantId) -> (opt PlantPublic) query;
    getPlantByNft: (nftTokenId: nat) -> (opt PlantLifecycle) query;
    getPlantClaimToken: (plantId: PlantId) -> (opt text) query;
@@ -1554,6 +1738,12 @@ type ICSpicy =
    getSeedBankStats: () -> (SeedBankStats) query;
    getSeedLotsByVariety: (varietyId: nat) -> (vec SeedLotPublic) query;
    getShopListingFile: (path: text) -> (opt ShopListingFile) query;
+   getSlicerSharePublic: (user: principal) -> (opt SlicerSharePublic) query;
+   getSlicerSubmitRejectionStats: () -> (vec record {
+                                               text;
+                                               nat;
+                                             }) query;
+   getSpawnSequence: (seed: nat, count: nat) -> (vec SpawnEvent) query;
    getTokenPriceInIcp: (token: OracleToken) -> (nat) query;
    getTokenPrices: () -> (vec TokenPrice) query;
    getTray: (tray_id: TrayId) -> (opt TrayPublic) query;
@@ -1585,6 +1775,8 @@ type ICSpicy =
      }) query;
    getZoneCalendar: (zone: text) -> (ZoneCalendar) query;
    getZoneSchedule: (zone: text, month: nat) -> (ZoneSchedule) query;
+   gradeQuizCheckpoint: (lessonId: text, answersJson: text) ->
+    (Result_1) query;
    harvestSeeds: (plantId: PlantId, quantity: opt nat, notes: opt text) ->
     (nat);
    hasDAOAccess: () -> (bool) query;
@@ -1654,6 +1846,7 @@ type ICSpicy =
                                skipped: nat;
                              });
    isCallerAdmin: () -> (bool) query;
+   /// ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
    isFollowing: (target: principal) -> (bool) query;
    isGrowerProvenanceToken: (tokenId: nat) -> (bool) query;
    isPepperHead: (tokenId: nat) -> (bool) query;
@@ -1743,12 +1936,16 @@ type ICSpicy =
     photoUrl: opt text) -> (bool);
    markPlantGerminated: (plant_id: PlantId, germination_date: Timestamp) ->
     ();
+   mintAchievementBadge: (recipient: principal, badgeType: text, tier: 
+    text, metadataJson: text) -> (Result_7);
    mintDesignAsNft: (designId: nat) -> (MintDesignNftResult);
    mintEXT: (_plantId: nat, _imageKey: text, _attributes:
     vec record {
           text;
           text;
         }) -> (text);
+   mintGameSeasonalBadge: (recipient: principal, badgeType: text, tier: 
+    text, metadataJson: text) -> (Result_7);
    mintGrowerProvenanceToken: (plantId: PlantId) ->
     (MintGrowerProvenanceResult);
    mintHederaNFT: (_plant_id: PlantId, _image_key: opt text, _attributes:
@@ -1762,6 +1959,16 @@ type ICSpicy =
           text;
         }) -> (text);
    mintRWAProvenance: (input: MintRWAProvenanceInput) -> (text);
+   paypalOAuthTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
+   paypalTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
    placeOrder: (input: CreateOrderInput) -> (OrderPublic);
    plantSeed: (trayId: TrayId, cellPosition: nat, varietyId: nat,
     datePlanted: opt Timestamp) -> (PlantSeedResult);
@@ -1769,6 +1976,14 @@ type ICSpicy =
     (record {
        ok: bool;
        total: nat;
+     });
+   prepareCoopPayPalCheckout: () ->
+    (record {
+       customId: opt text;
+       message: text;
+       success: bool;
+       tokenId: opt nat;
+       usdCents: nat;
      });
    priceOracleTransform:
     (record {
@@ -1778,9 +1993,11 @@ type ICSpicy =
    pruneUsageData: () -> ();
    publishProposal: (id: ProposalId) -> (bool);
    publishRecipe: (id: RecipeId) -> (bool);
+   publishSlicerSharePage: (html: text) -> (Result_6);
    purchaseCoopSeat: (paymentId: text) -> (PurchaseCoopSeatResult);
    purchaseCoopSeatDirect: (ledgerCanisterId: text, amount: nat) ->
     (PurchaseCoopSeatResult);
+   purchaseCoopSeatPayPal: (paypalOrderId: text) -> (PurchaseCoopSeatResult);
    purchasePepperHead: (paymentId: text) ->
     (record {
        message: text;
@@ -1793,9 +2010,17 @@ type ICSpicy =
        success: bool;
        tokenId: opt nat;
      });
+   purchasePepperHeadPayPal: (paypalOrderId: text) ->
+    (record {
+       message: text;
+       success: bool;
+       tokenId: opt nat;
+     });
    purchasePlant: (plantId: PlantId, token: PaymentToken, amount: nat) ->
     (PurchasePlantResult);
    purchasePlantICPay: (plantId: PlantId, paymentId: text) ->
+    (PurchasePlantResult);
+   purchasePlantPayPal: (plantId: PlantId, paypalOrderId: text) ->
     (PurchasePlantResult);
    recordCross: (name: text, motherVarietyId: nat, fatherVarietyId: nat,
     motherPlantId: opt PlantId, fatherPlantId: opt PlantId, crossDate:
@@ -1833,6 +2058,13 @@ type ICSpicy =
    revokeClaimTokenAdmin: (token: text) -> (bool);
    runDailyWeatherCapture: () -> (nat);
    saveCallerUserProfile: (input: SaveProfileInput) -> (bool);
+   saveCrafterRecipe: (name: text, ingredients: vec record {
+                                                      text;
+                                                      nat;
+                                                    }, shu: nat, harmony:
+    nat) -> (Result_5);
+   saveGardenState: (json: text) -> (Result_5);
+   saveIngredientInventory: (json: text) -> (Result_5);
    saveProfile: (input: SaveProfileInput) -> (bool);
    saveSchedule: (stage: text, inputs: vec text) -> (ScheduleId);
    saveVarietyGuide: (varietyId: nat, zone: text, sections: vec GuideSection,
@@ -1843,7 +2075,10 @@ type ICSpicy =
    seedDefaultRecipes: () -> ();
    setCoopSeatPriceCents: (cents: nat) -> ();
    setForSale: (plant_id: PlantId, for_sale: bool) -> ();
+   setFrontendCanisterId: (canisterId: text) -> ();
    setICPaySecretKey: (key: text) -> ();
+   setPayPalCredentials: (clientId: text, clientSecret: text, sandbox:
+    bool) -> ();
    setPlantNFT: (plant_id: PlantId, nft_id: text) -> ();
    setProfileBanner: (key: text) -> ();
    setProfileWallpaper: (value: text) -> ();
@@ -1858,16 +2093,24 @@ type ICSpicy =
    setVarietyIntro: (varietyId: nat, intro: text) -> (bool);
    setVarietyProvenance: (varietyId: nat, provenance: VarietyProvenance) ->
     (bool);
+   startGameSession: (gameId: text) -> (Result_4);
    storeArtworkFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
    storeAvatarFile: (data: vec nat8) -> (text);
+   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    storeCommunityImage: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
    storeNimsPhotoFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
    storeProfileBannerFile: (data: vec nat8) -> (text);
+   /// Per-principal rate limiters for cycle-drain protection (CDA).
    storeProfileWallpaperFile: (data: vec nat8) -> (text);
+   storeSlicerShareOgImage: (pngBytes: blob) -> (Result_3);
+   submitGameScore: (gameId: text, score: nat, displayData: text) ->
+    (Result_2);
    submitOffer: (input: SubmitOfferInput) -> (Offer);
+   submitQuizResult: (lessonId: text, answersJson: text) -> (Result_1);
+   submitSlicerRun: (sessionId: text, sliceLogJson: text) -> (Result);
    toggleCooked: (plant_id: PlantId) -> ();
    toggleFavorite: (recipe_id: RecipeId) -> (bool);
    toggleRecipeFeatured: (id: RecipeId) -> (bool);
@@ -1897,7 +2140,6 @@ type ICSpicy =
    updatePlantStage: (plant_id: PlantId, new_stage: PlantStage, notes:
     text) -> ();
    updatePlantingEvent: (input: UpdatePlantingEventInput) -> (PlantingEvent);
-   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    updateProduct: (input: UpdateProductInput) -> ();
    updateProposal: (id: ProposalId, input: UpdateProposalInput) -> (bool);
    updateRecipe: (input: UpdateRecipeInput) -> (bool);
@@ -1987,6 +2229,19 @@ type GardenDesign =
    structures: vec StructurePlacement;
    updatedAt: Timestamp;
    widthMeters: float64;
+ };
+type GameRankPublic = 
+ record {
+   displayData: text;
+   rank: nat;
+   score: nat;
+ };
+type GamePlayerStatsPublic = 
+ record {
+   bestScore: nat;
+   displayData: text;
+   lastPlayed: int;
+   totalPlays: nat;
  };
 type FoundersMintResult = 
  record {
@@ -2297,6 +2552,27 @@ type BatchGiftPackPublic =
    plant_ids: vec PlantId;
    redeemed: bool;
    redeemed_by: opt principal;
+ };
+type BadgeSource = 
+ variant {
+   game;
+   masterclass;
+ };
+type BadgePublic = 
+ record {
+   badgeType: text;
+   earnedAt: int;
+   metadataJson: text;
+   owner: principal;
+   source: BadgeSource;
+   tier: text;
+   tokenId: nat;
+ };
+type BadgeEarned = 
+ record {
+   badgeType: text;
+   isNew: bool;
+   tokenId: nat;
  };
 type AuditEntry = 
  record {

@@ -4,12 +4,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createActor } from "../backend";
 import { variantToString } from "../lib/candid-display";
 import { toNatBigInt, toOptionalNatBigInt } from "../lib/cart-utils";
+import { fetchPayPalCheckoutConfig } from "../lib/paypal";
+import { requireBackendRaw, backendRaw } from "../lib/backend-raw";
 import { useIcrc7Actor } from "../lib/icrc7-actor";
 import {
   refreshAllTrayGrids,
   refreshNimsDashboardStats,
 } from "../lib/nims-query";
-import { useActor } from "./useActor";
+import { isAchievementTokenId } from "../lib/nft-config";
+import { useCart } from "./useCart";
 
 import type {
   AddFeedingInput,
@@ -55,6 +58,7 @@ import type {
   RecipePublic,
   UpdateRecipeInput,
 } from "../declarations/backend.did";
+import { useActor } from "./useActor";
 import { useActorReady } from "./useActorReady";
 import { useAuth } from "./useAuth";
 import { useOisyWallet } from "../providers/OisyWalletProvider";
@@ -64,9 +68,7 @@ export function useBackendActor() {
 }
 
 function cookbookRaw(actor: import("../backend").Backend | null) {
-  if (!actor) return null;
-  return (actor as unknown as { actor: ActorSubclass<BackendServiceRaw> })
-    .actor;
+  return backendRaw(actor);
 }
 
 // ─── Products ───────────────────────────────────────────────────────────────
@@ -1283,8 +1285,8 @@ export function useRedeemClaim() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (claimToken: string) => {
-      if (!actor) throw new Error("Not connected");
-      const result = await actor.redeemClaim(claimToken);
+      const raw = requireBackendRaw(actor);
+      const result = await raw.redeemClaim(claimToken);
       if (!result.success) throw new Error(result.message);
       return result;
     },
@@ -2323,6 +2325,24 @@ export function useTokenCertified(tokenId: bigint | null) {
   });
 }
 
+export function useBadgeByTokenId(tokenId: bigint | null) {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: ["badge", "byToken", tokenId?.toString() ?? null],
+    queryFn: async () => {
+      if (!actor || tokenId == null) return null;
+      const raw = requireBackendRaw(actor);
+      const r = await raw.getBadgeByTokenId(tokenId);
+      return r.length === 1 ? r[0]! : null;
+    },
+    enabled:
+      !!actor &&
+      !isFetching &&
+      tokenId != null &&
+      isAchievementTokenId(tokenId),
+  });
+}
+
 // ─── Phase 4 Payment hooks ───────────────────────────────────────────────────
 
 export function useConfirmICPayPayment() {
@@ -2339,6 +2359,95 @@ export function useConfirmICPayPayment() {
       return result;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["orders"] }),
+  });
+}
+
+export function usePayPalCheckoutConfig() {
+  return useQuery({
+    queryKey: ["paypal-checkout-config"],
+    queryFn: fetchPayPalCheckoutConfig,
+    staleTime: 60_000,
+    retry: 2,
+  });
+}
+
+export function useConfirmPayPalOrderPayment() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      paypalOrderId,
+    }: { orderId: bigint; paypalOrderId: string }) => {
+      if (!actor) throw new Error("Not connected");
+      const result = await actor.confirmPayPalOrderPayment(
+        orderId,
+        paypalOrderId,
+      );
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      useCart.getState().clearCart();
+    },
+  });
+}
+
+export function usePurchasePepperHeadPayPal() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (paypalOrderId: string) => {
+      const raw = requireBackendRaw(actor);
+      const result = await raw.purchasePepperHeadPayPal(paypalOrderId);
+      if (!result.success) throw new Error(result.message);
+      return {
+        ...result,
+        tokenId: result.tokenId.length > 0 ? result.tokenId[0] : null,
+      };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["icrc7Owner"] });
+      qc.invalidateQueries({ queryKey: ["isPepperHeadAvailable"] });
+      qc.invalidateQueries({ queryKey: ["pepperHeadAvailable"] });
+    },
+  });
+}
+
+export function usePrepareCoopPayPalCheckout() {
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async () => {
+      const raw = requireBackendRaw(actor);
+      const result = await raw.prepareCoopPayPalCheckout();
+      if (!result.success) throw new Error(result.message);
+      const tokenId = result.tokenId.length > 0 ? result.tokenId[0] : null;
+      const customId =
+        result.customId.length > 0 ? result.customId[0] : null;
+      if (tokenId == null || customId == null) {
+        throw new Error("Co-op checkout reservation incomplete");
+      }
+      return { tokenId, customId, usdCents: result.usdCents };
+    },
+  });
+}
+
+export function usePurchaseCoopSeatPayPal() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (paypalOrderId: string) => {
+      const raw = requireBackendRaw(actor);
+      const result = await raw.purchaseCoopSeatPayPal(paypalOrderId);
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["coopStatus"] });
+      qc.invalidateQueries({ queryKey: ["coopSeatsRemaining"] });
+      qc.invalidateQueries({ queryKey: ["icrc7Owner"] });
+    },
   });
 }
 

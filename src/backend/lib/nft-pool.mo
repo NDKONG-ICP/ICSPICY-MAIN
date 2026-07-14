@@ -17,6 +17,7 @@ module {
 
   func isPlantPoolToken(tokenId : Nat) : Bool {
     if (tokenId == 0) return false;
+    // Exclude grower provenance (100K–199_999) and achievement badges (200K+).
     if (tokenId >= 100_000) return false;
     if (tokenId > MAX_TOKEN) return false;
     tokenId < PH_START or tokenId >= PH_END;

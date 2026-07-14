@@ -15,6 +15,7 @@ import { useActorReady } from "./hooks/useActorReady";
 import { useAuth } from "./hooks/useAuth";
 import { useIsAdmin } from "./hooks/useBackend";
 import { useOisyWallet } from "./providers/OisyWalletProvider";
+import { gameEntrySearch } from "./games/shared/game-route-search";
 
 // AuthCacheSync: clears ALL query cache when the principal changes.
 // This is critical for Chrome's full-page redirect flow:
@@ -103,6 +104,23 @@ const GardenGalleryPage = lazy(() => import("./pages/GardenGallery"));
 const TiersPage = lazy(() => import("./pages/Tiers"));
 const ClaimPage = lazy(() => import("./pages/Claim"));
 const NFTDetailPage = lazy(() => import("./pages/NFTDetail"));
+const GamesPage = lazy(() => import("./pages/Games"));
+const SlicerGamePage = lazy(() => import("./pages/games/SlicerPage"));
+const PepperPatchGamePage = lazy(() => import("./pages/games/PepperPatchPage"));
+const CrafterGamePage = lazy(() => import("./pages/games/CrafterPage"));
+const GamesLeaderboardPage = lazy(
+  () => import("./pages/games/GamesLeaderboardPage"),
+);
+const SlicerSharePage = lazy(() => import("./pages/games/SlicerSharePage"));
+const MasterclassHubPage = lazy(
+  () => import("./pages/masterclass/MasterclassHubPage"),
+);
+const MasterclassLessonPage = lazy(
+  () => import("./pages/masterclass/LessonPage"),
+);
+const MasterclassQuizPage = lazy(
+  () => import("./pages/masterclass/QuizPage"),
+);
 
 // Admin guard component — shows a clear Access Denied message for non-admins.
 // The tab is always visible in the nav; the gate lives here inside the route.
@@ -465,6 +483,70 @@ const creditsRoute = createRoute({
   component: CreditsPage,
 });
 
+const gamesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/games",
+  component: GamesPage,
+});
+
+const slicerGameRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/games/slicer",
+  validateSearch: gameEntrySearch,
+  component: SlicerGamePage,
+});
+
+const pepperPatchGameRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/games/pepper-patch",
+  validateSearch: gameEntrySearch,
+  component: PepperPatchGamePage,
+});
+
+const crafterGameRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/games/crafter",
+  validateSearch: gameEntrySearch,
+  component: CrafterGamePage,
+});
+
+const gamesLeaderboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/games/leaderboard",
+  validateSearch: (search: Record<string, unknown>) => ({
+    game:
+      typeof search.game === "string" &&
+      ["slicer", "pepper-patch", "crafter"].includes(search.game)
+        ? search.game
+        : undefined,
+  }),
+  component: GamesLeaderboardPage,
+});
+
+const slicerShareRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/s/slicer/$principal",
+  component: SlicerSharePage,
+});
+
+const masterclassRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/masterclass",
+  component: MasterclassHubPage,
+});
+
+const masterclassLessonRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/masterclass/lesson/$lessonId",
+  component: MasterclassLessonPage,
+});
+
+const masterclassQuizRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/masterclass/quiz/$lessonId",
+  component: MasterclassQuizPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   marketplaceRoute,
@@ -486,6 +568,15 @@ const routeTree = rootRoute.addChildren([
   guidesRoute,
   growersRoute,
   creditsRoute,
+  gamesRoute,
+  slicerGameRoute,
+  pepperPatchGameRoute,
+  crafterGameRoute,
+  gamesLeaderboardRoute,
+  slicerShareRoute,
+  masterclassRoute,
+  masterclassLessonRoute,
+  masterclassQuizRoute,
   cookbookDetailRoute,
   cookbookRoute,
   scheduleBuilderRoute,

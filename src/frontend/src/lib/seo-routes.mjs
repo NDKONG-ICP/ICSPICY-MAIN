@@ -174,6 +174,100 @@ export const STATIC_ROUTE_SEO = [
     ],
   },
   {
+    path: "/games",
+    title: "Games | IC SPICY — Slice, Grow & Craft the Heat",
+    description:
+      "Play ICSPICY arcade games — slice peppers, grow your patch, and craft small-batch heat. Compete on global SHU leaderboards from the IC SPICY pepper nursery.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: "ICSPICY Games",
+      url: "https://www.icspicy.app/games",
+      description:
+        "IC SPICY pepper arcade games with on-chain SHU leaderboards.",
+    },
+    crawlParagraphs: [
+      "ICSPICY Games brings arcade pepper action to the IC SPICY brand: ICSPICY Slicer, the flagship ICSPICY Pepper Patch grow sim, and ICSPICY Small Batch Crafter. Sign in with Internet Identity to save your score and climb the global SHU leaderboard.",
+    ],
+  },
+  {
+    path: "/games/leaderboard",
+    title: "Arcade Scoreboards | ICSPICY Games — SHU Leaderboards",
+    description:
+      "Full ICSPICY arcade leaderboards for Slicer, Pepper Patch, and Small Batch Crafter. See your rank, scroll the top 100, and compete on global Scoville scoreboards.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "ICSPICY Arcade Scoreboards",
+      url: "https://www.icspicy.app/games/leaderboard",
+      description:
+        "State-fair style arcade leaderboards for ICSPICY pepper games.",
+    },
+    crawlParagraphs: [
+      "Browse the full top-100 SHU leaderboards for ICSPICY Slicer, Pepper Patch, and Small Batch Crafter. Your row is highlighted and scrolled into view when you are on the board; ranks outside the top 100 appear in a pinned YOU row.",
+    ],
+  },
+  {
+    path: "/games/slicer",
+    title: "ICSPICY Slicer — Swipe-to-Slice Pepper Game | IC SPICY",
+    description:
+      "Swipe-to-slice pepper game: cut chilies, mangoes, and garlic mid-air, chain SHU combos, and survive frenzy bursts. Free mobile arcade from IC SPICY.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      name: "ICSPICY Slicer",
+      url: "https://www.icspicy.app/games/slicer",
+      description:
+        "Mobile-first swipe-to-slice arcade game with Scoville scoring and on-chain leaderboards.",
+      gamePlatform: "Web browser",
+      genre: "Arcade",
+      publisher: { "@type": "Organization", name: "IC SPICY" },
+    },
+    crawlParagraphs: [
+      "ICSPICY Slicer is a free swipe-to-slice pepper game from IC SPICY. Launch ingredients into the air, slice them with fast swipes to rack up SHU points, chain combos, and climb the global leaderboard. Sign in with Internet Identity to save your best small-batch score.",
+    ],
+  },
+  {
+    path: "/games/crafter",
+    title: "ICSPICY Small Batch Crafter — Blend Artisan Heat | IC SPICY",
+    description:
+      "Craft small-batch pepper sauces in a bubbling pot. Mix real ICSPICY chili varieties, balance heat and harmony, bottle your batch, and climb the crafter SHU leaderboard.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      name: "ICSPICY Small Batch Crafter",
+      url: "https://www.icspicy.app/games/crafter",
+      description:
+        "Mobile-first ingredient-mixing game with Scoville scoring, saved recipes, and on-chain leaderboards.",
+      gamePlatform: "Web browser",
+      genre: "Simulation",
+      publisher: { "@type": "Organization", name: "IC SPICY" },
+    },
+    crawlParagraphs: [
+      "ICSPICY Small Batch Crafter lets you blend artisan pepper sauces with real variety SHU values — Carolina Reaper, Scotch Bonnet, 7 Pot Primo, and more. Balance heat, sweet-acid, and flavor harmony, bottle your batch, save favorite recipes, and compete on the crafter leaderboard.",
+    ],
+  },
+  {
+    path: "/games/pepper-patch",
+    title: "ICSPICY Pepper Patch — Virtual Pepper Garden Simulator | IC SPICY",
+    description:
+      "Flagship grow sim: plant real ICSPICY pepper varieties, water and feed on timers, harvest SHU small batches, and unlock Carolina Reaper and legendary heat.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      name: "ICSPICY Pepper Patch",
+      url: "https://www.icspicy.app/games/pepper-patch",
+      description:
+        "Mobile-first virtual pepper garden with on-chain save, Pepperpedia variety guides, and SHU leaderboards.",
+      gamePlatform: "Web browser",
+      genre: "Simulation",
+      publisher: { "@type": "Organization", name: "IC SPICY" },
+    },
+    crawlParagraphs: [
+      "ICSPICY Pepper Patch is the flagship virtual pepper garden from IC SPICY. Grow Jalapeño through Carolina Reaper and legendary varieties, companion-plant with onion and garlic, earn Heat Reserve, and link each variety to real Pepperpedia growing guides.",
+    ],
+  },
+  {
     path: "/cookbook",
     title: "Natural Farming Recipes — KNF, JADAM, FPJ, LAB | IC SPICY CookBook",
     description:

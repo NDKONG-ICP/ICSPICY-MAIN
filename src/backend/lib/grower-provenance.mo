@@ -14,11 +14,13 @@ import ICRC7Lib "./icrc7";
 
 module {
   public let GROWER_TOKEN_START : Nat = 100_000;
+  /// Exclusive upper bound — 200_000+ is reserved for soulbound achievement badges.
+  public let GROWER_TOKEN_END : Nat = 200_000;
   public let MINTS_PER_HOUR : Nat = 20;
   public let HOUR_NS : Int = 3_600_000_000_000;
 
   public func isGrowerProvenanceToken(tokenId : Nat) : Bool {
-    tokenId >= GROWER_TOKEN_START;
+    tokenId >= GROWER_TOKEN_START and tokenId < GROWER_TOKEN_END;
   };
 
   public func buildMetadataEntries(

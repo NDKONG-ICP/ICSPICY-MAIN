@@ -39,3 +39,5 @@ src/docs_frontend/public/documents/
 src/docs_frontend/src/generated/
 vendor/
 labels/
+art-src/slicer/.preview/
+.env*

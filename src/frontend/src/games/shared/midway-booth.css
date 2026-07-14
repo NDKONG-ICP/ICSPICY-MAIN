@@ -1,0 +1,139 @@
+.arcade-midway-booth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.75rem;
+}
+
+.arcade-midway-booth__sign-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 18rem;
+}
+
+.arcade-midway-booth__sign-link {
+  display: block;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.arcade-midway-booth__sign-link:hover {
+  transform: scale(1.02);
+  filter: brightness(1.05);
+}
+
+.arcade-midway-booth__sign {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+}
+
+.arcade-midway-booth__sign--disabled {
+  opacity: 0.65;
+  filter: grayscale(0.35);
+}
+
+.arcade-midway-booth__flagship {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 2px;
+  background: rgba(120, 60, 10, 0.75);
+  color: #fef3c7;
+  font-family: var(--arcade-font);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.arcade-midway-booth__slats {
+  width: 100%;
+  max-width: 16rem;
+}
+
+.arcade-midway-booth__slats-label {
+  margin-bottom: 0.35rem;
+  text-align: center;
+  font-family: var(--arcade-font);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(254, 235, 200, 0.75);
+}
+
+.arcade-midway-booth__slat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.arcade-midway-slat {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  background: linear-gradient(180deg, #ebe0cc 0%, #ddd0b8 48%, #cfc0a4 100%);
+  border: 1px solid rgba(61, 40, 23, 0.35);
+  border-radius: 2px;
+  font-family: var(--arcade-font);
+  font-size: 0.68rem;
+  color: var(--arcade-ink-muted);
+  text-shadow: 0.5px 0.5px 0 rgba(255, 235, 200, 0.2);
+}
+
+.arcade-midway-slat__rank {
+  width: 1.25rem;
+  flex-shrink: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.arcade-midway-slat__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: inherit;
+  text-decoration: none;
+}
+
+.arcade-midway-slat__name:hover {
+  opacity: 0.8;
+}
+
+.arcade-midway-slat__score {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.arcade-midway-booth__empty {
+  text-align: center;
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+
+.arcade-midway-booth__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.arcade-midway-booth__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 7.5rem;
+  text-decoration: none;
+}

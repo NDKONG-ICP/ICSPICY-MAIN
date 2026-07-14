@@ -18,7 +18,8 @@ module {
   let MAX_LICENSE : Nat = 120;
 
   public func isGrowerProvenanceToken(tokenId : Nat) : Bool {
-    tokenId >= 100_000;
+    // Align with GrowerProvLib: [100_000, 200_000). 200K+ = achievement badges.
+    tokenId >= 100_000 and tokenId < 200_000;
   };
 
   public func toPublic(seat : CoopTypes.CoopSeat) : CoopTypes.CoopSeatPublic {

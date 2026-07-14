@@ -1,0 +1,195 @@
+{
+  "REVIEW_REQUIRED": true,
+  "quizVersion": 1,
+  "lessonId": "m1-l1",
+  "moduleId": "module-01-soil-biology",
+  "badgeId": "masterclass-soil-biology",
+  "title": "1.1 The Soil Food Web — Checkpoint",
+  "drawCount": 6,
+  "passCorrect": 5,
+  "note": "Phase 2b reviewed bank — William approval required before engine swap.",
+  "questions": [
+    {
+      "id": "m1-l1-q01",
+      "lessonId": "m1-l1",
+      "type": "mc",
+      "prompt": "In the soil food web metaphor, who are the 'cooks' that break down organic matter first?",
+      "choices": [
+        "Bacteria and fungi",
+        "Protozoa and nematodes",
+        "Earthworms only",
+        "The chili plant roots"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l1-q02",
+      "lessonId": "m1-l1",
+      "type": "mc",
+      "prompt": "What do protozoa and bacterial-feeding nematodes mainly contribute in a living soil food web?",
+      "choices": [
+        "They fix atmospheric nitrogen directly into fruit",
+        "They graze microbes and release plant-available nutrients",
+        "They replace the need for any organic matter",
+        "They sterilize the root zone against fungi"
+      ],
+      "correctIndex": 1,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l1-q03",
+      "lessonId": "m1-l1",
+      "type": "mc",
+      "prompt": "Why does IC SPICY emphasize fermenting inputs like FPJ, LAB, and IMO?",
+      "choices": [
+        "To seed and feed the living soil workforce",
+        "Fermentation is only for hot sauce flavor",
+        "To raise EC as high as possible",
+        "To kill all fungi before transplant"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l1-q04",
+      "lessonId": "m1-l1",
+      "type": "mc",
+      "prompt": "What are root exudates in this lesson's framing?",
+      "choices": [
+        "Salt fertilizer runoff",
+        "Sugars dripped from roots that keep beneficial microbes around",
+        "A disease symptom on leaves",
+        "Plastic mulch leachate"
+      ],
+      "correctIndex": 1,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l1-q05",
+      "lessonId": "m1-l1",
+      "type": "mc",
+      "prompt": "What happens when you sterilize a bed with salt fertilizers, bare soil, or constant tillage?",
+      "choices": [
+        "You permanently lock in peak heat",
+        "Mycorrhizae multiply automatically",
+        "You fire the microbial workforce and plants look hungry even after you 'fed' them",
+        "You no longer need mulch or compost"
+      ],
+      "correctIndex": 2,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l1-q06",
+      "lessonId": "m1-l1",
+      "type": "mc",
+      "prompt": "Compost and mulch are described as what for the soil workforce?",
+      "choices": [
+        "Optional decoration",
+        "A replacement for all water",
+        "A way to raise SHU overnight",
+        "Payroll — food and habitat for biology"
+      ],
+      "correctIndex": 3,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l1-q07",
+      "lessonId": "m1-l1",
+      "type": "mc",
+      "prompt": "Which statement matches the lesson's core claim?",
+      "choices": [
+        "A chili plant eats compost directly like a pellet",
+        "Soil biology only matters after fruit set",
+        "A chili plant is only as good as the living community under its roots",
+        "Sterile media always outyield living soil"
+      ],
+      "correctIndex": 2,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l1-q08",
+      "lessonId": "m1-l1",
+      "type": "mc",
+      "prompt": "According to the trophic ladder in Deeper Heat, nutrient release to plants is often strongest at which step?",
+      "choices": [
+        "When grazers like protozoa consume microbial biomass",
+        "When earthworms eat leaves directly",
+        "When roots absorb plastic mulch residue",
+        "When salt fertilizers bypass all biology"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l1-q09",
+      "lessonId": "m1-l1",
+      "type": "mc",
+      "prompt": "According to this lesson, what should you ask instead of 'what does my Reaper want to eat?'",
+      "choices": [
+        "Which salt fertilizer has the highest N-P-K",
+        "Who in the soil is still employed, and what are they eating?",
+        "How to sterilize the bed for maximum SHU",
+        "Whether hydroponic lettuce methods apply to all chilies"
+      ],
+      "correctIndex": 1,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l1-q10",
+      "lessonId": "m1-l1",
+      "type": "mc",
+      "prompt": "Peppers (Capsicum) form which partnership that trades soil phosphorus and water for plant sugars?",
+      "choices": [
+        "Rhizobium nitrogen nodules only",
+        "Hydroponic salt complexes",
+        "No fungal partnerships at all",
+        "Arbuscular mycorrhizal fungi"
+      ],
+      "correctIndex": 3,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l1-q11",
+      "lessonId": "m1-l1",
+      "type": "sa",
+      "prompt": "Name two major microbial groups that act as the 'cooks' in the soil food web.",
+      "acceptedKeywords": [
+        "bacteria",
+        "fungi",
+        "fungal",
+        "microbe",
+        "microbes"
+      ],
+      "minKeywords": 2,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l1-q12",
+      "lessonId": "m1-l1",
+      "type": "sa",
+      "prompt": "What plant-root payment keeps beneficial soil life nearby?",
+      "acceptedKeywords": [
+        "exudate",
+        "exudates",
+        "sugar",
+        "sugars",
+        "carbon"
+      ],
+      "minKeywords": 1,
+      "explanationSlug": "module-01-soil-biology/01-the-soil-food-web",
+      "difficulty": 2
+    }
+  ]
+}

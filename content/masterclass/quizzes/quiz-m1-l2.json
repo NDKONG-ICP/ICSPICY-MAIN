@@ -1,0 +1,199 @@
+{
+  "REVIEW_REQUIRED": true,
+  "quizVersion": 1,
+  "lessonId": "m1-l2",
+  "moduleId": "module-01-soil-biology",
+  "badgeId": "masterclass-soil-biology",
+  "title": "1.2 Fungi & Mycorrhizae — Checkpoint",
+  "drawCount": 6,
+  "passCorrect": 5,
+  "note": "Phase 2b reviewed bank — William approval required before engine swap.",
+  "questions": [
+    {
+      "id": "m1-l2-q01",
+      "lessonId": "m1-l2",
+      "type": "mc",
+      "prompt": "What do arbuscular mycorrhizae mainly trade to the plant?",
+      "choices": [
+        "Only leaf nitrogen gas",
+        "Soil minerals and drought insurance for plant sugars",
+        "Sterile sand structure",
+        "Instant fruit color"
+      ],
+      "correctIndex": 1,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l2-q02",
+      "lessonId": "m1-l2",
+      "type": "mc",
+      "prompt": "Which nursery habit quietly damages the fungal network?",
+      "choices": [
+        "Fungal-dominant mulch",
+        "Charged biochar",
+        "Fresh compost tea used as a courier",
+        "Tillage and excess soluble phosphorus"
+      ],
+      "correctIndex": 3,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l2-q03",
+      "lessonId": "m1-l2",
+      "type": "mc",
+      "prompt": "Fruiting chilies in long-season beds generally do better when which side of the F:B spectrum is awake?",
+      "choices": [
+        "Purely sterile / no biology",
+        "Only salt-N spikes",
+        "Fungal-leaning root zone",
+        "Constant rototilling"
+      ],
+      "correctIndex": 2,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l2-q04",
+      "lessonId": "m1-l2",
+      "type": "mc",
+      "prompt": "Why does excess soluble phosphorus break the mycorrhizal partnership?",
+      "choices": [
+        "Phosphorus kills all fungi instantly",
+        "The plant stops paying fungal 'rent' when phosphorus is cheap in the soil solution",
+        "Mycorrhizae only work in hydroponics",
+        "Soluble P forces fungi to eat wood chips"
+      ],
+      "correctIndex": 1,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l2-q05",
+      "lessonId": "m1-l2",
+      "type": "mc",
+      "prompt": "In IC SPICY terms, what is IMO1's role compared to IMO4?",
+      "choices": [
+        "IMO1 is finished bed amendment; IMO4 is rice capture only",
+        "IMO1 captures local microbes from leaf litter; IMO4 is finished soil amendment you blend into beds",
+        "Both are identical catalog powders",
+        "IMO4 replaces all need for mulch"
+      ],
+      "correctIndex": 1,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l2-q06",
+      "lessonId": "m1-l2",
+      "type": "mc",
+      "prompt": "A Reaper sulks in July heat despite looking 'fed' on paper. What question does this lesson want you to ask first?",
+      "choices": [
+        "Whether the underground fungal network is still plugged in",
+        "Whether SHU genetics failed",
+        "Whether to double salt starter fertilizer",
+        "Whether to rototill again for aeration"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l2-q07",
+      "lessonId": "m1-l2",
+      "type": "mc",
+      "prompt": "Which management signal pushes a bed toward a more fungal-leaning root zone?",
+      "choices": [
+        "Bare soil with frequent till",
+        "Daily rototilling between rows",
+        "Woody mulch and undisturbed structure",
+        "Leaving beds in long bare fallow with no cover"
+      ],
+      "correctIndex": 2,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l2-q08",
+      "lessonId": "m1-l2",
+      "type": "mc",
+      "prompt": "What is wrong with aerated compost tea that lost oxygen or sat too long on a hot bench?",
+      "choices": [
+        "It is no longer a living courier — anaerobic or stale tea is not the workforce you brewed for",
+        "It becomes too fungal to use",
+        "It must be boiled before use",
+        "It only works on hydroponic lettuce"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l2-q09",
+      "lessonId": "m1-l2",
+      "type": "mc",
+      "prompt": "Empty biochar applied without charging is described as what?",
+      "choices": [
+        "Instant mycorrhizae in a bag",
+        "A replacement for woody mulch",
+        "Safe to mix raw into every seedling hole",
+        "Thirsty carbon — pores need biology before they become microbial housing"
+      ],
+      "correctIndex": 3,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l2-q10",
+      "lessonId": "m1-l2",
+      "type": "mc",
+      "prompt": "This lesson's framing of bacteria vs fungi is:",
+      "choices": [
+        "You need both; chilies should not be farmed as if fungi were optional decoration",
+        "Bacteria bad, fungi good — choose one",
+        "Fungi only matter in hydroponics",
+        "Bacteria replace all fungal jobs in pepper beds"
+      ],
+      "correctIndex": 0,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 1
+    },
+    {
+      "id": "m1-l2-q11",
+      "lessonId": "m1-l2",
+      "type": "sa",
+      "prompt": "Name the fungal partners that plug chili roots into the underground network.",
+      "acceptedKeywords": [
+        "mycorrhizae",
+        "mycorrhiza",
+        "arbuscular",
+        "amf",
+        "mycorrhizal"
+      ],
+      "minKeywords": 1,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 2
+    },
+    {
+      "id": "m1-l2-q12",
+      "lessonId": "m1-l2",
+      "type": "sa",
+      "prompt": "Name one practice that reliably breaks the mycorrhizal partnership (from this lesson).",
+      "acceptedKeywords": [
+        "tillage",
+        "till",
+        "phosphorus",
+        "phosphate",
+        "soluble",
+        "rototill",
+        "disturbance",
+        "bare",
+        "fallow"
+      ],
+      "minKeywords": 1,
+      "explanationSlug": "module-01-soil-biology/02-fungi-and-mycorrhizae",
+      "difficulty": 2
+    }
+  ]
+}
