@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import type { TrayCellPublic } from "../../declarations/backend.did";
 import { TrayCell } from "./TrayCell";
 
@@ -26,12 +27,20 @@ function emptyTrayCell(position: bigint): TrayCellPublic {
 export type TrayGridProps = {
   cells: TrayCellPublic[];
   onCellClick: (position: bigint) => void;
+  /** When true, clicks toggle selection instead of opening cell actions. */
+  selectionMode?: boolean;
+  selectedCells?: ReadonlySet<string>;
 };
 
 /**
  * 72-cell nursery tray — landscape layout: 12 columns × 6 rows (positions 1..72).
  */
-export function TrayGrid({ cells, onCellClick }: TrayGridProps) {
+export function TrayGrid({
+  cells,
+  onCellClick,
+  selectionMode = false,
+  selectedCells,
+}: TrayGridProps) {
   const byPosition = new Map<bigint, TrayCellPublic>();
   for (const c of cells) {
     byPosition.set(c.position, c);
@@ -50,17 +59,26 @@ export function TrayGrid({ cells, onCellClick }: TrayGridProps) {
           const nftTokenId = unwrap(cell.nftTokenId);
           const daysSincePlanted = unwrap(cell.daysSincePlanted);
           const containerLabel = unwrap(cell.containerLabel);
+          const isSelected = selectedCells?.has(position.toString()) ?? false;
           return (
-            <TrayCell
+            <div
               key={idx}
-              status={cell.status}
-              position={cell.position}
-              varietyName={varietyName}
-              daysSincePlanted={daysSincePlanted}
-              nftTokenId={nftTokenId}
-              containerLabel={containerLabel}
-              onClick={() => onCellClick(cell.position)}
-            />
+              className={cn(
+                selectionMode &&
+                  isSelected &&
+                  "ring-2 ring-primary ring-offset-1 ring-offset-background rounded-md",
+              )}
+            >
+              <TrayCell
+                status={cell.status}
+                position={cell.position}
+                varietyName={varietyName}
+                daysSincePlanted={daysSincePlanted}
+                nftTokenId={nftTokenId}
+                containerLabel={containerLabel}
+                onClick={() => onCellClick(cell.position)}
+              />
+            </div>
           );
         })}
       </div>

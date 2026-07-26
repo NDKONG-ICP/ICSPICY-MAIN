@@ -11,32 +11,51 @@ import Time "mo:core/Time";
 import Nat "mo:core/Nat";
 import Text "mo:core/Text";
 import Iter "mo:core/Iter";
+import Result "mo:core/Result";
+import Array "mo:core/Array";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
   recipes : RecipesLib.RecipeMap,
   recipeFavorites : RecipesLib.FavoriteMap,
   recipeVideoUrls : Map.Map<Common.RecipeId, Text>,
+  recipeBonsaiVideoIds : Map.Map<Common.RecipeId, Text>,
   recipeIntros : Map.Map<Common.RecipeId, Text>,
   recipeFaqs : Map.Map<Common.RecipeId, [(Text, Text)]>,
   nextRecipeId : { var value : Nat },
   auditLog : { var value : AuditLog.AuditLog },
 ) {
+  func enrichPublic(p : RecipeTypes.RecipePublic) : RecipeTypes.RecipePublic {
+    { p with bonsaiVideoId = recipeBonsaiVideoIds.get(p.id) };
+  };
+
+  func enrichPublics(ps : [RecipeTypes.RecipePublic]) : [RecipeTypes.RecipePublic] {
+    Array.map<RecipeTypes.RecipePublic, RecipeTypes.RecipePublic>(ps, enrichPublic);
+  };
+
   public query ({ caller }) func getRecipes(
     category : ?RecipeTypes.RecipeCategory,
     search : ?Text,
     offset : Nat,
     limit : Nat,
   ) : async [RecipeTypes.RecipePublic] {
-    RecipesLib.getRecipes(recipes, recipeFavorites, caller, category, search, offset, limit);
+    enrichPublics(
+      RecipesLib.getRecipes(recipes, recipeFavorites, caller, category, search, offset, limit),
+    );
   };
 
   public query ({ caller }) func getRecipe(id : Common.RecipeId) : async ?RecipeTypes.RecipePublic {
-    RecipesLib.getRecipe(recipes, recipeFavorites, caller, id, false);
+    switch (RecipesLib.getRecipe(recipes, recipeFavorites, caller, id, false)) {
+      case null null;
+      case (?p) ?enrichPublic(p);
+    };
   };
 
   public query ({ caller }) func getRecipeBySlug(slug : Text) : async ?RecipeTypes.RecipePublic {
-    RecipesLib.getRecipeBySlug(recipes, recipeFavorites, caller, slug, false);
+    switch (RecipesLib.getRecipeBySlug(recipes, recipeFavorites, caller, slug, false)) {
+      case null null;
+      case (?p) ?enrichPublic(p);
+    };
   };
 
   public query func getRecipeCategories() : async [(RecipeTypes.RecipeCategory, Nat)] {
@@ -44,23 +63,23 @@ mixin (
   };
 
   public query ({ caller }) func getFeaturedRecipes(limit : Nat) : async [RecipeTypes.RecipePublic] {
-    RecipesLib.getFeaturedRecipes(recipes, recipeFavorites, caller, limit);
+    enrichPublics(RecipesLib.getFeaturedRecipes(recipes, recipeFavorites, caller, limit));
   };
 
   public query ({ caller }) func searchRecipes(
     searchText : Text,
     limit : Nat,
   ) : async [RecipeTypes.RecipePublic] {
-    RecipesLib.searchRecipes(recipes, recipeFavorites, caller, searchText, limit);
+    enrichPublics(RecipesLib.searchRecipes(recipes, recipeFavorites, caller, searchText, limit));
   };
 
   public query ({ caller }) func listRecipes() : async [RecipeTypes.RecipePublic] {
-    RecipesLib.listRecipes(recipes, recipeFavorites, caller);
+    enrichPublics(RecipesLib.listRecipes(recipes, recipeFavorites, caller));
   };
 
   public query ({ caller }) func listRecipesAdmin() : async [RecipeTypes.RecipePublic] {
     AccessControl.requireAdmin(accessControlState, caller);
-    RecipesLib.listRecipesAdmin(recipes, recipeFavorites, caller);
+    enrichPublics(RecipesLib.listRecipesAdmin(recipes, recipeFavorites, caller));
   };
 
   public shared ({ caller }) func toggleFavorite(recipe_id : Common.RecipeId) : async Bool {
@@ -73,7 +92,7 @@ mixin (
     limit : Nat,
   ) : async [RecipeTypes.RecipePublic] {
     AccessControl.requireAuthenticated(caller);
-    RecipesLib.getMyFavorites(recipes, recipeFavorites, caller, offset, limit);
+    enrichPublics(RecipesLib.getMyFavorites(recipes, recipeFavorites, caller, offset, limit));
   };
 
   public shared ({ caller }) func createRecipe(
@@ -138,6 +157,26 @@ mixin (
   public shared ({ caller }) func seedDefaultRecipes() : async () {
     AccessControl.requireAdmin(accessControlState, caller);
     RecipesLib.seedRecipes(recipes, nextRecipeId, caller);
+  };
+
+  /// Admin: set (or clear with null) the BonsaiTube embed video id for a recipe.
+  public shared ({ caller }) func setRecipeVideo(
+    id : Common.RecipeId,
+    videoId : ?Text,
+  ) : async Result.Result<(), Text> {
+    AccessControl.requireAdmin(accessControlState, caller);
+    switch (RecipesLib.setRecipeVideo(recipes, recipeBonsaiVideoIds, id, videoId)) {
+      case (#err(e)) { #err(e) };
+      case (#ok(_)) {
+        auditLog.value := AuditLog.append(auditLog.value, {
+          ts = Time.now();
+          admin = caller;
+          action = "recipe_bonsai_video_set";
+          detail = "id=" # Nat.toText(id);
+        });
+        #ok(());
+      };
+    };
   };
 
   // ── Recipe video URLs (side map — stored Recipe record stays untouched

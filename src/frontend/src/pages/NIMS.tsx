@@ -10,6 +10,7 @@ import {
   Loader2,
   Package,
   Plus,
+  Skull,
   Sprout,
   Trash2,
   Users,
@@ -23,6 +24,7 @@ import {
   AddPlantModal,
   AdoptPlantPrompt,
   GerminationModal,
+  GraveyardPanel,
   MarkDeadModal,
   NewTrayModal,
   NimsAnalyticsPanel,
@@ -32,6 +34,7 @@ import {
   NimsLocationSelector,
   PlantLifecycleCard,
   PlantSeedModal,
+  RegisterPlantBatchModal,
   RemovePlantModal,
   SeedBankPanel,
   TransplantModal,
@@ -42,6 +45,7 @@ import {
 import type {
   ContainerSize,
   DeathCause,
+  RegisterPlantBatchResult,
   TrayCellPublic,
 } from "../declarations/backend.did";
 import { useAuth } from "../hooks/useAuth";
@@ -60,10 +64,13 @@ import {
   useActivityFeed,
   useAdoptPurchasedPlant,
   useCreateNimsTray,
+  useGerminatePlant,
+  useListGraveyard,
   useMarkCellDead,
   useMarkCellGerminated,
   useNimsDashboardStats,
   usePlantSeed,
+  useRegisterPlantBatch,
   useTrayGrid,
   useWaterEntireTray,
 } from "../hooks/useNimsDashboard";
@@ -88,7 +95,8 @@ type NimsTab =
   | "seedbank"
   | "activity"
   | "analytics"
-  | "myplants";
+  | "myplants"
+  | "graveyard";
 
 function cellPositionLabel(pos: bigint): string {
   const n = Number(pos);
@@ -159,6 +167,8 @@ export default function NIMSPage() {
     undefined,
   );
   const { data: activity = [] } = useActivityFeed(40);
+  const { data: graveyardPlants = [], isLoading: graveyardLoading } =
+    useListGraveyard();
   const { data: unadoptedIds = [], dismissUnadoptedNft } =
     useUnadoptedNftTokenIds();
   const adoptPlant = useAdoptPurchasedPlant();
@@ -185,7 +195,9 @@ export default function NIMSPage() {
     useTrayGrid(activeTrayId);
 
   const plantSeed = usePlantSeed();
+  const registerPlantBatch = useRegisterPlantBatch();
   const markGerminated = useMarkCellGerminated();
+  const germinatePlant = useGerminatePlant();
   const markDead = useMarkCellDead();
   const waterTray = useWaterEntireTray();
   const transplantCell = useTransplantCell();
@@ -197,6 +209,14 @@ export default function NIMSPage() {
   const [deadOpen, setDeadOpen] = useState(false);
   const [transplantOpen, setTransplantOpen] = useState(false);
   const [transplantedOpen, setTransplantedOpen] = useState(false);
+  const [batchSelectMode, setBatchSelectMode] = useState(false);
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(() => new Set());
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
+  const [batchResult, setBatchResult] = useState<RegisterPlantBatchResult | null>(
+    null,
+  );
+
+  const canRegisterProvenance = Boolean(isAdmin || isSeatHolder);
 
   const selectedCellData = useMemo(
     () => trayCells.find((c) => c.position === selectedCell),
@@ -240,6 +260,16 @@ export default function NIMSPage() {
   }
 
   const handleCellClick = (position: bigint) => {
+    if (batchSelectMode) {
+      const key = position.toString();
+      setSelectedCells((prev) => {
+        const next = new Set(prev);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        return next;
+      });
+      return;
+    }
     setSelectedCell(position);
     const cell = trayCells.find((c) => c.position === position);
     const status = cell ? cellStatusKey(cell) : "empty";
@@ -255,6 +285,7 @@ export default function NIMSPage() {
     { id: "trays", label: "Trays", icon: Sprout },
     { id: "seedbank", label: "Seed Bank", icon: Wheat },
     { id: "inventory", label: "Inventory", icon: Package },
+    { id: "graveyard", label: "Graveyard", icon: Skull },
     { id: "activity", label: "Activity", icon: Activity },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "myplants", label: "My Plants", icon: Leaf },
@@ -410,7 +441,7 @@ export default function NIMSPage() {
                   ))}
                 </div>
 
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap items-center">
                   <Button
                     size="sm"
                     variant="outline"
@@ -437,12 +468,99 @@ export default function NIMSPage() {
                     )}
                     Water tray
                   </Button>
+                  {canRegisterProvenance && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant={batchSelectMode ? "default" : "outline"}
+                        onClick={() => {
+                          setBatchSelectMode((v) => {
+                            if (v) setSelectedCells(new Set());
+                            return !v;
+                          });
+                        }}
+                      >
+                        {batchSelectMode ? "Done selecting" : "Batch register"}
+                      </Button>
+                      {batchSelectMode && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            disabled={selectedCells.size === 0}
+                            onClick={() => setBatchModalOpen(true)}
+                          >
+                            Register {selectedCells.size} cell
+                            {selectedCells.size !== 1 ? "s" : ""}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs"
+                            onClick={() => {
+                              const empty = trayCells
+                                .filter((c) => cellStatusKey(c) === "empty")
+                                .map((c) => c.position.toString());
+                              setSelectedCells(new Set(empty));
+                            }}
+                          >
+                            Select empty
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs"
+                            onClick={() => {
+                              const anchor =
+                                selectedCells.size > 0
+                                  ? Number([...selectedCells][0])
+                                  : selectedCell != null
+                                    ? Number(selectedCell)
+                                    : null;
+                              if (anchor == null || Number.isNaN(anchor)) {
+                                toast.info("Tap a cell first to pick its row");
+                                return;
+                              }
+                              const row = Math.ceil(anchor / 12);
+                              const rowCells = Array.from(
+                                { length: 12 },
+                                (_, i) => String((row - 1) * 12 + i + 1),
+                              );
+                              setSelectedCells(new Set(rowCells));
+                            }}
+                          >
+                            Select row
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs"
+                            onClick={() => setSelectedCells(new Set())}
+                          >
+                            Clear
+                          </Button>
+                        </>
+                      )}
+                    </>
+                  )}
                 </div>
+
+                {batchSelectMode && (
+                  <p className="text-xs text-muted-foreground">
+                    Tap cells to select · {selectedCells.size} selected · each
+                    gets its own provenance NFT
+                  </p>
+                )}
 
                 {gridLoading ? (
                   <Skeleton className="aspect-[6/12] w-full" />
                 ) : (
-                  <TrayGrid cells={trayCells} onCellClick={handleCellClick} />
+                  <TrayGrid
+                    cells={trayCells}
+                    onCellClick={handleCellClick}
+                    selectionMode={batchSelectMode}
+                    selectedCells={selectedCells}
+                  />
                 )}
               </>
             )}
@@ -555,6 +673,13 @@ export default function NIMSPage() {
           />
         )}
 
+        {tab === "graveyard" && (
+          <GraveyardPanel
+            plants={graveyardPlants}
+            isLoading={graveyardLoading}
+          />
+        )}
+
         {tab === "activity" && <ActivityFeed entries={activity} />}
 
         {tab === "analytics" && (
@@ -661,16 +786,34 @@ export default function NIMSPage() {
             onMarkDead={openMarkDead}
             onSubmit={async () => {
               try {
-                const result = await markGerminated.mutateAsync({
-                  trayId: activeTrayId,
-                  cellPosition: selectedCell,
-                });
-                if (result.nftTokenId > 0n) {
+                const plantId = unwrapOpt(selectedCellData?.plantId ?? []);
+                const result =
+                  plantId != null
+                    ? await germinatePlant.mutateAsync({ plantId })
+                    : await markGerminated.mutateAsync({
+                        trayId: activeTrayId,
+                        cellPosition: selectedCell,
+                      });
+                if ("outcome" in result) {
+                  if ("assigned" in result.outcome) {
+                    toast.success(
+                      `🌱 Germinated! PepperHead #${result.outcome.assigned.token_id.toString()} assigned`,
+                    );
+                  } else if ("already_assigned" in result.outcome) {
+                    toast.success(
+                      `Already assigned PepperHead #${result.outcome.already_assigned.token_id.toString()}`,
+                    );
+                  } else {
+                    toast.success(
+                      "🌱 Germinated — awaiting PepperHead (pool exhausted)",
+                    );
+                  }
+                } else if (result.nftTokenId > 0n) {
                   toast.success(
                     `🌱 Germinated! NFT #${result.nftTokenId.toString()} assigned`,
                   );
                 } else {
-                  toast.success("🌱 Germinated — tracking in NIMS (no NFT)");
+                  toast.success("🌱 Germinated — awaiting PepperHead assignment");
                 }
                 setGermOpen(false);
               } catch (e) {
@@ -858,6 +1001,66 @@ export default function NIMSPage() {
           }
         }}
       />
+
+      {activeTrayId != null && canRegisterProvenance && (
+        <RegisterPlantBatchModal
+          open={batchModalOpen}
+          onOpenChange={setBatchModalOpen}
+          trayId={activeTrayId}
+          cellIndices={[...selectedCells].map((s) => BigInt(s)).sort((a, b) =>
+            Number(a - b),
+          )}
+          cellLabels={[...selectedCells]
+            .map((s) => cellPositionLabel(BigInt(s)))
+            .sort()}
+          varieties={varieties}
+          isCreatingVariety={addVariety.isPending}
+          isPending={registerPlantBatch.isPending}
+          batchResult={batchResult}
+          onClearResult={() => setBatchResult(null)}
+          onCreateVariety={async (name, species) => {
+            const id = await addVariety.mutateAsync({
+              name,
+              species,
+              scovilleMin: 0,
+              scovilleMax: 0,
+              description: "",
+            });
+            toast.success(`Variety "${name}" added`);
+            return id;
+          }}
+          onSubmit={async ({ sharedData, cellIndices }) => {
+            try {
+              const result = await registerPlantBatch.mutateAsync({
+                sharedData,
+                cellIndices,
+              });
+              setBatchResult(result);
+              if (result.failed === 0n) {
+                toast.success(
+                  `Registered ${result.succeeded.toString()} cells (provenance started — germinate for NFT)`,
+                );
+                setSelectedCells(new Set());
+                setBatchSelectMode(false);
+              } else if (result.succeeded > 0n) {
+                toast.warning(
+                  `${result.succeeded.toString()} succeeded, ${result.failed.toString()} failed — see details`,
+                );
+                const failedKeys = result.results
+                  .filter((r) => "err" in r.outcome)
+                  .map((r) => r.cell_index.toString());
+                setSelectedCells(new Set(failedKeys));
+              } else {
+                toast.error("Batch registration failed — see details");
+              }
+            } catch (e) {
+              toast.error(
+                e instanceof Error ? e.message : "Batch registration failed",
+              );
+            }
+          }}
+        />
+      )}
 
       {adoptTokenId != null && (
         <AdoptPlantPrompt

@@ -4,7 +4,7 @@
     "security_policy": "standard",
     "headers": {
       "Cache-Control": "public, max-age=0, must-revalidate",
-      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://icp-api.io https://*.icp0.io https://*.ic0.app https://identity.ic0.app https://identity.internetcomputer.org https://www.paypal.com https://www.sandbox.paypal.com https://www.paypalobjects.com; connect-src 'self' https: wss: blob:; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; frame-src https://identity.ic0.app https://identity.internetcomputer.org https://www.youtube-nocookie.com https://www.youtube.com https://www.paypal.com https://www.sandbox.paypal.com;"
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://icp-api.io https://*.icp0.io https://*.ic0.app https://identity.ic0.app https://identity.internetcomputer.org https://www.paypal.com https://www.sandbox.paypal.com https://www.paypalobjects.com; connect-src 'self' https: wss: blob:; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; frame-src https://identity.ic0.app https://identity.internetcomputer.org https://www.youtube-nocookie.com https://www.youtube.com https://www.paypal.com https://www.sandbox.paypal.com https://f65cr-hqaaa-aaaau-ag3kq-cai.raw.icp0.io;"
     },
     "allow_raw_access": false
   },

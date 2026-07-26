@@ -193,7 +193,6 @@ export function WeatherImmersivePanel({
   locationLabel,
   lat,
   lng,
-  radarReady = true,
   locationPreference = null,
   onChooseGps,
   onChooseNursery,
@@ -202,7 +201,6 @@ export function WeatherImmersivePanel({
   locationLabel?: string;
   lat: number;
   lng: number;
-  radarReady?: boolean;
   locationPreference?: LocationPreference;
   onChooseGps?: () => void;
   onChooseNursery?: () => void;
@@ -239,12 +237,12 @@ export function WeatherImmersivePanel({
         </div>
       )}
 
-      <WeatherRadarMap
-        lat={lat}
-        lng={lng}
-        locationLabel={locationLabel}
-        active={radarReady}
-      />
+      <div className="space-y-2">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-sky-400/90">
+          Live Doppler Radar
+        </p>
+        <WeatherRadarMap lat={lat} lng={lng} locationLabel={locationLabel} />
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <GlassCard className="relative overflow-hidden">

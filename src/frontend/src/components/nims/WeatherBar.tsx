@@ -68,12 +68,6 @@ export function WeatherBar({
   expanded,
   onExpandedChange,
 }: WeatherBarProps) {
-  const [radarReady, setRadarReady] = useState(false);
-
-  useEffect(() => {
-    if (!expanded) setRadarReady(false);
-  }, [expanded]);
-
   return (
     <section
       data-ocid="nims-weather-bar"
@@ -126,21 +120,16 @@ export function WeatherBar({
         {expanded && data && (
           <motion.div
             key="panel"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease: "easeInOut" }}
-            className="overflow-hidden"
-            onAnimationComplete={() => {
-              if (expanded) setRadarReady(true);
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
           >
             <WeatherImmersivePanel
               data={data}
               locationLabel={locationLabel}
               lat={lat}
               lng={lng}
-              radarReady={radarReady}
               locationPreference={locationPreference}
               onChooseGps={onChooseGps}
               onChooseNursery={onChooseNursery}

@@ -45,13 +45,12 @@ import {
 } from "../hooks/useCookbook";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  fetchAllRecipeVideoUrls,
   fetchRecipeSeoContent,
+  saveRecipeBonsaiVideo,
   saveRecipeFaqs,
   saveRecipeIntro,
-  saveRecipeVideoUrl,
 } from "../lib/recipe-video-idl";
-import { parseYouTubeId, youTubeThumbnailUrl } from "../lib/youtube";
+import { bonsaiTubeEmbedUrl } from "../lib/bonsai-tube";
 
 export default function AdminCookBookTab() {
   const { data: recipes, isPending } = useListRecipesAdmin();
@@ -62,12 +61,7 @@ export default function AdminCookBookTab() {
   const [deleteTarget, setDeleteTarget] = useState<RecipePublic | null>(null);
   const [videoTarget, setVideoTarget] = useState<RecipePublic | null>(null);
   const [seoTarget, setSeoTarget] = useState<RecipePublic | null>(null);
-
-  const { data: videoUrls } = useQuery({
-    queryKey: ["recipeVideoUrls"],
-    queryFn: fetchAllRecipeVideoUrls,
-    staleTime: 60 * 1000,
-  });
+  const queryClient = useQueryClient();
 
   const sorted = useMemo(() => {
     const list = recipes ?? [];
@@ -178,7 +172,9 @@ export default function AdminCookBookTab() {
             <RecipeAdminRow
               key={r.id.toString()}
               recipe={r}
-              hasVideo={videoUrls?.has(r.id.toString()) ?? false}
+              hasBonsaiVideo={
+                r.bonsaiVideoId.length > 0 && Boolean(r.bonsaiVideoId[0])
+              }
               onPublish={() => void handlePublish(r)}
               onDelete={() => setDeleteTarget(r)}
               onVideo={() => setVideoTarget(r)}
@@ -220,10 +216,13 @@ export default function AdminCookBookTab() {
       </AlertDialog>
 
       {videoTarget ? (
-        <RecipeVideoDialog
+        <RecipeBonsaiVideoDialog
           recipe={videoTarget}
-          currentUrl={videoUrls?.get(videoTarget.id.toString()) ?? ""}
+          currentId={videoTarget.bonsaiVideoId[0] ?? ""}
           onClose={() => setVideoTarget(null)}
+          onSaved={() => {
+            void queryClient.invalidateQueries({ queryKey: ["cookbook"] });
+          }}
         />
       ) : null}
 
@@ -383,36 +382,30 @@ function RecipeSeoDialog({
   );
 }
 
-function RecipeVideoDialog({
+function RecipeBonsaiVideoDialog({
   recipe,
-  currentUrl,
+  currentId,
   onClose,
+  onSaved,
 }: {
   recipe: RecipePublic;
-  currentUrl: string;
+  currentId: string;
   onClose: () => void;
+  onSaved: () => void;
 }) {
-  const queryClient = useQueryClient();
-  const [url, setUrl] = useState(currentUrl);
+  const [videoId, setVideoId] = useState(currentId);
   const [saving, setSaving] = useState(false);
 
-  const trimmed = url.trim();
-  const videoId = trimmed ? parseYouTubeId(trimmed) : null;
-  const invalid = trimmed.length > 0 && !videoId;
+  const trimmed = videoId.trim();
+  const invalid =
+    trimmed.length > 0 && !/^[A-Za-z0-9_-]{1,20}$/.test(trimmed);
 
   async function save(clear: boolean) {
     setSaving(true);
     try {
-      const ok = await saveRecipeVideoUrl(recipe.id, clear ? null : trimmed);
-      if (!ok) {
-        toast.error("Backend rejected the video update.");
-        return;
-      }
-      await queryClient.invalidateQueries({ queryKey: ["recipeVideoUrls"] });
-      await queryClient.invalidateQueries({
-        queryKey: ["recipeVideoUrl", recipe.id.toString()],
-      });
-      toast.success(clear ? "Video removed." : "Video saved.");
+      await saveRecipeBonsaiVideo(recipe.id, clear ? null : trimmed);
+      onSaved();
+      toast.success(clear ? "BonsaiTube video removed." : "BonsaiTube video saved.");
       onClose();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Video update failed.");
@@ -426,41 +419,39 @@ function RecipeVideoDialog({
       <DialogContent className="bg-card border-border">
         <DialogHeader>
           <DialogTitle className="font-display font-bold flex items-center gap-2">
-            <Youtube className="w-4 h-4 text-red-500" />
-            Video tutorial — {recipe.title}
+            <Youtube className="w-4 h-4 text-orange-500" />
+            BonsaiTube how-to — {recipe.title}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
-            Paste a YouTube URL (watch, youtu.be, or shorts). The recipe page
-            shows a lazy-loaded, privacy-enhanced embed above the ingredients.
+            Enter the BonsaiTube video id only (e.g.{" "}
+            <code className="text-primary">31</code>). The recipe page lazy-loads
+            the embed from{" "}
+            <code className="text-xs">f65cr-…raw.icp0.io/embed/…</code>.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           <Input
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://www.youtube.com/watch?v=…"
-            className="bg-muted/30 border-border text-sm"
-            data-ocid="recipe-video-url-input"
+            value={videoId}
+            onChange={(e) => setVideoId(e.target.value)}
+            placeholder="31"
+            className="bg-muted/30 border-border text-sm font-mono"
+            data-ocid="recipe-bonsai-video-id-input"
           />
           {invalid ? (
             <p className="text-xs text-destructive">
-              That doesn&apos;t look like a YouTube video URL.
+              Use 1–20 alphanumeric characters (e.g. 31).
             </p>
           ) : null}
-          {videoId ? (
-            <div className="rounded-xl overflow-hidden border border-border">
-              <img
-                src={youTubeThumbnailUrl(videoId)}
-                alt="Video thumbnail preview"
-                className="w-full aspect-video object-cover"
-              />
-            </div>
+          {trimmed && !invalid ? (
+            <p className="text-[11px] text-muted-foreground break-all">
+              Preview URL: {bonsaiTubeEmbedUrl(trimmed)}
+            </p>
           ) : null}
         </div>
 
         <DialogFooter className="gap-2">
-          {currentUrl ? (
+          {currentId ? (
             <Button
               variant="ghost"
               className="text-destructive hover:text-destructive text-xs"
@@ -479,9 +470,9 @@ function RecipeVideoDialog({
           </Button>
           <Button
             className="text-xs"
-            disabled={saving || !videoId}
+            disabled={saving || invalid || trimmed.length === 0}
             onClick={() => void save(false)}
-            data-ocid="recipe-video-save-btn"
+            data-ocid="recipe-bonsai-video-save-btn"
           >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
             Save video
@@ -494,7 +485,7 @@ function RecipeVideoDialog({
 
 function RecipeAdminRow({
   recipe,
-  hasVideo,
+  hasBonsaiVideo,
   onPublish,
   onDelete,
   onVideo,
@@ -502,7 +493,7 @@ function RecipeAdminRow({
   publishBusy,
 }: {
   recipe: RecipePublic;
-  hasVideo: boolean;
+  hasBonsaiVideo: boolean;
   onPublish: () => void;
   onDelete: () => void;
   onVideo: () => void;
@@ -564,13 +555,15 @@ function RecipeAdminRow({
         <Button
           size="sm"
           variant="outline"
-          className={`h-8 text-xs border-border ${hasVideo ? "text-red-400 border-red-500/40" : ""}`}
+          className={`h-8 text-xs border-border ${hasBonsaiVideo ? "text-orange-400 border-orange-500/40" : ""}`}
           onClick={onVideo}
-          title={hasVideo ? "Edit YouTube tutorial" : "Add YouTube tutorial"}
+          title={
+            hasBonsaiVideo ? "Edit BonsaiTube how-to" : "Add BonsaiTube how-to"
+          }
           data-ocid="recipe-video-btn"
         >
           <Youtube className="w-3.5 h-3.5" />
-          <span className="ml-1">{hasVideo ? "Video ✓" : "Video"}</span>
+          <span className="ml-1">{hasBonsaiVideo ? "Video ✓" : "Video"}</span>
         </Button>
         <Button
           size="sm"

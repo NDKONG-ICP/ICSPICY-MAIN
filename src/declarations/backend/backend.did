@@ -659,6 +659,54 @@ type ResaleListingPublic =
    rarity_tier: RarityTier;
    seller: principal;
  };
+type RegisterPlantSharedData = 
+ record {
+   common_name: opt text;
+   container_size: opt ContainerSize;
+   genetics: text;
+   latin_name: opt text;
+   notes: text;
+   origin: opt text;
+   planting_date: opt Timestamp;
+   tray_id: TrayId;
+   variety_id: nat;
+ };
+type RegisterPlantResult = record {plant_id: PlantId;};
+type RegisterPlantCellResult = 
+ record {
+   cell_index: nat;
+   outcome: RegisterPlantCellOutcome;
+ };
+type RegisterPlantCellOverrides = 
+ record {
+   common_name: opt text;
+   container_size: opt ContainerSize;
+   genetics: opt text;
+   latin_name: opt text;
+   notes: opt text;
+   origin: opt text;
+   planting_date: opt Timestamp;
+   variety_id: opt nat;
+ };
+type RegisterPlantCellOutcome = 
+ variant {
+   err: text;
+   ok: record {plant_id: PlantId;};
+   skipped: text;
+ };
+type RegisterPlantCellInput = 
+ record {
+   cell_index: nat;
+   overrides: opt RegisterPlantCellOverrides;
+ };
+type RegisterPlantBatchResult = 
+ record {
+   failed: nat;
+   results: vec RegisterPlantCellResult;
+   skipped: nat;
+   succeeded: nat;
+   tray_id: TrayId;
+ };
 type RecordTipInput = 
  record {
    amount: nat;
@@ -680,6 +728,7 @@ type RecipePublic =
    application_rate: opt text;
    author: principal;
    best_for: vec text;
+   bonsaiVideoId: opt text;
    caller_favorited: bool;
    category: RecipeCategory;
    created_at: Timestamp;
@@ -1043,6 +1092,11 @@ type PlantPublic =
    variety: text;
    watering_schedule: opt text;
  };
+type PlantPoolStatus = 
+ record {
+   available: nat;
+   theoretical_ceiling: nat;
+ };
 type PlantPlacement = 
  record {
    color: text;
@@ -1070,6 +1124,7 @@ type PlantNote =
  };
 type PlantLifecycle = 
  record {
+   deathRecord: opt PlantDeathRecord;
    feedingLog: vec FeedingPublic;
    nftTokenId: opt nat;
    notes: vec PlantNote;
@@ -1092,6 +1147,12 @@ type PlantHealth =
    lastWatered: opt Timestamp;
    needsAttention: bool;
  };
+type PlantDeathRecord = 
+ record {
+   cause: DeathCause;
+   died_at: Timestamp;
+   notes: opt text;
+ };
 type PlantCountStats = 
  record {
    byStage: vec record {
@@ -1101,6 +1162,15 @@ type PlantCountStats =
    forSale: nat;
    sold: nat;
    total: nat;
+ };
+type PlantAwaitingNft = 
+ record {
+   cell_position: opt nat;
+   germination_date: Timestamp;
+   owner: principal;
+   plant_id: PlantId;
+   tray_id: opt TrayId;
+   variety: text;
  };
 type PestEntry = 
  record {
@@ -1482,6 +1552,7 @@ type ICSpicy =
    calculateGardenYield: (designId: nat) -> (opt YieldEstimate) query;
    calculateGardenYieldInput: (input: GardenDesignInput) ->
     (YieldEstimate) query;
+   /// Per-principal rate limiters for cycle-drain protection (CDA).
    cancelOffer: (offerId: text) -> (Offer);
    cancelProposal: (id: ProposalId) -> (bool);
    cancelResaleListing: (listing_id: text) -> (variant {
@@ -1569,12 +1640,15 @@ type ICSpicy =
          });
    generateCoopClaimToken: (plantId: PlantId) -> (text);
    generatePickupQRPayload: (plant_id: PlantId) -> (text) query;
+   germinatePlant: (plantId: PlantId, date: opt Timestamp) ->
+    (GerminatePlantResult);
+   germinatePlantBatch: (plantIds: vec PlantId, date: opt Timestamp) ->
+    (GerminatePlantBatchResult);
    getActiveResaleListings: () -> (vec ResaleListingPublic) query;
    getAdminInventory: (stage: opt PlantStage, varietyId: opt nat, forSale:
     opt bool) -> (vec PlantLifecycle) query;
    getAdminOrder: (order_id: OrderId) -> (opt AdminOrderPublic) query;
    getAdmins: () -> (vec principal) query;
-   /// Per-principal rate limiters for cycle-drain protection (CDA).
    getArtworkFile: (path: text) -> (opt vec nat8);
    getArtworkUploadResult: () -> (UploadResult) query;
    getArtworkUploadStatus: () -> (UploadSessionStatus) query;
@@ -1638,6 +1712,7 @@ type ICSpicy =
    getGardenDesign: (designId: nat) -> (opt GardenDesign) query;
    getGardenDesignForUser: (designId: nat) -> (opt GardenDesign) query;
    getGlobalFeed: (offset: nat, limit: nat) -> (vec PostPublic) query;
+   getGraveyard: () -> (vec PlantLifecycle) query;
    getGrowerProvenanceMeta: (tokenId: nat) ->
     (opt GrowerProvenanceMeta) query;
    getIcrc7PoolStatsAdmin: () -> (Icrc7PoolStats) query;
@@ -1669,14 +1744,10 @@ type ICSpicy =
    getMySchedules: () -> (vec SavedSchedule);
    getMySeedBank: () -> (vec SeedLotPublic) query;
    getMyTrays: () -> (vec TrayPublic) query;
-   /// Uploads asset canister — user images served via HTTP from this canister.
    getMyVendors: () -> (vec SeedVendorPublic) query;
    getMyWeatherRecords: (limit: nat) -> (vec WeatherRecord);
    getNewOrderCount: () -> (nat) query;
-   getNftPoolStatus: () -> (record {
-                              available: nat;
-                              total: nat;
-                            }) query;
+   getNftPoolStatus: () -> (PlantPoolStatus) query;
    getNimsDashboardStats: () -> (DashboardStats) query;
    getNimsPhotoFile: (path: text) -> (opt ShopListingFile) query;
    getOffer: (offerId: text) -> (opt Offer) query;
@@ -1688,10 +1759,13 @@ type ICSpicy =
    getPayPalCheckoutConfig: () -> (PayPalCheckoutConfig) query;
    getPlant: (plant_id: PlantId) -> (opt PlantPublic) query;
    getPlantByNft: (nftTokenId: nat) -> (opt PlantLifecycle) query;
+   getPlantByNftIdBackfillCount: () -> (nat) query;
+   getPlantByNftIdMapSize: () -> (nat) query;
    getPlantClaimToken: (plantId: PlantId) -> (opt text) query;
    getPlantCount: () -> (PlantCountStats) query;
    getPlantHealth: (plantId: PlantId) -> (opt PlantHealth) query;
    getPlantLifecycle: (plantId: PlantId) -> (opt PlantLifecycle) query;
+   getPlantPoolAvailableCount: () -> (PlantPoolStatus) query;
    getPlantTimeline: (plant_id: PlantId) -> (opt PlantTimeline) query;
    getPlantingEvent: (event_id: nat) -> (opt PlantingEvent) query;
    getPlantsByContainer: (container: ContainerSize) ->
@@ -1819,6 +1893,7 @@ type ICSpicy =
    icrc7_max_query_batch_size: () -> (opt nat) query;
    icrc7_max_take_value: () -> (opt nat) query;
    icrc7_max_update_batch_size: () -> (opt nat) query;
+   /// ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
    icrc7_name: () -> (text) query;
    icrc7_owner_of: (token_ids: vec nat) -> (vec opt Account) query;
    icrc7_permitted_drift: () -> (opt nat) query;
@@ -1846,7 +1921,6 @@ type ICSpicy =
                                skipped: nat;
                              });
    isCallerAdmin: () -> (bool) query;
-   /// ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
    isFollowing: (target: principal) -> (bool) query;
    isGrowerProvenanceToken: (tokenId: nat) -> (bool) query;
    isPepperHead: (tokenId: nat) -> (bool) query;
@@ -1873,6 +1947,7 @@ type ICSpicy =
     (vec ClaimTokenAdminPublic) query;
    listCommentsByPost: (post_id: PostId) -> (vec CommentPublic) query;
    listDAOProposals: () -> (vec ProposalPublic) query;
+   listGraveyard: () -> (vec PlantLifecycle) query;
    listGrowerDirectory: () -> (vec GrowerDirectoryEntry) query;
    listIcrc7PoolTokensAdmin: (filter: Icrc7TokenFilter, offset: nat, limit:
     nat) -> (vec Icrc7TokenAdminPublic) query;
@@ -1886,6 +1961,7 @@ type ICSpicy =
    listOrdersByBuyer: () -> (vec OrderPublic) query;
    listPlantForSale: (plantId: PlantId, price: opt nat) -> (bool);
    listPlants: () -> (vec PlantPublic) query;
+   listPlantsAwaitingNft: () -> (vec PlantAwaitingNft) query;
    listPlantsByStage: (stage: PlantStage) -> (vec PlantPublic) query;
    listPoolNFTs: (statusFilter: opt PoolNFTStatus, limit: nat) ->
     (vec PoolNFTPublic);
@@ -1964,6 +2040,7 @@ type ICSpicy =
        context: blob;
        response: http_request_result;
      }) -> (http_request_result) query;
+   /// Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
    paypalTransform:
     (record {
        context: blob;
@@ -2041,6 +2118,10 @@ type ICSpicy =
      });
    refreshRavenBalance: () -> ();
    refreshTokenPrices: () -> (bool);
+   registerPlant: (sharedData: RegisterPlantSharedData, cellIndex: nat,
+    overrides: opt RegisterPlantCellOverrides) -> (RegisterPlantResult);
+   registerPlantBatch: (sharedData: RegisterPlantSharedData, cells:
+    vec RegisterPlantCellInput) -> (RegisterPlantBatchResult);
    rejectOffer: (offerId: text) -> (Offer);
    removeAdmin: (p: principal) -> ();
    removePlant: (plantId: PlantId) -> (bool);
@@ -2087,6 +2168,7 @@ type ICSpicy =
                                              text;
                                            }) -> (bool);
    setRecipeIntro: (id: RecipeId, intro: text) -> (bool);
+   setRecipeVideo: (id: RecipeId, videoId: opt text) -> (Result_5);
    setRecipeVideoUrl: (id: RecipeId, videoUrl: opt text) -> (bool);
    setTop8: (friends: vec principal) -> ();
    setUploadsCanisterId: (canisterId: text) -> ();
@@ -2097,13 +2179,11 @@ type ICSpicy =
    storeArtworkFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
    storeAvatarFile: (data: vec nat8) -> (text);
-   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    storeCommunityImage: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
    storeNimsPhotoFile: (path: text, data: vec nat8, mimeType: text) ->
     (StoredFile);
    storeProfileBannerFile: (data: vec nat8) -> (text);
-   /// Per-principal rate limiters for cycle-drain protection (CDA).
    storeProfileWallpaperFile: (data: vec nat8) -> (text);
    storeSlicerShareOgImage: (pngBytes: blob) -> (Result_3);
    submitGameScore: (gameId: text, score: nat, displayData: text) ->
@@ -2202,6 +2282,25 @@ type GrowerDirectoryEntry =
    profilePrincipal: principal;
    provenanceMinted: nat;
    tokenId: nat;
+ };
+type GerminatePlantResult = 
+ record {
+   outcome: GerminatePlantOutcome;
+   plant_id: PlantId;
+ };
+type GerminatePlantOutcome = 
+ variant {
+   already_assigned: record {token_id: nat;};
+   assigned: record {token_id: nat;};
+   awaiting_nft;
+ };
+type GerminatePlantBatchResult = 
+ record {
+   already_assigned_count: nat;
+   assigned_count: nat;
+   awaiting_count: nat;
+   failed_count: nat;
+   results: vec GerminatePlantResult;
  };
 type GardenDesignInput = 
  record {

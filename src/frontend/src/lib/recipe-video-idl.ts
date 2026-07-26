@@ -18,6 +18,10 @@ interface RecipeVideoActor {
   getRecipeVideoUrl(id: bigint): Promise<[] | [string]>;
   listRecipeVideoUrls(): Promise<Array<[bigint, string]>>;
   setRecipeVideoUrl(id: bigint, videoUrl: [] | [string]): Promise<boolean>;
+  setRecipeVideo(
+    id: bigint,
+    videoId: [] | [string],
+  ): Promise<{ ok: null } | { err: string }>;
   getRecipeSeoContent(id: bigint): Promise<RecipeSeoContent>;
   setRecipeIntro(id: bigint, intro: string): Promise<boolean>;
   setRecipeFaqs(id: bigint, faqs: Array<[string, string]>): Promise<boolean>;
@@ -33,6 +37,11 @@ const recipeVideoIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
       ["query"],
     ),
     setRecipeVideoUrl: IDL.Func([IDL.Nat, IDL.Opt(IDL.Text)], [IDL.Bool], []),
+    setRecipeVideo: IDL.Func(
+      [IDL.Nat, IDL.Opt(IDL.Text)],
+      [IDL.Variant({ ok: IDL.Null, err: IDL.Text })],
+      [],
+    ),
     getRecipeSeoContent: IDL.Func(
       [IDL.Nat],
       [IDL.Record({ intro: IDL.Opt(IDL.Text), faqs: IDL.Vec(FaqPair) })],
@@ -105,6 +114,17 @@ export async function fetchRecipeVideoUrl(
 export async function fetchAllRecipeVideoUrls(): Promise<Map<string, string>> {
   const rows = await getQueryActor().listRecipeVideoUrls();
   return new Map(rows.map(([id, url]) => [id.toString(), url]));
+}
+
+/** Admin: set (or clear with null) a recipe's BonsaiTube video id. */
+export async function saveRecipeBonsaiVideo(
+  recipeId: bigint,
+  videoId: string | null,
+): Promise<void> {
+  const actor = await getAuthActor();
+  if (!actor) throw new Error("Sign in required");
+  const res = await actor.setRecipeVideo(recipeId, videoId ? [videoId] : []);
+  if ("err" in res) throw new Error(res.err);
 }
 
 /** Admin: set (or clear with null) a recipe's YouTube URL. */

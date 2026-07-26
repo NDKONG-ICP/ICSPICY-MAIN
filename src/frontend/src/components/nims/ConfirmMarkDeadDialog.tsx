@@ -27,8 +27,10 @@ export function ConfirmMarkDeadDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Mark this plant dead?</AlertDialogTitle>
           <AlertDialogDescription>
-            This records a permanent loss for the cell. You will confirm details
-            on the next screen. This cannot be undone without an admin revive.
+            The plant moves to your Graveyard with its full provenance, weather
+            history, and PepperHead memorial preserved forever. The NFT is
+            retired with this plant — not deleted and not returned to the pool.
+            Admin revive is the only undo.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

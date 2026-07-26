@@ -98,6 +98,55 @@ export function usePlantsByContainer(container: ContainerSize | null) {
   });
 }
 
+export function useRegisterPlant() {
+  const actor = useNimsOpsActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      sharedData: import("../declarations/backend.did").RegisterPlantSharedData;
+      cellIndex: bigint;
+      overrides?: import("../declarations/backend.did").RegisterPlantCellOverrides;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.registerPlant(
+        args.sharedData,
+        args.cellIndex,
+        args.overrides ?? null,
+      );
+    },
+    onSettled: async (_data, _err, vars) => {
+      await refreshTrayGrid(qc, vars.sharedData.tray_id);
+      await refreshNimsDashboardStats(qc);
+      qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
+    },
+  });
+}
+
+export function useRegisterPlantBatch() {
+  const actor = useNimsOpsActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      sharedData: import("../declarations/backend.did").RegisterPlantSharedData;
+      cellIndices: bigint[];
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.registerPlantBatch(
+        args.sharedData,
+        args.cellIndices.map((cell_index) => ({
+          cell_index,
+          overrides: [],
+        })),
+      );
+    },
+    onSettled: async (_data, _err, vars) => {
+      await refreshTrayGrid(qc, vars.sharedData.tray_id);
+      await refreshNimsDashboardStats(qc);
+      qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
+    },
+  });
+}
+
 export function usePlantSeed() {
   const actor = useNimsOpsActor();
   const qc = useQueryClient();
@@ -146,6 +195,82 @@ export function useMarkCellGerminated() {
   });
 }
 
+export function useGerminatePlant() {
+  const actor = useNimsOpsActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { plantId: PlantId; date?: bigint }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.germinatePlant(args.plantId, args.date ?? null);
+    },
+    onSettled: async (_data, _err, vars) => {
+      qc.invalidateQueries({ queryKey: ["plantsAwaitingNft"] });
+      qc.invalidateQueries({ queryKey: ["nftPoolStatus"] });
+      qc.invalidateQueries({ queryKey: ["plantPoolAvailable"] });
+      qc.invalidateQueries({
+        queryKey: ["plantLifecycle", vars.plantId.toString()],
+      });
+      await refreshAllTrayGrids(qc);
+      await refreshNimsDashboardStats(qc);
+    },
+  });
+}
+
+export function useGerminatePlantBatch() {
+  const actor = useNimsOpsActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { plantIds: PlantId[]; date?: bigint }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.germinatePlantBatch(args.plantIds, args.date ?? null);
+    },
+    onSettled: async () => {
+      qc.invalidateQueries({ queryKey: ["plantsAwaitingNft"] });
+      qc.invalidateQueries({ queryKey: ["nftPoolStatus"] });
+      await refreshNimsDashboardStats(qc);
+    },
+  });
+}
+
+export function usePlantsAwaitingNft() {
+  const actor = useNimsOpsActor();
+  const { actorReady } = useActorReady();
+  return useQuery({
+    queryKey: ["plantsAwaitingNft", actorReady],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.listPlantsAwaitingNft();
+    },
+    enabled: actorReady,
+  });
+}
+
+export function usePlantPoolAvailableCount() {
+  const actor = useNimsOpsActor();
+  const { actorReady } = useActorReady();
+  return useQuery({
+    queryKey: ["plantPoolAvailable", actorReady],
+    queryFn: async () => {
+      if (!actor) return null;
+      return actor.getPlantPoolAvailableCount();
+    },
+    enabled: actorReady,
+  });
+}
+
+export function useListGraveyard() {
+  const actor = useNimsOpsActor();
+  const { actorReady } = useActorReady();
+  return useQuery({
+    queryKey: ["nimsGraveyard", actorReady],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.listGraveyard();
+    },
+    enabled: actorReady,
+  });
+}
+
 export function useMarkCellDead() {
   const actor = useNimsOpsActor();
   const qc = useQueryClient();
@@ -169,6 +294,7 @@ export function useMarkCellDead() {
     onSettled: async (_data, _err, vars) => {
       await refreshTrayGrid(qc, vars.trayId);
       await refreshNimsDashboardStats(qc);
+      qc.invalidateQueries({ queryKey: ["nimsGraveyard"] });
     },
   });
 }
@@ -242,6 +368,8 @@ export function useMarkPlantDead() {
       });
       qc.invalidateQueries({ queryKey: ["myPlantsNims"] });
       qc.invalidateQueries({ queryKey: ["nimsActivity"] });
+      qc.invalidateQueries({ queryKey: ["nimsGraveyard"] });
+      qc.invalidateQueries({ queryKey: ["nimsDashboardStats"] });
     },
   });
 }

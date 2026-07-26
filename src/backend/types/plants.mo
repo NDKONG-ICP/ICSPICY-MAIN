@@ -1,4 +1,5 @@
 import Common "common";
+import DashTypes "nims-dashboard";
 
 module {
   public type PlantStage = {
@@ -314,6 +315,12 @@ module {
     source : Text;
   };
 
+  public type PlantDeathRecord = {
+    died_at : Common.Timestamp;
+    cause : DashTypes.DeathCause;
+    notes : ?Text;
+  };
+
   public type PlantLifecycle = {
     plant : PlantPublic;
     varietyId : ?Nat;
@@ -326,6 +333,7 @@ module {
     pestLog : [PestEntry];
     photos : [PlantPhotoEntry];
     weatherSnapshots : [WeatherSnapshot];
+    deathRecord : ?PlantDeathRecord;
   };
 
   public type PlantCountStats = {
@@ -346,5 +354,95 @@ module {
     nftTokenId : ?Nat;
     claimToken : ?Common.ClaimTokenId;
     message : Text;
+  };
+
+  // ── Tray batch registration (registerPlant / registerPlantBatch) ───────────
+
+  /// Per-cell overrides — rare cells that differ from sharedData.
+  public type RegisterPlantCellOverrides = {
+    variety_id : ?Nat;
+    genetics : ?Text;
+    notes : ?Text;
+    common_name : ?Text;
+    latin_name : ?Text;
+    origin : ?Text;
+    container_size : ?ContainerSize;
+    planting_date : ?Common.Timestamp;
+  };
+
+  /// Common fields applied to every cell in a batch (or single registerPlant call).
+  public type RegisterPlantSharedData = {
+    tray_id : Common.TrayId;
+    variety_id : Nat;
+    container_size : ?ContainerSize;
+    origin : ?Text;
+    planting_date : ?Common.Timestamp;
+    notes : Text;
+    genetics : Text;
+    common_name : ?Text;
+    latin_name : ?Text;
+  };
+
+  public type RegisterPlantCellInput = {
+    cell_index : Nat;
+    overrides : ?RegisterPlantCellOverrides;
+  };
+
+  public type RegisterPlantCellOutcome = {
+    #ok : { plant_id : Common.PlantId };
+    #err : Text;
+    #skipped : Text;
+  };
+
+  public type RegisterPlantCellResult = {
+    cell_index : Nat;
+    outcome : RegisterPlantCellOutcome;
+  };
+
+  public type RegisterPlantResult = {
+    plant_id : Common.PlantId;
+  };
+
+  public type RegisterPlantBatchResult = {
+    tray_id : Common.TrayId;
+    results : [RegisterPlantCellResult];
+    succeeded : Nat;
+    failed : Nat;
+    skipped : Nat;
+  };
+
+  // ── Germination (assign PepperHead from plant pool) ────────────────────────
+
+  public type GerminatePlantOutcome = {
+    #assigned : { token_id : Nat };
+    #awaiting_nft;
+    #already_assigned : { token_id : Nat };
+  };
+
+  public type GerminatePlantResult = {
+    plant_id : Common.PlantId;
+    outcome : GerminatePlantOutcome;
+  };
+
+  public type GerminatePlantBatchResult = {
+    results : [GerminatePlantResult];
+    assigned_count : Nat;
+    awaiting_count : Nat;
+    already_assigned_count : Nat;
+    failed_count : Nat;
+  };
+
+  public type PlantAwaitingNft = {
+    plant_id : Common.PlantId;
+    tray_id : ?Common.TrayId;
+    cell_position : ?Nat;
+    variety : Text;
+    germination_date : Common.Timestamp;
+    owner : Principal;
+  };
+
+  public type PlantPoolStatus = {
+    available : Nat;
+    theoretical_ceiling : Nat;
   };
 };

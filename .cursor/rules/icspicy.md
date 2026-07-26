@@ -46,12 +46,65 @@ Never write them into source files or commit them to the repo.
 - Local dev: `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943/`
 - `ii_derivation_origin` (mainnet frontend): `https://7rukv-hqaaa-aaaao-ba6ma-cai.icp0.io`
 
-## NFT Pool
+## IC SPICY Collection (8,888 PepperHeads)
 
-- Total supply: **8888 tokens** (IDs 1–8888)
-- PepperHead range: IDs **7839–8726** (inclusive) → 888 tokens
-- Founder range: IDs **7839–7888** (50 tokens, subset of PepperHead range)
-- All tokens minted to pool account: `{ owner = backend; subaccount = null }`
+- **8,888 ICRC-7 tokens** (IDs **1–8888**), each with pre-generated artwork on `nft_assets` (`/images/nft_<N>.png`).
+- **Pre-minted at deploy:** admin `initializeNFTPool()` assigns all IDs to `{ owner = backend; subaccount = null }`. Plants do **not** mint new IDs in the 1–8888 range.
+- **Supply cap is fixed at launch.** When plant batches are exhausted, germination logs but **cannot assign** until a **new art collection** ships (separate deploy).
+- **Artwork canister:** `gawk3-2qaaa-aaaao-ba4sa-cai`
+
+### Batch allocation (IDs 1–8888)
+
+| Batch | Token IDs | Count | Role |
+|---|---|---:|---|
+| **Common — plant/product** | 1 – 5,000 | 5,000 | Germination pool (plant batch) |
+| **Uncommon — plant/product** | 5,001 – 7,838 | 2,838 | Germination pool (plant batch) |
+| **Founder — membership** | 7,839 – 7,888 | 50 | Digital membership ($25); co-op / promos |
+| **Rare PepperHead — membership** | 7,889 – 8,726 | 838 | Digital membership; co-op seats |
+| **Rare standard — plant/product** | 8,727 – 8,888 | 162 | Germination pool; SPICY burn-eligible |
+| **Total** | | **8,888** | |
+
+**Plant/product germination pool:** IDs **1–7838** + **8727–8888** = **8,000** tokens (excludes membership block 7839–8726).
+
+**Reserved / operational sub-batches (within 7839–8726 unless noted):**
+
+| Purpose | Range / count | Notes |
+|---|---|---|
+| **Co-op grower seats** | **88** tokens scanned from **7891–8726** | Excludes **7845–7890** (claim-labeled block); `designateCoopSeats` |
+| **Genesis Ten airdrop** | **7979–7987** (9 tokens) | #7988 stays in pool; `scripts/genesis-ten-airdrop.mjs` |
+| **QR / claim labels** | Admin-assigned | `assignNFT(..., #AssignToQR)` on admin pool map |
+| **Membership sales** | Any canister-owned **7839–8726** | `purchasePepperHead` ($25) |
+
+### Retired / non-plant ranges (do not use for new NIMS plants)
+
+| Range | Status |
+|---|---|
+| **100,000 – 199,999** grower-provenance | **RETIRED for plants.** Do not mint for new tray cells. |
+| **200,000+** achievement badges | Soulbound; games / masterclass only |
+
+**Grandfathered test artifacts:** grower-provenance tokens **#100_000–#100_006** (tray 3, mainnet) — leave as-is; do not extend this pattern.
+
+---
+
+## NIMS Plant NFT Lifecycle (AUTHORITATIVE)
+
+Plants use tokens from the **8,888 collection** (plant/product batches above). Lifecycle data lives on the **plant record**, keyed by the assigned token ID.
+
+| Stage | Behavior |
+|---|---|
+| **SOW** (seed in tray cell) | Provenance record **starts**. **`plant.nft_id = null`**. No NFT. |
+| **GERMINATE** (manual — grower confirms sprout) | Assign **one available token from the plant batch** (8,000 pool) **with its artwork**. **Only NFT assignment trigger.** Transfer canister pool → grower/admin. |
+| **DEATH → GRAVEYARD** | Plant marked dead and moved to the **Graveyard**. **Full record preserved forever** — all provenance, weather, and lifecycle data stays readable (e.g. diagnose a death months later in a grow bag). The assigned PepperHead is **retired with the plant**: permanently bound to that dead plant's record, **not** returned to the assignable pool, **not** reassigned. The assignable pool (**2001–8888**) **permanently shrinks by one** per death. **No burn/destroy** — token and art persist as a memorial bound to the dead plant. |
+| **TRANSPLANT / FEED / WATER / REPOT** | Provenance lifecycle events on the plant record (side maps + notes). |
+| **SALE** (`claimPlantOwnership` / checkout / QR claim) | The **same 8888 token + provenance** transfer to the buyer's profile. Backend today: `settlePlantPurchase`, `redeemClaim`, `purchasePlant`. |
+| **Supply exhaustion** | Germination may still **log** the event; **must not hard-trap** if plant batch is empty — surface graceful “awaiting new collection” UX. |
+
+### Agent rules (NIMS NFT work)
+
+- **Never** mint **100k grower-provenance** tokens for new plants.
+- **Never** assign NFT at sow — only at germinate.
+- **Never** return dead plant tokens to the assignable pool — **retire with the plant in the Graveyard** per design above (not yet implemented in code — current code returns to pool).
+- Prefer **`plantSeed` + germinate** over **`registerPlant`** until backend is realigned.
 
 ## Key Deploy Commands
 

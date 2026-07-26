@@ -22,6 +22,8 @@ import PlantsLib "../lib/plants";
 import IcrcPayment "../lib/icrc-payment";
 import ICRC37Lib "../lib/icrc37";
 import NftPool "../lib/nft-pool";
+import PlantPool "../lib/plant-pool";
+import GameSessionsLib "../lib/game-sessions";
 import Common "../types/common";
 import PlantTypes "../types/plants";
 import VarietyTypes "../types/variety";
@@ -33,6 +35,9 @@ import RateLimit "../lib/rate-limit";
 import IC "ic:aaaaa-aa";
 import Blob "mo:core/Blob";
 import WeatherProvenance "../lib/weather-provenance";
+import GrowerProvLib "../lib/grower-provenance";
+import CoopLib "../lib/coop";
+import CoopTypes "../types/coop";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
@@ -55,10 +60,14 @@ mixin (
   plantPestLog : Map.Map<Common.PlantId, List.List<PlantTypes.PestEntry>>,
   plantPhotoLog : Map.Map<Common.PlantId, List.List<PlantTypes.PlantPhotoEntry>>,
   plantWeatherSnapshots : Map.Map<Common.PlantId, List.List<PlantTypes.WeatherSnapshot>>,
+  plantDeathRecords : Map.Map<Common.PlantId, PlantTypes.PlantDeathRecord>,
   nftClaimTokens : Map.Map<Text, ClaimTypes.NftClaimEntry>,
   nftClaimPlantIds : Map.Map<Text, Common.PlantId>,
   plantClaimTokens : Map.Map<Common.PlantId, Text>,
   nftTokenPlantIds : Map.Map<Nat, Common.PlantId>,
+  plantByNftId : Map.Map<Nat, Common.PlantId>,
+  productNftTokenIds : Map.Map<Common.ProductId, Nat>,
+  coopDesignatedSeats : Map.Map<Nat, Bool>,
   icrc7Owners : Map.Map<Nat, ICRC7.Account>,
   icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
   icrc37Approvals : ICRC37Lib.ApprovalsMap,
@@ -69,6 +78,12 @@ mixin (
   nextPlantId : { var value : Nat },
   nextTrayId : { var value : Nat },
   nextFeedingId : { var value : Nat },
+  nextGrowerTokenId : { var value : Nat },
+  growerProvenanceMeta : Map.Map<Nat, CoopTypes.GrowerProvenanceMeta>,
+  growerMintLimits : Map.Map<Principal, (Nat, Int)>,
+  growerBatchMintLimits : Map.Map<Principal, (Nat, Int)>,
+  coopSeats : Map.Map<Nat, CoopTypes.CoopSeat>,
+  linkedWallets : Map.Map<Principal, [Principal]>,
 ) {
   stable var lastWeatherError : Text = "";
   stable var lastWeatherUrl : Text = "";
@@ -101,6 +116,7 @@ mixin (
       plantPestLog;
       plantPhotoLog;
       plantWeatherSnapshots;
+      plantDeathRecords;
     };
   };
 
@@ -120,11 +136,38 @@ mixin (
     };
   };
 
+  func isCoopGrower(p : Principal) : Bool {
+    CoopLib.isActiveSeatHolder(p, linkedWallets, icrc7Balances, coopSeats);
+  };
+
+  func canRegisterProvenance(caller : Principal) : Bool {
+    nimsIsAdmin(caller) or isCoopGrower(caller);
+  };
+
+  func growerDisplayName(caller : Principal) : Text {
+    switch (CoopLib.findMyCoopStatus(caller, linkedWallets, icrc7Balances, coopSeats)) {
+      case (?s) switch (s.seat.growerName) { case (?n) n; case null Principal.toText(caller) };
+      case null Principal.toText(caller);
+    };
+  };
+
   func requireTrayOwnerOrAdmin(caller : Principal, trayId : Common.TrayId) {
     AccessControl.requireAuthenticated(caller);
     if (nimsIsAdmin(caller) or isTrayOwner(caller, trayId)) {
     } else {
       Runtime.trap("Unauthorized: tray owner or admin only");
+    };
+  };
+
+  func requirePlantOwnerOrAdmin(caller : Principal, plantId : Common.PlantId) {
+    AccessControl.requireAuthenticated(caller);
+    switch (plants.get(plantId)) {
+      case null Runtime.trap("Plant not found");
+      case (?plant) {
+        if (not NimsLib.ownerOrAdmin(plant, plantId, sideMaps(), caller, nimsIsAdmin)) {
+          Runtime.trap("Unauthorized: plant owner or admin only");
+        };
+      };
     };
   };
 
@@ -346,24 +389,128 @@ mixin (
   ) : async PlantTypes.AddPlantResult {
     requireTrayOwnerOrAdmin(caller, trayId);
     let germDate = switch date { case (?d) d; case null Time.now() };
-    let entropy = Int.abs(Time.now()) + cellPosition + trayId;
-    let assignNft = nimsIsAdmin(caller);
+    let randBlob = await IC.raw_rand();
+    let entropy = GameSessionsLib.seedFromBlob(randBlob);
     switch (
       NimsLib.germinateCellInternal(
         plants, trays, varieties, sideMaps(),
         icrc7Owners, icrc7Balances,
-        nftClaimTokens, nftClaimPlantIds, plantClaimTokens, nftTokenPlantIds,
+        nftClaimTokens, nftClaimPlantIds, plantClaimTokens,
+        plantByNftId, nftTokenPlantIds, productNftTokenIds, coopDesignatedSeats,
         selfPrincipal(), caller,
-        trayId, cellPosition, germDate, entropy, assignNft,
+        trayId, cellPosition, germDate, entropy,
       )
     ) {
       case (#err(e)) Runtime.trap(e);
       case (#ok(result)) {
-        if (assignNft) {
-          logAdmin(caller, "mark_cell_germinated", "tray=" # Nat.toText(trayId) # " cell=" # Nat.toText(cellPosition) # " nft=" # Nat.toText(result.nftTokenId));
-        };
+        logAdmin(
+          caller,
+          "mark_cell_germinated",
+          "tray=" # Nat.toText(trayId)
+          # " cell=" # Nat.toText(cellPosition)
+          # " nft=" # Nat.toText(result.nftTokenId),
+        );
         result;
       };
+    };
+  };
+
+  public shared ({ caller }) func germinatePlant(
+    plantId : Common.PlantId,
+    date : ?Common.Timestamp,
+  ) : async PlantTypes.GerminatePlantResult {
+    requirePlantOwnerOrAdmin(caller, plantId);
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok) {};
+    };
+    let germDate = switch date { case (?d) d; case null Time.now() };
+    try {
+      let randBlob = await IC.raw_rand();
+      let entropy = GameSessionsLib.seedFromBlob(randBlob);
+      switch (
+        NimsLib.germinatePlantInternal(
+          plants, sideMaps(), icrc7Owners, icrc7Balances,
+          nftClaimTokens, nftClaimPlantIds, plantClaimTokens,
+          plantByNftId, nftTokenPlantIds, productNftTokenIds, coopDesignatedSeats,
+          selfPrincipal(), caller, plantId, germDate, entropy,
+        )
+      ) {
+        case (#err(e)) Runtime.trap(e);
+        case (#ok(result)) {
+          logAdmin(
+            caller,
+            "germinate_plant",
+            "plantId=" # Nat.toText(plantId)
+            # " outcome=" # germinateOutcomeTag(result.outcome),
+          );
+          result;
+        };
+      };
+    } finally {
+      CallerGuard.release(callerGuards, caller);
+    };
+  };
+
+  public shared ({ caller }) func germinatePlantBatch(
+    plantIds : [Common.PlantId],
+    date : ?Common.Timestamp,
+  ) : async PlantTypes.GerminatePlantBatchResult {
+    AccessControl.requireAuthenticated(caller);
+    for (plantId in plantIds.vals()) {
+      requirePlantOwnerOrAdmin(caller, plantId);
+    };
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok) {};
+    };
+    let germDate = switch date { case (?d) d; case null Time.now() };
+    try {
+      let randBlob = await IC.raw_rand();
+      let baseEntropy = GameSessionsLib.seedFromBlob(randBlob);
+      let result = NimsLib.germinatePlantBatchInternal(
+        plants, sideMaps(), icrc7Owners, icrc7Balances,
+        nftClaimTokens, nftClaimPlantIds, plantClaimTokens,
+        plantByNftId, nftTokenPlantIds, productNftTokenIds, coopDesignatedSeats,
+        selfPrincipal(), caller, plantIds, baseEntropy, germDate,
+      );
+      logAdmin(
+        caller,
+        "germinate_plant_batch",
+        "assigned=" # Nat.toText(result.assigned_count)
+        # " awaiting=" # Nat.toText(result.awaiting_count),
+      );
+      result;
+    } finally {
+      CallerGuard.release(callerGuards, caller);
+    };
+  };
+
+  func germinateOutcomeTag(outcome : PlantTypes.GerminatePlantOutcome) : Text {
+    switch (outcome) {
+      case (#assigned({ token_id })) "assigned:" # Nat.toText(token_id);
+      case (#awaiting_nft) "awaiting_nft";
+      case (#already_assigned({ token_id })) "already:" # Nat.toText(token_id);
+    };
+  };
+
+  public query ({ caller }) func listPlantsAwaitingNft() : async [PlantTypes.PlantAwaitingNft] {
+    AccessControl.requireAuthenticated(caller);
+    NimsLib.listPlantsAwaitingNftInternal(plants, sideMaps(), caller, nimsIsAdmin);
+  };
+
+  public query func getPlantPoolAvailableCount() : async PlantTypes.PlantPoolStatus {
+    let canister = selfPrincipal();
+    {
+      available = PlantPool.countAssignable(
+        icrc7Owners,
+        canister,
+        plantByNftId,
+        nftTokenPlantIds,
+        productNftTokenIds,
+        coopDesignatedSeats,
+      );
+      theoretical_ceiling = PlantPool.THEORETICAL_CEILING;
     };
   };
 
@@ -391,6 +538,67 @@ mixin (
     };
   };
 
+  /// Register one tray cell: create plant (or reuse) + provenance-start — no NFT at sow.
+  public shared ({ caller }) func registerPlant(
+    sharedData : PlantTypes.RegisterPlantSharedData,
+    cellIndex : Nat,
+    overrides : ?PlantTypes.RegisterPlantCellOverrides,
+  ) : async PlantTypes.RegisterPlantResult {
+    AccessControl.requireAuthenticated(caller);
+    if (not canRegisterProvenance(caller)) {
+      Runtime.trap("Co-op seat or admin required to register provenance plants");
+    };
+    requireTrayOwnerOrAdmin(caller, sharedData.tray_id);
+    switch (
+      NimsLib.registerPlantInternal(
+        plants, trays, stageHistory, varieties, sideMaps(),
+        caller, nextPlantId,
+        sharedData, cellIndex, overrides,
+      )
+    ) {
+      case (#err(e)) Runtime.trap(e);
+      case (#ok(result)) {
+        logAdmin(
+          caller,
+          "register_plant",
+          "tray=" # Nat.toText(sharedData.tray_id)
+          # " cell=" # Nat.toText(cellIndex)
+          # " plantId=" # Nat.toText(result.plant_id),
+        );
+        result;
+      };
+    };
+  };
+
+  /// Batch register tray cells — best-effort per cell; idempotent re-run skips cells that already have NFTs.
+  public shared ({ caller }) func registerPlantBatch(
+    sharedData : PlantTypes.RegisterPlantSharedData,
+    cells : [PlantTypes.RegisterPlantCellInput],
+  ) : async PlantTypes.RegisterPlantBatchResult {
+    AccessControl.requireAuthenticated(caller);
+    if (not canRegisterProvenance(caller)) {
+      Runtime.trap("Co-op seat or admin required to register provenance plants");
+    };
+    requireTrayOwnerOrAdmin(caller, sharedData.tray_id);
+    if (cells.size() > NimsLib.REGISTER_BATCH_MAX_CELLS) {
+      Runtime.trap("Batch exceeds maximum cell count");
+    };
+    let result = NimsLib.registerPlantBatchInternal(
+      plants, trays, stageHistory, varieties, sideMaps(),
+      caller, nextPlantId,
+      sharedData, cells,
+    );
+    logAdmin(
+      caller,
+      "register_plant_batch",
+      "tray=" # Nat.toText(sharedData.tray_id)
+      # " ok=" # Nat.toText(result.succeeded)
+      # " fail=" # Nat.toText(result.failed)
+      # " skip=" # Nat.toText(result.skipped),
+    );
+    result;
+  };
+
   public shared ({ caller }) func markCellDead(
     trayId : Common.TrayId,
     cellPosition : Nat,
@@ -401,9 +609,8 @@ mixin (
     requireTrayOwnerOrAdmin(caller, trayId);
     switch (
       NimsLib.markCellDeadInternal(
-        plants, trays, sideMaps(),
-        icrc7Owners, icrc7Balances, icrc37Approvals,
-        selfPrincipal(), caller, trayId, cellPosition, cause, notes, _photoUrl,
+        plants, trays, sideMaps(), stageHistory,
+        caller, nimsIsAdmin, trayId, cellPosition, cause, notes, _photoUrl,
       )
     ) {
       case (#err(e)) Runtime.trap(e);
@@ -442,9 +649,8 @@ mixin (
     AccessControl.requireAuthenticated(caller);
     switch (
       NimsLib.markPlantDeadInternal(
-        plants, sideMaps(),
-        icrc7Owners, icrc7Balances, icrc37Approvals,
-        selfPrincipal(), caller, nimsIsAdmin, plantId, cause, notes, photoUrl,
+        plants, sideMaps(), stageHistory,
+        caller, nimsIsAdmin, plantId, cause, notes, photoUrl,
       )
     ) {
       case (#err(e)) Runtime.trap(e);
@@ -901,6 +1107,19 @@ mixin (
     PlantsLib.listTraysForOwner(trays, trayOwners, caller);
   };
 
+  public query ({ caller }) func listGraveyard() : async [PlantTypes.PlantLifecycle] {
+    AccessControl.requireAuthenticated(caller);
+    NimsLib.listGraveyardForCallerInternal(plants, feedings, sideMaps(), caller);
+  };
+
+  public query ({ caller }) func getGraveyard() : async [PlantTypes.PlantLifecycle] {
+    AccessControl.requireAuthenticated(caller);
+    if (not nimsIsAdmin(caller)) {
+      Runtime.trap("Unauthorized: admin only");
+    };
+    NimsLib.listGraveyardAllInternal(plants, feedings, sideMaps());
+  };
+
   public query func getPlantLifecycle(plantId : Common.PlantId) : async ?PlantTypes.PlantLifecycle {
     NimsLib.buildLifecycle(plants, feedings, sideMaps(), plantId);
   };
@@ -956,10 +1175,19 @@ mixin (
     NimsLib.getPlantsByContainer(plants, sideMaps(), feedings, container);
   };
 
-  public query func getNftPoolStatus() : async { available : Nat; total : Nat } {
+  public query func getNftPoolStatus() : async PlantTypes.PlantPoolStatus {
     let canister = selfPrincipal();
-    let available = NftPool.collectAvailable(icrc7Owners, canister).size();
-    { available; total = 7838 + 162 }; // non-PepperHead plant pool size
+    {
+      available = PlantPool.countAssignable(
+        icrc7Owners,
+        canister,
+        plantByNftId,
+        nftTokenPlantIds,
+        productNftTokenIds,
+        coopDesignatedSeats,
+      );
+      theoretical_ceiling = PlantPool.THEORETICAL_CEILING;
+    };
   };
 
   // ── Purchase ────────────────────────────────────────────────────────────────
@@ -1004,6 +1232,9 @@ mixin (
     };
     if (not plant.for_sale or plant.sold) {
       return { success = false; nftTokenId = null; claimToken = null; message = "Plant not for sale" };
+    };
+    if (plant.is_cooked) {
+      return { success = false; nftTokenId = null; claimToken = null; message = "Plant is dead" };
     };
     let expected = NimsLib.centsToStablecoinBase(NimsLib.getPriceCents(sideMaps(), plant));
     if (amount != expected) {

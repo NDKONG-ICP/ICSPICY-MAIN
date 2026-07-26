@@ -36,6 +36,7 @@ mixin (
   plantPestLog : Map.Map<Common.PlantId, List.List<PlantTypes.PestEntry>>,
   plantPhotoLog : Map.Map<Common.PlantId, List.List<PlantTypes.PlantPhotoEntry>>,
   plantWeatherSnapshots : Map.Map<Common.PlantId, List.List<PlantTypes.WeatherSnapshot>>,
+  plantDeathRecords : Map.Map<Common.PlantId, PlantTypes.PlantDeathRecord>,
   nftTokenPlantIds : Map.Map<Nat, Common.PlantId>,
 ) {
   func resaleSideMaps() : NimsLib.SideMaps {
@@ -51,6 +52,7 @@ mixin (
       plantPestLog;
       plantPhotoLog;
       plantWeatherSnapshots;
+      plantDeathRecords;
     };
   };
 

@@ -90,6 +90,7 @@ module {
     display_order : Nat;
     caller_favorited : Bool;
     favorite_count : Nat;
+    bonsaiVideoId : ?Text;
   };
 
   public type CreateRecipeInput = {

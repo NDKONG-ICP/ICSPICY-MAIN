@@ -440,6 +440,22 @@ export interface GardenDesignInput {
   'depthMeters' : number,
   'isPublic' : boolean,
 }
+export interface GerminatePlantBatchResult {
+  'awaiting_count' : bigint,
+  'results' : Array<GerminatePlantResult>,
+  'already_assigned_count' : bigint,
+  'assigned_count' : bigint,
+  'failed_count' : bigint,
+}
+export type GerminatePlantOutcome = {
+    'already_assigned' : { 'token_id' : bigint }
+  } |
+  { 'assigned' : { 'token_id' : bigint } } |
+  { 'awaiting_nft' : null };
+export interface GerminatePlantResult {
+  'outcome' : GerminatePlantOutcome,
+  'plant_id' : PlantId,
+}
 export interface GrowerDirectoryEntry {
   'tokenId' : bigint,
   'growerLocation' : [] | [string],
@@ -623,6 +639,9 @@ export interface ICSpicy {
   >,
   'calculateGardenYield' : ActorMethod<[bigint], [] | [YieldEstimate]>,
   'calculateGardenYieldInput' : ActorMethod<[GardenDesignInput], YieldEstimate>,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'cancelOffer' : ActorMethod<[string], Offer>,
   'cancelProposal' : ActorMethod<[ProposalId], boolean>,
   'cancelResaleListing' : ActorMethod<
@@ -721,6 +740,14 @@ export interface ICSpicy {
   >,
   'generateCoopClaimToken' : ActorMethod<[PlantId], string>,
   'generatePickupQRPayload' : ActorMethod<[PlantId], string>,
+  'germinatePlant' : ActorMethod<
+    [PlantId, [] | [Timestamp]],
+    GerminatePlantResult
+  >,
+  'germinatePlantBatch' : ActorMethod<
+    [Array<PlantId>, [] | [Timestamp]],
+    GerminatePlantBatchResult
+  >,
   'getActiveResaleListings' : ActorMethod<[], Array<ResaleListingPublic>>,
   'getAdminInventory' : ActorMethod<
     [[] | [PlantStage], [] | [bigint], [] | [boolean]],
@@ -728,9 +755,6 @@ export interface ICSpicy {
   >,
   'getAdminOrder' : ActorMethod<[OrderId], [] | [AdminOrderPublic]>,
   'getAdmins' : ActorMethod<[], Array<Principal>>,
-  /**
-   * / Per-principal rate limiters for cycle-drain protection (CDA).
-   */
   'getArtworkFile' : ActorMethod<[string], [] | [Uint8Array | number[]]>,
   'getArtworkUploadResult' : ActorMethod<[], UploadResult>,
   'getArtworkUploadStatus' : ActorMethod<[], UploadSessionStatus>,
@@ -810,6 +834,7 @@ export interface ICSpicy {
   'getGardenDesign' : ActorMethod<[bigint], [] | [GardenDesign]>,
   'getGardenDesignForUser' : ActorMethod<[bigint], [] | [GardenDesign]>,
   'getGlobalFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
+  'getGraveyard' : ActorMethod<[], Array<PlantLifecycle>>,
   'getGrowerProvenanceMeta' : ActorMethod<
     [bigint],
     [] | [GrowerProvenanceMeta]
@@ -844,16 +869,10 @@ export interface ICSpicy {
   'getMySchedules' : ActorMethod<[], Array<SavedSchedule>>,
   'getMySeedBank' : ActorMethod<[], Array<SeedLotPublic>>,
   'getMyTrays' : ActorMethod<[], Array<TrayPublic>>,
-  /**
-   * / Uploads asset canister — user images served via HTTP from this canister.
-   */
   'getMyVendors' : ActorMethod<[], Array<SeedVendorPublic>>,
   'getMyWeatherRecords' : ActorMethod<[bigint], Array<WeatherRecord>>,
   'getNewOrderCount' : ActorMethod<[], bigint>,
-  'getNftPoolStatus' : ActorMethod<
-    [],
-    { 'total' : bigint, 'available' : bigint }
-  >,
+  'getNftPoolStatus' : ActorMethod<[], PlantPoolStatus>,
   'getNimsDashboardStats' : ActorMethod<[], DashboardStats>,
   'getNimsPhotoFile' : ActorMethod<[string], [] | [ShopListingFile]>,
   'getOffer' : ActorMethod<[string], [] | [Offer]>,
@@ -865,10 +884,13 @@ export interface ICSpicy {
   'getPayPalCheckoutConfig' : ActorMethod<[], PayPalCheckoutConfig>,
   'getPlant' : ActorMethod<[PlantId], [] | [PlantPublic]>,
   'getPlantByNft' : ActorMethod<[bigint], [] | [PlantLifecycle]>,
+  'getPlantByNftIdBackfillCount' : ActorMethod<[], bigint>,
+  'getPlantByNftIdMapSize' : ActorMethod<[], bigint>,
   'getPlantClaimToken' : ActorMethod<[PlantId], [] | [string]>,
   'getPlantCount' : ActorMethod<[], PlantCountStats>,
   'getPlantHealth' : ActorMethod<[PlantId], [] | [PlantHealth]>,
   'getPlantLifecycle' : ActorMethod<[PlantId], [] | [PlantLifecycle]>,
+  'getPlantPoolAvailableCount' : ActorMethod<[], PlantPoolStatus>,
   'getPlantTimeline' : ActorMethod<[PlantId], [] | [PlantTimeline]>,
   'getPlantingEvent' : ActorMethod<[bigint], [] | [PlantingEvent]>,
   'getPlantsByContainer' : ActorMethod<[ContainerSize], Array<PlantLifecycle>>,
@@ -1007,6 +1029,9 @@ export interface ICSpicy {
   'icrc7_max_query_batch_size' : ActorMethod<[], [] | [bigint]>,
   'icrc7_max_take_value' : ActorMethod<[], [] | [bigint]>,
   'icrc7_max_update_batch_size' : ActorMethod<[], [] | [bigint]>,
+  /**
+   * / ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
+   */
   'icrc7_name' : ActorMethod<[], string>,
   'icrc7_owner_of' : ActorMethod<[Array<bigint>], Array<[] | [Account]>>,
   'icrc7_permitted_drift' : ActorMethod<[], [] | [bigint]>,
@@ -1040,9 +1065,6 @@ export interface ICSpicy {
     { 'skipped' : bigint, 'initialized' : bigint }
   >,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  /**
-   * / ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
-   */
   'isFollowing' : ActorMethod<[Principal], boolean>,
   'isGrowerProvenanceToken' : ActorMethod<[bigint], boolean>,
   'isPepperHead' : ActorMethod<[bigint], boolean>,
@@ -1074,6 +1096,7 @@ export interface ICSpicy {
   >,
   'listCommentsByPost' : ActorMethod<[PostId], Array<CommentPublic>>,
   'listDAOProposals' : ActorMethod<[], Array<ProposalPublic>>,
+  'listGraveyard' : ActorMethod<[], Array<PlantLifecycle>>,
   'listGrowerDirectory' : ActorMethod<[], Array<GrowerDirectoryEntry>>,
   'listIcrc7PoolTokensAdmin' : ActorMethod<
     [Icrc7TokenFilter, bigint, bigint],
@@ -1089,6 +1112,7 @@ export interface ICSpicy {
   'listOrdersByBuyer' : ActorMethod<[], Array<OrderPublic>>,
   'listPlantForSale' : ActorMethod<[PlantId, [] | [bigint]], boolean>,
   'listPlants' : ActorMethod<[], Array<PlantPublic>>,
+  'listPlantsAwaitingNft' : ActorMethod<[], Array<PlantAwaitingNft>>,
   'listPlantsByStage' : ActorMethod<[PlantStage], Array<PlantPublic>>,
   'listPoolNFTs' : ActorMethod<
     [[] | [PoolNFTStatus], bigint],
@@ -1172,6 +1196,9 @@ export interface ICSpicy {
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
   >,
+  /**
+   * / Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
+   */
   'paypalTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
@@ -1254,6 +1281,14 @@ export interface ICSpicy {
   >,
   'refreshRavenBalance' : ActorMethod<[], undefined>,
   'refreshTokenPrices' : ActorMethod<[], boolean>,
+  'registerPlant' : ActorMethod<
+    [RegisterPlantSharedData, bigint, [] | [RegisterPlantCellOverrides]],
+    RegisterPlantResult
+  >,
+  'registerPlantBatch' : ActorMethod<
+    [RegisterPlantSharedData, Array<RegisterPlantCellInput>],
+    RegisterPlantBatchResult
+  >,
   'rejectOffer' : ActorMethod<[string], Offer>,
   'removeAdmin' : ActorMethod<[Principal], undefined>,
   'removePlant' : ActorMethod<[PlantId], boolean>,
@@ -1298,6 +1333,7 @@ export interface ICSpicy {
   'setProfileWallpaper' : ActorMethod<[string], undefined>,
   'setRecipeFaqs' : ActorMethod<[RecipeId, Array<[string, string]>], boolean>,
   'setRecipeIntro' : ActorMethod<[RecipeId, string], boolean>,
+  'setRecipeVideo' : ActorMethod<[RecipeId, [] | [string]], Result_5>,
   'setRecipeVideoUrl' : ActorMethod<[RecipeId, [] | [string]], boolean>,
   'setTop8' : ActorMethod<[Array<Principal>], undefined>,
   'setUploadsCanisterId' : ActorMethod<[string], undefined>,
@@ -1309,9 +1345,6 @@ export interface ICSpicy {
     StoredFile
   >,
   'storeAvatarFile' : ActorMethod<[Uint8Array | number[]], string>,
-  /**
-   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
-   */
   'storeCommunityImage' : ActorMethod<
     [string, Uint8Array | number[], string],
     StoredFile
@@ -1321,9 +1354,6 @@ export interface ICSpicy {
     StoredFile
   >,
   'storeProfileBannerFile' : ActorMethod<[Uint8Array | number[]], string>,
-  /**
-   * / Per-principal rate limiters for cycle-drain protection (CDA).
-   */
   'storeProfileWallpaperFile' : ActorMethod<[Uint8Array | number[]], string>,
   'storeSlicerShareOgImage' : ActorMethod<[Uint8Array | number[]], Result_3>,
   'submitGameScore' : ActorMethod<[string, bigint, string], Result_2>,
@@ -1629,11 +1659,24 @@ export interface PestEntry {
   'timestamp' : Timestamp,
   'severity' : string,
 }
+export interface PlantAwaitingNft {
+  'owner' : Principal,
+  'cell_position' : [] | [bigint],
+  'germination_date' : Timestamp,
+  'tray_id' : [] | [TrayId],
+  'variety' : string,
+  'plant_id' : PlantId,
+}
 export interface PlantCountStats {
   'total' : bigint,
   'sold' : bigint,
   'byStage' : Array<[PlantStage, bigint]>,
   'forSale' : bigint,
+}
+export interface PlantDeathRecord {
+  'cause' : DeathCause,
+  'notes' : [] | [string],
+  'died_at' : Timestamp,
 }
 export interface PlantHealth {
   'daysSinceFeed' : [] | [bigint],
@@ -1647,6 +1690,7 @@ export type PlantId = bigint;
 export interface PlantLifecycle {
   'wateringLog' : Array<WateringEntry>,
   'pestLog' : Array<PestEntry>,
+  'deathRecord' : [] | [PlantDeathRecord],
   'soldAt' : [] | [Timestamp],
   'feedingLog' : Array<FeedingPublic>,
   'nftTokenId' : [] | [bigint],
@@ -1678,6 +1722,10 @@ export interface PlantPlacement {
   'color' : string,
   'scale' : number,
   'varietyId' : [] | [bigint],
+}
+export interface PlantPoolStatus {
+  'available' : bigint,
+  'theoretical_ceiling' : bigint,
 }
 export interface PlantPublic {
   'id' : PlantId,
@@ -1955,6 +2003,7 @@ export interface RecipePublic {
   'title' : string,
   'updated_at' : Timestamp,
   'fermentation_time' : [] | [string],
+  'bonsaiVideoId' : [] | [string],
   'image_key' : [] | [string],
   'difficulty' : Difficulty,
   'slug' : string,
@@ -1990,6 +2039,46 @@ export interface RecordTipInput {
   'block_index' : bigint,
   'ledger_canister_id' : string,
   'amount' : bigint,
+}
+export interface RegisterPlantBatchResult {
+  'skipped' : bigint,
+  'results' : Array<RegisterPlantCellResult>,
+  'tray_id' : TrayId,
+  'failed' : bigint,
+  'succeeded' : bigint,
+}
+export interface RegisterPlantCellInput {
+  'overrides' : [] | [RegisterPlantCellOverrides],
+  'cell_index' : bigint,
+}
+export type RegisterPlantCellOutcome = { 'ok' : { 'plant_id' : PlantId } } |
+  { 'err' : string } |
+  { 'skipped' : string };
+export interface RegisterPlantCellOverrides {
+  'container_size' : [] | [ContainerSize],
+  'origin' : [] | [string],
+  'common_name' : [] | [string],
+  'variety_id' : [] | [bigint],
+  'notes' : [] | [string],
+  'planting_date' : [] | [Timestamp],
+  'genetics' : [] | [string],
+  'latin_name' : [] | [string],
+}
+export interface RegisterPlantCellResult {
+  'outcome' : RegisterPlantCellOutcome,
+  'cell_index' : bigint,
+}
+export interface RegisterPlantResult { 'plant_id' : PlantId }
+export interface RegisterPlantSharedData {
+  'container_size' : [] | [ContainerSize],
+  'origin' : [] | [string],
+  'common_name' : [] | [string],
+  'variety_id' : bigint,
+  'tray_id' : TrayId,
+  'notes' : string,
+  'planting_date' : [] | [Timestamp],
+  'genetics' : string,
+  'latin_name' : [] | [string],
 }
 export interface ResaleListingPublic {
   'id' : string,

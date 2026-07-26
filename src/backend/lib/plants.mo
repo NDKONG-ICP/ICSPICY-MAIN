@@ -437,7 +437,12 @@ module {
     for_sale : Bool,
   ) : () {
     switch (plants.get(plant_id)) {
-      case (?plant) { plant.for_sale := for_sale };
+      case (?plant) {
+        if (for_sale and plant.is_cooked) {
+          Runtime.trap("Plant is dead");
+        };
+        plant.for_sale := for_sale;
+      };
       case null { Runtime.trap("Plant not found") };
     };
   };

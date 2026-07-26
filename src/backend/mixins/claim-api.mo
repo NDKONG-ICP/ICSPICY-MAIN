@@ -38,6 +38,7 @@ mixin (
   plantPestLog : Map.Map<Common.PlantId, List.List<PlantTypes.PestEntry>>,
   plantPhotoLog : Map.Map<Common.PlantId, List.List<PlantTypes.PlantPhotoEntry>>,
   plantWeatherSnapshots : Map.Map<Common.PlantId, List.List<PlantTypes.WeatherSnapshot>>,
+  plantDeathRecords : Map.Map<Common.PlantId, PlantTypes.PlantDeathRecord>,
   icrc7Owners : Map.Map<Nat, ICRC7.Account>,
   icrc7Balances : Map.Map<Principal, Set.Set<Nat>>,
   selfPrincipal : () -> Principal,
@@ -56,6 +57,7 @@ mixin (
       plantPestLog;
       plantPhotoLog;
       plantWeatherSnapshots;
+      plantDeathRecords;
     };
   };
 
@@ -145,6 +147,19 @@ mixin (
     };
     if (not holderOk) {
       return { success = false; tokenId = null; message = "NFT not available for claim" };
+    };
+    switch (nftClaimPlantIds.get(claimToken)) {
+      case (?plantId) {
+        switch (plants.get(plantId)) {
+          case (?plant) {
+            if (plant.is_cooked) {
+              return { success = false; tokenId = null; message = "Plant is dead" };
+            };
+          };
+          case null {};
+        };
+      };
+      case null {};
     };
     entry.redeemed := true;
     let buyerAccount : ICRC7.Account = { owner = caller; subaccount = null };

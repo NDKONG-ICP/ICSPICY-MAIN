@@ -98,6 +98,7 @@ mixin (
   plantPestLog            : Map.Map<Common.PlantId, List.List<PlantTypes.PestEntry>>,
   plantPhotoLog           : Map.Map<Common.PlantId, List.List<PlantTypes.PlantPhotoEntry>>,
   plantWeatherSnapshots   : Map.Map<Common.PlantId, List.List<PlantTypes.WeatherSnapshot>>,
+  plantDeathRecords       : Map.Map<Common.PlantId, PlantTypes.PlantDeathRecord>,
   priceOracleState        : PriceOracleTypes.PriceOracleState,
   coopSeats               : Map.Map<Nat, CoopTypes.CoopSeat>,
   coopDesignatedSeats     : Map.Map<Nat, Bool>,
@@ -1081,6 +1082,7 @@ mixin (
       plantPestLog;
       plantPhotoLog;
       plantWeatherSnapshots;
+      plantDeathRecords;
     };
   };
 

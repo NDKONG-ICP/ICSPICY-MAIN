@@ -51,8 +51,8 @@ export function MarkDeadModal({
             Mark tray loss
           </DialogTitle>
           <DialogDescription>
-            {plantLabel ?? "Recording loss"} freezes provenance permanently for
-            this cell.
+            {plantLabel ?? "Recording loss"} moves to the Graveyard — full
+            lifecycle data and PepperHead art stay bound to this memorial record.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground">

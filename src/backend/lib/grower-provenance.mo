@@ -17,6 +17,8 @@ module {
   /// Exclusive upper bound — 200_000+ is reserved for soulbound achievement badges.
   public let GROWER_TOKEN_END : Nat = 200_000;
   public let MINTS_PER_HOUR : Nat = 20;
+  /// Tray batch registration may mint up to this many grower tokens per hour.
+  public let BATCH_MINTS_PER_HOUR : Nat = 128;
   public let HOUR_NS : Int = 3_600_000_000_000;
 
   public func isGrowerProvenanceToken(tokenId : Nat) : Bool {
@@ -55,15 +57,56 @@ module {
     limits : Map.Map<Principal, (Nat, Int)>,
     caller : Principal,
   ) {
+    recordMintCount(limits, caller, 1);
+  };
+
+  public func recordMintCount(
+    limits : Map.Map<Principal, (Nat, Int)>,
+    caller : Principal,
+    count : Nat,
+  ) {
+    if (count == 0) return;
     let now = Time.now();
     switch (limits.get(caller)) {
-      case null { limits.add(caller, (1, now)) };
-      case (?(count, windowStart)) {
+      case null { limits.add(caller, (count, now)) };
+      case (?(prev, windowStart)) {
         if (now - windowStart >= HOUR_NS) {
-          limits.add(caller, (1, now));
+          limits.add(caller, (count, now));
         } else {
-          limits.add(caller, (count + 1, windowStart));
+          limits.add(caller, (prev + count, windowStart));
         };
+      };
+    };
+  };
+
+  public func checkBatchMintAllowance(
+    limits : Map.Map<Principal, (Nat, Int)>,
+    caller : Principal,
+    requested : Nat,
+  ) : Bool {
+    if (requested == 0) return true;
+    if (requested > BATCH_MINTS_PER_HOUR) return false;
+    let now = Time.now();
+    switch (limits.get(caller)) {
+      case null true;
+      case (?(count, windowStart)) {
+        if (now - windowStart >= HOUR_NS) true
+        else count + requested <= BATCH_MINTS_PER_HOUR;
+      };
+    };
+  };
+
+  public func tokensRemainingInBatchWindow(
+    limits : Map.Map<Principal, (Nat, Int)>,
+    caller : Principal,
+  ) : Nat {
+    let now = Time.now();
+    switch (limits.get(caller)) {
+      case null BATCH_MINTS_PER_HOUR;
+      case (?(count, windowStart)) {
+        if (now - windowStart >= HOUR_NS) BATCH_MINTS_PER_HOUR
+        else if (count >= BATCH_MINTS_PER_HOUR) 0
+        else BATCH_MINTS_PER_HOUR - count;
       };
     };
   };

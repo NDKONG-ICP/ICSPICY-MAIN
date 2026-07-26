@@ -6,8 +6,10 @@ import Time "mo:core/Time";
 import Nat "mo:core/Nat";
 import Int "mo:core/Int";
 import Text "mo:core/Text";
+import Char "mo:core/Char";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Result "mo:core/Result";
 import Common "../types/common";
 import RecipeTypes "../types/recipes";
 
@@ -77,6 +79,7 @@ module {
       display_order = r.display_order;
       caller_favorited = callerFav;
       favorite_count = favoriteCount(favorites, r.id);
+      bonsaiVideoId = null;
     };
   };
 
@@ -316,6 +319,39 @@ module {
         };
         recipes.add(updated.id, updated);
         true;
+      };
+    };
+  };
+
+  func isValidBonsaiVideoId(id : Text) : Bool {
+    if (id.size() == 0 or id.size() > 20) return false;
+    for (c in id.chars()) {
+      if (not (Char.isDigit(c) or (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z') or c == '-' or c == '_')) {
+        return false;
+      };
+    };
+    true;
+  };
+
+  public func setRecipeVideo(
+    recipes : RecipeMap,
+    bonsaiVideoIds : Map.Map<Common.RecipeId, Text>,
+    id : Common.RecipeId,
+    videoId : ?Text,
+  ) : Result.Result<(), Text> {
+    switch (recipes.get(id)) {
+      case null { #err("Recipe not found") };
+      case (?_) {
+        switch (videoId) {
+          case null { ignore bonsaiVideoIds.delete(id) };
+          case (?vid) {
+            if (not isValidBonsaiVideoId(vid)) {
+              return #err("Invalid BonsaiTube video id (max 20 chars, alphanumeric)");
+            };
+            bonsaiVideoIds.add(id, vid);
+          };
+        };
+        #ok(());
       };
     };
   };

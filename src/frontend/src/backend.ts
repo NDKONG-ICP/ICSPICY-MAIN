@@ -1024,6 +1024,8 @@ export interface backendInterface {
     getMyResaleListings(): Promise<Array<ResaleListingPublic>>;
     getMyNftListings(): Promise<Array<NftListingPublic>>;
     getNimsDashboardStats(): Promise<import("./declarations/backend.did").DashboardStats>;
+    listGraveyard(): Promise<Array<import("./declarations/backend.did").PlantLifecycle>>;
+    getGraveyard(): Promise<Array<import("./declarations/backend.did").PlantLifecycle>>;
     getRecentActivity(limit: bigint): Promise<Array<import("./declarations/backend.did").ActivityEntry>>;
     getTrayGrid(trayId: TrayId): Promise<Array<import("./declarations/backend.did").TrayCellPublic>>;
     getPlantHealth(plantId: PlantId): Promise<import("./declarations/backend.did").PlantHealth | null>;
@@ -1074,7 +1076,11 @@ export interface backendInterface {
     purchasePlant(plantId: PlantId, token: import("./declarations/backend.did").PaymentToken, amount: bigint): Promise<import("./declarations/backend.did").PurchasePlantResult>;
     purchasePlantICPay(plantId: PlantId, paymentId: string): Promise<import("./declarations/backend.did").PurchasePlantResult>;
     purchasePlantPayPal(plantId: PlantId, paypalOrderId: string): Promise<import("./declarations/backend.did").PurchasePlantResult>;
-    getNftPoolStatus(): Promise<{ available: bigint; total: bigint }>;
+    getNftPoolStatus(): Promise<import("./declarations/backend.did").PlantPoolStatus>;
+    getPlantPoolAvailableCount(): Promise<import("./declarations/backend.did").PlantPoolStatus>;
+    getPlantByNftIdMapSize(): Promise<bigint>;
+    getPlantByNftIdBackfillCount(): Promise<bigint>;
+    listPlantsAwaitingNft(): Promise<Array<import("./declarations/backend.did").PlantAwaitingNft>>;
     getPlantTimeline(plant_id: PlantId): Promise<PlantTimeline | null>;
     getPoolDashboard(): Promise<PoolDashboard>;
     getPoolNFT(nftId: bigint): Promise<PoolNFTPublic | null>;
@@ -1125,7 +1131,11 @@ export interface backendInterface {
     logPest(plantId: PlantId, pestName: string, severity: string, treatment: string | null, notes: string | null): Promise<boolean>;
     markCellDead(trayId: TrayId, cellPosition: bigint, cause: import("./declarations/backend.did").DeathCause, notes: string | null, photoUrl: string | null): Promise<boolean>;
     markCellGerminated(trayId: TrayId, cellPosition: bigint, date: bigint | null): Promise<{ plantId: bigint; nftTokenId: bigint; claimToken: string }>;
+    germinatePlant(plantId: PlantId, date: bigint | null): Promise<import("./declarations/backend.did").GerminatePlantResult>;
+    germinatePlantBatch(plantIds: Array<PlantId>, date: bigint | null): Promise<import("./declarations/backend.did").GerminatePlantBatchResult>;
     plantSeed(trayId: TrayId, cellPosition: bigint, varietyId: bigint, datePlanted: bigint | null): Promise<{ plantId: bigint }>;
+    registerPlant(sharedData: import("./declarations/backend.did").RegisterPlantSharedData, cellIndex: bigint, overrides: import("./declarations/backend.did").RegisterPlantCellOverrides | null): Promise<import("./declarations/backend.did").RegisterPlantResult>;
+    registerPlantBatch(sharedData: import("./declarations/backend.did").RegisterPlantSharedData, cells: Array<import("./declarations/backend.did").RegisterPlantCellInput>): Promise<import("./declarations/backend.did").RegisterPlantBatchResult>;
     addPurchasedPlantToNims(nftTokenId: bigint, container: import("./declarations/backend.did").ContainerSize, locationNotes: string | null): Promise<{ plantId: bigint }>;
     waterEntireTray(trayId: TrayId, amountMl: bigint, phLevel: number | null, notes: string | null): Promise<bigint>;
     feedEntireTray(trayId: TrayId, productName: string, nutrientType: string, dosage: string, notes: string | null): Promise<bigint>;
@@ -2259,6 +2269,16 @@ export class Backend implements backendInterface {
             try { return await this.actor.getNimsDashboardStats(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.getNimsDashboardStats(); }
     }
+    async listGraveyard(): Promise<Array<import("./declarations/backend.did").PlantLifecycle>> {
+        if (this.processError) {
+            try { return await this.actor.listGraveyard(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.listGraveyard(); }
+    }
+    async getGraveyard(): Promise<Array<import("./declarations/backend.did").PlantLifecycle>> {
+        if (this.processError) {
+            try { return await this.actor.getGraveyard(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getGraveyard(); }
+    }
     async getRecentActivity(arg0: bigint): Promise<Array<import("./declarations/backend.did").ActivityEntry>> {
         if (this.processError) {
             try { return await this.actor.getRecentActivity(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
@@ -2310,10 +2330,30 @@ export class Backend implements backendInterface {
             try { return await this.actor.markCellGerminated(arg0, arg1, arg2 != null ? [arg2] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.markCellGerminated(arg0, arg1, arg2 != null ? [arg2] : []); }
     }
+    async germinatePlant(arg0: PlantId, arg1: bigint | null): Promise<import("./declarations/backend.did").GerminatePlantResult> {
+        if (this.processError) {
+            try { return await this.actor.germinatePlant(arg0, arg1 != null ? [arg1] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.germinatePlant(arg0, arg1 != null ? [arg1] : []); }
+    }
+    async germinatePlantBatch(arg0: Array<PlantId>, arg1: bigint | null): Promise<import("./declarations/backend.did").GerminatePlantBatchResult> {
+        if (this.processError) {
+            try { return await this.actor.germinatePlantBatch(arg0, arg1 != null ? [arg1] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.germinatePlantBatch(arg0, arg1 != null ? [arg1] : []); }
+    }
     async plantSeed(arg0: TrayId, arg1: bigint, arg2: bigint, arg3: bigint | null): Promise<{ plantId: bigint }> {
         if (this.processError) {
             try { return await this.actor.plantSeed(arg0, arg1, arg2, arg3 != null ? [arg3] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.plantSeed(arg0, arg1, arg2, arg3 != null ? [arg3] : []); }
+    }
+    async registerPlant(arg0: import("./declarations/backend.did").RegisterPlantSharedData, arg1: bigint, arg2: import("./declarations/backend.did").RegisterPlantCellOverrides | null): Promise<import("./declarations/backend.did").RegisterPlantResult> {
+        if (this.processError) {
+            try { return await this.actor.registerPlant(arg0, arg1, arg2 != null ? [arg2] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.registerPlant(arg0, arg1, arg2 != null ? [arg2] : []); }
+    }
+    async registerPlantBatch(arg0: import("./declarations/backend.did").RegisterPlantSharedData, arg1: Array<import("./declarations/backend.did").RegisterPlantCellInput>): Promise<import("./declarations/backend.did").RegisterPlantBatchResult> {
+        if (this.processError) {
+            try { return await this.actor.registerPlantBatch(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.registerPlantBatch(arg0, arg1); }
     }
     async addPurchasedPlantToNims(arg0: bigint, arg1: import("./declarations/backend.did").ContainerSize, arg2: string | null): Promise<{ plantId: bigint }> {
         if (this.processError) {
@@ -2663,10 +2703,30 @@ export class Backend implements backendInterface {
             return { ...r, nftTokenId: r.nftTokenId.length > 0 ? r.nftTokenId[0] : null, claimToken: r.claimToken.length > 0 ? r.claimToken[0] : null };
         }
     }
-    async getNftPoolStatus(): Promise<{ available: bigint; total: bigint }> {
+    async getNftPoolStatus(): Promise<import("./declarations/backend.did").PlantPoolStatus> {
         if (this.processError) {
             try { return await this.actor.getNftPoolStatus(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
         } else { return this.actor.getNftPoolStatus(); }
+    }
+    async getPlantPoolAvailableCount(): Promise<import("./declarations/backend.did").PlantPoolStatus> {
+        if (this.processError) {
+            try { return await this.actor.getPlantPoolAvailableCount(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getPlantPoolAvailableCount(); }
+    }
+    async getPlantByNftIdMapSize(): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.getPlantByNftIdMapSize(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getPlantByNftIdMapSize(); }
+    }
+    async getPlantByNftIdBackfillCount(): Promise<bigint> {
+        if (this.processError) {
+            try { return await this.actor.getPlantByNftIdBackfillCount(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getPlantByNftIdBackfillCount(); }
+    }
+    async listPlantsAwaitingNft(): Promise<Array<import("./declarations/backend.did").PlantAwaitingNft>> {
+        if (this.processError) {
+            try { return await this.actor.listPlantsAwaitingNft(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.listPlantsAwaitingNft(); }
     }
     async getPlantTimeline(arg0: PlantId): Promise<PlantTimeline | null> {
         if (this.processError) {

@@ -64,6 +64,7 @@ import VarietyGuideTypes "types/variety-guide";
 import ProvenanceTypes "types/variety-provenance";
 import SeedBankTypes "types/seed-bank";
 import NimsAPI "mixins/nims-api";
+import NimsLib "lib/nims";
 import CoopAPI "mixins/coop-api";
 import PlantingScheduleTypes "types/planting-schedule";
 import SeedBankAPI "mixins/seed-bank-api";
@@ -405,6 +406,8 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // Side map for recipe YouTube tutorial URLs — stored Recipe record stays
   // untouched (stable-memory upgrade safety, see AGENTS.md migration rules).
   let recipeVideoUrls = Map.empty<Common.RecipeId, Text>();
+  // BonsaiTube how-to video ids (additive side map — Recipe record untouched).
+  let recipeBonsaiVideoIds = Map.empty<Common.RecipeId, Text>();
   // SEO Phase 2: per-recipe intro paragraph + Common Questions (same pattern).
   let recipeIntros = Map.empty<Common.RecipeId, Text>();
   let recipeFaqs = Map.empty<Common.RecipeId, [(Text, Text)]>();
@@ -562,6 +565,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let nextGrowerTokenId = { var value : Nat = 100_000 };
   let growerProvenanceMeta = Map.empty<Nat, CoopTypes.GrowerProvenanceMeta>();
   let growerMintLimits = Map.empty<Principal, (Nat, Int)>();
+  let growerBatchMintLimits = Map.empty<Principal, (Nat, Int)>();
 
   // ── RAVEN balance cache ────────────────────────────────────────────────────
   //
@@ -635,6 +639,13 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // Seed default KNF recipes on first install (idempotent — skipped if already populated).
   RecipesLib.seedRecipes(recipes, nextRecipeId, initialDeployer);
 
+  // ── NIMS plant-pool reverse lookup (append-only — Jul 2026 EOP safety) ─────
+  //
+  // Maps assigned PepperHead tokenId → plantId for germination pool exclusion.
+  // Populated on germinate + backfilled in postupgrade for legacy assignments.
+  let plantByNftId = Map.empty<Nat, Common.PlantId>();
+  let plantDeathRecords = Map.empty<Common.PlantId, PlantTypes.PlantDeathRecord>();
+
   // ── Mixins ─────────────────────────────────────────────────────────────────
 
   include PlantsAPI(accessControlState, plants, trays, trayOwners, feedings, stageHistory, weatherRecords, weatherIndex, artworkLayers, rwaTokens, plantNotesLog, nextPlantId, nextTrayId, nextFeedingId, nextWeatherRecordId, nextArtworkLayerId);
@@ -662,10 +673,14 @@ shared(msg) persistent actor class ICSpicy() = Self {
     plantPestLog,
     plantPhotoLog,
     plantWeatherSnapshots,
+    plantDeathRecords,
     nftClaimTokens,
     nftClaimPlantIds,
     plantClaimTokens,
     nftTokenPlantIds,
+    plantByNftId,
+    productNftTokenIds,
+    coopDesignatedSeats,
     icrc7Owners,
     icrc7Balances,
     icrc37Approvals,
@@ -676,6 +691,12 @@ shared(msg) persistent actor class ICSpicy() = Self {
     nextPlantId,
     nextTrayId,
     nextFeedingId,
+    nextGrowerTokenId,
+    growerProvenanceMeta,
+    growerMintLimits,
+    growerBatchMintLimits,
+    coopSeats,
+    linkedWallets,
   );
   include SeedBankAPI(
     accessControlState,
@@ -778,7 +799,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     certStore,
     linkedWallets,
   );
-  include RecipesAPI(accessControlState, recipes, recipeFavorites, recipeVideoUrls, recipeIntros, recipeFaqs, nextRecipeId, auditLog);
+  include RecipesAPI(accessControlState, recipes, recipeFavorites, recipeVideoUrls, recipeBonsaiVideoIds, recipeIntros, recipeFaqs, nextRecipeId, auditLog);
   include ClaimAPI(
     accessControlState,
     nftClaimTokens,
@@ -798,6 +819,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     plantPestLog,
     plantPhotoLog,
     plantWeatherSnapshots,
+    plantDeathRecords,
     icrc7Owners,
     icrc7Balances,
     func() : Principal { Principal.fromActor(Self) },
@@ -822,6 +844,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     plantPestLog,
     plantPhotoLog,
     plantWeatherSnapshots,
+    plantDeathRecords,
     nftTokenPlantIds,
   );
   include ScheduleAPI(accessControlState, savedSchedules, scheduleShareIndex);
@@ -902,6 +925,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     plantPestLog,
     plantPhotoLog,
     plantWeatherSnapshots,
+    plantDeathRecords,
     priceOracleState,
     coopSeats,
     coopDesignatedSeats,
@@ -972,6 +996,9 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   /// Frontend asset canister for share-time OG HTML publish (append-only slot).
   stable var frontendCanisterIdStable : ?Text = ?"7rukv-hqaaa-aaaao-ba6ma-cai";
+
+  /// Count of plantByNftId entries added during last postupgrade backfill.
+  stable var plantByNftIdBackfillCount : Nat = 0;
 
   func frontendCanisterPrincipal() : Principal {
     switch (frontendCanisterIdStable) {
@@ -1175,6 +1202,16 @@ shared(msg) persistent actor class ICSpicy() = Self {
     [backendEntry, frontend, nftAssets, uploads];
   };
 
+  public query func getPlantByNftIdBackfillCount() : async Nat {
+    plantByNftIdBackfillCount;
+  };
+
+  public query func getPlantByNftIdMapSize() : async Nat {
+    var count : Nat = 0;
+    for ((_, _) in plantByNftId.entries()) { count += 1 };
+    count;
+  };
+
   // ── Ingress filter ─────────────────────────────────────────────────────────
 
   // Block anonymous callers at ingress before consensus — no cycles burned on rejection.
@@ -1234,6 +1271,11 @@ shared(msg) persistent actor class ICSpicy() = Self {
       gameLeaderboardCache,
       leaderboardExcluded,
       accessControlState,
+    );
+    plantByNftIdBackfillCount := NimsLib.backfillPlantByNftId(
+      plants,
+      nftTokenPlantIds,
+      plantByNftId,
     );
   };
 };

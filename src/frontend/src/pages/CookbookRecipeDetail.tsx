@@ -23,6 +23,7 @@ import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { Seo } from "../components/Seo";
 import { openSpicyAi } from "../components/SpicyAiWidget";
+import { BonsaiTubeEmbed } from "../components/BonsaiTubeEmbed";
 import { YouTubeEmbed } from "../components/YouTubeEmbed";
 import type { Ingredient } from "../declarations/backend.did";
 import { useAuth } from "../hooks/useAuth";
@@ -44,26 +45,50 @@ import {
   recipeBreadcrumbJsonLd,
   recipeSeoMeta,
 } from "../lib/seo-routes.mjs";
+import { bonsaiTubeEmbedUrl } from "../lib/bonsai-tube";
 import { parseYouTubeId, youTubeThumbnailUrl } from "../lib/youtube";
+
+/** Short amounts (e.g. "10", "~24") stay inline; longer ratio text stacks on mobile. */
+const COMPACT_AMOUNT_MAX = 24;
 
 function IngredientLine({ ing }: { ing: Ingredient }) {
   const note = ing.notes.length ? (ing.notes[0] ?? "") : "";
+  const compactAmount = ing.amount.length <= COMPACT_AMOUNT_MAX;
+
   return (
-    <li className="text-sm leading-relaxed flex gap-2">
-      <span className="text-primary font-semibold whitespace-nowrap">
-        {ing.amount}
-      </span>
-      <span className="text-foreground">
-        {ing.name}
-        {ing.is_optional ? (
-          <span className="text-muted-foreground text-xs ml-1">(optional)</span>
-        ) : null}
-        {note ? (
-          <span className="block text-muted-foreground text-xs mt-0.5">
-            {note}
+    <li className="text-sm leading-relaxed py-2.5 border-b border-border/40 last:border-0 sm:py-0 sm:border-0">
+      {compactAmount ? (
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span className="text-primary font-semibold tabular-nums shrink-0">
+            {ing.amount}
           </span>
-        ) : null}
-      </span>
+          <span className="text-foreground font-medium min-w-0">
+            {ing.name}
+            {ing.is_optional ? (
+              <span className="text-muted-foreground text-xs font-normal ml-1">
+                (optional)
+              </span>
+            ) : null}
+          </span>
+        </div>
+      ) : (
+        <div className="space-y-0.5 min-w-0">
+          <span className="font-medium text-foreground block">
+            {ing.name}
+            {ing.is_optional ? (
+              <span className="text-muted-foreground text-xs font-normal ml-1">
+                (optional)
+              </span>
+            ) : null}
+          </span>
+          <span className="text-primary text-xs font-semibold block leading-snug">
+            {ing.amount}
+          </span>
+        </div>
+      )}
+      {note ? (
+        <p className="text-muted-foreground text-xs mt-1 leading-snug">{note}</p>
+      ) : null}
     </li>
   );
 }
@@ -128,6 +153,14 @@ export default function CookbookRecipeDetailPage() {
       recipe ? fetchRecipeVideoUrl(recipe.id) : Promise.resolve(null),
   });
   const videoId = videoUrl ? parseYouTubeId(videoUrl) : null;
+  const bonsaiVideoId =
+    recipe?.bonsaiVideoId && recipe.bonsaiVideoId.length > 0
+      ? (recipe.bonsaiVideoId[0] ?? null)
+      : null;
+  const recipePosterUrl =
+    recipe && recipe.image_key.length > 0 && recipe.image_key[0]
+      ? `/api/object-storage/${recipe.image_key[0]}`
+      : null;
 
   async function handleShare() {
     if (!recipe) return;
@@ -225,16 +258,27 @@ export default function CookbookRecipeDetailPage() {
     author: { "@type": "Organization", name: "IC SPICY" },
     image: "https://www.icspicy.app/banner.png",
     url: `https://www.icspicy.app/cookbook/${encodeURIComponent(recipe.slug)}`,
-    ...(videoId && {
-      video: {
-        "@type": "VideoObject",
-        name: `${recipe.title} tutorial`,
-        description: recipe.description.slice(0, 200),
-        thumbnailUrl: youTubeThumbnailUrl(videoId),
-        embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}`,
-        contentUrl: `https://www.youtube.com/watch?v=${videoId}`,
-      },
-    }),
+    ...(bonsaiVideoId
+      ? {
+          video: {
+            "@type": "VideoObject",
+            name: `${recipe.title} how-to`,
+            description: recipe.description.slice(0, 200),
+            embedUrl: bonsaiTubeEmbedUrl(bonsaiVideoId),
+          },
+        }
+      : videoId
+        ? {
+            video: {
+              "@type": "VideoObject",
+              name: `${recipe.title} tutorial`,
+              description: recipe.description.slice(0, 200),
+              thumbnailUrl: youTubeThumbnailUrl(videoId),
+              embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}`,
+              contentUrl: `https://www.youtube.com/watch?v=${videoId}`,
+            },
+          }
+        : {}),
   };
 
   const faqSchema = faqPageJsonLd(seoContent?.faqs ?? []);
@@ -488,7 +532,18 @@ export default function CookbookRecipeDetailPage() {
                 </section>
               ) : null}
 
-              {videoId ? (
+              {bonsaiVideoId ? (
+                <section aria-label="How-to video">
+                  <h2 className="font-display font-bold text-xl mb-3 text-primary">
+                    Watch the how-to
+                  </h2>
+                  <BonsaiTubeEmbed
+                    videoId={bonsaiVideoId}
+                    title={`${recipe.title} — BonsaiTube how-to`}
+                    posterUrl={recipePosterUrl}
+                  />
+                </section>
+              ) : videoId ? (
                 <section aria-label="Video tutorial">
                   <h2 className="font-display font-bold text-xl mb-3 text-primary">
                     Watch the tutorial
@@ -505,7 +560,7 @@ export default function CookbookRecipeDetailPage() {
                   <h2 className="font-display font-bold text-xl mb-3 text-primary">
                     Ingredients
                   </h2>
-                  <ul className="space-y-3">
+                  <ul className="sm:space-y-3">
                     {recipe.ingredients.map((ing, idx) => (
                       <IngredientLine
                         key={`${recipe.id}-${String(idx)}`}

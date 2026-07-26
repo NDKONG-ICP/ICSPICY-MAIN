@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { getNftImageUrl } from "@/lib/nft-config";
 import type { CellStatus } from "../../declarations/backend.did";
 
 export type TrayCellProps = {
@@ -46,6 +47,8 @@ export function TrayCell({
       ? `d ${daysSincePlanted.toString()}`
       : undefined;
   const pid = nftTokenId?.toString();
+  const nftArtUrl =
+    nftTokenId != null && nftTokenId > 0n ? getNftImageUrl(nftTokenId) : undefined;
   const movedText =
     isTransplanted && containerLabel ? `Moved · ${containerLabel}` : undefined;
 
@@ -60,23 +63,35 @@ export function TrayCell({
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         cellTone(status),
         "Empty" in status && "opacity-70",
+        nftArtUrl != null && "overflow-hidden",
       )}
     >
+      {nftArtUrl != null ? (
+        <>
+          <img
+            src={nftArtUrl}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full object-cover opacity-90"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        </>
+      ) : null}
       <span className="absolute left-1 top-1 text-[9px] font-normal opacity-70">
         {position.toString()}
       </span>
-      <span className="truncate text-white">{label}</span>
+      <span className="relative truncate text-white">{label}</span>
       {movedText ? (
-        <span className="truncate text-[9px] font-normal text-white/80">
+        <span className="relative truncate text-[9px] font-normal text-white/80">
           {movedText}
         </span>
       ) : subtitle !== undefined ? (
-        <span className="truncate text-[9px] font-normal text-white/80">
+        <span className="relative truncate text-[9px] font-normal text-white/80">
           {subtitle}
           {pid !== undefined ? ` · #${pid}` : ""}
         </span>
       ) : pid !== undefined ? (
-        <span className="truncate text-[9px] font-normal text-white/80">
+        <span className="relative truncate text-[9px] font-normal text-white/80">
           #{pid}
           {isTransplanted ? " · historical" : ""}
         </span>

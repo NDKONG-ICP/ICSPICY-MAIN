@@ -1,3 +1,6 @@
+export { GraveyardPanel } from "./GraveyardPanel";
+export type { GraveyardPanelProps } from "./GraveyardPanel";
+
 export { WeatherBar } from "./WeatherBar";
 export { WeatherRadarMap } from "./WeatherRadarMap";
 export { WeatherImmersivePanel } from "./WeatherImmersivePanel";
@@ -39,6 +42,12 @@ export type { LogPestModalProps, LogPestSubmit } from "./LogPestModal";
 
 export { PlantSeedModal } from "./PlantSeedModal";
 export type { PlantSeedModalProps, PlantSeedSubmit } from "./PlantSeedModal";
+
+export { RegisterPlantBatchModal } from "./RegisterPlantBatchModal";
+export type {
+  RegisterPlantBatchModalProps,
+  RegisterPlantBatchSubmit,
+} from "./RegisterPlantBatchModal";
 
 export { GerminationModal } from "./GerminationModal";
 export type {

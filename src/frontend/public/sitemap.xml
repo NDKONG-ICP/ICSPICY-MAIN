@@ -381,6 +381,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://www.icspicy.app/cookbook/egg-amino-acids-eaa</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://www.icspicy.app/variety/1/guide</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -6027,6 +6032,16 @@
   </url>
   <url>
     <loc>https://www.icspicy.app/variety/1130/guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.icspicy.app/variety/1131/guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.icspicy.app/variety/1132/guide</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
