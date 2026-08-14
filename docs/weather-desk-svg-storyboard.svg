@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" role="img" aria-label="IC SPICY Weather Desk SVG storyboard  eight WMO sky states">
+  <title>Weather Desk  Phase 0 SVG Storyboard</title>
+  <desc>Design freeze storyboard. Not production UI. States: clear, partly, overcast, fog, drizzle, rain, storm, heat.</desc>
+
+  <!-- Page chrome -->
+  <rect width="1440" height="900" fill="#1a1714"/>
+  <text x="48" y="48" fill="#f5f0eb" font-family="system-ui,sans-serif" font-size="28" font-weight="700">IC SPICY Weather Desk  SVG Storyboard</text>
+  <text x="48" y="78" fill="#9a9188" font-family="system-ui,sans-serif" font-size="14">Phase 0 freeze � vector sky layers only � no radar bitmaps � Jul 30 2026</text>
+
+  <!-- Helper: 8 panels 320x280, 2 rows -->
+  <!-- CLEAR -->
+  <g transform="translate(48,110)">
+    <rect width="320" height="280" rx="12" fill="#0f1419" stroke="#3a3530"/>
+    <defs>
+      <linearGradient id="gClear" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#6eb0d4"/>
+        <stop offset="100%" stop-color="#2a6a7a"/>
+      </linearGradient>
+    </defs>
+    <rect x="12" y="40" width="296" height="180" rx="8" fill="url(#gClear)"/>
+    <circle cx="240" cy="90" r="36" fill="#f4d58d" opacity="0.95"/>
+    <text x="16" y="28" fill="#e8e2dc" font-family="system-ui,sans-serif" font-size="13" font-weight="600">clear � WMO 01</text>
+    <text x="16" y="248" fill="#9a9188" font-family="system-ui,sans-serif" font-size="11">sun glow pulse</text>
+  </g>
+
+  <!-- PARTLY -->
+  <g transform="translate(400,110)">
+    <rect width="320" height="280" rx="12" fill="#0f1419" stroke="#3a3530"/>
+    <defs>
+      <linearGradient id="gPartly" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#5a9bb8"/>
+        <stop offset="100%" stop-color="#355a68"/>
+      </linearGradient>
+    </defs>
+    <rect x="12" y="40" width="296" height="180" rx="8" fill="url(#gPartly)"/>
+    <circle cx="220" cy="85" r="28" fill="#f4d58d"/>
+    <ellipse cx="120" cy="110" rx="55" ry="22" fill="#dce6ec" opacity="0.85"/>
+    <ellipse cx="160" cy="120" rx="40" ry="16" fill="#c5d3dc" opacity="0.9"/>
+    <text x="16" y="28" fill="#e8e2dc" font-family="system-ui,sans-serif" font-size="13" font-weight="600">partly � WMO 2</text>
+    <text x="16" y="248" fill="#9a9188" font-family="system-ui,sans-serif" font-size="11">cloud drift translateX</text>
+  </g>
+
+  <!-- OVERCAST -->
+  <g transform="translate(752,110)">
+    <rect width="320" height="280" rx="12" fill="#0f1419" stroke="#3a3530"/>
+    <rect x="12" y="40" width="296" height="180" rx="8" fill="#4a5560"/>
+    <ellipse cx="100" cy="100" rx="70" ry="28" fill="#6a7580" opacity="0.7"/>
+    <ellipse cx="200" cy="120" rx="80" ry="30" fill="#5a6570" opacity="0.75"/>
+    <text x="16" y="28" fill="#e8e2dc" font-family="system-ui,sans-serif" font-size="13" font-weight="600">overcast � WMO 3</text>
+    <text x="16" y="248" fill="#9a9188" font-family="system-ui,sans-serif" font-size="11">opacity breathe</text>
+  </g>
+
+  <!-- FOG -->
+  <g transform="translate(1104,110)">
+    <rect width="288" height="280" rx="12" fill="#0f1419" stroke="#3a3530"/>
+    <rect x="12" y="40" width="264" height="180" rx="8" fill="#6d7378"/>
+    <rect x="12" y="80" width="264" height="24" fill="#b8 rec0c4" opacity="0.35"/>
+    <rect x="12" y="120" width="264" height="28" fill="#c8d0d4" opacity="0.4"/>
+    <rect x="12" y="160" width="264" height="20" fill="#a8b0b4" opacity="0.3"/>
+    <text x="16" y="28" fill="#e8e2dc" font-family="system-ui,sans-serif" font-size="13" font-weight="600">fog � WMO 4548</text>
+    <text x="16" y="248" fill="#9a9188" font-family="system-ui,sans-serif" font-size="11">veil slide</text>
+  </g>
+
+  <!-- DRIZZLE -->
+  <g transform="translate(48,430)">
+    <rect width="320" height="280" rx="12" fill="#0f1419" stroke="#3a3530"/>
+    <rect x="12" y="40" width="296" height="180" rx="8" fill="#3d4a58"/>
+    <g stroke="#7eb8d8" stroke-width="1.5" opacity="0.7">
+      <line x1="40" y1="60" x2="28" y2="100"/><line x1="70" y1="55" x2="58" y2="95"/>
+      <line x1="100" y1="70" x2="88" y2="110"/><line x1="140" y1="50" x2="128" y2="90"/>
+      <line x1="180" y1="65" x2="168" y2="105"/><line x1="220" y1="55" x2="208" y2="95"/>
+      <line x1="260" y1="75" x2="248" y2="115"/><line x1="290" y1="60" x2="278" y2="100"/>
+    </g>
+    <text x="16" y="28" fill="#e8e2dc" font-family="system-ui,sans-serif" font-size="13" font-weight="600">drizzle � WMO 5155</text>
+    <text x="16" y="248" fill="#9a9188" font-family="system-ui,sans-serif" font-size="11">thin diagonal strokes</text>
+  </g>
+
+  <!-- RAIN -->
+  <g transform="translate(400,430)">
+    <rect width="320" height="280" rx="12" fill="#0f1419" stroke="#3a3530"/>
+    <rect x="12" y="40" width="296" height="180" rx="8" fill="#2a3544"/>
+    <g stroke="#5aa0c8" stroke-width="2" opacity="0.85">
+      <line x1="35" y1="50" x2="18" y2="110"/><line x1="65" y1="45" x2="48" y2="105"/>
+      <line x1="95" y1="55" x2="78" y2="115"/><line x1="125" y1="48" x2="108" y2="108"/>
+      <line x1="155" y1="52" x2="138" y2="112"/><line x1="185" y1="46" x2="168" y2="106"/>
+      <line x1="215" y1="58" x2="198" y2="118"/><line x1="245" y1="50" x2="228" y2="110"/>
+      <line x1="275" y1="54" x2="258" y2="114"/><line x1="300" y1="48" x2="283" y2="108"/>
+    </g>
+    <text x="16" y="28" fill="#e8e2dc" font-family="system-ui,sans-serif" font-size="13" font-weight="600">rain � WMO 6165 / 8082</text>
+    <text x="16" y="248" fill="#9a9188" font-family="system-ui,sans-serif" font-size="11">dense strokes + optional splash</text>
+  </g>
+
+  <!-- STORM -->
+  <g transform="translate(752,430)">
+    <rect width="320" height="280" rx="12" fill="#0f1419" stroke="#3a3530"/>
+    <rect x="12" y="40" width="296" height="180" rx="8" fill="#1a2230"/>
+    <rect x="12" y="40" width="296" height="180" rx="8" fill="#c8d8f0" opacity="0.15"/>
+    <polyline points="180,55 160,100 175,100 145,160" fill="none" stroke="#e8f0ff" stroke-width="3" opacity="0.9"/>
+    <g stroke="#8aa0b8" stroke-width="1.5" opacity="0.6">
+      <line x1="40" y1="90" x2="100" y2="80"/><line x1="60" y1="130" x2="130" y2="118"/>
+      <line x1="200" y1="140" x2="280" y2="125"/>
+    </g>
+    <text x="16" y="28" fill="#e8e2dc" font-family="system-ui,sans-serif" font-size="13" font-weight="600">storm � WMO 9599</text>
+    <text x="16" y="248" fill="#9a9188" font-family="system-ui,sans-serif" font-size="11">flash + wind streaks</text>
+  </g>
+
+  <!-- HEAT overlay -->
+  <g transform="translate(1104,430)">
+    <rect width="288" height="280" rx="12" fill="#0f1419" stroke="#3a3530"/>
+    <defs>
+      <linearGradient id="gHeat" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#6eb0d4"/>
+        <stop offset="60%" stop-color="#e07a3a" stop-opacity="0.55"/>
+        <stop offset="100%" stop-color="#c44a20" stop-opacity="0.7"/>
+      </linearGradient>
+    </defs>
+    <rect x="12" y="40" width="264" height="180" rx="8" fill="url(#gHeat)"/>
+    <circle cx="200" cy="90" r="32" fill="#f4d58d"/>
+    <text x="16" y="28" fill="#e8e2dc" font-family="system-ui,sans-serif" font-size="13" font-weight="600">heat overlay � e100�F</text>
+    <text x="16" y="248" fill="#9a9188" font-family="system-ui,sans-serif" font-size="11">amber wash on any base</text>
+  </g>
+</svg>

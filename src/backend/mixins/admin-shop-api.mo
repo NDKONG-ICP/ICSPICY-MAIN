@@ -19,6 +19,7 @@ import Time "mo:core/Time";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
+  agentPrincipalState : AccessControl.AgentPrincipalState,
   products : Map.Map<Common.ProductId, MarketTypes.Product>,
   orders : Map.Map<Common.OrderId, MarketTypes.Order>,
   orderLineNftTokenIds : Map.Map<Common.OrderId, [Nat]>,
@@ -39,7 +40,7 @@ mixin (
   public shared query ({ caller }) func listAllOrdersAdmin(
     filter : AdminTypes.AdminOrderStatusFilter,
   ) : async [AdminTypes.AdminOrderPublic] {
-    AccessControl.requireAdmin(accessControlState, caller);
+    AccessControl.requireAdminOrAgent(accessControlState, agentPrincipalState, caller);
     AdminOrdersLib.listOrders(
       orders, products, orderLineNftTokenIds, orderPickupClaimTokens,
       orderShippingCents, orderShippingAddresses, icpaySessionsConsumed, filter,
@@ -49,7 +50,7 @@ mixin (
   public shared query ({ caller }) func getAdminOrder(
     order_id : Common.OrderId,
   ) : async ?AdminTypes.AdminOrderPublic {
-    AccessControl.requireAdmin(accessControlState, caller);
+    AccessControl.requireAdminOrAgent(accessControlState, agentPrincipalState, caller);
     switch (orders.get(order_id)) {
       case null null;
       case (?order) {
@@ -62,7 +63,7 @@ mixin (
   };
 
   public shared query ({ caller }) func getNewOrderCount() : async Nat {
-    AccessControl.requireAdmin(accessControlState, caller);
+    AccessControl.requireAdminOrAgent(accessControlState, agentPrincipalState, caller);
     let seen = switch (adminOrdersSeenUpTo.get(caller)) {
       case (?n) n;
       case null 0;

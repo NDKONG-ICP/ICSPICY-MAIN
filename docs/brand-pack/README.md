@@ -2,6 +2,8 @@
 
 Generated branded source documents and PDFs for whitepaper, roadmap, pitch deck, marketing strategy, market analysis, scripts, and X Spaces.
 
+- [IC SPICY Agent Swarm Worker Tutorial](IC_SPICY_Agent_Swarm_Worker_Tutorial.md) / `IC_SPICY_Agent_Swarm_Worker_Tutorial.pdf`
+- [IC SPICY Bullishness and Multichain Strategy](IC_SPICY_Bullishness_Multichain_Strategy.md) / `IC_SPICY_Bullishness_Multichain_Strategy.pdf`
 - [IC SPICY Branded Whitepaper](IC_SPICY_Branded_Whitepaper.md) / `IC_SPICY_Branded_Whitepaper.pdf`
 - [IC SPICY Roadmap](IC_SPICY_Roadmap.md) / `IC_SPICY_Roadmap.pdf`
 - [IC SPICY Pitch Deck](IC_SPICY_Pitch_Deck.md) / `IC_SPICY_Pitch_Deck.pdf`

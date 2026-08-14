@@ -16,7 +16,7 @@ import { uploadsUrl } from "@/lib/uploads-canister";
 import { weatherDataToSnapshot } from "@/lib/weather-snapshot";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type {
   PlantStage as BackendPlantStage,
@@ -31,6 +31,7 @@ import {
   LogWateringModal,
   MarkDeadModal,
   NfcTagLinkModal,
+  PlantClaimBanner,
   CareStreakHeatmap,
   NimsStoredPhoto,
   PlantQuickActions,
@@ -72,6 +73,7 @@ import {
 import { useNimsLocation } from "../hooks/useNimsLocation";
 import { useUploadNimsPhoto } from "../hooks/useNimsPhotoUpload";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { useUsageTracking, USAGE } from "../hooks/useUsageTracking";
 import { useHarvestSeeds } from "../hooks/useSeedBank";
 import { useWeather } from "../hooks/useWeather";
 
@@ -113,6 +115,7 @@ export default function PlantDetailPage() {
   const removePlant = useRemovePlant();
   const harvestSeeds = useHarvestSeeds();
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const { track } = useUsageTracking();
   const [noteText, setNoteText] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [weatherExpanded, setWeatherExpanded] = useState(false);
@@ -131,6 +134,14 @@ export default function PlantDetailPage() {
     weather,
     Boolean(identity && lc && !plantIsDeadEarly),
   );
+
+  useEffect(() => {
+    if (id === undefined) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("src") === "nfc") {
+      track(USAGE.NIMS.NFC_SCAN.feature, USAGE.NIMS.NFC_SCAN.action, `nfc-${id}`);
+    }
+  }, [id, track]);
 
   const [waterOpen, setWaterOpen] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
@@ -356,6 +367,13 @@ export default function PlantDetailPage() {
             plantId={id}
             lifecycle={lc}
             isOwner={canEdit}
+          />
+
+          <PlantClaimBanner
+            plantId={id}
+            hasNft={tokenId !== undefined}
+            sold={plant.sold}
+            isOwner={isOwner}
           />
 
           <Card>

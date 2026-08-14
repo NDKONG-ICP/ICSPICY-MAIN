@@ -9,7 +9,9 @@ import {
   RAINVIEWER_TILE_SIZE,
 } from "@/lib/rainviewer-radar";
 
-const MAX_NATIVE_ZOOM = 7;
+// RainViewer serves native radar tiles up to z10; Leaflet upscales to street level.
+const MAX_NATIVE_ZOOM = 10;
+const MAP_MAX_ZOOM = 19;
 const RADAR_OPACITY = 0.65;
 const HIDDEN_OPACITY = 0.001;
 const FRAME_MS = 700;
@@ -29,10 +31,12 @@ export function WeatherRadarMap({
   lat,
   lng,
   locationLabel,
+  className,
 }: {
   lat: number;
   lng: number;
   locationLabel?: string;
+  className?: string;
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -44,6 +48,7 @@ export function WeatherRadarMap({
   const [isPlaying, setIsPlaying] = useState(true);
   const [status, setStatus] = useState<RadarStatus>("loading");
   const [mapReady, setMapReady] = useState(false);
+  const [mapZoom, setMapZoom] = useState(7);
 
   const loadRadarFrames = useCallback(async () => {
     setStatus("loading");
@@ -87,9 +92,13 @@ export function WeatherRadarMap({
       const map = L.map(el, {
         center: [lat, lng],
         zoom: 7,
-        maxZoom: 12,
-        zoomControl: false,
+        maxZoom: MAP_MAX_ZOOM,
+        zoomControl: true,
         attributionControl: false,
+      });
+
+      map.on("zoomend", () => {
+        setMapZoom(map.getZoom());
       });
 
       L.tileLayer(
@@ -173,7 +182,7 @@ export function WeatherRadarMap({
         tileSize: RAINVIEWER_TILE_SIZE,
         opacity: HIDDEN_OPACITY,
         maxNativeZoom: MAX_NATIVE_ZOOM,
-        maxZoom: 12,
+        maxZoom: MAP_MAX_ZOOM,
         updateWhenIdle: false,
         updateWhenZooming: false,
       }).addTo(map),
@@ -217,7 +226,10 @@ export function WeatherRadarMap({
   return (
     <div
       data-ocid="nims-weather-radar"
-      className="relative min-h-64 overflow-hidden rounded-2xl border border-white/10 bg-zinc-950"
+      className={
+        className ??
+        "relative min-h-64 overflow-hidden rounded-2xl border border-white/10 bg-zinc-950"
+      }
     >
       <div
         ref={mapRef}
@@ -227,6 +239,12 @@ export function WeatherRadarMap({
       {locationLabel && !showOverlay && (
         <div className="pointer-events-none absolute left-2 top-2 z-[500] rounded-md bg-black/60 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
           📍 {locationLabel}
+        </div>
+      )}
+      {status === "ready" && mapZoom > MAX_NATIVE_ZOOM && (
+        <div className="pointer-events-none absolute right-2 top-2 z-[500] max-w-[11rem] rounded-md bg-black/70 px-2 py-1 text-[10px] leading-snug text-zinc-300 backdrop-blur-sm">
+          Radar upscaled — native resolution to z{MAX_NATIVE_ZOOM}. Basemap
+          zooms to street level.
         </div>
       )}
       {showOverlay && (

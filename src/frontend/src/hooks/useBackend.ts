@@ -56,6 +56,8 @@ import type {
   _SERVICE as BackendServiceRaw,
   CreateRecipeInput,
   RecipePublic,
+  SwarmCanisterInput as SwarmCanisterInputRaw,
+  SwarmCanisterTarget as SwarmCanisterTargetRaw,
   UpdateRecipeInput,
 } from "../declarations/backend.did";
 import { useActor } from "./useActor";
@@ -2552,37 +2554,148 @@ export type CanisterHealthSnapshot = {
   isHealthy: boolean;
 };
 
+export type FleetProbeStatus = "ok" | "denied" | "error";
+
+export type FleetTargetCategory =
+  | "core"
+  | "asset"
+  | "agent"
+  | "weather"
+  | "workerBridge";
+
 export type FleetCanisterEntry = {
   name: string;
   canisterId: string;
+  category: FleetTargetCategory;
+  agentKind: string | null;
+  isSwarm: boolean;
+  autoTopUpEnabled: boolean;
+  autoTopUpThresholdCycles: bigint;
+  autoTopUpIcpE8s: bigint;
+  autoTopUpMaxIcpPerDayE8s: bigint;
   cyclesBalance: bigint;
   memorySize: bigint;
   isHealthy: boolean;
+  probeStatus: FleetProbeStatus;
+  probeMessage: string | null;
+  burnPerDay: bigint;
+  cumulativeBurned: bigint;
+  lastBurnSampleAt: bigint;
 };
 
-type CanisterHealthActor = {
-  getCanisterHealth: () => Promise<{
-    cyclesBalance: bigint;
-    memoryUsed: bigint;
-    heapSize: bigint;
-    isHealthy: boolean;
-  }>;
-  getFleetCanisterHealth: () => Promise<
-    Array<{
-      name: string;
-      canisterId: string;
-      cyclesBalance: bigint;
-      memorySize: bigint;
-      isHealthy: boolean;
-    }>
-  >;
+export type FleetHealthReport = {
+  canisters: FleetCanisterEntry[];
+  appBurnPerDay: bigint;
+  appCumulativeBurned: bigint;
 };
 
-function canisterHealthActor(
-  actor: import("../backend").Backend | null,
-): CanisterHealthActor | null {
-  if (!actor) return null;
-  return (actor as unknown as { actor: CanisterHealthActor }).actor;
+function parseProbeStatus(raw: {
+  ok?: null;
+  denied?: null;
+  error?: null;
+}): FleetProbeStatus {
+  if ("ok" in raw) return "ok";
+  if ("denied" in raw) return "denied";
+  return "error";
+}
+
+function parseFleetCategory(raw?: {
+  core?: null;
+  asset?: null;
+  agent?: null;
+  weather?: null;
+  workerBridge?: null;
+}): FleetTargetCategory {
+  if (!raw) return "core";
+  if ("asset" in raw) return "asset";
+  if ("agent" in raw) return "agent";
+  if ("weather" in raw) return "weather";
+  if ("workerBridge" in raw) return "workerBridge";
+  return "core";
+}
+
+function parseProbeKind(raw: {
+  local?: null;
+  managementStatus?: null;
+  remoteHealthQuery?: null;
+}): "local" | "managementStatus" | "remoteHealthQuery" {
+  if ("local" in raw) return "local";
+  if ("remoteHealthQuery" in raw) return "remoteHealthQuery";
+  return "managementStatus";
+}
+
+function probeKindToVariant(
+  kind: "local" | "managementStatus" | "remoteHealthQuery",
+) {
+  switch (kind) {
+    case "local":
+      return { local: null } as const;
+    case "remoteHealthQuery":
+      return { remoteHealthQuery: null } as const;
+    default:
+      return { managementStatus: null } as const;
+  }
+}
+
+function categoryToVariant(category: FleetTargetCategory) {
+  switch (category) {
+    case "asset":
+      return { asset: null } as const;
+    case "agent":
+      return { agent: null } as const;
+    case "weather":
+      return { weather: null } as const;
+    case "workerBridge":
+      return { workerBridge: null } as const;
+    default:
+      return { core: null } as const;
+  }
+}
+
+function mapFleetEntry(e: {
+  name: string;
+  canisterId: string;
+  category?: {
+    core?: null;
+    asset?: null;
+    agent?: null;
+    weather?: null;
+    workerBridge?: null;
+  };
+  agentKind?: [] | [string];
+  isSwarm?: boolean;
+  autoTopUpEnabled?: boolean;
+  autoTopUpThresholdCycles?: bigint;
+  autoTopUpIcpE8s?: bigint;
+  autoTopUpMaxIcpPerDayE8s?: bigint;
+  cyclesBalance: bigint;
+  memorySize: bigint;
+  isHealthy: boolean;
+  probeStatus: { ok?: null; denied?: null; error?: null };
+  probeMessage: [] | [string];
+  burnPerDay: bigint;
+  cumulativeBurned: bigint;
+  lastBurnSampleAt: bigint;
+}): FleetCanisterEntry {
+  return {
+    name: e.name,
+    canisterId: e.canisterId,
+    category: parseFleetCategory(e.category),
+    agentKind: e.agentKind?.length ? (e.agentKind[0] ?? null) : null,
+    isSwarm: e.isSwarm ?? false,
+    autoTopUpEnabled: e.autoTopUpEnabled ?? false,
+    autoTopUpThresholdCycles: BigInt(e.autoTopUpThresholdCycles ?? 0),
+    autoTopUpIcpE8s: BigInt(e.autoTopUpIcpE8s ?? 0),
+    autoTopUpMaxIcpPerDayE8s: BigInt(e.autoTopUpMaxIcpPerDayE8s ?? 0),
+    cyclesBalance: BigInt(e.cyclesBalance),
+    memorySize: BigInt(e.memorySize),
+    isHealthy: e.isHealthy,
+    probeStatus: parseProbeStatus(e.probeStatus),
+    probeMessage: e.probeMessage.length ? (e.probeMessage[0] ?? null) : null,
+    burnPerDay: BigInt(e.burnPerDay ?? 0),
+    cumulativeBurned: BigInt(e.cumulativeBurned ?? 0),
+    lastBurnSampleAt: BigInt(e.lastBurnSampleAt ?? 0),
+  };
 }
 
 export function useCanisterHealth() {
@@ -2590,7 +2703,7 @@ export function useCanisterHealth() {
   return useQuery({
     queryKey: ["canisterHealth"],
     queryFn: async (): Promise<CanisterHealthSnapshot | null> => {
-      const raw = canisterHealthActor(actor);
+      const raw = backendRaw(actor);
       if (!raw) return null;
       const h = await raw.getCanisterHealth();
       return {
@@ -2608,24 +2721,600 @@ export function useCanisterHealth() {
 export function useFleetCanisterHealth() {
   const { actor } = useBackendActor();
   const { actorReady } = useActorReady();
-  const { data: role } = useUserRole();
-  const isAdmin = role === UserRole.admin;
+  const { isAuthenticated } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
   return useQuery({
-    queryKey: ["fleetCanisterHealth", actorReady, isAdmin],
-    queryFn: async (): Promise<FleetCanisterEntry[]> => {
-      const raw = canisterHealthActor(actor);
-      if (!raw) return [];
-      const fleet = await raw.getFleetCanisterHealth();
-      return fleet.map((e) => ({
-        name: e.name,
-        canisterId: e.canisterId,
-        cyclesBalance: BigInt(e.cyclesBalance),
-        memorySize: BigInt(e.memorySize),
-        isHealthy: e.isHealthy,
+    queryKey: ["fleetCanisterHealth", actorReady, isAdmin, isAuthenticated],
+    queryFn: async (): Promise<FleetHealthReport> => {
+      const raw = backendRaw(actor);
+      if (!raw) {
+        return {
+          canisters: [],
+          appBurnPerDay: 0n,
+          appCumulativeBurned: 0n,
+        };
+      };
+      const report = await raw.getFleetCanisterHealth();
+      // Back-compat: older candid returned a bare vec
+      if (Array.isArray(report)) {
+        const canisters = report.map(mapFleetEntry);
+        let appBurnPerDay = 0n;
+        let appCumulativeBurned = 0n;
+        for (const c of canisters) {
+          appBurnPerDay += c.burnPerDay;
+          appCumulativeBurned += c.cumulativeBurned;
+        }
+        return { canisters, appBurnPerDay, appCumulativeBurned };
+      }
+      return {
+        canisters: (report.canisters ?? []).map(mapFleetEntry),
+        appBurnPerDay: BigInt(report.appBurnPerDay ?? 0),
+        appCumulativeBurned: BigInt(report.appCumulativeBurned ?? 0),
+      };
+    },
+    enabled: !!actor && actorReady && !!isAdmin && isAuthenticated,
+    refetchInterval: 60_000,
+  });
+}
+
+export type CanisterTopUpResult = {
+  success: boolean;
+  cyclesMinted: bigint | null;
+  icpSpentE8s: bigint;
+  ledgerBlockIndex: bigint | null;
+  message: string;
+};
+
+export type FleetAutoTopUpPolicy = {
+  enabled: boolean;
+  thresholdCycles: bigint;
+  icpPerTopUpE8s: bigint;
+  maxIcpPerDayE8s: bigint;
+  spentTodayIcpE8s: bigint;
+};
+
+function mapTopUpResult(r: {
+  success: boolean;
+  cyclesMinted: [] | [bigint];
+  icpSpentE8s: bigint;
+  ledgerBlockIndex: [] | [bigint];
+  message: string;
+}): CanisterTopUpResult {
+  return {
+    success: r.success,
+    cyclesMinted: r.cyclesMinted.length ? (r.cyclesMinted[0] ?? null) : null,
+    icpSpentE8s: BigInt(r.icpSpentE8s),
+    ledgerBlockIndex: r.ledgerBlockIndex.length
+      ? (r.ledgerBlockIndex[0] ?? null)
+      : null,
+    message: r.message,
+  };
+}
+
+function mapAutoTopUpPolicy(p: {
+  enabled: boolean;
+  thresholdCycles: bigint;
+  icpPerTopUpE8s: bigint;
+  maxIcpPerDayE8s: bigint;
+  spentTodayIcpE8s: bigint;
+}): FleetAutoTopUpPolicy {
+  return {
+    enabled: p.enabled,
+    thresholdCycles: BigInt(p.thresholdCycles),
+    icpPerTopUpE8s: BigInt(p.icpPerTopUpE8s),
+    maxIcpPerDayE8s: BigInt(p.maxIcpPerDayE8s),
+    spentTodayIcpE8s: BigInt(p.spentTodayIcpE8s),
+  };
+}
+
+export function useAdminTopUpCanisterFromTreasuryIcp() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      targetCanisterId,
+      icpE8s,
+    }: {
+      targetCanisterId: string;
+      icpE8s: bigint;
+    }) => {
+      const raw = backendRaw(actor);
+      if (!raw) throw new Error("Not connected");
+      const r = await raw.adminTopUpCanisterFromTreasuryIcp(
+        targetCanisterId,
+        icpE8s,
+      );
+      const mapped = mapTopUpResult(r);
+      if (!mapped.success) throw new Error(mapped.message);
+      return mapped;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fleetCanisterHealth"] });
+      qc.invalidateQueries({ queryKey: ["canisterTreasuryBalances"] });
+      qc.invalidateQueries({ queryKey: ["fleetAutoTopUpPolicy"] });
+      qc.invalidateQueries({ queryKey: ["auditLog"] });
+    },
+  });
+}
+
+export function useFleetAutoTopUpPolicy() {
+  const { actor } = useBackendActor();
+  const { actorReady } = useActorReady();
+  const { isAuthenticated } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
+  return useQuery({
+    queryKey: ["fleetAutoTopUpPolicy", actorReady, isAdmin, isAuthenticated],
+    queryFn: async (): Promise<FleetAutoTopUpPolicy | null> => {
+      const raw = backendRaw(actor);
+      if (!raw) return null;
+      const p = await raw.getFleetAutoTopUpPolicy();
+      return mapAutoTopUpPolicy(p);
+    },
+    enabled: !!actor && actorReady && !!isAdmin && isAuthenticated,
+  });
+}
+
+export function useSetFleetAutoTopUpPolicy() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (policy: {
+      enabled: boolean;
+      thresholdCycles: bigint;
+      icpPerTopUpE8s: bigint;
+      maxIcpPerDayE8s: bigint;
+    }) => {
+      const raw = backendRaw(actor);
+      if (!raw) throw new Error("Not connected");
+      await raw.setFleetAutoTopUpPolicy(
+        policy.enabled,
+        policy.thresholdCycles,
+        policy.icpPerTopUpE8s,
+        policy.maxIcpPerDayE8s,
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fleetAutoTopUpPolicy"] });
+      qc.invalidateQueries({ queryKey: ["auditLog"] });
+    },
+  });
+}
+
+export function useAdminRunFleetAutoTopUp() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const raw = backendRaw(actor);
+      if (!raw) throw new Error("Not connected");
+      return raw.adminRunFleetAutoTopUp();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fleetCanisterHealth"] });
+      qc.invalidateQueries({ queryKey: ["fleetAutoTopUpPolicy"] });
+      qc.invalidateQueries({ queryKey: ["swarmCanisterTargets"] });
+      qc.invalidateQueries({ queryKey: ["canisterTreasuryBalances"] });
+      qc.invalidateQueries({ queryKey: ["auditLog"] });
+    },
+  });
+}
+
+export type SwarmCanisterTarget = {
+  name: string;
+  canisterId: string;
+  kind: "local" | "managementStatus" | "remoteHealthQuery";
+  category: FleetTargetCategory;
+  agentKind: string | null;
+  enabled: boolean;
+  autoTopUpEnabled: boolean;
+  thresholdCycles: bigint;
+  icpPerTopUpE8s: bigint;
+  maxIcpPerDayE8s: bigint;
+  createdAt: bigint;
+  updatedAt: bigint;
+  notes: string;
+};
+
+export type SwarmCanisterStatus = {
+  target: SwarmCanisterTarget;
+  spentTodayIcpE8s: bigint;
+};
+
+export type SwarmCanisterInput = {
+  name: string;
+  canisterId: string;
+  kind: "local" | "managementStatus" | "remoteHealthQuery";
+  category: FleetTargetCategory;
+  agentKind: string | null;
+  enabled: boolean;
+  autoTopUpEnabled: boolean;
+  thresholdCycles: bigint;
+  icpPerTopUpE8s: bigint;
+  maxIcpPerDayE8s: bigint;
+  notes: string;
+};
+
+function mapSwarmTarget(raw: SwarmCanisterTargetRaw): SwarmCanisterTarget {
+  return {
+    name: raw.name,
+    canisterId: raw.canisterId,
+    kind: parseProbeKind(raw.kind),
+    category: parseFleetCategory(raw.category),
+    agentKind: raw.agentKind.length ? (raw.agentKind[0] ?? null) : null,
+    enabled: raw.enabled,
+    autoTopUpEnabled: raw.autoTopUpEnabled,
+    thresholdCycles: BigInt(raw.thresholdCycles),
+    icpPerTopUpE8s: BigInt(raw.icpPerTopUpE8s),
+    maxIcpPerDayE8s: BigInt(raw.maxIcpPerDayE8s),
+    createdAt: BigInt(raw.createdAt),
+    updatedAt: BigInt(raw.updatedAt),
+    notes: raw.notes,
+  };
+}
+
+function toSwarmInputPayload(input: SwarmCanisterInput): SwarmCanisterInputRaw {
+  return {
+    name: input.name,
+    canisterId: input.canisterId,
+    kind: probeKindToVariant(input.kind),
+    category: categoryToVariant(input.category),
+    agentKind: input.agentKind ? [input.agentKind] : [],
+    enabled: input.enabled,
+    autoTopUpEnabled: input.autoTopUpEnabled,
+    thresholdCycles: input.thresholdCycles,
+    icpPerTopUpE8s: input.icpPerTopUpE8s,
+    maxIcpPerDayE8s: input.maxIcpPerDayE8s,
+    notes: input.notes,
+  };
+}
+
+export function useSwarmCanisterTargets() {
+  const { actor } = useBackendActor();
+  const { actorReady } = useActorReady();
+  const { isAuthenticated } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
+  return useQuery({
+    queryKey: ["swarmCanisterTargets", actorReady, isAdmin, isAuthenticated],
+    queryFn: async (): Promise<SwarmCanisterStatus[]> => {
+      const raw = requireBackendRaw(actor);
+      const rows = await raw.listSwarmCanisterTargets();
+      return rows.map((row) => ({
+        target: mapSwarmTarget(row.target),
+        spentTodayIcpE8s: BigInt(row.spentTodayIcpE8s),
       }));
     },
-    enabled: !!actor && actorReady && isAdmin,
-    refetchInterval: 60_000,
+    enabled: !!actor && actorReady && !!isAdmin && isAuthenticated,
+  });
+}
+
+export function useAdminRegisterSwarmCanister() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: SwarmCanisterInput) => {
+      const raw = requireBackendRaw(actor);
+      return mapSwarmTarget(await raw.adminRegisterSwarmCanister(toSwarmInputPayload(input)));
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["swarmCanisterTargets"] });
+      qc.invalidateQueries({ queryKey: ["fleetCanisterHealth"] });
+      qc.invalidateQueries({ queryKey: ["auditLog"] });
+    },
+  });
+}
+
+export function useAdminUpdateSwarmCanister() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      previousCanisterId,
+      input,
+    }: {
+      previousCanisterId: string;
+      input: SwarmCanisterInput;
+    }) => {
+      const raw = requireBackendRaw(actor);
+      return mapSwarmTarget(
+        await raw.adminUpdateSwarmCanister(previousCanisterId, toSwarmInputPayload(input)),
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["swarmCanisterTargets"] });
+      qc.invalidateQueries({ queryKey: ["fleetCanisterHealth"] });
+      qc.invalidateQueries({ queryKey: ["auditLog"] });
+    },
+  });
+}
+
+export function useAdminRemoveSwarmCanister() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (canisterId: string) => {
+      const raw = requireBackendRaw(actor);
+      await raw.adminRemoveSwarmCanister(canisterId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["swarmCanisterTargets"] });
+      qc.invalidateQueries({ queryKey: ["fleetCanisterHealth"] });
+      qc.invalidateQueries({ queryKey: ["auditLog"] });
+    },
+  });
+}
+
+export function useAdminSetSwarmCanisterAutoTopUp() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      canisterId,
+      enabled,
+      thresholdCycles,
+      icpPerTopUpE8s,
+      maxIcpPerDayE8s,
+    }: {
+      canisterId: string;
+      enabled: boolean;
+      thresholdCycles: bigint;
+      icpPerTopUpE8s: bigint;
+      maxIcpPerDayE8s: bigint;
+    }) => {
+      const raw = requireBackendRaw(actor);
+      return mapSwarmTarget(
+        await raw.adminSetSwarmCanisterAutoTopUp(canisterId, {
+          enabled,
+          thresholdCycles,
+          icpPerTopUpE8s,
+          maxIcpPerDayE8s,
+        }),
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["swarmCanisterTargets"] });
+      qc.invalidateQueries({ queryKey: ["fleetCanisterHealth"] });
+      qc.invalidateQueries({ queryKey: ["auditLog"] });
+    },
+  });
+}
+
+export type LpFeeCyclesConfig = {
+  enabled: boolean;
+  spicyLedgerId: string | null;
+  swapPoolId: string | null;
+  positionId: bigint | null;
+  icpIsToken0: boolean;
+  positionOwnerPrincipal: string | null;
+  intervalDays: bigint;
+  lastRunAt: bigint;
+  enabledAt: bigint;
+};
+
+export type LpFeeCyclesDryRun = {
+  configured: boolean;
+  positionFound: boolean;
+  icpOwedE8s: bigint;
+  spicyOwedE8s: bigint;
+  ownerMatchesBackend: boolean;
+  backendPrincipal: string;
+  message: string;
+};
+
+export type LpFeeCyclesFundingDetail = {
+  name: string;
+  canisterId: string;
+  icpSpentE8s: bigint;
+  cyclesMinted: bigint;
+};
+
+export type LpFeeCyclesRunResult = {
+  success: boolean;
+  icpHarvestedE8s: bigint;
+  spicyFeesSkippedE8s: bigint;
+  canistersToppedUp: bigint;
+  totalCyclesMinted: bigint;
+  details: LpFeeCyclesFundingDetail[];
+  message: string;
+};
+
+export type LpFeeCyclesEvent = {
+  ts: bigint;
+  trigger: string;
+  icpHarvestedE8s: bigint;
+  spicyFeesSkippedE8s: bigint;
+  totalCyclesMinted: bigint;
+  canistersToppedUp: bigint;
+  details: LpFeeCyclesFundingDetail[];
+  success: boolean;
+  message: string;
+};
+
+function optText(v: [] | [string]): string | null {
+  return v.length ? (v[0] ?? null) : null;
+}
+
+function optNat(v: [] | [bigint]): bigint | null {
+  return v.length ? (v[0] ?? null) : null;
+}
+
+function mapLpFeeConfig(c: {
+  enabled: boolean;
+  spicyLedgerId: [] | [string];
+  swapPoolId: [] | [string];
+  positionId: [] | [bigint];
+  icpIsToken0: boolean;
+  positionOwnerPrincipal: [] | [string];
+  intervalDays: bigint;
+  lastRunAt: bigint;
+  enabledAt: bigint;
+}): LpFeeCyclesConfig {
+  return {
+    enabled: c.enabled,
+    spicyLedgerId: optText(c.spicyLedgerId),
+    swapPoolId: optText(c.swapPoolId),
+    positionId: optNat(c.positionId),
+    icpIsToken0: c.icpIsToken0,
+    positionOwnerPrincipal: optText(c.positionOwnerPrincipal),
+    intervalDays: BigInt(c.intervalDays),
+    lastRunAt: BigInt(c.lastRunAt),
+    enabledAt: BigInt(c.enabledAt),
+  };
+}
+
+function mapFundingDetail(d: {
+  name: string;
+  canisterId: string;
+  icpSpentE8s: bigint;
+  cyclesMinted: bigint;
+}): LpFeeCyclesFundingDetail {
+  return {
+    name: d.name,
+    canisterId: d.canisterId,
+    icpSpentE8s: BigInt(d.icpSpentE8s),
+    cyclesMinted: BigInt(d.cyclesMinted),
+  };
+}
+
+function mapLpFeeRunResult(r: {
+  success: boolean;
+  icpHarvestedE8s: bigint;
+  spicyFeesSkippedE8s: bigint;
+  canistersToppedUp: bigint;
+  totalCyclesMinted: bigint;
+  details: Array<{
+    name: string;
+    canisterId: string;
+    icpSpentE8s: bigint;
+    cyclesMinted: bigint;
+  }>;
+  message: string;
+}): LpFeeCyclesRunResult {
+  return {
+    success: r.success,
+    icpHarvestedE8s: BigInt(r.icpHarvestedE8s),
+    spicyFeesSkippedE8s: BigInt(r.spicyFeesSkippedE8s),
+    canistersToppedUp: BigInt(r.canistersToppedUp),
+    totalCyclesMinted: BigInt(r.totalCyclesMinted),
+    details: r.details.map(mapFundingDetail),
+    message: r.message,
+  };
+}
+
+export function useLpFeeCyclesConfig() {
+  const { actor } = useBackendActor();
+  const { actorReady } = useActorReady();
+  const { isAuthenticated } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
+  return useQuery({
+    queryKey: ["lpFeeCyclesConfig", actorReady, isAdmin, isAuthenticated],
+    queryFn: async (): Promise<LpFeeCyclesConfig | null> => {
+      const raw = backendRaw(actor);
+      if (!raw) return null;
+      const c = await raw.getLpFeeCyclesConfig();
+      return mapLpFeeConfig(c);
+    },
+    enabled: !!actor && actorReady && !!isAdmin && isAuthenticated,
+  });
+}
+
+export function useSetLpFeeCyclesConfig() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (config: {
+      enabled: boolean;
+      spicyLedgerId: string | null;
+      swapPoolId: string | null;
+      positionId: bigint | null;
+      icpIsToken0: boolean;
+      positionOwnerPrincipal: string | null;
+      intervalDays: bigint;
+    }) => {
+      const raw = backendRaw(actor);
+      if (!raw) throw new Error("Not connected");
+      await raw.setLpFeeCyclesConfig(
+        config.enabled,
+        config.spicyLedgerId ? [config.spicyLedgerId] : [],
+        config.swapPoolId ? [config.swapPoolId] : [],
+        config.positionId != null ? [config.positionId] : [],
+        config.icpIsToken0,
+        config.positionOwnerPrincipal ? [config.positionOwnerPrincipal] : [],
+        config.intervalDays,
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lpFeeCyclesConfig"] });
+      qc.invalidateQueries({ queryKey: ["auditLog"] });
+    },
+  });
+}
+
+export function usePreviewLpFeeCyclesDryRun() {
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (): Promise<LpFeeCyclesDryRun> => {
+      const raw = backendRaw(actor);
+      if (!raw) throw new Error("Not connected");
+      const r = await raw.previewLpFeeCyclesDryRun();
+      return {
+        configured: r.configured,
+        positionFound: r.positionFound,
+        icpOwedE8s: BigInt(r.icpOwedE8s),
+        spicyOwedE8s: BigInt(r.spicyOwedE8s),
+        ownerMatchesBackend: r.ownerMatchesBackend,
+        backendPrincipal: r.backendPrincipal,
+        message: r.message,
+      };
+    },
+  });
+}
+
+export function useAdminRunLpFeeCyclesFunding() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (dryRunOnly: boolean) => {
+      const raw = backendRaw(actor);
+      if (!raw) throw new Error("Not connected");
+      const r = await raw.adminRunLpFeeCyclesFunding(dryRunOnly);
+      const mapped = mapLpFeeRunResult(r);
+      if (!dryRunOnly && !mapped.success) throw new Error(mapped.message);
+      return mapped;
+    },
+    onSuccess: (_data, dryRunOnly) => {
+      if (!dryRunOnly) {
+        qc.invalidateQueries({ queryKey: ["fleetCanisterHealth"] });
+        qc.invalidateQueries({ queryKey: ["lpFeeCyclesConfig"] });
+        qc.invalidateQueries({ queryKey: ["lpFeeCyclesEvents"] });
+        qc.invalidateQueries({ queryKey: ["canisterTreasuryBalances"] });
+        qc.invalidateQueries({ queryKey: ["auditLog"] });
+      }
+    },
+  });
+}
+
+export function useLpFeeCyclesEvents(limit = 10) {
+  const { actor } = useBackendActor();
+  const { actorReady } = useActorReady();
+  return useQuery({
+    queryKey: ["lpFeeCyclesEvents", limit, actorReady],
+    queryFn: async (): Promise<LpFeeCyclesEvent[]> => {
+      const raw = backendRaw(actor);
+      if (!raw) return [];
+      const events = await raw.getLpFeeCyclesEvents(BigInt(limit));
+      return events.map((e) => ({
+        ts: BigInt(e.ts),
+        trigger: e.trigger,
+        icpHarvestedE8s: BigInt(e.icpHarvestedE8s),
+        spicyFeesSkippedE8s: BigInt(e.spicyFeesSkippedE8s),
+        totalCyclesMinted: BigInt(e.totalCyclesMinted),
+        canistersToppedUp: BigInt(e.canistersToppedUp),
+        details: e.details.map(mapFundingDetail),
+        success: e.success,
+        message: e.message,
+      }));
+    },
+    enabled: !!actor && actorReady,
   });
 }
 

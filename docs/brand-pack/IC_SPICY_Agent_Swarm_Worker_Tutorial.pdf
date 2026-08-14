@@ -1,0 +1,508 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R] /Count 5 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 390 844] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1086 >>
+stream
+0.047 0.031 0.024 rg
+0.0 0.0 390.0 844.0 re f
+0.933 0.314 0.169 rg
+0.0 836.0 390.0 8.0 re f
+0.110 0.086 0.071 rg
+0.0 780.0 390.0 56.0 re f
+0.973 0.941 0.910 rg
+BT /F2 13.0 Tf 22.0 811.0 Td (IC SPICY) Tj ET
+0.902 0.698 0.345 rg
+BT /F1 8.0 Tf 22.0 794.0 Td (Rare. Hot. Alive.) Tj ET
+0.165 0.125 0.102 rg
+22.0 184.0 346.0 460.0 re f
+0.933 0.314 0.169 rg
+22.0 184.0 6.0 460.0 re f
+0.973 0.941 0.910 rg
+BT /F2 23.0 Tf 42.0 592.0 Td (IC SPICY) Tj ET
+0.902 0.698 0.345 rg
+BT /F2 18.0 Tf 42.0 548.0 Td (IC SPICY Agent Swarm Worker) Tj ET
+0.902 0.698 0.345 rg
+BT /F2 18.0 Tf 42.0 523.0 Td (Setup) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 10.5 Tf 42.0 420.0 Td (Step-by-step guide to run the off-chain) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 10.5 Tf 42.0 404.0 Td (agent worker on Mac or Chromebook.) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 8.0 Tf 42.0 226.0 Td (August 2026 ∑ Mobile-friendly operator guide) Tj ET
+0.902 0.698 0.345 RG
+22.0 38.0 m 368.0 38.0 l S
+0.769 0.659 0.580 rg
+BT /F1 7.0 Tf 22.0 22.0 Td (IC SPICY Agent Swarm Worker Tutorial) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.0 Tf 352.0 22.0 Td (1) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 390 844] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 5266 >>
+stream
+0.047 0.031 0.024 rg
+0.0 0.0 390.0 844.0 re f
+0.933 0.314 0.169 rg
+0.0 836.0 390.0 8.0 re f
+0.110 0.086 0.071 rg
+0.0 780.0 390.0 56.0 re f
+0.973 0.941 0.910 rg
+BT /F2 13.0 Tf 22.0 811.0 Td (IC SPICY) Tj ET
+0.902 0.698 0.345 rg
+BT /F1 8.0 Tf 22.0 794.0 Td (Rare. Hot. Alive.) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.6 Tf 182.0 812.0 Td (IC SPICY Agent Swarm Worker) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.6 Tf 182.0 800.0 Td (Setup) Tj ET
+0.933 0.314 0.169 rg
+22.0 746.0 4.0 23.0 re f
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 752.0 Td (What You Are Building) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 726.0 Td (The Agent Swarm has two parts: agent_hub \(on-chain brain) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 713.6 Td (on ICP\) and a Node.js worker \(off-chain hands\). You) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 701.2 Td (control both. The worker uses a BIP39 seed phrase to) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 688.8 Td (derive a principal ? register that principal in Admin ?) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 676.4 Td (Agent Swarm ? Worker principals.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 658.0 Td (The hub stores jobs, drafts, approvals, subscribers,) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 645.6 Td (secrets, and audit logs. The worker polls for jobs, reads) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 633.2 Td (backend data \(recipes, orders, weather\), calls your LLM) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 620.8 Td (API, and submits drafts for your approval before anything) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 608.4 Td (is sent.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 590.0 Td (Never store API keys in git. Only the seed phrase lives on) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 577.6 Td (the worker machine \(in .env or a file with chmod 600\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 565.2 Td (Resend and LLM keys are set in Admin ? Agent Swarm ?) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 552.8 Td (Secrets.) Tj ET
+0.933 0.314 0.169 rg
+22.0 528.4 4.0 23.0 re f
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 534.4 Td (Prerequisites) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 508.4 Td (Node.js 20+ \(nvm recommended on Mac; Crostini Linux on) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 496.0 Td (Chromebook\).) Tj ET
+0.933 0.314 0.169 rg
+BT /F2 9.0 Tf 38.0 477.6 Td (-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 477.6 Td (dfx 0.29+ and mops for canister deploys \(already in) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 465.2 Td (this repo\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 447.8 Td (Resend account \(resend.com\) with a verified sending domain) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 435.4 Td (DNS records.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 417.0 Td (LLM API key: OpenAI or Anthropic \(SpicyAI on-chain) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 404.6 Td (fallback is rate-limited\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 386.2 Td (Admin access to icspicy.app Admin ? Agent Swarm tab.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 367.8 Td (~3T cycles for agent_hub canister on mainnet \(one-time) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 355.4 Td (create\).) Tj ET
+0.933 0.314 0.169 rg
+22.0 331.0 4.0 23.0 re f
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 337.0 Td (Step 1 ? Generate Worker) Tj ET
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 321.0 Td (Identity) Tj ET
+0.933 0.314 0.169 rg
+BT /F2 9.0 Tf 38.0 295.0 Td (-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 295.0 Td (cd worker && cp .env.example .env) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 277.6 Td (Generate a new 12-word BIP39 mnemonic \(write it on paper;) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 265.2 Td (never commit it\): node -e) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 252.8 Td ("console.log\(require\('bip39'\).generateMnemonic\(\)\)") Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 234.4 Td (Set WORKER_MNEMONIC="word1 word2 ..." in .env OR save) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 222.0 Td (words to ~/.ic-spicy/worker-mnemonic.txt and set) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 209.6 Td (WORKER_MNEMONIC_FILE.) Tj ET
+0.933 0.314 0.169 rg
+BT /F2 9.0 Tf 38.0 191.2 Td (-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 191.2 Td (npm install && npm run show-principal ? copy the) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 178.8 Td (printed principal.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 161.4 Td (In Admin ? Agent Swarm ? Worker principals ? Register that) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 149.0 Td (principal. Also register it on backend via backend) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 136.6 Td (addAgentPrincipal \(same Admin flow uses hub; backend agent) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 124.2 Td (role enables fleet/orders reads\).) Tj ET
+0.933 0.314 0.169 rg
+22.0 99.8 4.0 23.0 re f
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 105.8 Td (Step 2 ? Configure Secrets) Tj ET
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 89.8 Td (\(Admin UI\)) Tj ET
+0.902 0.698 0.345 RG
+22.0 38.0 m 368.0 38.0 l S
+0.769 0.659 0.580 rg
+BT /F1 7.0 Tf 22.0 22.0 Td (IC SPICY Agent Swarm Worker Tutorial) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.0 Tf 352.0 22.0 Td (2) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 390 844] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 5212 >>
+stream
+0.047 0.031 0.024 rg
+0.0 0.0 390.0 844.0 re f
+0.933 0.314 0.169 rg
+0.0 836.0 390.0 8.0 re f
+0.110 0.086 0.071 rg
+0.0 780.0 390.0 56.0 re f
+0.973 0.941 0.910 rg
+BT /F2 13.0 Tf 22.0 811.0 Td (IC SPICY) Tj ET
+0.902 0.698 0.345 rg
+BT /F1 8.0 Tf 22.0 794.0 Td (Rare. Hot. Alive.) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.6 Tf 182.0 812.0 Td (IC SPICY Agent Swarm Worker) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.6 Tf 182.0 800.0 Td (Setup) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 752.0 Td (Admin ? Agent Swarm ? Secrets. Set: resend_api_key,) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 739.6 Td (resend_from_email \(e.g. newsletter@yourdomain.com\),) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 727.2 Td (llm_api_key, llm_provider \(openai or anthropic\), llm_model) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 714.8 Td (\(e.g. gpt-4o-mini\), admin_alert_email \(optional\),) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 702.4 Td (newsletter_reply_to \(optional\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 684.0 Td (Set AGENT_HUB_CANISTER_ID and BACKEND_CANISTER_ID in) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 671.6 Td (worker/.env after deploy \(see canister_ids.json\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 653.2 Td (Set PUBLIC_SITE_URL to your frontend URL for newsletter) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 640.8 Td (confirm links \(mainnet: https://7rukv-hqaaa-aaaao-ba6ma-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 628.4 Td (cai.icp0.io\).) Tj ET
+0.933 0.314 0.169 rg
+22.0 604.0 4.0 23.0 re f
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 610.0 Td (Step 3 ? M1 MacBook Air Setup) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 584.0 Td (Install nvm: curl -o-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 571.6 Td (https://raw.githubusercontent.com/nvm-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 559.2 Td (sh/nvm/v0.40.1/install.sh | bash) Tj ET
+0.933 0.314 0.169 rg
+BT /F2 9.0 Tf 38.0 540.8 Td (-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 540.8 Td (nvm install 20 && nvm use 20) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 523.4 Td (Clone or open this repo. cd worker && npm install) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 505.0 Td (Test one poll cycle: npm run once \(requires local or) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 492.6 Td (mainnet canisters deployed and worker principal) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 480.2 Td (registered\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 461.8 Td (Always-on: edit worker/deploy/com.icspicy.agent-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 449.4 Td (worker.plist ? replace CHANGE_ME paths with your repo) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 437.0 Td (path. mkdir worker/logs) Tj ET
+0.933 0.314 0.169 rg
+BT /F2 9.0 Tf 38.0 418.6 Td (-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 418.6 Td (launchctl load) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 406.2 Td (~/Library/LaunchAgents/com.icspicy.agent-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 393.8 Td (worker.plist \(copy plist there first\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 376.4 Td (Monitor: tail -f worker/logs/stdout.log) Tj ET
+0.933 0.314 0.169 rg
+22.0 352.0 4.0 23.0 re f
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 358.0 Td (Step 4 ? Chromebook \(Crostini) Tj ET
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 342.0 Td (Linux\)) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 316.0 Td (Settings ? Developers ? Linux ? Turn on. Open Terminal.) Tj ET
+0.933 0.314 0.169 rg
+BT /F2 9.0 Tf 38.0 297.6 Td (-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 297.6 Td (sudo apt update && sudo apt install -y curl git) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 285.2 Td (build-essential) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 267.8 Td (Install nvm and Node 20 \(same commands as Mac\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 249.4 Td (Clone repo into Linux files \(~/IC-SPICY-MAIN\). cd worker) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 237.0 Td (&& npm install) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 218.6 Td (Prevent sleep: Settings ? Device ? Power ? Sleep when) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 206.2 Td (inactive ? Never \(while plugged in\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 187.8 Td (Copy worker/deploy/ic-spicy-agent-worker.service ? replace) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 175.4 Td (CHANGE_ME paths and User.) Tj ET
+0.933 0.314 0.169 rg
+BT /F2 9.0 Tf 38.0 157.0 Td (-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 157.0 Td (sudo cp ic-spicy-agent-worker.service) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 144.6 Td (/etc/systemd/system/ && sudo systemctl daemon-reload) Tj ET
+0.933 0.314 0.169 rg
+BT /F2 9.0 Tf 38.0 127.2 Td (-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 127.2 Td (sudo systemctl enable --now ic-spicy-agent-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 114.8 Td (worker.service) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 97.4 Td (Check status: sudo systemctl status ic-spicy-agent-worker) Tj ET
+0.902 0.698 0.345 RG
+22.0 38.0 m 368.0 38.0 l S
+0.769 0.659 0.580 rg
+BT /F1 7.0 Tf 22.0 22.0 Td (IC SPICY Agent Swarm Worker Tutorial) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.0 Tf 352.0 22.0 Td (3) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 390 844] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 5027 >>
+stream
+0.047 0.031 0.024 rg
+0.0 0.0 390.0 844.0 re f
+0.933 0.314 0.169 rg
+0.0 836.0 390.0 8.0 re f
+0.110 0.086 0.071 rg
+0.0 780.0 390.0 56.0 re f
+0.973 0.941 0.910 rg
+BT /F2 13.0 Tf 22.0 811.0 Td (IC SPICY) Tj ET
+0.902 0.698 0.345 rg
+BT /F1 8.0 Tf 22.0 794.0 Td (Rare. Hot. Alive.) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.6 Tf 182.0 812.0 Td (IC SPICY Agent Swarm Worker) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.6 Tf 182.0 800.0 Td (Setup) Tj ET
+0.933 0.314 0.169 rg
+22.0 746.0 4.0 23.0 re f
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 752.0 Td (Step 5 ? Resend DNS) Tj ET
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 736.0 Td (Verification) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 710.0 Td (In Resend dashboard ? Domains ? Add domain \(your sending) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 697.6 Td (domain\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 679.2 Td (Add the SPF, DKIM, and optional DMARC DNS records Resend) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 666.8 Td (provides.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 648.4 Td (Wait for verification \(usually minutes to hours\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 630.0 Td (Use the verified address as resend_from_email in Admin) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 617.6 Td (secrets.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 599.2 Td (Test: subscribe your email via site footer ? confirm link) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 586.8 Td (? approve newsletter draft in Admin ? worker sends on next) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 574.4 Td (poll.) Tj ET
+0.933 0.314 0.169 rg
+22.0 550.0 4.0 23.0 re f
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 556.0 Td (Step 6 ? Daily Workflow) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 530.0 Td (Orchestrator enqueues jobs on a timer inside agent_hub.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 517.6 Td (Worker claims jobs every POLL_INTERVAL_SEC \(default 60s\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 499.2 Td (Social agents submit drafts only ? review in Admin ? Agent) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 486.8 Td (Swarm ? Approval Queue. Approve, edit, or reject.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 468.4 Td (Newsletter agent creates HTML draft weekly. After) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 456.0 Td (approval, worker sends via Resend with idempotency keys) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 443.6 Td (\(no double-send on retry\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 425.2 Td (Ops agents \(fleet/cycles, weather, orders/claims,) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 412.8 Td (analytics\) post internal digests to the same queue.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 394.4 Td (Compliance reviewer runs rule checks + optional LLM review) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 382.0 Td (before drafts enter the queue.) Tj ET
+0.933 0.314 0.169 rg
+22.0 357.6 4.0 23.0 re f
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 363.6 Td (Step 7 ? Deploy Canisters) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 337.6 Td (Local first: dfx start --background --clean && dfx deploy) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 325.2 Td (--network local backend agent_hub) Tj ET
+0.933 0.314 0.169 rg
+BT /F2 9.0 Tf 38.0 306.8 Td (-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.8 Tf 52.0 306.8 Td (dfx generate backend && pnpm bindgen from repo root.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 289.4 Td (Frontend: cd src/frontend && pnpm build. Set) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 277.0 Td (CANISTER_ID_AGENT_HUB in env for Vite.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 258.6 Td (Mainnet \(requires explicit confirmation\): dfx deploy) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 246.2 Td (--network ic agent_hub \(~3T cycles\), then dfx deploy) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 233.8 Td (--network ic backend, then node scripts/upload-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 221.4 Td (frontend.mjs --network ic --canister 7rukv-hqaaa-aaaao-) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 209.0 Td (ba6ma-cai) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 190.6 Td (Post-deploy: register worker principal, set secrets,) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 178.2 Td (subscribe test email, run npm run once on worker.) Tj ET
+0.933 0.314 0.169 rg
+22.0 153.8 4.0 23.0 re f
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 159.8 Td (Troubleshooting) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 133.8 Td (agent only / admin or agent only: worker principal not) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 121.4 Td (registered in hub or backend.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 103.0 Td (Newsletter service not configured: CANISTER_ID_AGENT_HUB) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 90.6 Td (missing in frontend build env.) Tj ET
+0.902 0.698 0.345 RG
+22.0 38.0 m 368.0 38.0 l S
+0.769 0.659 0.580 rg
+BT /F1 7.0 Tf 22.0 22.0 Td (IC SPICY Agent Swarm Worker Tutorial) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.0 Tf 352.0 22.0 Td (4) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 390 844] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 2130 >>
+stream
+0.047 0.031 0.024 rg
+0.0 0.0 390.0 844.0 re f
+0.933 0.314 0.169 rg
+0.0 836.0 390.0 8.0 re f
+0.110 0.086 0.071 rg
+0.0 780.0 390.0 56.0 re f
+0.973 0.941 0.910 rg
+BT /F2 13.0 Tf 22.0 811.0 Td (IC SPICY) Tj ET
+0.902 0.698 0.345 rg
+BT /F1 8.0 Tf 22.0 794.0 Td (Rare. Hot. Alive.) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.6 Tf 182.0 812.0 Td (IC SPICY Agent Swarm Worker) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.6 Tf 182.0 800.0 Td (Setup) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 752.0 Td (Resend 403: domain not verified or wrong from address.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 733.6 Td (LLM errors: check llm_api_key and provider/model in Admin) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 721.2 Td (secrets.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 702.8 Td (Revoke compromised worker: Admin ? remove worker principal) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 690.4 Td (immediately; rotate mnemonic and re-register.) Tj ET
+0.933 0.314 0.169 rg
+22.0 666.0 4.0 23.0 re f
+0.902 0.698 0.345 rg
+BT /F2 14.0 Tf 34.0 672.0 Td (Security Checklist) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 646.0 Td (Seed phrase: paper backup only; chmod 600 on .env and) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 633.6 Td (mnemonic file.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 615.2 Td (Worker is agent role, never full admin.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 596.8 Td (All public sends require human approval in Admin queue) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 584.4 Td (\(start here; auto-post later per platform\).) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 566.0 Td (Audit log in Admin ? Agent Swarm ? Audit for every draft) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 553.6 Td (and secret change.) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 535.2 Td (Do not log customer email content in worker stdout in) Tj ET
+0.973 0.941 0.910 rg
+BT /F1 8.9 Tf 34.0 522.8 Td (production.) Tj ET
+0.902 0.698 0.345 RG
+22.0 38.0 m 368.0 38.0 l S
+0.769 0.659 0.580 rg
+BT /F1 7.0 Tf 22.0 22.0 Td (IC SPICY Agent Swarm Worker Tutorial) Tj ET
+0.769 0.659 0.580 rg
+BT /F1 7.0 Tf 352.0 22.0 Td (5) Tj ET
+endstream
+endobj
+xref
+0 13
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000146 00000 n 
+0000000385 00000 n 
+0000001523 00000 n 
+0000001762 00000 n 
+0000007080 00000 n 
+0000007319 00000 n 
+0000012583 00000 n 
+0000012823 00000 n 
+0000017903 00000 n 
+0000018144 00000 n 
+trailer
+<< /Size 13 /Root 1 0 R >>
+startxref
+20327
+%%EOF

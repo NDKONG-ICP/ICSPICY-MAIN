@@ -8,6 +8,7 @@ import {
   SiYoutube,
 } from "react-icons/si";
 import { SOCIAL_LINKS } from "../types/index";
+import { FooterNewsletterSignup } from "./FooterNewsletterSignup";
 
 const SOCIAL_ICONS = [
   { href: SOCIAL_LINKS.facebook, Icon: SiFacebook, label: "Facebook" },
@@ -48,6 +49,7 @@ const FOOTER_LINKS = [
     title: "Tools",
     links: [
       { label: "NIMS Inventory", to: "/nims" },
+      { label: "Weather Desk", to: "/weather" },
       { label: "Garden Designer", to: "/garden" },
       { label: "Schedule Builder", to: "/schedule-builder" },
       { label: "CookBook", to: "/cookbook" },
@@ -121,6 +123,8 @@ export function Footer() {
                 </a>
               ))}
             </div>
+
+            <FooterNewsletterSignup />
           </div>
 
           {/* Nav columns */}

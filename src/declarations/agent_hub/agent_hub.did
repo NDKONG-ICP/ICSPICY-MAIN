@@ -1,0 +1,181 @@
+type SubscriberStatus = 
+ variant {
+   confirmed;
+   pending;
+   unsubscribed;
+ };
+type SubscriberPublic = 
+ record {
+   confirmedAt: opt int;
+   email: text;
+   status: SubscriberStatus;
+   subscribedAt: int;
+ };
+type SubscribeResult = 
+ record {
+   message: text;
+   success: bool;
+ };
+type NewsletterIssue = 
+ record {
+   draftId: nat;
+   htmlBody: text;
+   recipientCount: nat;
+   sentAt: int;
+   subject: text;
+   weekKey: text;
+ };
+type JobStatus = 
+ variant {
+   claimed;
+   done;
+   failed;
+   queued;
+ };
+type JobPublic = 
+ record {
+   agentId: nat;
+   claimedAt: opt int;
+   claimedBy: opt principal;
+   completedAt: opt int;
+   createdAt: int;
+   error: opt text;
+   id: nat;
+   kind: AgentKind;
+   payload: text;
+   status: JobStatus;
+ };
+type DraftStatus = 
+ variant {
+   approved;
+   pending;
+   rejected;
+   sent;
+ };
+type DraftPublic = 
+ record {
+   agentKind: AgentKind;
+   body: text;
+   complianceNotes: text;
+   compliancePassed: bool;
+   createdAt: int;
+   id: nat;
+   jobId: opt nat;
+   metadata: text;
+   platform: opt text;
+   reviewedAt: opt int;
+   reviewedBy: opt principal;
+   sentAt: opt int;
+   status: DraftStatus;
+   title: text;
+ };
+type AuditEntry = 
+ record {
+   action: text;
+   actorLabel: text;
+   at: int;
+   detail: text;
+   id: nat;
+ };
+type AgentStatus = 
+ variant {
+   active;
+   disabled;
+   paused;
+ };
+type AgentPublic = 
+ record {
+   budgetDailyJobs: nat;
+   budgetDailyLlmCalls: nat;
+   cadenceSeconds: nat;
+   id: nat;
+   jobsToday: nat;
+   kind: AgentKind;
+   lastRunAt: int;
+   llmCallsToday: nat;
+   name: text;
+   nextRunAt: int;
+   status: AgentStatus;
+ };
+type AgentKind = 
+ variant {
+   analytics_digest;
+   community_moderator;
+   compliance_reviewer;
+   email_correspondence;
+   fleet_cycles_ops;
+   newsletter;
+   nims_ops;
+   orchestrator;
+   orders_claims_ops;
+   social_facebook;
+   social_instagram;
+   social_tiktok;
+   social_x;
+   social_youtube;
+   weather_concierge;
+   weather_sentinel;
+ };
+type AgentHub = 
+ service {
+   addAdmin: (p: principal) -> ();
+   addAgentPrincipal: (p: principal) -> ();
+   adminAttachAgentCanister: (agentId: nat, canisterId: principal) -> ();
+   adminDetachAgentCanister: (agentId: nat) -> ();
+   approveDraft: (draftId: nat) -> ();
+   archiveNewsletterIssue: (weekKey: text, subject: text, htmlBody: text,
+    draftId: nat, recipientCount: nat) -> ();
+   claimJobs: (limit: nat) -> (vec JobPublic);
+   confirmSubscription: (token: text) -> (SubscribeResult);
+   editDraft: (draftId: nat, title: text, body: text) -> ();
+   enqueueJob: (agentId: nat, payload: text) -> (nat);
+   /// Register caller as agent_hub admin when they are a backend admin (one-time sync).
+   ensureAdminRegistration: () -> (bool);
+   getApprovedDraftsForSend: (limit: nat) -> (vec DraftPublic) query;
+   getAuditLog: (offset: nat, limit: nat) -> (vec AuditEntry) query;
+   getAuditLogEntries: (limit: nat) -> (vec AuditEntry) query;
+   getBackendCanisterId: () -> (text) query;
+   getCycleBalance: () -> (nat) query;
+   getNewsletterIssue: (weekKey: text) -> (opt NewsletterIssue) query;
+   getSecrets: (names: vec text) -> (vec record {
+                                           text;
+                                           text;
+                                         });
+   listAdmins: () -> (vec principal) query;
+   listAgentCanisterLinks: () -> (vec AgentCanisterLink) query;
+   listAgentPrincipals: () -> (vec principal) query;
+   listAgents: () -> (vec AgentPublic) query;
+   listConfirmedSubscriberEmails: (limit: nat) -> (vec text) query;
+   listDrafts: (limit: nat, statusFilter: opt DraftStatus) ->
+    (vec DraftPublic) query;
+   listJobs: (limit: nat, statusFilter: opt JobStatus) ->
+    (vec JobPublic) query;
+   listNewsletterIssues: (limit: nat) -> (vec NewsletterIssue) query;
+   listSecretNames: () -> (vec text) query;
+   listSubscribers: (limit: nat) -> (vec SubscriberPublic) query;
+   markDraftSent: (draftId: nat) -> ();
+   recordLlmCall: (agentId: nat) -> (bool);
+   rejectDraft: (draftId: nat, reason: text) -> ();
+   removeAdmin: (p: principal) -> ();
+   removeAgentPrincipal: (p: principal) -> ();
+   reportJobComplete: (jobId: nat, success: bool, errorMsg: opt text) -> ();
+   reportRun: (kind: AgentKind, summary: text) -> ();
+   setAgentBudgets: (agentId: nat, budgetDailyJobs: nat, budgetDailyLlmCalls:
+    nat) -> ();
+   setAgentStatus: (agentId: nat, status: AgentStatus) -> ();
+   setBackendCanisterId: (id: text) -> ();
+   setSecret: (name: text, value: text) -> ();
+   submitDraft: (agentKind: AgentKind, jobId: opt nat, title: text, body:
+    text, platform: opt text, compliancePassed: bool, complianceNotes: 
+    text, metadata: text) -> (nat);
+   subscribeNewsletter: (email: text) -> (SubscribeResult);
+   unsubscribe: (token: text) -> (SubscribeResult);
+ };
+type AgentCanisterLink = 
+ record {
+   agentId: nat;
+   agentKind: AgentKind;
+   agentName: text;
+   canisterId: principal;
+ };
+service : () -> AgentHub

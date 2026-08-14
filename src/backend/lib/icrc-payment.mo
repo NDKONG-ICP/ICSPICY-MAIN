@@ -138,6 +138,33 @@ module {
     await ledger.icrc1_fee();
   };
 
+  /// Transfer tokens from the calling canister to an account with an explicit
+  /// subaccount via icrc1_transfer. Needed for CMC top-ups, which require the
+  /// deposit on the CMC's subaccount derived from the target canister.
+  public func transferOutToAccount(
+    ledgerCanisterId : Text,
+    toOwner : Principal,
+    toSubaccount : ?Blob,
+    amount : Nat,
+    created_at_time_ns : ?Nat64,
+    memo : ?Blob,
+  ) : async Result.Result<Nat, Text> {
+    let ledger = getIcrc1Ledger(ledgerCanisterId);
+    let fee = await ledger.icrc1_fee();
+    let result = await ledger.icrc1_transfer({
+      from_subaccount = null;
+      to = { owner = toOwner; subaccount = toSubaccount };
+      amount;
+      fee = ?fee;
+      memo;
+      created_at_time = created_at_time_ns;
+    });
+    switch result {
+      case (#Ok(blockIndex)) #ok(blockIndex);
+      case (#Err(e)) #err(transferErrorText(e));
+    };
+  };
+
   /// Transfer tokens from the calling canister to `to` via icrc1_transfer.
   public func transferOut(
     ledgerCanisterId : Text,

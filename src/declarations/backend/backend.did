@@ -27,6 +27,14 @@ type ZoneCalendar =
    months: vec ZoneSchedule;
    zone_label: text;
  };
+type ZipCoord = 
+ record {
+   displayLabel: text;
+   fetchedAt: int;
+   lat: float64;
+   lng: float64;
+   zip: text;
+ };
 type YieldEstimate = 
  record {
    companionBonusPct: float64;
@@ -35,6 +43,29 @@ type YieldEstimate =
    notes: text;
    spacingPenaltyPct: float64;
    totalPlantCount: nat;
+ };
+type WeatherSourceLedgerEntry = 
+ record {
+   bodyDigest: text;
+   fetchedAt: int;
+   gridKey: opt text;
+   httpStatus: nat;
+   id: nat;
+   kind: WeatherSourceKind;
+   parserVersion: text;
+   sourceUrl: text;
+   status: WeatherFreshnessStatus;
+ };
+type WeatherSourceKind = 
+ variant {
+   airQuality;
+   almanac;
+   ensemble;
+   geocode;
+   model;
+   nws;
+   outlook;
+   tropical;
  };
 type WeatherSnapshot = 
  record {
@@ -60,6 +91,63 @@ type WeatherRecord =
    temperature_min: float64;
    user: principal;
    wind_speed: opt float64;
+ };
+type WeatherOutlook = 
+ record {
+   airQuality: opt AirQuality;
+   current: CurrentConditions;
+   daily: vec DailyOutlook;
+   fetchedAt: int;
+   gridKey: text;
+   lat: float64;
+   lng: float64;
+   models: opt ModelSpread;
+   source: text;
+   stale: bool;
+ };
+type WeatherLocationKind = 
+ variant {
+   coords;
+   zip;
+ };
+type WeatherLocation = 
+ record {
+   displayLabel: text;
+   kind: WeatherLocationKind;
+   lat: float64;
+   lng: float64;
+   updatedAt: int;
+   zip: opt text;
+ };
+type WeatherFreshnessStatus = 
+ variant {
+   error;
+   fresh;
+   stale;
+ };
+type WeatherBrief = 
+ record {
+   almanacDateKey: opt text;
+   generatedAt: int;
+   gridKey: text;
+   outlookFetchedAt: int;
+   "text": text;
+   tropicalFetchedAt: opt int;
+ };
+type WeatherAlert = 
+ record {
+   body: text;
+   createdAt: int;
+   expiresAt: int;
+   gridKey: text;
+   id: nat;
+   kind: AlertKind;
+   severity: variant {
+               info;
+               warning;
+               watch;
+             };
+   title: text;
  };
 type WateringEntry = 
  record {
@@ -148,6 +236,7 @@ type ValidationSeverity =
 type UserRole = 
  variant {
    admin;
+   agent;
    guest;
    user;
  };
@@ -247,6 +336,41 @@ type UpdateCellDataInput =
    pest_notes: opt text;
    plant_id: PlantId;
    watering_schedule: opt text;
+ };
+type TropicalSummary = 
+ record {
+   aceStats: AceSeasonStats;
+   dataSource: text;
+   developmentOutlooks: vec DevelopmentOutlook;
+   disclaimer: text;
+   fetchedAt: int;
+   seasonActive: bool;
+   storms: vec TropicalStorm;
+ };
+type TropicalStorm = 
+ record {
+   advisoryNum: nat;
+   basin: StormBasin;
+   classification: text;
+   forecastTrack: vec ForecastPoint;
+   id: text;
+   lat: float64;
+   lng: float64;
+   maxWindKt: nat;
+   movementDirDeg: nat;
+   movementSpeedKt: nat;
+   movementText: text;
+   name: text;
+   pressureMb: nat;
+   track: vec StormTrackPoint;
+   validAt: int;
+ };
+type TropicalAdeck = 
+ record {
+   fetchedAt: int;
+   gz: blob;
+   stormName: text;
+   wallet: text;
  };
 type TreasuryTxType = 
  variant {
@@ -392,6 +516,48 @@ type TokenApproval =
  };
 type Timestamp = int;
 type Time = int;
+type SwarmCanisterTarget = 
+ record {
+   agentKind: opt text;
+   autoTopUpEnabled: bool;
+   canisterId: text;
+   category: FleetTargetCategory;
+   createdAt: int;
+   enabled: bool;
+   icpPerTopUpE8s: nat;
+   kind: ProbeKind;
+   maxIcpPerDayE8s: nat;
+   name: text;
+   notes: text;
+   thresholdCycles: nat;
+   updatedAt: int;
+ };
+type SwarmCanisterStatus = 
+ record {
+   spentTodayIcpE8s: nat;
+   target: SwarmCanisterTarget;
+ };
+type SwarmCanisterInput = 
+ record {
+   agentKind: opt text;
+   autoTopUpEnabled: bool;
+   canisterId: text;
+   category: FleetTargetCategory;
+   enabled: bool;
+   icpPerTopUpE8s: nat;
+   kind: ProbeKind;
+   maxIcpPerDayE8s: nat;
+   name: text;
+   notes: text;
+   thresholdCycles: nat;
+ };
+type SwarmAutoTopUpPolicy = 
+ record {
+   enabled: bool;
+   icpPerTopUpE8s: nat;
+   maxIcpPerDayE8s: nat;
+   thresholdCycles: nat;
+ };
 type SubmitScoreOk = 
  record {
    bestScore: nat;
@@ -438,6 +604,18 @@ type StructurePlacement =
    width: float64;
    x: float64;
    y: float64;
+ };
+type StormTrackPoint = 
+ record {
+   lat: float64;
+   lng: float64;
+   maxWindKt: nat;
+   timeUtc: text;
+ };
+type StormBasin = 
+ variant {
+   atlantic;
+   eastPacific;
  };
 type StoredFile = 
  record {
@@ -929,6 +1107,12 @@ type ProductCategory =
    Seedling;
    Spice;
  };
+type ProbeKind = 
+ variant {
+   local;
+   managementStatus;
+   remoteHealthQuery;
+ };
 type PostWithComments = 
  record {
    comments: vec CommentPublic;
@@ -1163,6 +1347,22 @@ type PlantCountStats =
    sold: nat;
    total: nat;
  };
+type PlantClaimStatusPublic = 
+ record {
+   hasNft: bool;
+   myStatus: opt ClaimRequestStatus;
+   pendingCount: nat;
+   sold: bool;
+ };
+type PlantClaimRequestPublic = 
+ record {
+   nftTokenId: nat;
+   note: opt text;
+   plantId: PlantId;
+   requestedAt: Timestamp;
+   requester: principal;
+   status: ClaimRequestStatus;
+ };
 type PlantAwaitingNft = 
  record {
    cell_position: opt nat;
@@ -1315,6 +1515,35 @@ type NFTStandard =
    Hedera;
    ICRC37;
  };
+type ModelSpread = 
+ record {
+   agreementScore: nat;
+   ecmwf: vec ModelDay;
+   ensemble: opt EnsemblePlume;
+   gem: vec ModelDay;
+   gfs: vec ModelDay;
+   icon: vec ModelDay;
+ };
+type ModelGustSpread = 
+ record {
+   ecmwf: vec ModelGustDay;
+   fetchedAt: int;
+   gem: vec ModelGustDay;
+   gfs: vec ModelGustDay;
+   gridKey: text;
+   icon: vec ModelGustDay;
+ };
+type ModelGustDay = 
+ record {
+   date: text;
+   windGustsMph: float64;
+ };
+type ModelDay = 
+ record {
+   date: text;
+   precipInches: float64;
+   tempHighF: float64;
+ };
 type MintRWAProvenanceInput = 
  record {
    artwork_layer_id: ArtworkLayerId;
@@ -1349,6 +1578,50 @@ type MembershipNFTPublic =
    owner: principal;
    rarity_tier: opt RarityTier;
    tier: MembershipTier;
+ };
+type LpFeeCyclesRunResult = 
+ record {
+   canistersToppedUp: nat;
+   details: vec CanisterFundingDetail;
+   icpHarvestedE8s: nat;
+   message: text;
+   spicyFeesSkippedE8s: nat;
+   success: bool;
+   totalCyclesMinted: nat;
+ };
+type LpFeeCyclesEvent = 
+ record {
+   canistersToppedUp: nat;
+   details: vec CanisterFundingDetail;
+   icpHarvestedE8s: nat;
+   message: text;
+   spicyFeesSkippedE8s: nat;
+   success: bool;
+   totalCyclesMinted: nat;
+   trigger: text;
+   ts: Time;
+ };
+type LpFeeCyclesDryRun = 
+ record {
+   backendPrincipal: text;
+   configured: bool;
+   icpOwedE8s: nat;
+   message: text;
+   ownerMatchesBackend: bool;
+   positionFound: bool;
+   spicyOwedE8s: nat;
+ };
+type LpFeeCyclesConfigView = 
+ record {
+   enabled: bool;
+   enabledAt: int;
+   icpIsToken0: bool;
+   intervalDays: nat;
+   lastRunAt: int;
+   positionId: opt nat;
+   positionOwnerPrincipal: opt text;
+   spicyLedgerId: opt text;
+   swapPoolId: opt text;
  };
 type LoadStaticMetadataResult = 
  record {
@@ -1438,6 +1711,7 @@ type ICSpicy =
    _initializeAccessControl: () -> () query;
    acceptOffer: (offerId: text) -> (Offer);
    addAdmin: (p: principal) -> ();
+   addAgentPrincipal: (p: principal) -> ();
    addArtworkLayer: (name: text, object_key: text, layer_number: nat) ->
     (ArtworkLayer);
    addComment: (post_id: PostId, content: text, is_anonymous: bool) ->
@@ -1466,10 +1740,16 @@ type ICSpicy =
    addVendor: (name: text, website: opt text, notes: opt text) -> (nat);
    addWateringEntry: (plantId: PlantId, amountMl: nat, phLevel: opt float64,
     notes: opt text) -> (bool);
+   /// Uploads asset canister — user images served via HTTP from this canister.
    addWeatherRecord: (input: AddWeatherRecordInput) -> (WeatherRecord);
    addWeatherSnapshot: (plantId: PlantId, snapshot: WeatherSnapshot) ->
     (bool);
    addZonePhoto: (tray_id: TrayId, photo_key: text) -> ();
+   adminApproveClaimRequest: (plantId: PlantId, requester: principal) ->
+    (record {
+       message: text;
+       success: bool;
+     });
    adminBatchAirdrop: (recipients: vec principal, useRandom: bool,
     startTokenId: opt nat) ->
     (vec
@@ -1482,26 +1762,50 @@ type ICSpicy =
    adminDeleteComment: (comment_id: CommentId) -> (bool);
    adminDeletePost: (post_id: PostId) -> (bool);
    adminDeleteVarietyGuide: (varietyId: nat, zone: text) -> (bool);
+   /// Public query — used by agent_hub to sync admin access with backend admins.
    adminGetGameStats: (gameId: text, "principal": principal) ->
     (opt GamePlayerStatsPublic) query;
    adminGrantCoopSeat: (tokenId: nat, recipient: principal) ->
     (PurchaseCoopSeatResult);
+   adminListClaimRequests: (statusFilter: opt ClaimRequestStatus) ->
+    (vec PlantClaimRequestPublic) query;
    adminListCoopDesignatedSeats: () -> (vec nat) query;
    adminListUsers: (offset: nat, limit: nat, search: text) ->
     (AdminUserPage) query;
+   adminRefreshTropical: () -> (opt TropicalSummary);
+   adminRefreshWeatherGrid: (lat: float64, lng: float64) ->
+    (opt WeatherOutlook);
+   /// Admin: register a dynamic swarm/agent canister for fleet monitoring.
+   adminRegisterSwarmCanister: (input: SwarmCanisterInput) ->
+    (SwarmCanisterTarget);
+   adminRejectClaimRequest: (plantId: PlantId, requester: principal) ->
+    (bool);
    adminRemoveGameScore: (gameId: text, "principal": principal) -> (bool);
+   /// Admin: remove a swarm canister from the dynamic fleet registry.
+   adminRemoveSwarmCanister: (canisterId: text) -> ();
+   adminRetractAlmanac: (dateKey: text) -> ();
    adminReturnToPool: (tokenId: nat) -> (TransferResult);
    adminRevokeSeat: (tokenId: nat, reason: text) -> (bool);
    adminRunDailyWeatherCapture: () -> (nat);
+   /// Admin: run auto top-up now (same logic as the 6-hour timer).
+   adminRunFleetAutoTopUp: () -> (nat);
+   /// Admin: harvest ICP LP fees and fund fleet canisters (marketable monthly event).
+   adminRunLpFeeCyclesFunding: (dryRunOnly: bool) -> (LpFeeCyclesRunResult);
    adminSendNotification: (recipient: principal, message: text) -> (bool);
    adminSetLeaderboardExcluded: ("principal": principal, excluded: bool) ->
     ();
+   /// Admin: set per-swarm-canister auto top-up policy.
+   adminSetSwarmCanisterAutoTopUp: (canisterId: text, autoPolicy:
+    SwarmAutoTopUpPolicy) -> (SwarmCanisterTarget);
    adminSubmitToDAB: (collectionName: text, collectionDescription: text,
     standard: text, canisterIdOverride: opt text) ->
     (variant {
        err: text;
        ok: text;
      });
+   /// Admin: convert treasury ICP to cycles on a fleet canister via CMC.
+   adminTopUpCanisterFromTreasuryIcp: (targetCanisterId: text, icpE8s:
+    nat) -> (CanisterTopUpResult);
    adminTransferFromPool: (tokenId: nat, to: Account) -> (TransferResult);
    adminUnstickOrder: (orderId: nat) ->
     (record {
@@ -1513,6 +1817,9 @@ type ICSpicy =
        message: text;
        success: bool;
      });
+   /// Admin: update a registered swarm canister target.
+   adminUpdateSwarmCanister: (canisterId: text, input: SwarmCanisterInput) ->
+    (SwarmCanisterTarget);
    adminWithdrawTokens: (ledgerCanisterId: text, to: principal, amount:
     nat) -> (AdminWithdrawTokensResult);
    airdropNFT: (_token_id: text, _recipient: principal) -> ();
@@ -1552,7 +1859,7 @@ type ICSpicy =
    calculateGardenYield: (designId: nat) -> (opt YieldEstimate) query;
    calculateGardenYieldInput: (input: GardenDesignInput) ->
     (YieldEstimate) query;
-   /// Per-principal rate limiters for cycle-drain protection (CDA).
+   cancelMyClaimRequest: (plantId: PlantId) -> (bool);
    cancelOffer: (offerId: text) -> (Offer);
    cancelProposal: (id: ProposalId) -> (bool);
    cancelResaleListing: (listing_id: text) -> (variant {
@@ -1623,6 +1930,8 @@ type ICSpicy =
    editPost: (post_id: PostId, new_content: text) -> (bool);
    ensureAdminProfile: () -> ();
    ensureCallerProfile: () -> ();
+   ensureTropicalSummary: (forceFlag: nat) -> (opt TropicalSummary);
+   ensureWeatherOutlook: (lat: float64, lng: float64) -> (opt WeatherOutlook);
    feedEntireTray: (trayId: TrayId, productName: text, nutrientType: 
     text, dosage: text, notes: opt text) -> (nat);
    finalizeArtworkUpload: () -> (UploadResult);
@@ -1695,12 +2004,17 @@ type ICSpicy =
        totalVotes: nat;
        uniqueVoters: nat;
      }) query;
+   getDailyAlmanac: (dateKey: opt text) -> (opt DailyAlmanac) query;
+   getDailyAlmanacCertified: (dateKey: text) -> (CertifiedWeather_3) query;
    getFeaturedRecipes: (limit: nat) -> (vec RecipePublic) query;
-   /// Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
-   getFleetCanisterHealth: () -> (vec FleetEntry);
+   /// Admin: read automatic fleet top-up policy.
+   getFleetAutoTopUpPolicy: () -> (FleetAutoTopUpPolicy) query;
+   /// Admin: cycles, memory, and observed burn for all production canisters.
+   getFleetCanisterHealth: () -> (FleetHealthReport);
    getFollowers: (user: principal, offset: nat, limit: nat) ->
     (vec UserProfilePublic) query;
    getFollowersCount: (user: principal) -> (nat) query;
+   /// Uploads asset canister — user images served via HTTP from this canister.
    getFollowing: (user: principal, offset: nat, limit: nat) ->
     (vec UserProfilePublic) query;
    getFollowingCount: (user: principal) -> (nat) query;
@@ -1713,6 +2027,8 @@ type ICSpicy =
    getGardenDesignForUser: (designId: nat) -> (opt GardenDesign) query;
    getGlobalFeed: (offset: nat, limit: nat) -> (vec PostPublic) query;
    getGraveyard: () -> (vec PlantLifecycle) query;
+   getGrowerAlerts: (lat: opt float64, lng: opt float64) ->
+    (vec WeatherAlert) query;
    getGrowerProvenanceMeta: (tokenId: nat) ->
     (opt GrowerProvenanceMeta) query;
    getIcrc7PoolStatsAdmin: () -> (Icrc7PoolStats) query;
@@ -1721,8 +2037,15 @@ type ICSpicy =
    getLinkedWallets: () -> (vec principal) query;
    getListedNfts: (pepperHeadOnly: opt bool) -> (vec NftListingPublic) query;
    getLoadedMetadataCount: () -> (nat) query;
+   /// Admin: read monthly LP fee → cycles configuration.
+   getLpFeeCyclesConfig: () -> (LpFeeCyclesConfigView) query;
+   /// Public: marketing/transparency log of monthly LP infrastructure funding events.
+   getLpFeeCyclesEvents: (limit: nat) -> (vec LpFeeCyclesEvent) query;
    getMembershipPriceInToken: (token: OracleToken) -> (nat) query;
+   getModelGusts: (lat: opt float64, lng: opt float64) ->
+    (opt ModelGustSpread) query;
    getMyBadges: () -> (vec BadgePublic) query;
+   getMyClaimRequests: () -> (vec PlantClaimRequestPublic) query;
    getMyCoopStatus: () -> (opt CoopStatus) query;
    getMyCrafterRecipes: () -> (vec SavedCrafterRecipe) query;
    getMyCrosses: () -> (vec BreedingCrossPublic) query;
@@ -1745,11 +2068,15 @@ type ICSpicy =
    getMySeedBank: () -> (vec SeedLotPublic) query;
    getMyTrays: () -> (vec TrayPublic) query;
    getMyVendors: () -> (vec SeedVendorPublic) query;
+   getMyWeatherAlerts: () -> (vec WeatherAlert) query;
+   getMyWeatherLocation: () -> (opt WeatherLocation) query;
    getMyWeatherRecords: (limit: nat) -> (vec WeatherRecord);
    getNewOrderCount: () -> (nat) query;
    getNftPoolStatus: () -> (PlantPoolStatus) query;
    getNimsDashboardStats: () -> (DashboardStats) query;
    getNimsPhotoFile: (path: text) -> (opt ShopListingFile) query;
+   getNurseryWeatherDesk: () -> (opt WeatherOutlook) query;
+   getNwsAlertsCertified: () -> (CertifiedWeather_2) query;
    getOffer: (offerId: text) -> (opt Offer) query;
    getOffersForNft: (nftId: text) -> (vec Offer) query;
    getOffersReceived: () -> (vec Offer) query;
@@ -1761,6 +2088,8 @@ type ICSpicy =
    getPlantByNft: (nftTokenId: nat) -> (opt PlantLifecycle) query;
    getPlantByNftIdBackfillCount: () -> (nat) query;
    getPlantByNftIdMapSize: () -> (nat) query;
+   getPlantClaimStatus: (plantId: PlantId, caller: opt principal) ->
+    (PlantClaimStatusPublic) query;
    getPlantClaimToken: (plantId: PlantId) -> (opt text) query;
    getPlantCount: () -> (PlantCountStats) query;
    getPlantHealth: (plantId: PlantId) -> (opt PlantHealth) query;
@@ -1818,6 +2147,7 @@ type ICSpicy =
                                                nat;
                                              }) query;
    getSpawnSequence: (seed: nat, count: nat) -> (vec SpawnEvent) query;
+   getStormTrack: (stormId: text) -> (opt vec StormTrackPoint) query;
    getTokenPriceInIcp: (token: OracleToken) -> (nat) query;
    getTokenPrices: () -> (vec TokenPrice) query;
    getTray: (tray_id: TrayId) -> (opt TrayPublic) query;
@@ -1826,6 +2156,9 @@ type ICSpicy =
    getTreasuryBalances: () -> (vec TreasuryBalance) query;
    getTreasuryLedger: () -> (vec TreasuryTransaction) query;
    getTrendingPosts: (limit: nat) -> (vec PostPublic) query;
+   getTropicalAdecks: () -> (vec TropicalAdeck) query;
+   getTropicalSummary: () -> (opt TropicalSummary) query;
+   getTropicalSummaryCertified: () -> (CertifiedWeather_1) query;
    getUnreadCount: () -> (nat) query;
    getUpcomingEvents: () -> (vec PlantingEvent) query;
    getUpgradeHistory: (plant_id: PlantId) ->
@@ -1841,12 +2174,30 @@ type ICSpicy =
    getVarietyIntro: (varietyId: nat) -> (opt text) query;
    getVarietyProvenance: (varietyId: nat) ->
     (opt VarietyProvenancePublic) query;
+   getWeatherBrief: (lat: opt float64, lng: opt float64) ->
+    (opt WeatherBrief) query;
    getWeatherDebug: () ->
     (record {
        activeCount: nat;
        lastError: text;
        lastUrl: text;
      }) query;
+   getWeatherHubDebug: () ->
+    (record {
+       gridCount: nat;
+       lastError: text;
+       lastTropicalError: text;
+       seasonActive: bool;
+       tropicalStormCount: nat;
+       zipBudgetRemaining: nat;
+       zipCount: nat;
+     }) query;
+   getWeatherOutlook: (lat: opt float64, lng: opt float64) ->
+    (opt WeatherOutlook) query;
+   getWeatherOutlookCertified: (lat: opt float64, lng: opt float64) ->
+    (CertifiedWeather) query;
+   getWeatherSourceLedger: (limit: nat) ->
+    (vec WeatherSourceLedgerEntry) query;
    getZoneCalendar: (zone: text) -> (ZoneCalendar) query;
    getZoneSchedule: (zone: text, month: nat) -> (ZoneSchedule) query;
    gradeQuizCheckpoint: (lessonId: text, answersJson: text) ->
@@ -1889,11 +2240,11 @@ type ICSpicy =
    icrc7_default_take_value: () -> (opt nat) query;
    icrc7_description: () -> (opt text) query;
    icrc7_logo: () -> (opt text) query;
+   /// Uploads asset canister — user images served via HTTP from this canister.
    icrc7_max_memo_size: () -> (opt nat) query;
    icrc7_max_query_batch_size: () -> (opt nat) query;
    icrc7_max_take_value: () -> (opt nat) query;
    icrc7_max_update_batch_size: () -> (opt nat) query;
-   /// ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
    icrc7_name: () -> (text) query;
    icrc7_owner_of: (token_ids: vec nat) -> (vec opt Account) query;
    icrc7_permitted_drift: () -> (opt nat) query;
@@ -1921,10 +2272,13 @@ type ICSpicy =
                                skipped: nat;
                              });
    isCallerAdmin: () -> (bool) query;
+   isCallerAgent: () -> (bool) query;
    isFollowing: (target: principal) -> (bool) query;
    isGrowerProvenanceToken: (tokenId: nat) -> (bool) query;
    isPepperHead: (tokenId: nat) -> (bool) query;
    isPepperHeadAvailable: () -> (nat) query;
+   /// Public query — used by agent_hub to sync admin access with backend admins.
+   isPrincipalAdmin: (p: principal) -> (bool) query;
    isUserBanned: (user: principal) -> (bool) query;
    issueMembership: (owner: principal, tier: MembershipTier, nft_standard:
     variant {
@@ -1935,6 +2289,7 @@ type ICSpicy =
    likeComment: (comment_id: CommentId) -> (bool);
    likePost: (post_id: PostId) -> (bool);
    linkWallet: (walletPrincipal: principal) -> (bool);
+   listAgentPrincipals: () -> (vec principal) query;
    listAllOrdersAdmin: (filter: AdminOrderStatusFilter) ->
     (vec AdminOrderPublic) query;
    listAllPostsAdmin: (offset: nat, limit: nat) -> (vec PostPublic) query;
@@ -1947,6 +2302,7 @@ type ICSpicy =
     (vec ClaimTokenAdminPublic) query;
    listCommentsByPost: (post_id: PostId) -> (vec CommentPublic) query;
    listDAOProposals: () -> (vec ProposalPublic) query;
+   listDailyAlmanacArchive: (limit: nat) -> (vec DailyAlmanac) query;
    listGraveyard: () -> (vec PlantLifecycle) query;
    listGrowerDirectory: () -> (vec GrowerDirectoryEntry) query;
    listIcrc7PoolTokensAdmin: (filter: Icrc7TokenFilter, offset: nat, limit:
@@ -1984,6 +2340,8 @@ type ICSpicy =
                                    }) query;
    listRecipes: () -> (vec RecipePublic) query;
    listRecipesAdmin: () -> (vec RecipePublic) query;
+   /// Admin/agent: list registered swarm canister targets.
+   listSwarmCanisterTargets: () -> (vec SwarmCanisterStatus) query;
    listTrays: () -> (vec TrayPublic) query;
    listVarieties: () -> (vec VarietyPublic) query;
    listVarietyIntros: () -> (vec record {
@@ -2002,6 +2360,7 @@ type ICSpicy =
     opt text, notes: opt text) -> (bool);
    logWatering: (plantId: PlantId, amountMl: nat, phLevel: opt float64,
     notes: opt text) -> (bool);
+   lookupCachedZip: (zip: text) -> (opt ZipCoord) query;
    markCellDead: (trayId: TrayId, cellPosition: nat, cause: DeathCause,
     notes: opt text, _photoUrl: opt text) -> (bool);
    markCellGerminated: (trayId: TrayId, cellPosition: nat, date:
@@ -2040,7 +2399,6 @@ type ICSpicy =
        context: blob;
        response: http_request_result;
      }) -> (http_request_result) query;
-   /// Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
    paypalTransform:
     (record {
        context: blob;
@@ -2062,12 +2420,16 @@ type ICSpicy =
        tokenId: opt nat;
        usdCents: nat;
      });
+   /// Admin: preview accrued LP fees without claiming.
+   previewLpFeeCyclesDryRun: () -> (LpFeeCyclesDryRun);
    priceOracleTransform:
     (record {
        context: blob;
        response: http_request_result;
      }) -> (http_request_result) query;
    pruneUsageData: () -> ();
+   publishDailyAlmanac: (dateKey: text, title: text, body: text, recipeSlug:
+    opt text, varietyIds: vec nat) -> ();
    publishProposal: (id: ProposalId) -> (bool);
    publishRecipe: (id: RecipeId) -> (bool);
    publishSlicerSharePage: (html: text) -> (Result_6);
@@ -2116,25 +2478,34 @@ type ICSpicy =
        success: bool;
        tokenId: opt nat;
      });
+   refreshNurseryWeatherHub: () -> (bool);
    refreshRavenBalance: () -> ();
    refreshTokenPrices: () -> (bool);
+   refreshTropicalDesk: () -> (bool);
    registerPlant: (sharedData: RegisterPlantSharedData, cellIndex: nat,
     overrides: opt RegisterPlantCellOverrides) -> (RegisterPlantResult);
    registerPlantBatch: (sharedData: RegisterPlantSharedData, cells:
     vec RegisterPlantCellInput) -> (RegisterPlantBatchResult);
    rejectOffer: (offerId: text) -> (Offer);
    removeAdmin: (p: principal) -> ();
+   removeAgentPrincipal: (p: principal) -> ();
    removePlant: (plantId: PlantId) -> (bool);
    removePlantPhoto: (plant_id: PlantId, photo_key: text) -> ();
    removeVariety: (id: nat) -> (bool);
    removeZonePhoto: (tray_id: TrayId, photo_key: text) -> ();
    reorderRecipes: (ids: vec RecipeId) -> (bool);
+   requestPlantClaim: (plantId: PlantId, note: opt text) ->
+    (record {
+       message: text;
+       success: bool;
+     });
    resetOrphanPoolNFT: (nftId: nat) -> (bool);
    resetPoolNFT: (nftId: nat) -> (variant {
                                     err: text;
                                     ok: text;
                                   });
    resolveUsername: (username: text) -> (opt principal) query;
+   resolveZip: (zip: text) -> (ZipCoord);
    revivePlant: (plantId: PlantId) -> (bool);
    revokeClaimTokenAdmin: (token: text) -> (bool);
    runDailyWeatherCapture: () -> (nat);
@@ -2155,9 +2526,18 @@ type ICSpicy =
    searchVarieties: (searchQuery: text) -> (vec VarietyPublic) query;
    seedDefaultRecipes: () -> ();
    setCoopSeatPriceCents: (cents: nat) -> ();
+   /// Admin: update automatic fleet top-up policy.
+   setFleetAutoTopUpPolicy: (enabled: bool, thresholdCycles: nat,
+    icpPerTopUpE8s: nat, maxIcpPerDayE8s: nat) -> ();
    setForSale: (plant_id: PlantId, for_sale: bool) -> ();
    setFrontendCanisterId: (canisterId: text) -> ();
    setICPaySecretKey: (key: text) -> ();
+   /// Admin: update monthly LP fee → cycles configuration (toggle + pool IDs).
+   setLpFeeCyclesConfig: (enabled: bool, spicyLedgerId: opt text, swapPoolId:
+    opt text, positionId: opt nat, icpIsToken0: bool, positionOwnerPrincipal:
+    opt text, intervalDays: nat) -> ();
+   setMyWeatherLocation: (kind: WeatherLocationKind, zip: opt text, lat:
+    float64, lng: float64, displayLabel: text) -> (WeatherLocation);
    setPayPalCredentials: (clientId: text, clientSecret: text, sandbox:
     bool) -> ();
    setPlantNFT: (plant_id: PlantId, nft_id: text) -> ();
@@ -2244,7 +2624,63 @@ type ICSpicy =
    voteOnProposal: (proposal_id: ProposalId, option_index: nat) -> ();
    waterEntireTray: (trayId: TrayId, amountMl: nat, phLevel: opt float64,
     notes: opt text) -> (nat);
+   weatherAdeckTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
+   weatherAirQualityTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
+   weatherEnsembleTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
+   weatherGeocodeTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
+   weatherModelTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
+   weatherNoaaForecastTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
+   weatherNoaaOutlookTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
+   weatherNoaaPastTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
+   weatherNwsAlertsTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
+   weatherOutlookTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
    weatherProvenanceTransform:
+    (record {
+       context: blob;
+       response: http_request_result;
+     }) -> (http_request_result) query;
+   /// Uploads asset canister — user images served via HTTP from this canister.
+   weatherTropicalTransform:
     (record {
        context: blob;
        response: http_request_result;
@@ -2357,13 +2793,63 @@ type FoundersMintInput =
    rarityTier: RarityTier;
    recipient: principal;
  };
+type ForecastPoint = 
+ record {
+   category: nat;
+   forecastHour: nat;
+   lat: float64;
+   lng: float64;
+   maxWindKt: nat;
+   pointLabel: text;
+   pressureMb: nat;
+ };
+type FleetTargetCategory = 
+ variant {
+   agent;
+   asset;
+   core;
+   weather;
+   workerBridge;
+ };
+type FleetProbeStatus = 
+ variant {
+   denied;
+   error;
+   ok;
+ };
+type FleetHealthReport = 
+ record {
+   appBurnPerDay: nat;
+   appCumulativeBurned: nat;
+   canisters: vec FleetEntry;
+ };
 type FleetEntry = 
  record {
+   agentKind: opt text;
+   autoTopUpEnabled: bool;
+   autoTopUpIcpE8s: nat;
+   autoTopUpMaxIcpPerDayE8s: nat;
+   autoTopUpThresholdCycles: nat;
+   burnPerDay: nat;
    canisterId: text;
+   category: FleetTargetCategory;
+   cumulativeBurned: nat;
    cyclesBalance: nat;
    isHealthy: bool;
+   isSwarm: bool;
+   lastBurnSampleAt: int;
    memorySize: nat;
    name: text;
+   probeMessage: opt text;
+   probeStatus: FleetProbeStatus;
+ };
+type FleetAutoTopUpPolicy = 
+ record {
+   enabled: bool;
+   icpPerTopUpE8s: nat;
+   maxIcpPerDayE8s: nat;
+   spentTodayIcpE8s: nat;
+   thresholdCycles: nat;
  };
 type FinishVideoUploadResult = 
  record {
@@ -2381,11 +2867,28 @@ type FeedingPublic =
    product_name: text;
  };
 type FeedingId = nat;
+type EnsemblePlume = 
+ record {
+   dates: vec text;
+   memberCount: nat;
+   precipMembers: vec vec float64;
+   tempHighMembers: vec vec float64;
+ };
 type Difficulty = 
  variant {
    Advanced;
    Beginner;
    Intermediate;
+ };
+type DevelopmentOutlook = 
+ record {
+   basin: text;
+   centroidLat: float64;
+   centroidLng: float64;
+   prob2Day: text;
+   prob7Day: text;
+   risk2Day: text;
+   risk7Day: text;
  };
 type DeathCause = 
  variant {
@@ -2405,6 +2908,16 @@ type DashboardStats =
    needsAttention: nat;
    totalPlants: nat;
  };
+type DailyOutlook = 
+ record {
+   date: text;
+   precipInches: float64;
+   tempHighF: float64;
+   tempLowF: float64;
+   uvIndexMax: float64;
+   weatherCode: nat;
+   windMphMax: float64;
+ };
 type DailyFeatureStat = 
  record {
    action: text;
@@ -2412,6 +2925,28 @@ type DailyFeatureStat =
    day: DayBucket;
    feature: text;
    uniqueUsers: nat;
+ };
+type DailyAlmanac = 
+ record {
+   body: text;
+   dateKey: text;
+   publishedAt: int;
+   recipeSlug: opt text;
+   retracted: bool;
+   title: text;
+   varietyIds: vec nat;
+ };
+type CurrentConditions = 
+ record {
+   feelsLikeF: float64;
+   humidity: float64;
+   precipInches: float64;
+   pressureHpa: float64;
+   tempF: float64;
+   uvIndex: float64;
+   weatherCode: nat;
+   windDirDeg: float64;
+   windMph: float64;
  };
 type CreateTrayInput = 
  record {
@@ -2588,6 +3123,40 @@ type ClaimTokenAdminPublic =
    token: text;
    token_id: nat;
  };
+type ClaimRequestStatus = 
+ variant {
+   approved;
+   pending;
+   rejected;
+ };
+type CertifiedWeather_3 = 
+ record {
+   bodyDigest: text;
+   certificate: opt blob;
+   value: opt DailyAlmanac;
+   witness: blob;
+ };
+type CertifiedWeather_2 = 
+ record {
+   bodyDigest: text;
+   certificate: opt blob;
+   value: opt vec WeatherAlert;
+   witness: blob;
+ };
+type CertifiedWeather_1 = 
+ record {
+   bodyDigest: text;
+   certificate: opt blob;
+   value: opt TropicalSummary;
+   witness: blob;
+ };
+type CertifiedWeather = 
+ record {
+   bodyDigest: text;
+   certificate: opt blob;
+   value: opt WeatherOutlook;
+   witness: blob;
+ };
 type CellStatus = 
  variant {
    Dead;
@@ -2601,6 +3170,21 @@ type CanisterTreasuryBalance =
    balance: nat;
    ledgerCanisterId: text;
    symbol: text;
+ };
+type CanisterTopUpResult = 
+ record {
+   cyclesMinted: opt nat;
+   icpSpentE8s: nat;
+   ledgerBlockIndex: opt nat;
+   message: text;
+   success: bool;
+ };
+type CanisterFundingDetail = 
+ record {
+   canisterId: text;
+   cyclesMinted: nat;
+   icpSpentE8s: nat;
+   name: text;
  };
 type CallerVoteInfo = 
  record {
@@ -2730,10 +3314,25 @@ type ApprovalInfo =
    memo: opt blob;
    spender: Account;
  };
+type AlertKind = 
+ variant {
+   extremeHeat;
+   heavyRain;
+   highUv;
+   highWind;
+   nwsOfficial;
+   tropicalThreat;
+ };
 type AirdropAssignment = 
  record {
    nftId: nat;
    recipient: principal;
+ };
+type AirQuality = 
+ record {
+   pm10: float64;
+   pm25: float64;
+   usAqi: nat;
  };
 type AdminWithdrawTokensResult = 
  record {
@@ -2826,6 +3425,20 @@ type ActivityEntry =
    plantId: PlantId;
    plantName: text;
    timestamp: Timestamp;
+ };
+type AceStormEntry = 
+ record {
+   ace: float64;
+   maxWindKt: nat;
+   name: text;
+ };
+type AceSeasonStats = 
+ record {
+   seasonAverage: float64;
+   seasonNames: vec text;
+   seasonRecord: float64;
+   seasonTotal: float64;
+   storms: vec AceStormEntry;
  };
 type Account = 
  record {

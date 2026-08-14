@@ -1,4 +1,7 @@
 {
+  "agent_hub": {
+    "ic": "swzzi-lyaaa-aaaao-bbfha-cai"
+  },
   "backend": {
     "ic": "ghxmp-xiaaa-aaaao-ba4sq-cai"
   },
@@ -8,22 +11,34 @@
   "docs_frontend": {
     "ic": "pr3bu-6aaaa-aaaao-ba5ba-cai"
   },
+  "fleet_cycles_ops_canister": {
+    "ic": "q6dgn-zyaaa-aaaao-bbfla-cai"
+  },
   "frontend": {
     "ic": "7rukv-hqaaa-aaaao-ba6ma-cai"
   },
   "llama_cpp": {
     "ic": "pw2ha-tyaaa-aaaao-ba5bq-cai"
   },
+  "newsletter_canister": {
+    "ic": "qzcaz-uaaaa-aaaao-bbflq-cai"
+  },
   "nft_assets": {
     "ic": "gawk3-2qaaa-aaaao-ba4sa-cai"
-  },
-  "uploads": {
-    "ic": "r53pg-maaaa-aaaao-ba7na-cai"
   },
   "spicy_ai_canister": {
     "ic": "pd5wn-sqaaa-aaaao-ba5ca-cai"
   },
   "uploads": {
     "ic": "r53pg-maaaa-aaaao-ba7na-cai"
+  },
+  "weather_concierge_canister": {
+    "ic": "qqblf-ciaaa-aaaao-bbfka-cai"
+  },
+  "weather_mcp": {
+    "ic": "z2j4p-4aaaa-aaaao-bbe3q-cai"
+  },
+  "weather_sentinel_canister": {
+    "ic": "qxanr-pqaaa-aaaao-bbfkq-cai"
   }
 }

@@ -33,6 +33,7 @@ import {
   AlertCircle,
   BarChart3,
   BookOpen,
+  Bot,
   Box,
   CheckCircle2,
   ChevronRight,
@@ -95,6 +96,7 @@ import { AdminOrdersTab } from "../components/admin/AdminOrdersTab";
 import { AdminQRLabelsTab } from "../components/admin/AdminQRLabelsTab";
 import { AdminUsersTab } from "../components/admin/AdminUsersTab";
 import { AdminUsageTab } from "../components/admin/AdminUsageTab";
+import { AdminAgentSwarmTab } from "../components/admin/AdminAgentSwarmTab";
 import { useNewOrderCountAdmin } from "../hooks/useAdminShop";
 import { useAuth } from "../hooks/useAuth";
 import {
@@ -5203,6 +5205,14 @@ export default function AdminPage() {
               Treasury
             </TabsTrigger>
             <TabsTrigger
+              value="agents"
+              className="text-xs gap-1.5 flex-1"
+              data-ocid="admin-tab-agents"
+            >
+              <Bot className="w-3.5 h-3.5" />
+              Agent Swarm
+            </TabsTrigger>
+            <TabsTrigger
               value="system"
               className="text-xs gap-1.5 flex-1"
               data-ocid="admin-tab-system"
@@ -5265,6 +5275,9 @@ export default function AdminPage() {
           </TabsContent>
           <TabsContent value="treasury">
             <AdminTreasuryTab />
+          </TabsContent>
+          <TabsContent value="agents">
+            <AdminAgentSwarmTab />
           </TabsContent>
           <TabsContent value="system">
             <AdminCanisterHealthTab />

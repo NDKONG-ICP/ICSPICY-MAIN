@@ -8,9 +8,10 @@ module {
   // Named AccessControlState (not AdminSet) to keep all 14 mixin parameter
   // signatures unchanged — they all declare `accessControlState : AccessControl.AccessControlState`.
   public type AccessControlState = Map.Map<Principal, Bool>;
+  public type AgentPrincipalState = Map.Map<Principal, Bool>;
 
   // Compat shim type — consumed only by the deprecated getCallerUserRole Candid method.
-  public type UserRole = { #admin; #user; #guest };
+  public type UserRole = { #admin; #user; #guest; #agent };
 
   // Initialize a new admin set with the deployer as the sole member.
   // Called once at actor construction; result persists across upgrades.
@@ -42,6 +43,64 @@ module {
     };
   };
 
+  public func initAgentState() : AgentPrincipalState {
+    Map.empty<Principal, Bool>()
+  };
+
+  public func isAgent(agents : AgentPrincipalState, caller : Principal) : Bool {
+    switch (agents.get(caller)) {
+      case (?true) true;
+      case _ false;
+    };
+  };
+
+  public func isAdminOrAgent(
+    admins : AccessControlState,
+    agents : AgentPrincipalState,
+    caller : Principal,
+  ) : Bool {
+    isAdmin(admins, caller) or isAgent(agents, caller)
+  };
+
+  public func requireAdminOrAgent(
+    admins : AccessControlState,
+    agents : AgentPrincipalState,
+    caller : Principal,
+  ) {
+    requireAuthenticated(caller);
+    if (not isAdminOrAgent(admins, agents, caller)) {
+      Runtime.trap("caller is not admin or agent");
+    };
+  };
+
+  public func addAgentPrincipal(
+    admins : AccessControlState,
+    agents : AgentPrincipalState,
+    caller : Principal,
+    agent : Principal,
+  ) {
+    requireAdmin(admins, caller);
+    agents.add(agent, true);
+  };
+
+  public func removeAgentPrincipal(
+    admins : AccessControlState,
+    agents : AgentPrincipalState,
+    caller : Principal,
+    agent : Principal,
+  ) {
+    requireAdmin(admins, caller);
+    ignore agents.delete(agent);
+  };
+
+  public func listAgentPrincipals(agents : AgentPrincipalState) : [Principal] {
+    let result = List.empty<Principal>();
+    for ((p, _) in agents.entries()) {
+      result.add(p);
+    };
+    result.toArray()
+  };
+
   // ── Admin set mutations ────────────────────────────────────────────────────
 
   public func addAdmin(state : AccessControlState, caller : Principal, newAdmin : Principal) {
@@ -68,9 +127,14 @@ module {
 
   // ── Compat shim: computed UserRole for deprecated Candid surface ───────────
 
-  public func getUserRole(state : AccessControlState, caller : Principal) : UserRole {
+  public func getUserRole(
+    state : AccessControlState,
+    agents : AgentPrincipalState,
+    caller : Principal,
+  ) : UserRole {
     if (Principal.isAnonymous(caller)) return #guest;
     if (isAdmin(state, caller)) return #admin;
+    if (isAgent(agents, caller)) return #agent;
     #user
   };
 };

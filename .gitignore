@@ -22,6 +22,8 @@
 .env.local
 .idea/
 .mops/
+src/weather_mcp/weather_mcp.wasm
+src/weather_mcp/*.most
 .old/
 .pnpm-store/
 .vscode/

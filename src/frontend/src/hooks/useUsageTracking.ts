@@ -16,6 +16,7 @@ export const USAGE = {
     OPEN: { feature: "nims", action: "open" },
     PLANT_ADD: { feature: "nims", action: "plant_add" },
     LOG_WATER: { feature: "nims", action: "log_water" },
+    NFC_SCAN: { feature: "nims", action: "nfc_scan" },
   },
   COOKBOOK: {
     OPEN: { feature: "cookbook", action: "open" },

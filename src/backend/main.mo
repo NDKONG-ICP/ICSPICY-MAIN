@@ -1,4 +1,5 @@
 import Map "mo:core/Map";
+import Error "mo:core/Error";
 import List "mo:core/List";
 import Set "mo:core/Set";
 import Principal "mo:core/Principal";
@@ -18,6 +19,7 @@ import NotificationTypes "types/notification";
 import MembershipTypes "types/membership";
 import RecipeTypes "types/recipes";
 import ClaimTypes "types/claim";
+import ClaimRequests "lib/claim-requests";
 import ArtworkUploadTypes "types/artwork-upload";
 import WalletTypes "types/wallet";
 import RecipesLib "lib/recipes";
@@ -90,8 +92,21 @@ import CrafterRecipesTypes "types/crafter-recipes";
 import GardenStateTypes "types/garden-state";
 import IngredientInventoryTypes "types/ingredient-inventory";
 import RateLimits "lib/rate-limits";
+import RateLimit "lib/rate-limit";
 import CanisterHealth "lib/canister-health";
+import FleetRegistry "lib/fleet-registry";
+import SwarmFleetRegistry "lib/swarm-fleet-registry";
+import SwarmFleetTypes "types/swarm-fleet";
+import WeatherSourceLedger "lib/weather-source-ledger";
+import CyclesTopUp "lib/cycles-topup";
+import CyclesBurnTracker "lib/cycles-burn-tracker";
+import LpFeeCycles "lib/lp-fee-cycles";
+import LpFeeCyclesEvents "lib/lp-fee-cycles-events";
+import WeatherHubTypes "types/weather-hub";
+import WeatherHubAPI "mixins/weather-hub-api";
 import Timer "mo:core/Timer";
+import Time "mo:core/Time";
+import Nat64 "mo:core/Nat64";
 import Prim "mo:⛔";
 import UsageAnalytics "UsageAnalytics";
 import Iter "mo:base/Iter";
@@ -101,6 +116,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   // Admin set — initialized with deployer at first deploy; persists across upgrades.
   let accessControlState : AccessControl.AccessControlState = AccessControl.initState(initialDeployer);
+  let agentPrincipalState : AccessControl.AgentPrincipalState = AccessControl.initAgentState();
 
   // Reentrancy lock state for settlement methods.
   //
@@ -134,6 +150,22 @@ shared(msg) persistent actor class ICSpicy() = Self {
     AccessControl.removeAdmin(accessControlState, caller, p);
   };
 
+  public shared ({ caller }) func addAgentPrincipal(p : Principal) : async () {
+    AccessControl.addAgentPrincipal(accessControlState, agentPrincipalState, caller, p);
+  };
+
+  public shared ({ caller }) func removeAgentPrincipal(p : Principal) : async () {
+    AccessControl.removeAgentPrincipal(accessControlState, agentPrincipalState, caller, p);
+  };
+
+  public query func listAgentPrincipals() : async [Principal] {
+    AccessControl.listAgentPrincipals(agentPrincipalState)
+  };
+
+  public query ({ caller }) func isCallerAgent() : async Bool {
+    AccessControl.isAgent(agentPrincipalState, caller)
+  };
+
   public query ({ caller }) func isCallerAdmin() : async Bool {
     AccessControl.isAdmin(accessControlState, caller)
   };
@@ -143,6 +175,11 @@ shared(msg) persistent actor class ICSpicy() = Self {
     AccessControl.listAdmins(accessControlState)
   };
 
+  /// Public query — used by agent_hub to sync admin access with backend admins.
+  public query func isPrincipalAdmin(p : Principal) : async Bool {
+    AccessControl.isAdmin(accessControlState, p)
+  };
+
   // ── Deprecated Caffeine auth shims — frontend compat until Phase 1.5 ───────
 
   // no-op; deployer is captured via msg.caller at actor construction.
@@ -150,7 +187,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   // Computed from admin set — no longer stored per-user.
   public query({ caller }) func getCallerUserRole() : async AccessControl.UserRole {
-    AccessControl.getUserRole(accessControlState, caller)
+    AccessControl.getUserRole(accessControlState, agentPrincipalState, caller)
   };
 
   // Incompatible with flat admin model; traps to surface dead call sites during testing.
@@ -342,6 +379,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // uncertified for now). Therefore icrc7_transfer / transfer_from /
   // initializeNFTPool do NOT update this tree.
   let certStore : Cert.Store = Cert.newStore();
+  let weatherSourceLedger : WeatherSourceLedger.Store = WeatherSourceLedger.emptyStore();
 
   // Phase 3.4: ICRC-37 approval state.
   //
@@ -456,6 +494,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let nftClaimPlantIds = Map.empty<Text, Common.PlantId>();
   let plantClaimTokens = Map.empty<Common.PlantId, Text>();
   let nftTokenPlantIds = Map.empty<Nat, Common.PlantId>();
+  let plantClaimRequests = ClaimRequests.emptyMap();
 
   // Phase 6: ICRC-7 peer-to-peer NFT resale (tokenId-keyed)
   let nftListings = Map.empty<Nat, ResaleTypes.NftListing>();
@@ -646,6 +685,19 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let plantByNftId = Map.empty<Nat, Common.PlantId>();
   let plantDeathRecords = Map.empty<Common.PlantId, PlantTypes.PlantDeathRecord>();
 
+  // Weather Desk hub (Phase 1) — grid cache orthogonal to plant WeatherSnapshot.
+  let weatherGridCache = Map.empty<Text, WeatherHubTypes.WeatherOutlook>();
+  let weatherGridAccess = Map.empty<Text, Int>();
+  let userWeatherLocations = Map.empty<Principal, WeatherHubTypes.WeatherLocation>();
+  let zipCoordCache = Map.empty<Text, WeatherHubTypes.ZipCoord>();
+  let zipGeocodeBudget = { var windowStart : Int = 0; var count : Nat = 0 };
+  var tropicalSummary : ?WeatherHubTypes.TropicalSummary = null;
+  // Weather Desk V3 — raw ATCF a-decks + per-model gusts (new stable maps,
+  // side structures so existing WeatherOutlook/TropicalSummary types stay
+  // upgrade-compatible).
+  let tropicalAdecks = Map.empty<Text, WeatherHubTypes.TropicalAdeck>();
+  let weatherModelGusts = Map.empty<Text, WeatherHubTypes.ModelGustSpread>();
+
   // ── Mixins ─────────────────────────────────────────────────────────────────
 
   include PlantsAPI(accessControlState, plants, trays, trayOwners, feedings, stageHistory, weatherRecords, weatherIndex, artworkLayers, rwaTokens, plantNotesLog, nextPlantId, nextTrayId, nextFeedingId, nextWeatherRecordId, nextArtworkLayerId);
@@ -698,6 +750,24 @@ shared(msg) persistent actor class ICSpicy() = Self {
     coopSeats,
     linkedWallets,
   );
+  include WeatherHubAPI(
+    accessControlState,
+    agentPrincipalState,
+    rateLimits,
+    weatherGridCache,
+    weatherGridAccess,
+    userWeatherLocations,
+    zipCoordCache,
+    auditLog,
+    zipGeocodeBudget,
+    func () : ?WeatherHubTypes.TropicalSummary { tropicalSummary },
+    func (v : ?WeatherHubTypes.TropicalSummary) { tropicalSummary := v },
+    func () : Principal { Principal.fromActor(Self) },
+    certStore,
+    weatherSourceLedger,
+    tropicalAdecks,
+    weatherModelGusts,
+  );
   include SeedBankAPI(
     accessControlState,
     plants,
@@ -739,6 +809,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include DAOAPI(accessControlState, rateLimits, daoProposals, daoVotes, icrc7Balances, linkedWallets, daoTokenVotes, nextProposalId, coopSeats);
   include CommunityAPI(
     accessControlState,
+    agentPrincipalState,
     rateLimits,
     posts,
     comments,
@@ -802,10 +873,12 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include RecipesAPI(accessControlState, recipes, recipeFavorites, recipeVideoUrls, recipeBonsaiVideoIds, recipeIntros, recipeFaqs, nextRecipeId, auditLog);
   include ClaimAPI(
     accessControlState,
+    agentPrincipalState,
     nftClaimTokens,
     nftClaimPlantIds,
     plantClaimTokens,
     nftTokenPlantIds,
+    plantClaimRequests,
     plants,
     feedings,
     plantVarietyIds,
@@ -934,6 +1007,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   );
   include AdminShopAPI(
     accessControlState,
+    agentPrincipalState,
     products,
     orders,
     orderLineNftTokenIds,
@@ -1000,6 +1074,33 @@ shared(msg) persistent actor class ICSpicy() = Self {
   /// Count of plantByNftId entries added during last postupgrade backfill.
   stable var plantByNftIdBackfillCount : Nat = 0;
 
+  // Fleet auto top-up policy (admin System tab).
+  stable var autoTopUpEnabled : Bool = false;
+  stable var autoTopUpThresholdCycles : Nat = 500_000_000_000; // 0.5T
+  stable var autoTopUpIcpE8s : Nat = 10_000_000; // 0.1 ICP per auto top-up
+  stable var autoTopUpMaxIcpPerDayE8s : Nat = 100_000_000; // 1 ICP/day cap
+  stable var autoTopUpDayIndex : Nat = 0;
+  stable var autoTopUpSpentTodayE8s : Nat = 0;
+
+  /// Observed cycle burn samples (6h cadence) for fleet health UI.
+  let fleetBurnTrackers : CyclesBurnTracker.Store = CyclesBurnTracker.empty();
+
+  /// Admin-managed dynamic swarm/agent canister targets.
+  let swarmCanisterTargets : SwarmFleetRegistry.Store = SwarmFleetRegistry.emptyStore();
+  let swarmTopUpSpend : SwarmFleetRegistry.SpendStore = SwarmFleetRegistry.emptySpendStore();
+
+  // Monthly LP fee → cycles infrastructure funding (post-LGE).
+  stable var lpFeeCyclesEnabled : Bool = false;
+  stable var lpFeeCyclesSpicyLedgerId : ?Text = null;
+  stable var lpFeeCyclesSwapPoolId : ?Text = null;
+  stable var lpFeeCyclesPositionId : ?Nat = null;
+  stable var lpFeeCyclesIcpIsToken0 : Bool = true;
+  stable var lpFeeCyclesPositionOwner : ?Text = null;
+  stable var lpFeeCyclesIntervalDays : Nat = 30;
+  stable var lpFeeCyclesLastRunAt : Int = 0;
+  stable var lpFeeCyclesEnabledAt : Int = 0;
+  stable var lpFeeCyclesEvents : [LpFeeCyclesEvents.LpFeeCyclesEvent] = [];
+
   func frontendCanisterPrincipal() : Principal {
     switch (frontendCanisterIdStable) {
       case null Principal.fromText("7rukv-hqaaa-aaaao-ba6ma-cai");
@@ -1044,22 +1145,280 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // Daily weather provenance — Open-Meteo capture for all active plants.
   // Timers are not persisted across upgrades; restart in postupgrade.
   transient var dailyWeatherTimerId : ?Timer.TimerId = null;
+  transient var fleetAutoTopUpTimerId : ?Timer.TimerId = null;
+  transient var lpFeeCyclesTimerId : ?Timer.TimerId = null;
+
+  func lpFeeCyclesConfigSnapshot() : LpFeeCycles.Config {
+    {
+      enabled = lpFeeCyclesEnabled;
+      spicyLedgerId = lpFeeCyclesSpicyLedgerId;
+      swapPoolId = lpFeeCyclesSwapPoolId;
+      positionId = lpFeeCyclesPositionId;
+      icpIsToken0 = lpFeeCyclesIcpIsToken0;
+      positionOwnerPrincipal = lpFeeCyclesPositionOwner;
+      intervalDays = lpFeeCyclesIntervalDays;
+      lastRunAt = lpFeeCyclesLastRunAt;
+      enabledAt = lpFeeCyclesEnabledAt;
+    };
+  };
+
+  func recordLpFeeCyclesEvent(
+    trigger : Text,
+    result : LpFeeCycles.RunResult,
+  ) {
+    lpFeeCyclesEvents := LpFeeCyclesEvents.appendEvent(
+      lpFeeCyclesEvents,
+      {
+        ts = Time.now();
+        trigger;
+        icpHarvestedE8s = result.icpHarvestedE8s;
+        spicyFeesSkippedE8s = result.spicyFeesSkippedE8s;
+        totalCyclesMinted = result.totalCyclesMinted;
+        canistersToppedUp = result.canistersToppedUp;
+        details = result.details;
+        success = result.success;
+        message = result.message;
+      },
+    );
+  };
+
+  func runLpFeeCyclesFundingInternal(
+    trigger : Text,
+    triggerAdmin : ?Principal,
+    dryRunOnly : Bool,
+  ) : async LpFeeCycles.RunResult {
+    let config = lpFeeCyclesConfigSnapshot();
+    let backendPrincipal = Principal.fromActor(Self);
+    let backendId = backendPrincipal.toText();
+    let result = await LpFeeCycles.runFunding(
+      config,
+      backendPrincipal,
+      backendId,
+      uploadsCanisterIdStable,
+      dryRunOnly,
+    );
+    if (not dryRunOnly and result.success) {
+      lpFeeCyclesLastRunAt := Time.now();
+    };
+    if (not dryRunOnly) {
+      recordLpFeeCyclesEvent(trigger, result);
+      switch (triggerAdmin) {
+        case (?admin) {
+          auditLog.value := AuditLog.append(auditLog.value, {
+            ts = Time.now();
+            admin;
+            action = if (result.success) {
+              "lp_fee_cycles_funding"
+            } else {
+              "lp_fee_cycles_funding_failed"
+            };
+            detail = result.message # " icp=" # Nat.toText(result.icpHarvestedE8s) #
+              " cycles=" # Nat.toText(result.totalCyclesMinted);
+          });
+        };
+        case null {};
+      };
+    };
+    result;
+  };
+
+  func startLpFeeCyclesTimer<system>() {
+    switch (lpFeeCyclesTimerId) {
+      case (?id) Timer.cancelTimer(id);
+      case null {};
+    };
+    lpFeeCyclesTimerId := ?Timer.recurringTimer<system>(
+      #seconds(86_400),
+      func () : async () {
+        let config = lpFeeCyclesConfigSnapshot();
+        let now = Time.now();
+        if (LpFeeCycles.shouldRunOnTimer(config, now)) {
+          ignore await runLpFeeCyclesFundingInternal("timer", null, false);
+        };
+      },
+    );
+  };
+
+  func autoTopUpPolicySnapshot() : CyclesTopUp.AutoTopUpPolicy {
+    {
+      enabled = autoTopUpEnabled;
+      thresholdCycles = autoTopUpThresholdCycles;
+      icpPerTopUpE8s = autoTopUpIcpE8s;
+      maxIcpPerDayE8s = autoTopUpMaxIcpPerDayE8s;
+      spentTodayIcpE8s = autoTopUpSpentTodayE8s;
+    };
+  };
+
+  func resetAutoTopUpDailyBudgetIfNeeded(now : Time.Time) {
+    let today = CyclesTopUp.dayIndex(now);
+    if (today != autoTopUpDayIndex) {
+      autoTopUpDayIndex := today;
+      autoTopUpSpentTodayE8s := 0;
+    };
+  };
+
+  /// Probe fleet + update burn samples (always). Optionally auto top-up.
+  func sampleFleetBurnsInternal() : async [CanisterHealth.FleetEntry] {
+    let backendId = Principal.fromActor(Self).toText();
+    let swarmTargets = SwarmFleetRegistry.toFleetTargets(swarmCanisterTargets);
+    let targets = FleetRegistry.allTargets(backendId, uploadsCanisterIdStable, swarmTargets);
+    let fleet = await CanisterHealth.probeFleet(targets);
+    let now = Time.now();
+    CyclesBurnTracker.sampleFleet(fleetBurnTrackers, fleet, now);
+    CyclesBurnTracker.enrichFleet(fleetBurnTrackers, fleet);
+  };
+
+  func runFleetAutoTopUpInternal(triggerAdmin : ?Principal) : async Nat {
+    // Always refresh burn samples on the 6h cadence (even if auto top-up is off).
+    let fleet = await sampleFleetBurnsInternal();
+    let now = Time.now();
+    let dayIdx = CyclesTopUp.dayIndex(now);
+    resetAutoTopUpDailyBudgetIfNeeded(now);
+    var toppedUp : Nat = 0;
+    label fleetLoop for (entry in fleet.vals()) {
+      if (toppedUp >= 3) break fleetLoop; // cap burst per timer tick
+      switch (entry.probeStatus) {
+        case (#ok) {
+          let useSwarmPolicy = entry.isSwarm and entry.autoTopUpEnabled;
+          let useCorePolicy = (not entry.isSwarm) and autoTopUpEnabled;
+          if (not useSwarmPolicy and not useCorePolicy) continue fleetLoop;
+
+          let threshold = if (useSwarmPolicy) {
+            entry.autoTopUpThresholdCycles;
+          } else {
+            autoTopUpThresholdCycles;
+          };
+          let icpPerTopUp = if (useSwarmPolicy) {
+            entry.autoTopUpIcpE8s;
+          } else {
+            autoTopUpIcpE8s;
+          };
+          let maxPerDay = if (useSwarmPolicy) {
+            entry.autoTopUpMaxIcpPerDayE8s;
+          } else {
+            autoTopUpMaxIcpPerDayE8s;
+          };
+
+          if (entry.cyclesBalance >= threshold) continue fleetLoop;
+
+          let globalRemaining = if (autoTopUpMaxIcpPerDayE8s > autoTopUpSpentTodayE8s) {
+            autoTopUpMaxIcpPerDayE8s - autoTopUpSpentTodayE8s;
+          } else { 0 };
+          if (globalRemaining < 100_000) break fleetLoop;
+
+          var icpE8s = if (icpPerTopUp > globalRemaining) globalRemaining else icpPerTopUp;
+          if (useSwarmPolicy) {
+            SwarmFleetRegistry.resetSpendIfNeeded(swarmTopUpSpend, entry.canisterId, dayIdx);
+            let targetSpent = SwarmFleetRegistry.spendToday(
+              swarmTopUpSpend,
+              entry.canisterId,
+              dayIdx,
+            );
+            let targetRemaining = if (maxPerDay > targetSpent) {
+              maxPerDay - targetSpent;
+            } else { 0 };
+            if (targetRemaining < 100_000) continue fleetLoop;
+            if (icpE8s > targetRemaining) icpE8s := targetRemaining;
+          };
+          if (icpE8s < 100_000) continue fleetLoop;
+
+          let result = try {
+            await CyclesTopUp.topUpFromTreasuryIcp(
+              Principal.fromActor(Self),
+              entry.canisterId,
+              icpE8s,
+            );
+          } catch (e) {
+            {
+              success = false;
+              cyclesMinted = null;
+              icpSpentE8s = 0;
+              ledgerBlockIndex = null;
+              message = "Top-up trapped: " # Error.message(e);
+            };
+          };
+          switch (triggerAdmin) {
+            case (?admin) {
+              auditLog.value := AuditLog.append(auditLog.value, {
+                ts = now;
+                admin = admin;
+                action = if (result.success) "fleet_auto_top_up" else "fleet_auto_top_up_failed";
+                detail = entry.name # " icpE8s=" # Nat.toText(icpE8s) #
+                  " msg=" # result.message #
+                  (switch (result.ledgerBlockIndex) {
+                    case null "";
+                    case (?b) " block=" # Nat.toText(b);
+                  });
+              });
+            };
+            case null {
+              auditLog.value := AuditLog.append(auditLog.value, {
+                ts = now;
+                admin = Principal.fromActor(Self);
+                action = if (result.success) "fleet_auto_top_up_timer" else "fleet_auto_top_up_timer_failed";
+                detail = entry.name # " icpE8s=" # Nat.toText(icpE8s) #
+                  " msg=" # result.message;
+              });
+            };
+          };
+          if (result.success) {
+            autoTopUpSpentTodayE8s += icpE8s;
+            if (useSwarmPolicy) {
+              SwarmFleetRegistry.creditSpend(
+                swarmTopUpSpend,
+                entry.canisterId,
+                dayIdx,
+                icpE8s,
+              );
+            };
+            toppedUp += 1;
+            switch (result.cyclesMinted) {
+              case (?c) {
+                CyclesBurnTracker.creditTopUp(fleetBurnTrackers, entry.canisterId, c);
+              };
+              case null {};
+            };
+          };
+        };
+        case (_) {};
+      };
+    };
+    toppedUp;
+  };
+
+  func startFleetAutoTopUpTimer<system>() {
+    switch (fleetAutoTopUpTimerId) {
+      case (?id) Timer.cancelTimer(id);
+      case null {};
+    };
+    fleetAutoTopUpTimerId := ?Timer.recurringTimer<system>(
+      #seconds(21_600),
+      func () : async () {
+        ignore await runFleetAutoTopUpInternal(null);
+      },
+    );
+  };
 
   func startDailyWeatherTimer<system>() {
     switch (dailyWeatherTimerId) {
       case (?id) Timer.cancelTimer(id);
       case null {};
     };
+    // 6h: plant provenance snapshot + Weather Desk nursery grid refresh.
     dailyWeatherTimerId := ?Timer.recurringTimer<system>(
-      #seconds(86400),
+      #seconds(21_600),
       func () : async () {
         ignore await runDailyWeatherCapture();
+        ignore await refreshNurseryWeatherHub();
+        ignore await refreshTropicalDesk();
         UsageAnalytics.prune(_usageState, 90);
       },
     );
   };
 
   startDailyWeatherTimer<system>();
+  startFleetAutoTopUpTimer<system>();
+  startLpFeeCyclesTimer<system>();
 
   // ── Usage analytics ─────────────────────────────────────────────────────────
 
@@ -1069,7 +1428,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   };
 
   public query ({ caller }) func getUsageRollups(days : Nat) : async [UsageAnalytics.DailyFeatureStat] {
-    assert AccessControl.isAdmin(accessControlState, caller);
+    assert AccessControl.isAdminOrAgent(accessControlState, agentPrincipalState, caller);
     UsageAnalytics.getRollups(_usageState, days);
   };
 
@@ -1174,32 +1533,345 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   /// Admin: backend cycle balance (AGENTS.md hygiene).
   public shared query ({ caller }) func getCycleBalance() : async Nat {
-    assert AccessControl.isAdmin(accessControlState, caller);
+    assert AccessControl.isAdminOrAgent(accessControlState, agentPrincipalState, caller);
     Prim.cyclesBalance();
   };
 
-  /// Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
-  public shared ({ caller }) func getFleetCanisterHealth() : async [CanisterHealth.FleetEntry] {
+  public type FleetHealthReport = {
+    canisters : [CanisterHealth.FleetEntry];
+    appBurnPerDay : Nat;
+    appCumulativeBurned : Nat;
+  };
+
+  /// Admin: cycles, memory, and observed burn for all production canisters.
+  public shared ({ caller }) func getFleetCanisterHealth() : async FleetHealthReport {
+    AccessControl.requireAdminOrAgent(accessControlState, agentPrincipalState, caller);
+    let enriched = await sampleFleetBurnsInternal();
+    let (appBurnPerDay, appCumulativeBurned) = CyclesBurnTracker.appTotals(enriched);
+    {
+      canisters = enriched;
+      appBurnPerDay;
+      appCumulativeBurned;
+    };
+  };
+
+  public type CanisterTopUpResult = CyclesTopUp.TopUpResult;
+  public type FleetAutoTopUpPolicy = CyclesTopUp.AutoTopUpPolicy;
+
+  /// Admin: convert treasury ICP to cycles on a fleet canister via CMC.
+  public shared ({ caller }) func adminTopUpCanisterFromTreasuryIcp(
+    targetCanisterId : Text,
+    icpE8s : Nat,
+  ) : async CanisterTopUpResult {
     AccessControl.requireAdmin(accessControlState, caller);
+    if (not RateLimit.check(rateLimits.withdrawal, caller)) {
+      return {
+        success = false;
+        cyclesMinted = null;
+        icpSpentE8s = 0;
+        ledgerBlockIndex = null;
+        message = "Top-up rate limited. Max 3 per hour.";
+      };
+    };
     let backendId = Principal.fromActor(Self).toText();
-    let local = CanisterHealth.localHealth();
-    let backendEntry : CanisterHealth.FleetEntry = {
-      name = "backend";
-      canisterId = backendId;
-      cyclesBalance = local.cyclesBalance;
-      memorySize = local.memoryUsed;
-      isHealthy = local.isHealthy;
+    if (not CyclesTopUp.isFleetCanister(
+      targetCanisterId,
+      backendId,
+      uploadsCanisterIdStable,
+      swarmCanisterTargets,
+    )) {
+      return {
+        success = false;
+        cyclesMinted = null;
+        icpSpentE8s = 0;
+        ledgerBlockIndex = null;
+        message = "Target is not a registered fleet canister";
+      };
     };
-    let frontendId = "7rukv-hqaaa-aaaao-ba6ma-cai";
-    let nftAssetsId = "gawk3-2qaaa-aaaao-ba4sa-cai";
-    let uploadsId = switch uploadsCanisterIdStable {
-      case null "r53pg-maaaa-aaaao-ba7na-cai";
-      case (?id) id;
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok(_)) {};
     };
-    let frontend = await CanisterHealth.fetchRemoteHealth("frontend", frontendId);
-    let nftAssets = await CanisterHealth.fetchRemoteHealth("nft_assets", nftAssetsId);
-    let uploads = await CanisterHealth.fetchRemoteHealth("uploads", uploadsId);
-    [backendEntry, frontend, nftAssets, uploads];
+    try {
+      let result = await CyclesTopUp.topUpFromTreasuryIcp(
+        Principal.fromActor(Self),
+        targetCanisterId,
+        icpE8s,
+      );
+      if (result.success) {
+        switch (result.cyclesMinted) {
+          case (?c) {
+            CyclesBurnTracker.creditTopUp(fleetBurnTrackers, targetCanisterId, c);
+          };
+          case null {};
+        };
+      };
+      auditLog.value := AuditLog.append(auditLog.value, {
+        ts = Time.now();
+        admin = caller;
+        action = if (result.success) "fleet_manual_top_up" else "fleet_manual_top_up_failed";
+        detail = "target=" # targetCanisterId #
+          " icpE8s=" # Nat.toText(icpE8s) #
+          " msg=" # result.message #
+          (switch (result.ledgerBlockIndex) {
+            case null "";
+            case (?b) " block=" # Nat.toText(b);
+          });
+      });
+      CallerGuard.release(callerGuards, caller);
+      result;
+    } catch (e) {
+      CallerGuard.release(callerGuards, caller);
+      let msg = "Top-up trapped: " # Error.message(e);
+      auditLog.value := AuditLog.append(auditLog.value, {
+        ts = Time.now();
+        admin = caller;
+        action = "fleet_manual_top_up_failed";
+        detail = "target=" # targetCanisterId #
+          " icpE8s=" # Nat.toText(icpE8s) #
+          " msg=" # msg;
+      });
+      {
+        success = false;
+        cyclesMinted = null;
+        icpSpentE8s = 0;
+        ledgerBlockIndex = null;
+        message = msg;
+      };
+    };
+  };
+
+  /// Admin: read automatic fleet top-up policy.
+  public shared query ({ caller }) func getFleetAutoTopUpPolicy() : async FleetAutoTopUpPolicy {
+    AccessControl.requireAdmin(accessControlState, caller);
+    autoTopUpPolicySnapshot();
+  };
+
+  /// Admin: update automatic fleet top-up policy.
+  public shared ({ caller }) func setFleetAutoTopUpPolicy(
+    enabled : Bool,
+    thresholdCycles : Nat,
+    icpPerTopUpE8s : Nat,
+    maxIcpPerDayE8s : Nat,
+  ) : async () {
+    AccessControl.requireAdmin(accessControlState, caller);
+    autoTopUpEnabled := enabled;
+    autoTopUpThresholdCycles := thresholdCycles;
+    autoTopUpIcpE8s := icpPerTopUpE8s;
+    autoTopUpMaxIcpPerDayE8s := maxIcpPerDayE8s;
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "fleet_auto_top_up_policy";
+      detail = "enabled=" # (if enabled "true" else "false") #
+        " threshold=" # Nat.toText(thresholdCycles) #
+        " icpPerTopUp=" # Nat.toText(icpPerTopUpE8s) #
+        " maxPerDay=" # Nat.toText(maxIcpPerDayE8s);
+    });
+  };
+
+  /// Admin: run auto top-up now (same logic as the 6-hour timer).
+  public shared ({ caller }) func adminRunFleetAutoTopUp() : async Nat {
+    AccessControl.requireAdmin(accessControlState, caller);
+    await runFleetAutoTopUpInternal(?caller);
+  };
+
+  public type SwarmCanisterTarget = SwarmFleetTypes.SwarmCanisterTarget;
+  public type SwarmCanisterInput = SwarmFleetTypes.SwarmCanisterInput;
+  public type SwarmAutoTopUpPolicy = SwarmFleetTypes.SwarmAutoTopUpPolicy;
+  public type SwarmCanisterStatus = SwarmFleetTypes.SwarmCanisterStatus;
+  public type FleetTargetCategory = SwarmFleetTypes.FleetTargetCategory;
+
+  /// Admin/agent: list registered swarm canister targets.
+  public shared query ({ caller }) func listSwarmCanisterTargets() : async [SwarmCanisterStatus] {
+    AccessControl.requireAdminOrAgent(accessControlState, agentPrincipalState, caller);
+    let dayIdx = CyclesTopUp.dayIndex(Time.now());
+    SwarmFleetRegistry.list(swarmCanisterTargets, swarmTopUpSpend, dayIdx);
+  };
+
+  /// Admin: register a dynamic swarm/agent canister for fleet monitoring.
+  public shared ({ caller }) func adminRegisterSwarmCanister(
+    input : SwarmCanisterInput,
+  ) : async SwarmCanisterTarget {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let now = Time.now();
+    switch (SwarmFleetRegistry.register(swarmCanisterTargets, input, now)) {
+      case (#ok(target)) {
+        auditLog.value := AuditLog.append(auditLog.value, {
+          ts = now;
+          admin = caller;
+          action = "swarm_canister_register";
+          detail = target.name # " " # target.canisterId;
+        });
+        target;
+      };
+      case (#err(msg)) Runtime.trap(msg);
+    };
+  };
+
+  /// Admin: update a registered swarm canister target.
+  public shared ({ caller }) func adminUpdateSwarmCanister(
+    canisterId : Text,
+    input : SwarmCanisterInput,
+  ) : async SwarmCanisterTarget {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let now = Time.now();
+    switch (SwarmFleetRegistry.update(swarmCanisterTargets, canisterId, input, now)) {
+      case (#ok(target)) {
+        auditLog.value := AuditLog.append(auditLog.value, {
+          ts = now;
+          admin = caller;
+          action = "swarm_canister_update";
+          detail = target.name # " " # target.canisterId;
+        });
+        target;
+      };
+      case (#err(msg)) Runtime.trap(msg);
+    };
+  };
+
+  /// Admin: remove a swarm canister from the dynamic fleet registry.
+  public shared ({ caller }) func adminRemoveSwarmCanister(canisterId : Text) : async () {
+    AccessControl.requireAdmin(accessControlState, caller);
+    if (not SwarmFleetRegistry.remove(swarmCanisterTargets, canisterId)) {
+      Runtime.trap("Swarm canister not found");
+    };
+    ignore swarmTopUpSpend.delete(canisterId);
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "swarm_canister_remove";
+      detail = canisterId;
+    });
+  };
+
+  /// Admin: set per-swarm-canister auto top-up policy.
+  public shared ({ caller }) func adminSetSwarmCanisterAutoTopUp(
+    canisterId : Text,
+    autoPolicy : SwarmAutoTopUpPolicy,
+  ) : async SwarmCanisterTarget {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let now = Time.now();
+    switch (SwarmFleetRegistry.setAutoTopUpPolicy(swarmCanisterTargets, canisterId, autoPolicy, now)) {
+      case (#ok(target)) {
+        let enabledText = if (autoPolicy.enabled) "true" else "false";
+        let detailText = canisterId # " enabled=" # enabledText #
+          " threshold=" # Nat.toText(autoPolicy.thresholdCycles);
+        auditLog.value := AuditLog.append(auditLog.value, {
+          ts = now;
+          admin = caller;
+          action = "swarm_canister_auto_top_up";
+          detail = detailText;
+        });
+        target;
+      };
+      case (#err(msg)) Runtime.trap(msg);
+    };
+  };
+
+  public type LpFeeCyclesConfigView = LpFeeCycles.Config;
+  public type LpFeeCyclesDryRun = LpFeeCycles.DryRun;
+  public type LpFeeCyclesRunResult = LpFeeCycles.RunResult;
+  public type LpFeeCyclesEvent = LpFeeCyclesEvents.LpFeeCyclesEvent;
+
+  /// Admin: read monthly LP fee → cycles configuration.
+  public shared query ({ caller }) func getLpFeeCyclesConfig() : async LpFeeCyclesConfigView {
+    AccessControl.requireAdmin(accessControlState, caller);
+    lpFeeCyclesConfigSnapshot();
+  };
+
+  /// Admin: update monthly LP fee → cycles configuration (toggle + pool IDs).
+  public shared ({ caller }) func setLpFeeCyclesConfig(
+    enabled : Bool,
+    spicyLedgerId : ?Text,
+    swapPoolId : ?Text,
+    positionId : ?Nat,
+    icpIsToken0 : Bool,
+    positionOwnerPrincipal : ?Text,
+    intervalDays : Nat,
+  ) : async () {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let wasEnabled = lpFeeCyclesEnabled;
+    lpFeeCyclesEnabled := enabled;
+    lpFeeCyclesSpicyLedgerId := spicyLedgerId;
+    lpFeeCyclesSwapPoolId := swapPoolId;
+    lpFeeCyclesPositionId := positionId;
+    lpFeeCyclesIcpIsToken0 := icpIsToken0;
+    lpFeeCyclesPositionOwner := positionOwnerPrincipal;
+    lpFeeCyclesIntervalDays := if (intervalDays < 7) 7 else intervalDays;
+    if (enabled and not wasEnabled) {
+      lpFeeCyclesEnabledAt := Time.now();
+    };
+    if (not enabled) {
+      lpFeeCyclesEnabledAt := 0;
+    };
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "lp_fee_cycles_config";
+      detail = "enabled=" # (if enabled "true" else "false") #
+        " pool=" # (switch (swapPoolId) { case (?p) p; case null "none" }) #
+        " position=" # (switch (positionId) {
+          case (?p) Nat.toText(p);
+          case null "none";
+        });
+    });
+  };
+
+  /// Admin: preview accrued LP fees without claiming.
+  public shared ({ caller }) func previewLpFeeCyclesDryRun() : async LpFeeCyclesDryRun {
+    AccessControl.requireAdmin(accessControlState, caller);
+    await LpFeeCycles.dryRun(
+      lpFeeCyclesConfigSnapshot(),
+      Principal.fromActor(Self),
+    );
+  };
+
+  /// Admin: harvest ICP LP fees and fund fleet canisters (marketable monthly event).
+  public shared ({ caller }) func adminRunLpFeeCyclesFunding(
+    dryRunOnly : Bool,
+  ) : async LpFeeCyclesRunResult {
+    AccessControl.requireAdmin(accessControlState, caller);
+    if (not dryRunOnly and not RateLimit.check(rateLimits.withdrawal, caller)) {
+      return {
+        success = false;
+        icpHarvestedE8s = 0;
+        spicyFeesSkippedE8s = 0;
+        canistersToppedUp = 0;
+        totalCyclesMinted = 0;
+        details = [];
+        message = "Rate limited. Max 3 funding runs per hour.";
+      };
+    };
+    switch (CallerGuard.acquire(callerGuards, caller)) {
+      case (#err(e)) { Runtime.trap("Request already in flight: " # e) };
+      case (#ok(_)) {};
+    };
+    try {
+      let result = await runLpFeeCyclesFundingInternal(
+        if (dryRunOnly) "admin_dry_run" else "admin",
+        ?caller,
+        dryRunOnly,
+      );
+      CallerGuard.release(callerGuards, caller);
+      result;
+    } catch (_) {
+      CallerGuard.release(callerGuards, caller);
+      {
+        success = false;
+        icpHarvestedE8s = 0;
+        spicyFeesSkippedE8s = 0;
+        canistersToppedUp = 0;
+        totalCyclesMinted = 0;
+        details = [];
+        message = "LP fee funding failed";
+      };
+    };
+  };
+
+  /// Public: marketing/transparency log of monthly LP infrastructure funding events.
+  public query func getLpFeeCyclesEvents(limit : Nat) : async [LpFeeCyclesEvent] {
+    LpFeeCyclesEvents.listEvents(lpFeeCyclesEvents, limit);
   };
 
   public query func getPlantByNftIdBackfillCount() : async Nat {
@@ -1215,9 +1887,10 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // ── Ingress filter ─────────────────────────────────────────────────────────
 
   // Block anonymous callers at ingress before consensus — no cycles burned on rejection.
-  // All update calls from anonymous principals are rejected. Query calls (including
-  // _initializeAccessControl, which is now a query) bypass this filter entirely.
+  // Exception (Weather Desk): resolveZip, ensureWeatherOutlook, ensureTropicalSummary
+  // allow anonymous (rate-limited in method body). Query calls bypass this filter.
   // Reject oversized messages (>2 MB) to prevent memory exhaustion attacks.
+  // Anonymous updates use a small-arg heuristic; empty-arg updates stay blocked.
   let MAX_INGRESS_BYTES : Nat = 2_097_152;
 
   system func inspect({
@@ -1225,7 +1898,9 @@ shared(msg) persistent actor class ICSpicy() = Self {
     arg : Blob;
   }) : Bool {
     if (arg.size() > MAX_INGRESS_BYTES) { return false };
-    not caller.isAnonymous();
+    if (not caller.isAnonymous()) { return true };
+    // Anonymous: resolveZip / ensureWeatherOutlook / ensureTropicalSummary(Nat).
+    arg.size() >= 8 and arg.size() < 200;
   };
 
   // Phase 3.6: re-establish the certified-data slot after upgrade.
@@ -1265,6 +1940,8 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
     Cert.setCertifiedData(certStore);
     startDailyWeatherTimer<system>();
+    startFleetAutoTopUpTimer<system>();
+    startLpFeeCyclesTimer<system>();
     // Re-filter leaderboards so admin/test principals are hidden after upgrade.
     GamesLib.rebuildAllLeaderboardCaches(
       gameScores,

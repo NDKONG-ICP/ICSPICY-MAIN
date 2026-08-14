@@ -34,7 +34,10 @@ export const ON_CHAIN_PHRASES = [
   "Grounding answer in your docs…",
 ];
 
-export function useSpicyAiChat() {
+export function useSpicyAiChat(opts?: {
+  weatherCoords?: { lat: number; lng: number } | null;
+}) {
+  const weatherCoords = opts?.weatherCoords ?? null;
   const { track, USAGE } = useUsageTracking();
   const [messages, setMessages] = useState<SpicyAiDisplayMessage[]>([]);
   const [history, setHistory] = useState<SpicyChatTurn[]>([]);
@@ -119,9 +122,17 @@ export function useSpicyAiChat() {
         setOnChainMode(false);
 
         try {
-          const res = await spicyAi.chatWithLlm({
+          const payload = {
             messages: newHistory.map(toSpicyAiMessage),
-          });
+          };
+          const res =
+            weatherCoords != null
+              ? await spicyAi.chatWithWeather({
+                  ...payload,
+                  lat: weatherCoords.lat,
+                  lng: weatherCoords.lng,
+                })
+              : await spicyAi.chatWithLlm(payload);
 
           if (res.err) {
             setMessages((prev) => [
@@ -317,7 +328,15 @@ export function useSpicyAiChat() {
         setLoading(false);
       }
     },
-    [history, loading, saveHistory, selectedModel, track, USAGE.AI.CHAT],
+    [
+      history,
+      loading,
+      saveHistory,
+      selectedModel,
+      track,
+      USAGE.AI.CHAT,
+      weatherCoords,
+    ],
   );
 
   const clearHistory = useCallback(() => {

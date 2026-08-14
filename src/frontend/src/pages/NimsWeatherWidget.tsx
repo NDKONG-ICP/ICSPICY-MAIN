@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { WEATHER_FETCH_INIT } from "@/lib/weather-service";
+import { fetchWeatherData } from "@/lib/weather-service";
 import { CloudRain, MapPin, Thermometer, Wind } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -8,16 +8,6 @@ import { useAddWeatherRecord, useMyWeatherRecords } from "../hooks/useBackend";
 
 interface WeatherWidgetProps {
   compact?: boolean;
-}
-
-interface OpenMeteoResponse {
-  daily: {
-    time: string[];
-    temperature_2m_max: number[];
-    temperature_2m_min: number[];
-    precipitation_sum: number[];
-    windspeed_10m_max: number[];
-  };
 }
 
 export function WeatherWidget({ compact = false }: WeatherWidgetProps) {
@@ -37,14 +27,8 @@ export function WeatherWidget({ compact = false }: WeatherWidgetProps) {
     async (lat: number, lon: number) => {
       if (polledRef.current) return;
       try {
-        const url = `https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto&past_days=7`;
-        const res = await fetch(url, WEATHER_FETCH_INIT);
-        const data: OpenMeteoResponse = await res.json();
-
-        const today = new Date().toISOString().split("T")[0];
-        const todayIdx = data.daily.time.findIndex((d) => d === today);
-
-        if (todayIdx === -1) return;
+        const data = await fetchWeatherData(lat, lon);
+        const today = new Date().toISOString().split("T")[0] ?? "";
 
         const existingDates = new Set(
           (weatherRecords as WeatherRecord[]).map((r) => r.date),
@@ -55,10 +39,10 @@ export function WeatherWidget({ compact = false }: WeatherWidgetProps) {
           latitude: lat,
           longitude: lon,
           date: today,
-          temperature_max: data.daily.temperature_2m_max[todayIdx],
-          temperature_min: data.daily.temperature_2m_min[todayIdx],
-          precipitation: data.daily.precipitation_sum[todayIdx],
-          wind_speed: data.daily.windspeed_10m_max[todayIdx] || undefined,
+          temperature_max: data.daily.highF,
+          temperature_min: data.daily.lowF,
+          precipitation: data.daily.totalRainInches,
+          wind_speed: data.daily.maxWindMph || undefined,
         });
         polledRef.current = true;
       } catch (_e) {

@@ -53,10 +53,12 @@ export function SpicyAiChatPanel({
   onClose,
   initialPrompt,
   onInitialPromptSent,
+  weatherCoords = null,
 }: {
   onClose: () => void;
   initialPrompt: string | null;
   onInitialPromptSent: () => void;
+  weatherCoords?: { lat: number; lng: number } | null;
 }) {
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -77,7 +79,7 @@ export function SpicyAiChatPanel({
     handleSendText,
     clearHistory,
     messagesEndRef,
-  } = useSpicyAiChat();
+  } = useSpicyAiChat({ weatherCoords });
 
   useEffect(() => {
     inputRef.current?.focus();

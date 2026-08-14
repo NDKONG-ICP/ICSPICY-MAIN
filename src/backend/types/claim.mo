@@ -9,6 +9,38 @@ module {
     var redeemed : Bool;
   };
 
+  /// Admin-cosigned NFC / in-person sale — customer requests, nursery approves.
+  public type ClaimRequestStatus = {
+    #pending;
+    #approved;
+    #rejected;
+  };
+
+  public type PlantClaimRequest = {
+    plantId : Common.PlantId;
+    nftTokenId : Nat;
+    requester : Principal;
+    requestedAt : Common.Timestamp;
+    note : ?Text;
+    var status : ClaimRequestStatus;
+  };
+
+  public type PlantClaimRequestPublic = {
+    plantId : Common.PlantId;
+    nftTokenId : Nat;
+    requester : Principal;
+    requestedAt : Common.Timestamp;
+    note : ?Text;
+    status : ClaimRequestStatus;
+  };
+
+  public type PlantClaimStatusPublic = {
+    pendingCount : Nat;
+    sold : Bool;
+    hasNft : Bool;
+    myStatus : ?ClaimRequestStatus;
+  };
+
   // Rarity tier for RWA NFTs — determines holder discount percentage.
   //
   // Phase 3.0: #Founder added for the 50 Founder PepperHeads (token IDs

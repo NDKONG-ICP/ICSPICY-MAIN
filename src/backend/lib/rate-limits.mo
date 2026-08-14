@@ -16,6 +16,9 @@ module {
     gameScore : RateLimit.Limiter;
     gameSession : RateLimit.Limiter;
     masterclassQuiz : RateLimit.Limiter;
+    weatherZip : RateLimit.Limiter;
+    weatherOutlook : RateLimit.Limiter;
+    weatherTropical : RateLimit.Limiter;
   };
 
   let MINUTE : Int = 60_000_000_000;
@@ -37,6 +40,9 @@ module {
       gameScore = RateLimit.init({ maxCallsPerWindow = 30; windowSizeNanos = MINUTE });
       gameSession = RateLimit.init({ maxCallsPerWindow = 10; windowSizeNanos = MINUTE });
       masterclassQuiz = RateLimit.init({ maxCallsPerWindow = 20; windowSizeNanos = MINUTE });
+      weatherZip = RateLimit.init({ maxCallsPerWindow = 20; windowSizeNanos = HOUR });
+      weatherOutlook = RateLimit.init({ maxCallsPerWindow = 30; windowSizeNanos = HOUR });
+      weatherTropical = RateLimit.init({ maxCallsPerWindow = 10; windowSizeNanos = HOUR });
     };
   };
 
@@ -55,5 +61,8 @@ module {
     RateLimit.cleanup(bundle.gameScore);
     RateLimit.cleanup(bundle.gameSession);
     RateLimit.cleanup(bundle.masterclassQuiz);
+    RateLimit.cleanup(bundle.weatherZip);
+    RateLimit.cleanup(bundle.weatherOutlook);
+    RateLimit.cleanup(bundle.weatherTropical);
   };
 };

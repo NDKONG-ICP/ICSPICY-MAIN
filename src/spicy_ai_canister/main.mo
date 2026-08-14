@@ -21,12 +21,14 @@ import Array     "mo:core/Array";
 import Char      "mo:core/Char";
 import Cycles    "mo:core/Cycles";
 import Error     "mo:core/Error";
+import Float     "mo:core/Float";
 import Int       "mo:core/Int";
 import Iter      "mo:core/Iter";
 import Nat       "mo:core/Nat";
 import Nat16     "mo:core/Nat16";
 import Principal "mo:core/Principal";
 import Runtime   "mo:core/Runtime";
+import Prim      "mo:⛔";
 import Text      "mo:core/Text";
 import Time      "mo:core/Time";
 import LLM       "mo:llm";
@@ -76,11 +78,40 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
     queryChunks : shared query (queryText : Text, topK : Nat) -> async RetrievalResult;
   };
 
+  type WeatherBrief = {
+    generatedAt : Int;
+    gridKey : Text;
+    text : Text;
+    outlookFetchedAt : Int;
+    tropicalFetchedAt : ?Int;
+    almanacDateKey : ?Text;
+  };
+
+  type BackendWeatherActor = actor {
+    getWeatherBrief : shared query (lat : ?Float, lng : ?Float) -> async ?WeatherBrief;
+    getDailyAlmanac : shared query (dateKey : ?Text) -> async ?DailyAlmanac;
+  };
+
+  type DailyAlmanac = {
+    dateKey : Text;
+    publishedAt : Int;
+    title : Text;
+    body : Text;
+    recipeSlug : ?Text;
+    varietyIds : [Nat];
+    retracted : Bool;
+  };
+
   // ── Public chat types ────────────────────────────────────────────────────────
 
   public type ChatRole    = { #user; #assistant };
   public type ChatMessage = { role : ChatRole; content : Text };
   public type ChatRequest = { messages : [ChatMessage] };
+  public type WeatherChatRequest = {
+    messages : [ChatMessage];
+    lat : Float;
+    lng : Float;
+  };
 
   public type ChatError = {
     #rateLimited   : { resetInSeconds : Nat };
@@ -141,6 +172,8 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
 
   var llamaCppId    : Text = "";
   var docsBackendId : Text = "";
+  /// Main IC SPICY backend (Weather Desk briefs). Empty until admin sets or defaults on deploy.
+  var backendCanisterId : Text = "ghxmp-xiaaa-aaaao-ba4sq-cai";
   var modelPath     : Text = "/models/deepseek-r1-distill-qwen-1.5b-q4_k_m.gguf";
   var contextSize   : Nat  = 512;
   var topK          : Nat  = 1;
@@ -772,12 +805,156 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
     }
   };
 
+  /// Phase 4 Weather Desk: inject on-chain brief + Module 5–biased BM25.
+  /// Does not invent storms — system prompt forbids citing anything outside the brief.
+  public shared({ caller }) func chatWithWeather(req : WeatherChatRequest) : async LlmChatResponse {
+    if (docsBackendId == "" or backendCanisterId == "") { return #err(#notConfigured) };
+    if (not withinRateLimit(caller)) {
+      let resetSecs : Nat = 86_400 - Int.abs(Time.now()) / 1_000_000_000 % 86_400;
+      return #err(#rateLimited({ resetInSeconds = resetSecs }));
+    };
+
+    let lastMsg = switch (Array.find<ChatMessage>(
+      Array.reverse(req.messages),
+      func(m) { switch (m.role) { case (#user) true; case (_) false } },
+    )) {
+      case (?m) m;
+      case null { return #err(#llmError("No user message provided.")) };
+    };
+
+    try {
+      let backend : BackendWeatherActor = actor(backendCanisterId);
+      let briefOpt = try {
+        await backend.getWeatherBrief(?req.lat, ?req.lng)
+      } catch (_e) {
+        null
+      };
+      let almanacOpt = try {
+        await backend.getDailyAlmanac(null)
+      } catch (_e) {
+        null
+      };
+      let briefBlock = switch (briefOpt) {
+        case (?b) {
+          "\n\n--- WEATHER BRIEF (authoritative; generatedAt ns=" #
+            Int.toText(b.generatedAt) # ") ---\n" # b.text # "\n--- END BRIEF ---\n"
+        };
+        case null {
+          "\n\n--- WEATHER BRIEF ---\nUnavailable for this grid. Say you lack a live on-chain brief and give only general Zone 10a practice — do not invent storm names or numbers.\n--- END BRIEF ---\n"
+        };
+      };
+      let almanacBlock = switch (almanacOpt) {
+        case (?a) {
+          if (a.retracted) {
+            ""
+          } else {
+            "\n\n--- DAILY ALMANAC (" # a.dateKey # ") ---\n" # a.title # "\n" # a.body
+              # "\n--- END ALMANAC ---\n"
+          }
+        };
+        case null { "" };
+      };
+
+      let docs : DocsBackendActor = actor(docsBackendId);
+      let retrievalQ = buildWeatherRetrievalQuery(lastMsg.content);
+      let retrieved : RetrievalResult = try {
+        await docs.queryChunks(retrievalQ, topK)
+      } catch (e) {
+        let msg = Error.message(e);
+        if (isRetrievalFailure(msg)) {
+          return #err(#retrievalError(
+            "Knowledge retrieval hit an instruction limit. Try a shorter, more specific question."
+          ));
+        };
+        return #err(#retrievalError("Knowledge retrieval failed. Please try again."));
+      };
+
+      let ctxBlock = buildRetrievalContext(retrieved);
+      let systemTxt =
+        "You are SpicyAi for IC SPICY Weather Desk — Florida Zone 10a pepper growers. " #
+        "Answer using the WEATHER BRIEF below plus any retrieved grower docs (storms, mulch, drainage, biology). " #
+        "CRITICAL: Never invent storm names, tracks, wind speeds, or rainfall. " #
+        "Only cite tropical systems and numeric conditions that appear in the WEATHER BRIEF. " #
+        "If the brief lists no Atlantic threat, say conditions are quiet for Atlantic threats. " #
+        "Prefer mulch, drainage, staking, and soil-biology recovery over panic sprays. Be concise." #
+        briefBlock # almanacBlock # VARIETY_KNOWLEDGE_RULES # unknownVarietyHint(retrieved.slugs) # ctxBlock;
+
+      let llmMessages : [LLM.ChatMessage] = [
+        #system_({ content = systemTxt }),
+        #user({ content = truncateChars(lastMsg.content, 500) }),
+      ];
+
+      let response = try {
+        await LLM.chat(#Llama4Scout)
+          .withMessages(llmMessages)
+          .send()
+      } catch (_e) {
+        return #err(#llmError("Failed to reach the LLM. Please try again."));
+      };
+
+      let text = switch (response.message.content) {
+        case (?t) t;
+        case null "I wasn't able to generate a response. Please try again.";
+      };
+
+      incrementCallCount(caller);
+      #ok({ response = text; docsReferenced = retrieved.slugs })
+    } catch (e) {
+      let msg = Error.message(e);
+      if (isRetrievalFailure(msg)) {
+        #err(#retrievalError(
+          "Knowledge retrieval hit an instruction limit. Try a shorter, more specific question."
+        ))
+      } else {
+        #err(#llmError("Failed to reach the LLM. Please try again."))
+      }
+    }
+  };
+
+  func buildWeatherRetrievalQuery(userText : Text) : Text {
+    let lower = Text.toLower(userText);
+    if (
+      Text.contains(lower, #text "storm") or
+      Text.contains(lower, #text "hurricane") or
+      Text.contains(lower, #text "tropical") or
+      Text.contains(lower, #text "ian") or
+      Text.contains(lower, #text "charley")
+    ) {
+      return "storms extreme weather mulch drainage";
+    };
+    if (
+      Text.contains(lower, #text "mulch") or
+      Text.contains(lower, #text "drain") or
+      Text.contains(lower, #text "flood") or
+      Text.contains(lower, #text "wind")
+    ) {
+      return "mulch cover systems storm protection";
+    };
+    if (
+      Text.contains(lower, #text "foliar") or
+      Text.contains(lower, #text "spray") or
+      Text.contains(lower, #text "fpj")
+    ) {
+      return "foliar spray rain wet season";
+    };
+    if (
+      Text.contains(lower, #text "biology") or
+      Text.contains(lower, #text "recovery") or
+      Text.contains(lower, #text "soil")
+    ) {
+      return "soil biology recovery post storm";
+    };
+    // Default Module 5–adjacent practice query
+    "storms extreme weather zone 10a peppers";
+  };
+
   // ── Monitoring ──────────────────────────────────────────────────────────────
 
   public type GenerationStatus = {
     enabled        : Bool;
     llamaCppId     : Text;
     docsBackendId  : Text;
+    backendCanisterId : Text;
     modelPath      : Text;
     contextSize    : Nat;
     topK           : Nat;
@@ -789,7 +966,7 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
 
   public query func getStatus() : async GenerationStatus {
     {
-      enabled; llamaCppId; docsBackendId; modelPath;
+      enabled; llamaCppId; docsBackendId; backendCanisterId; modelPath;
       contextSize; topK; maxGenSteps;
       anonDailyLimit; authDailyLimit;
       activeSessions = chatSessions.size();
@@ -797,6 +974,24 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
   };
 
   public query func getCycleBalance() : async Nat { Cycles.balance() };
+
+  public type CanisterHealthSnapshot = {
+    cyclesBalance : Nat;
+    memoryUsed : Nat;
+    heapSize : Nat;
+    isHealthy : Bool;
+  };
+
+  public query func getCanisterHealth() : async CanisterHealthSnapshot {
+    let balance = Prim.cyclesBalance();
+    {
+      cyclesBalance = balance;
+      memoryUsed = Prim.rts_memory_size();
+      heapSize = Prim.rts_heap_size();
+      isHealthy = balance > 500_000_000_000;
+    };
+  };
+
   public query func getCanisterId()   : async Text { Principal.toText(Principal.fromActor(Self)) };
 
   // ── Admin: canister config setters ──────────────────────────────────────────
@@ -807,6 +1002,10 @@ shared(msg) persistent actor class SpicyAiCanister() = Self {
 
   public shared({ caller }) func setDocsBackendId(id : Text) : async () {
     requireAdmin(caller); docsBackendId := id
+  };
+
+  public shared({ caller }) func setBackendCanisterId(id : Text) : async () {
+    requireAdmin(caller); backendCanisterId := id
   };
 
   public shared({ caller }) func setModelPath(path : Text) : async () {

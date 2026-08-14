@@ -1,0 +1,16 @@
+[Unit]
+Description=IC SPICY Agent Swarm Worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=CHANGE_ME
+WorkingDirectory=CHANGE_ME/worker
+EnvironmentFile=CHANGE_ME/worker/.env
+ExecStart=/usr/bin/node CHANGE_ME/worker/src/index.js
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

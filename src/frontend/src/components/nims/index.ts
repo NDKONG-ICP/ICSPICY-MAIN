@@ -22,6 +22,7 @@ export type {
 export { ActivityFeed } from "./ActivityFeed";
 export type { ActivityFeedProps } from "./ActivityFeed";
 
+export { PlantClaimBanner } from "./PlantClaimBanner";
 export { PlantQuickActions } from "./PlantQuickActions";
 export type {
   PlantQuickActionsProps,

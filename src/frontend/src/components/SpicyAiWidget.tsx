@@ -10,13 +10,28 @@ const LazyChatPanel = lazy(() =>
   import("./SpicyAiChatPanel").then((m) => ({ default: m.SpicyAiChatPanel })),
 );
 
+export type SpicyAiOpenDetail = {
+  prompt: string | null;
+  /** When set, Fast path uses chatWithWeather with this grid. */
+  weather?: { lat: number; lng: number } | null;
+};
+
 /**
  * Programmatically open the floating SpicyAI widget from anywhere in the app.
  * Optionally auto-sends a prompt (e.g. "Tell me about the FPJ recipe.").
+ * Pass weather coords from /weather so answers use the on-chain brief.
  */
-export function openSpicyAi(prompt?: string) {
+export function openSpicyAi(
+  prompt?: string,
+  opts?: { weather?: { lat: number; lng: number } },
+) {
   window.dispatchEvent(
-    new CustomEvent(OPEN_EVENT, { detail: { prompt: prompt ?? null } }),
+    new CustomEvent(OPEN_EVENT, {
+      detail: {
+        prompt: prompt ?? null,
+        weather: opts?.weather ?? null,
+      } satisfies SpicyAiOpenDetail,
+    }),
   );
 }
 
@@ -27,13 +42,17 @@ export function SpicyAiWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [everOpened, setEverOpened] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+  const [weatherCoords, setWeatherCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [showLabel, setShowLabel] = useState(false);
 
   useEffect(() => {
     const onOpen = (e: Event) => {
-      const prompt = (e as CustomEvent<{ prompt: string | null }>).detail
-        ?.prompt;
-      if (prompt) setPendingPrompt(prompt);
+      const detail = (e as CustomEvent<SpicyAiOpenDetail>).detail;
+      if (detail?.prompt) setPendingPrompt(detail.prompt);
+      setWeatherCoords(detail?.weather ?? null);
       setEverOpened(true);
       setIsOpen(true);
     };
@@ -139,6 +158,7 @@ export function SpicyAiWidget() {
                 onClose={() => setIsOpen(false)}
                 initialPrompt={pendingPrompt}
                 onInitialPromptSent={() => setPendingPrompt(null)}
+                weatherCoords={weatherCoords}
               />
             </Suspense>
           </motion.div>

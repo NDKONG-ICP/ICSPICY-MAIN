@@ -2,6 +2,7 @@
 
 import AccessControl "../lib/access-control";
 import AuditLog "../lib/audit-log";
+import ClaimRequests "../lib/claim-requests";
 import ICRC7Lib "../lib/icrc7";
 import NftClaim "../lib/nft-claim";
 import NimsLib "../lib/nims";
@@ -21,10 +22,12 @@ import Runtime "mo:core/Runtime";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
+  agentPrincipalState : AccessControl.AgentPrincipalState,
   nftClaimTokens : Map.Map<Text, ClaimTypes.NftClaimEntry>,
   nftClaimPlantIds : Map.Map<Text, Common.PlantId>,
   plantClaimTokens : Map.Map<Common.PlantId, Text>,
   nftTokenPlantIds : Map.Map<Nat, Common.PlantId>,
+  plantClaimRequests : ClaimRequests.RequestMap,
   plants : Map.Map<Common.PlantId, PlantTypes.Plant>,
   feedings : Map.Map<Common.FeedingId, PlantTypes.Feeding>,
   plantVarietyIds : Map.Map<Common.PlantId, Nat>,
@@ -246,5 +249,210 @@ mixin (
       Runtime.trap("Admin only");
     };
     plantClaimTokens.get(plantId);
+  };
+
+  /// Authenticated visitor: request admin-cosigned provenance claim after NFC scan.
+  public shared ({ caller }) func requestPlantClaim(
+    plantId : Common.PlantId,
+    note : ?Text,
+  ) : async { success : Bool; message : Text } {
+    AccessControl.requireAuthenticated(caller);
+    switch (plants.get(plantId)) {
+      case null return { success = false; message = "Plant not found" };
+      case (?plant) {
+        if (plant.is_cooked) {
+          return { success = false; message = "Plant is no longer available" };
+        };
+        if (plant.sold) {
+          return { success = false; message = "Plant already claimed" };
+        };
+        let tokenId = switch (ClaimRequests.plantHasClaimableNft(plant)) {
+          case null return { success = false; message = "No NFT linked to this plant" };
+          case (?n) n;
+        };
+        switch (plantClaimRequests.get(ClaimRequests.requestKey(plantId, caller))) {
+          case (?existing) {
+            if (existing.status == #pending) {
+              return { success = false; message = "Claim already requested — awaiting nursery confirmation" };
+            };
+            if (existing.status == #approved) {
+              return { success = false; message = "You already own this plant's provenance" };
+            };
+          };
+          case null {};
+        };
+        switch (icrc7Owners.get(tokenId)) {
+          case null return { success = false; message = "NFT not found" };
+          case (?owner) {
+            if (Principal.equal(owner.owner, caller) and owner.subaccount == null) {
+              return { success = false; message = "You already own this NFT" };
+            };
+          };
+        };
+        let req : ClaimTypes.PlantClaimRequest = {
+          plantId;
+          nftTokenId = tokenId;
+          requester = caller;
+          requestedAt = Time.now();
+          note;
+          var status = #pending;
+        };
+        plantClaimRequests.add(ClaimRequests.requestKey(plantId, caller), req);
+        { success = true; message = "Claim requested — the nursery confirms at checkout" };
+      };
+    };
+  };
+
+  public shared ({ caller }) func cancelMyClaimRequest(
+    plantId : Common.PlantId,
+  ) : async Bool {
+    AccessControl.requireAuthenticated(caller);
+    let key = ClaimRequests.requestKey(plantId, caller);
+    switch (plantClaimRequests.get(key)) {
+      case null false;
+      case (?r) {
+        if (r.status != #pending) return false;
+        r.status := #rejected;
+        true;
+      };
+    };
+  };
+
+  public query ({ caller }) func getMyClaimRequests() : async [ClaimTypes.PlantClaimRequestPublic] {
+    if (caller.isAnonymous()) return [];
+    ClaimRequests.listForRequester(plantClaimRequests, caller);
+  };
+
+  public query func getPlantClaimStatus(
+    plantId : Common.PlantId,
+    caller : ?Principal,
+  ) : async ClaimTypes.PlantClaimStatusPublic {
+    let sold = switch (plants.get(plantId)) {
+      case (?p) p.sold;
+      case null false;
+    };
+    let hasNft = switch (plants.get(plantId)) {
+      case (?p) ClaimRequests.plantHasClaimableNft(p) != null or p.nft_id != null;
+      case null false;
+    };
+    let myStatus = switch (caller) {
+      case (?c) {
+        if (c.isAnonymous()) null
+        else ClaimRequests.statusForCaller(plantClaimRequests, plantId, c);
+      };
+      case null null;
+    };
+    {
+      pendingCount = ClaimRequests.countPendingForPlant(plantClaimRequests, plantId);
+      sold;
+      hasNft;
+      myStatus;
+    };
+  };
+
+  public query ({ caller }) func adminListClaimRequests(
+    statusFilter : ?ClaimTypes.ClaimRequestStatus,
+  ) : async [ClaimTypes.PlantClaimRequestPublic] {
+    if (not AccessControl.isAdminOrAgent(accessControlState, agentPrincipalState, caller)) {
+      Runtime.trap("Admin only");
+    };
+    ClaimRequests.listByStatus(plantClaimRequests, statusFilter);
+  };
+
+  public shared ({ caller }) func adminApproveClaimRequest(
+    plantId : Common.PlantId,
+    requester : Principal,
+  ) : async { success : Bool; message : Text } {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let key = ClaimRequests.requestKey(plantId, requester);
+    let req = switch (plantClaimRequests.get(key)) {
+      case null return { success = false; message = "Claim request not found" };
+      case (?r) r;
+    };
+    if (req.status != #pending) {
+      return { success = false; message = "Claim request is not pending" };
+    };
+    switch (plants.get(plantId)) {
+      case null return { success = false; message = "Plant not found" };
+      case (?plant) {
+        if (plant.is_cooked) {
+          return { success = false; message = "Plant is dead" };
+        };
+        if (plant.sold) {
+          return { success = false; message = "Plant already sold" };
+        };
+      };
+    };
+    let tokenId = req.nftTokenId;
+    let canister = selfPrincipal();
+    let currentOwner = switch (icrc7Owners.get(tokenId)) {
+      case null return { success = false; message = "NFT token not found" };
+      case (?o) o;
+    };
+    let holderOk = if (
+      Principal.equal(currentOwner.owner, canister) and currentOwner.subaccount == null
+    ) {
+      true
+    } else if (AccessControl.isAdmin(accessControlState, currentOwner.owner)) {
+      true
+    } else {
+      switch (plantOwners.get(plantId)) {
+        case (?owner) owner == currentOwner.owner;
+        case null false;
+      };
+    };
+    if (not holderOk) {
+      return { success = false; message = "NFT not held by nursery for transfer" };
+    };
+    let buyerAccount : ICRC7.Account = { owner = requester; subaccount = null };
+    switch (
+      ICRC7Lib.assignOwnership(
+        icrc7Owners,
+        icrc7Balances,
+        tokenId,
+        ?currentOwner,
+        buyerAccount,
+      )
+    ) {
+      case (#err(e)) {
+        return { success = false; message = "NFT transfer failed: " # e };
+      };
+      case (#ok) {};
+    };
+    ignore NimsLib.markPlantClaimedViaQr(plants, claimSideMaps(), plantId, requester);
+    req.status := #approved;
+    ClaimRequests.rejectOtherPending(plantClaimRequests, plantId, requester);
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "claim_request_approved";
+      detail = "plantId=" # Nat.toText(plantId) #
+        " tokenId=" # Nat.toText(tokenId) #
+        " to=" # Principal.toText(requester);
+    });
+    { success = true; message = "Provenance transferred to buyer" };
+  };
+
+  public shared ({ caller }) func adminRejectClaimRequest(
+    plantId : Common.PlantId,
+    requester : Principal,
+  ) : async Bool {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let key = ClaimRequests.requestKey(plantId, requester);
+    switch (plantClaimRequests.get(key)) {
+      case null false;
+      case (?r) {
+        if (r.status != #pending) return false;
+        r.status := #rejected;
+        auditLog.value := AuditLog.append(auditLog.value, {
+          ts = Time.now();
+          admin = caller;
+          action = "claim_request_rejected";
+          detail = "plantId=" # Nat.toText(plantId) #
+            " requester=" # Principal.toText(requester);
+        });
+        true;
+      };
+    };
   };
 };

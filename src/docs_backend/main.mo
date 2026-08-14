@@ -25,6 +25,7 @@ import Order     "mo:core/Order";
 import Principal "mo:core/Principal";
 import Text      "mo:core/Text";
 import Time      "mo:base/Time";
+import Prim      "mo:⛔";
 
 import Types    "types";
 import BM25     "lib/bm25";
@@ -580,4 +581,22 @@ shared(msg) persistent actor class DocsBackend() = Self {
 
   // Returns the total chunk count (admin diagnostic).
   public query func getChunkCount() : async Nat { _chunks.size() };
+
+  public type CanisterHealthSnapshot = {
+    cyclesBalance : Nat;
+    memoryUsed : Nat;
+    heapSize : Nat;
+    isHealthy : Bool;
+  };
+
+  /// Public query for fleet monitoring (backend admin panel probes this canister).
+  public query func getCanisterHealth() : async CanisterHealthSnapshot {
+    let balance = Prim.cyclesBalance();
+    {
+      cyclesBalance = balance;
+      memoryUsed = Prim.rts_memory_size();
+      heapSize = Prim.rts_heap_size();
+      isHealthy = balance > 500_000_000_000;
+    };
+  };
 };

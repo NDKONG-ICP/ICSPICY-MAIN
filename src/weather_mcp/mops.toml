@@ -1,0 +1,15 @@
+[package]
+name = "weather_mcp"
+version = "0.1.0"
+description = "IC SPICY Weather Desk MCP server (Phase 5)"
+
+[dependencies]
+mcp-motoko-sdk = "2.0.2"
+base = "0.14.14"
+json = "1.4.0"
+map = "9.0.1"
+http-types = "1.0.1"
+ic = "3.2.0"
+
+[toolchain]
+moc = "0.14.14"

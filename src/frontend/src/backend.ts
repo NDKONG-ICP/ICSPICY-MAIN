@@ -1181,6 +1181,24 @@ export interface backendInterface {
     }>;
     getClaimInfo(token: string): Promise<{ tokenId: bigint; redeemed: boolean; nftName: string } | null>;
     redeemClaim(claimToken: string): Promise<{ tokenId: bigint | null; message: string; success: boolean }>;
+    requestPlantClaim(plantId: PlantId, note: string | null): Promise<{ success: boolean; message: string }>;
+    cancelMyClaimRequest(plantId: PlantId): Promise<boolean>;
+    getPlantClaimStatus(
+      plantId: PlantId,
+      caller: import("@icp-sdk/core/principal").Principal | null,
+    ): Promise<import("./declarations/backend.did").PlantClaimStatusPublic>;
+    getMyClaimRequests(): Promise<Array<import("./declarations/backend.did").PlantClaimRequestPublic>>;
+    adminListClaimRequests(
+      statusFilter: import("./declarations/backend.did").ClaimRequestStatus | null,
+    ): Promise<Array<import("./declarations/backend.did").PlantClaimRequestPublic>>;
+    adminApproveClaimRequest(
+      plantId: PlantId,
+      requester: import("@icp-sdk/core/principal").Principal,
+    ): Promise<{ success: boolean; message: string }>;
+    adminRejectClaimRequest(
+      plantId: PlantId,
+      requester: import("@icp-sdk/core/principal").Principal,
+    ): Promise<boolean>;
     refreshTokenPrices(): Promise<boolean>;
     rejectOffer(offerId: string): Promise<Offer>;
     removePlantPhoto(plant_id: PlantId, photo_key: string): Promise<void>;
@@ -3554,6 +3572,41 @@ export class Backend implements backendInterface {
             const r = await this.actor.redeemClaim(arg0);
             return { ...r, tokenId: r.tokenId.length > 0 ? r.tokenId[0] : null };
         }
+    }
+    async requestPlantClaim(arg0: PlantId, arg1: string | null): Promise<{ success: boolean; message: string }> {
+        if (this.processError) {
+            try { return await this.actor.requestPlantClaim(arg0, arg1 != null ? [arg1] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.requestPlantClaim(arg0, arg1 != null ? [arg1] : []); }
+    }
+    async cancelMyClaimRequest(arg0: PlantId): Promise<boolean> {
+        if (this.processError) {
+            try { return await this.actor.cancelMyClaimRequest(arg0); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.cancelMyClaimRequest(arg0); }
+    }
+    async getPlantClaimStatus(arg0: PlantId, arg1: import("@icp-sdk/core/principal").Principal | null) {
+        if (this.processError) {
+            try { return await this.actor.getPlantClaimStatus(arg0, arg1 != null ? [arg1] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getPlantClaimStatus(arg0, arg1 != null ? [arg1] : []); }
+    }
+    async getMyClaimRequests() {
+        if (this.processError) {
+            try { return await this.actor.getMyClaimRequests(); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.getMyClaimRequests(); }
+    }
+    async adminListClaimRequests(arg0: import("./declarations/backend.did").ClaimRequestStatus | null) {
+        if (this.processError) {
+            try { return await this.actor.adminListClaimRequests(arg0 != null ? [arg0] : []); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.adminListClaimRequests(arg0 != null ? [arg0] : []); }
+    }
+    async adminApproveClaimRequest(arg0: PlantId, arg1: import("@icp-sdk/core/principal").Principal) {
+        if (this.processError) {
+            try { return await this.actor.adminApproveClaimRequest(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.adminApproveClaimRequest(arg0, arg1); }
+    }
+    async adminRejectClaimRequest(arg0: PlantId, arg1: import("@icp-sdk/core/principal").Principal) {
+        if (this.processError) {
+            try { return await this.actor.adminRejectClaimRequest(arg0, arg1); } catch (e) { this.processError(e); throw new Error("unreachable"); }
+        } else { return this.actor.adminRejectClaimRequest(arg0, arg1); }
     }
     async refreshTokenPrices(): Promise<boolean> {
         if (this.processError) {

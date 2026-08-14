@@ -166,6 +166,19 @@ export const idlFactory = ({ IDL }) => {
     'message' : IDL.Text,
     'success' : IDL.Bool,
   });
+  const ClaimRequestStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  });
+  const PlantClaimRequestPublic = IDL.Record({
+    'status' : ClaimRequestStatus,
+    'requester' : IDL.Principal,
+    'note' : IDL.Opt(IDL.Text),
+    'nftTokenId' : IDL.Nat,
+    'plantId' : PlantId,
+    'requestedAt' : Timestamp,
+  });
   const AdminUserRow = IDL.Record({
     'username' : IDL.Text,
     'avatar_key' : IDL.Opt(IDL.Text),
@@ -180,6 +193,168 @@ export const idlFactory = ({ IDL }) => {
   const AdminUserPage = IDL.Record({
     'total' : IDL.Nat,
     'rows' : IDL.Vec(AdminUserRow),
+  });
+  const StormTrackPoint = IDL.Record({
+    'lat' : IDL.Float64,
+    'lng' : IDL.Float64,
+    'maxWindKt' : IDL.Nat,
+    'timeUtc' : IDL.Text,
+  });
+  const ForecastPoint = IDL.Record({
+    'lat' : IDL.Float64,
+    'lng' : IDL.Float64,
+    'pointLabel' : IDL.Text,
+    'maxWindKt' : IDL.Nat,
+    'category' : IDL.Nat,
+    'forecastHour' : IDL.Nat,
+    'pressureMb' : IDL.Nat,
+  });
+  const StormBasin = IDL.Variant({
+    'eastPacific' : IDL.Null,
+    'atlantic' : IDL.Null,
+  });
+  const TropicalStorm = IDL.Record({
+    'id' : IDL.Text,
+    'lat' : IDL.Float64,
+    'lng' : IDL.Float64,
+    'track' : IDL.Vec(StormTrackPoint),
+    'name' : IDL.Text,
+    'validAt' : IDL.Int,
+    'movementText' : IDL.Text,
+    'maxWindKt' : IDL.Nat,
+    'forecastTrack' : IDL.Vec(ForecastPoint),
+    'advisoryNum' : IDL.Nat,
+    'basin' : StormBasin,
+    'movementDirDeg' : IDL.Nat,
+    'movementSpeedKt' : IDL.Nat,
+    'pressureMb' : IDL.Nat,
+    'classification' : IDL.Text,
+  });
+  const AceStormEntry = IDL.Record({
+    'ace' : IDL.Float64,
+    'name' : IDL.Text,
+    'maxWindKt' : IDL.Nat,
+  });
+  const AceSeasonStats = IDL.Record({
+    'seasonTotal' : IDL.Float64,
+    'storms' : IDL.Vec(AceStormEntry),
+    'seasonNames' : IDL.Vec(IDL.Text),
+    'seasonAverage' : IDL.Float64,
+    'seasonRecord' : IDL.Float64,
+  });
+  const DevelopmentOutlook = IDL.Record({
+    'risk2Day' : IDL.Text,
+    'risk7Day' : IDL.Text,
+    'prob2Day' : IDL.Text,
+    'prob7Day' : IDL.Text,
+    'basin' : IDL.Text,
+    'centroidLat' : IDL.Float64,
+    'centroidLng' : IDL.Float64,
+  });
+  const TropicalSummary = IDL.Record({
+    'storms' : IDL.Vec(TropicalStorm),
+    'dataSource' : IDL.Text,
+    'fetchedAt' : IDL.Int,
+    'aceStats' : AceSeasonStats,
+    'developmentOutlooks' : IDL.Vec(DevelopmentOutlook),
+    'disclaimer' : IDL.Text,
+    'seasonActive' : IDL.Bool,
+  });
+  const ModelDay = IDL.Record({
+    'precipInches' : IDL.Float64,
+    'date' : IDL.Text,
+    'tempHighF' : IDL.Float64,
+  });
+  const EnsemblePlume = IDL.Record({
+    'memberCount' : IDL.Nat,
+    'precipMembers' : IDL.Vec(IDL.Vec(IDL.Float64)),
+    'dates' : IDL.Vec(IDL.Text),
+    'tempHighMembers' : IDL.Vec(IDL.Vec(IDL.Float64)),
+  });
+  const ModelSpread = IDL.Record({
+    'gem' : IDL.Vec(ModelDay),
+    'gfs' : IDL.Vec(ModelDay),
+    'icon' : IDL.Vec(ModelDay),
+    'ecmwf' : IDL.Vec(ModelDay),
+    'agreementScore' : IDL.Nat,
+    'ensemble' : IDL.Opt(EnsemblePlume),
+  });
+  const CurrentConditions = IDL.Record({
+    'precipInches' : IDL.Float64,
+    'tempF' : IDL.Float64,
+    'pressureHpa' : IDL.Float64,
+    'uvIndex' : IDL.Float64,
+    'humidity' : IDL.Float64,
+    'windDirDeg' : IDL.Float64,
+    'weatherCode' : IDL.Nat,
+    'windMph' : IDL.Float64,
+    'feelsLikeF' : IDL.Float64,
+  });
+  const DailyOutlook = IDL.Record({
+    'precipInches' : IDL.Float64,
+    'date' : IDL.Text,
+    'windMphMax' : IDL.Float64,
+    'tempHighF' : IDL.Float64,
+    'tempLowF' : IDL.Float64,
+    'weatherCode' : IDL.Nat,
+    'uvIndexMax' : IDL.Float64,
+  });
+  const AirQuality = IDL.Record({
+    'pm10' : IDL.Float64,
+    'pm25' : IDL.Float64,
+    'usAqi' : IDL.Nat,
+  });
+  const WeatherOutlook = IDL.Record({
+    'lat' : IDL.Float64,
+    'lng' : IDL.Float64,
+    'gridKey' : IDL.Text,
+    'fetchedAt' : IDL.Int,
+    'source' : IDL.Text,
+    'stale' : IDL.Bool,
+    'models' : IDL.Opt(ModelSpread),
+    'current' : CurrentConditions,
+    'daily' : IDL.Vec(DailyOutlook),
+    'airQuality' : IDL.Opt(AirQuality),
+  });
+  const ProbeKind = IDL.Variant({
+    'managementStatus' : IDL.Null,
+    'local' : IDL.Null,
+    'remoteHealthQuery' : IDL.Null,
+  });
+  const FleetTargetCategory = IDL.Variant({
+    'agent' : IDL.Null,
+    'asset' : IDL.Null,
+    'core' : IDL.Null,
+    'workerBridge' : IDL.Null,
+    'weather' : IDL.Null,
+  });
+  const SwarmCanisterInput = IDL.Record({
+    'thresholdCycles' : IDL.Nat,
+    'kind' : ProbeKind,
+    'name' : IDL.Text,
+    'agentKind' : IDL.Opt(IDL.Text),
+    'icpPerTopUpE8s' : IDL.Nat,
+    'enabled' : IDL.Bool,
+    'notes' : IDL.Text,
+    'category' : FleetTargetCategory,
+    'autoTopUpEnabled' : IDL.Bool,
+    'canisterId' : IDL.Text,
+    'maxIcpPerDayE8s' : IDL.Nat,
+  });
+  const SwarmCanisterTarget = IDL.Record({
+    'thresholdCycles' : IDL.Nat,
+    'kind' : ProbeKind,
+    'name' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'agentKind' : IDL.Opt(IDL.Text),
+    'icpPerTopUpE8s' : IDL.Nat,
+    'enabled' : IDL.Bool,
+    'updatedAt' : IDL.Int,
+    'notes' : IDL.Text,
+    'category' : FleetTargetCategory,
+    'autoTopUpEnabled' : IDL.Bool,
+    'canisterId' : IDL.Text,
+    'maxIcpPerDayE8s' : IDL.Nat,
   });
   const TransferError = IDL.Variant({
     'GenericError' : IDL.Record({
@@ -198,6 +373,34 @@ export const idlFactory = ({ IDL }) => {
     'TooOld' : IDL.Null,
   });
   const TransferResult = IDL.Variant({ 'Ok' : IDL.Nat, 'Err' : TransferError });
+  const CanisterFundingDetail = IDL.Record({
+    'icpSpentE8s' : IDL.Nat,
+    'name' : IDL.Text,
+    'cyclesMinted' : IDL.Nat,
+    'canisterId' : IDL.Text,
+  });
+  const LpFeeCyclesRunResult = IDL.Record({
+    'icpHarvestedE8s' : IDL.Nat,
+    'spicyFeesSkippedE8s' : IDL.Nat,
+    'message' : IDL.Text,
+    'totalCyclesMinted' : IDL.Nat,
+    'canistersToppedUp' : IDL.Nat,
+    'details' : IDL.Vec(CanisterFundingDetail),
+    'success' : IDL.Bool,
+  });
+  const SwarmAutoTopUpPolicy = IDL.Record({
+    'thresholdCycles' : IDL.Nat,
+    'icpPerTopUpE8s' : IDL.Nat,
+    'enabled' : IDL.Bool,
+    'maxIcpPerDayE8s' : IDL.Nat,
+  });
+  const CanisterTopUpResult = IDL.Record({
+    'icpSpentE8s' : IDL.Nat,
+    'cyclesMinted' : IDL.Opt(IDL.Nat),
+    'message' : IDL.Text,
+    'success' : IDL.Bool,
+    'ledgerBlockIndex' : IDL.Opt(IDL.Nat),
+  });
   const Subaccount = IDL.Vec(IDL.Nat8);
   const Account = IDL.Record({
     'owner' : IDL.Principal,
@@ -210,6 +413,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
+    'agent' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
@@ -852,6 +1056,21 @@ export const idlFactory = ({ IDL }) => {
     'data' : IDL.Vec(IDL.Nat8),
     'mime_type' : IDL.Text,
   });
+  const DailyAlmanac = IDL.Record({
+    'retracted' : IDL.Bool,
+    'title' : IDL.Text,
+    'dateKey' : IDL.Text,
+    'recipeSlug' : IDL.Opt(IDL.Text),
+    'body' : IDL.Text,
+    'publishedAt' : IDL.Int,
+    'varietyIds' : IDL.Vec(IDL.Nat),
+  });
+  const CertifiedWeather_3 = IDL.Record({
+    'certificate' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'value' : IDL.Opt(DailyAlmanac),
+    'witness' : IDL.Vec(IDL.Nat8),
+    'bodyDigest' : IDL.Text,
+  });
   const RecipePublic = IDL.Record({
     'id' : RecipeId,
     'title' : IDL.Text,
@@ -881,12 +1100,41 @@ export const idlFactory = ({ IDL }) => {
     'prep_time' : IDL.Opt(IDL.Text),
     'application_rate' : IDL.Opt(IDL.Text),
   });
+  const FleetAutoTopUpPolicy = IDL.Record({
+    'spentTodayIcpE8s' : IDL.Nat,
+    'thresholdCycles' : IDL.Nat,
+    'icpPerTopUpE8s' : IDL.Nat,
+    'enabled' : IDL.Bool,
+    'maxIcpPerDayE8s' : IDL.Nat,
+  });
+  const FleetProbeStatus = IDL.Variant({
+    'ok' : IDL.Null,
+    'denied' : IDL.Null,
+    'error' : IDL.Null,
+  });
   const FleetEntry = IDL.Record({
+    'probeStatus' : FleetProbeStatus,
+    'isSwarm' : IDL.Bool,
+    'autoTopUpMaxIcpPerDayE8s' : IDL.Nat,
+    'autoTopUpIcpE8s' : IDL.Nat,
+    'probeMessage' : IDL.Opt(IDL.Text),
     'name' : IDL.Text,
+    'lastBurnSampleAt' : IDL.Int,
+    'agentKind' : IDL.Opt(IDL.Text),
+    'autoTopUpThresholdCycles' : IDL.Nat,
     'isHealthy' : IDL.Bool,
+    'category' : FleetTargetCategory,
+    'burnPerDay' : IDL.Nat,
     'cyclesBalance' : IDL.Nat,
+    'cumulativeBurned' : IDL.Nat,
     'memorySize' : IDL.Nat,
+    'autoTopUpEnabled' : IDL.Bool,
     'canisterId' : IDL.Text,
+  });
+  const FleetHealthReport = IDL.Record({
+    'appCumulativeBurned' : IDL.Nat,
+    'appBurnPerDay' : IDL.Nat,
+    'canisters' : IDL.Vec(FleetEntry),
   });
   const LeaderboardEntry = IDL.Record({
     'principal' : IDL.Principal,
@@ -907,6 +1155,28 @@ export const idlFactory = ({ IDL }) => {
     'updatedAt' : Timestamp,
     'depthMeters' : IDL.Float64,
     'isPublic' : IDL.Bool,
+  });
+  const AlertKind = IDL.Variant({
+    'heavyRain' : IDL.Null,
+    'nwsOfficial' : IDL.Null,
+    'highUv' : IDL.Null,
+    'extremeHeat' : IDL.Null,
+    'highWind' : IDL.Null,
+    'tropicalThreat' : IDL.Null,
+  });
+  const WeatherAlert = IDL.Record({
+    'id' : IDL.Nat,
+    'gridKey' : IDL.Text,
+    'title' : IDL.Text,
+    'expiresAt' : IDL.Int,
+    'body' : IDL.Text,
+    'kind' : AlertKind,
+    'createdAt' : IDL.Int,
+    'severity' : IDL.Variant({
+      'warning' : IDL.Null,
+      'info' : IDL.Null,
+      'watch' : IDL.Null,
+    }),
   });
   const GrowerProvenanceMeta = IDL.Record({
     'grower' : IDL.Principal,
@@ -954,12 +1224,46 @@ export const idlFactory = ({ IDL }) => {
     'plantId' : IDL.Opt(PlantId),
     'priceUsdCents' : IDL.Nat,
   });
+  const LpFeeCyclesConfigView = IDL.Record({
+    'enabledAt' : IDL.Int,
+    'lastRunAt' : IDL.Int,
+    'icpIsToken0' : IDL.Bool,
+    'positionId' : IDL.Opt(IDL.Nat),
+    'intervalDays' : IDL.Nat,
+    'swapPoolId' : IDL.Opt(IDL.Text),
+    'enabled' : IDL.Bool,
+    'positionOwnerPrincipal' : IDL.Opt(IDL.Text),
+    'spicyLedgerId' : IDL.Opt(IDL.Text),
+  });
+  const LpFeeCyclesEvent = IDL.Record({
+    'ts' : Time,
+    'icpHarvestedE8s' : IDL.Nat,
+    'trigger' : IDL.Text,
+    'spicyFeesSkippedE8s' : IDL.Nat,
+    'message' : IDL.Text,
+    'totalCyclesMinted' : IDL.Nat,
+    'canistersToppedUp' : IDL.Nat,
+    'details' : IDL.Vec(CanisterFundingDetail),
+    'success' : IDL.Bool,
+  });
   const OracleToken = IDL.Variant({
     'ICP' : IDL.Null,
     'ckBTC' : IDL.Null,
     'ckETH' : IDL.Null,
     'ckUSDC' : IDL.Null,
     'ckUSDT' : IDL.Null,
+  });
+  const ModelGustDay = IDL.Record({
+    'date' : IDL.Text,
+    'windGustsMph' : IDL.Float64,
+  });
+  const ModelGustSpread = IDL.Record({
+    'gem' : IDL.Vec(ModelGustDay),
+    'gfs' : IDL.Vec(ModelGustDay),
+    'gridKey' : IDL.Text,
+    'fetchedAt' : IDL.Int,
+    'icon' : IDL.Vec(ModelGustDay),
+    'ecmwf' : IDL.Vec(ModelGustDay),
   });
   const CoopSeatPublic = IDL.Record({
     'revoked' : IDL.Bool,
@@ -1054,6 +1358,18 @@ export const idlFactory = ({ IDL }) => {
     'website' : IDL.Opt(IDL.Text),
     'notes' : IDL.Opt(IDL.Text),
   });
+  const WeatherLocationKind = IDL.Variant({
+    'zip' : IDL.Null,
+    'coords' : IDL.Null,
+  });
+  const WeatherLocation = IDL.Record({
+    'lat' : IDL.Float64,
+    'lng' : IDL.Float64,
+    'zip' : IDL.Opt(IDL.Text),
+    'kind' : WeatherLocationKind,
+    'displayLabel' : IDL.Text,
+    'updatedAt' : IDL.Int,
+  });
   const PlantPoolStatus = IDL.Record({
     'available' : IDL.Nat,
     'theoretical_ceiling' : IDL.Nat,
@@ -1064,10 +1380,22 @@ export const idlFactory = ({ IDL }) => {
     'lastWateredMsAgo' : IDL.Opt(IDL.Nat),
     'totalPlants' : IDL.Nat,
   });
+  const CertifiedWeather_2 = IDL.Record({
+    'certificate' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'value' : IDL.Opt(IDL.Vec(WeatherAlert)),
+    'witness' : IDL.Vec(IDL.Nat8),
+    'bodyDigest' : IDL.Text,
+  });
   const PayPalCheckoutConfig = IDL.Record({
     'sandbox' : IDL.Bool,
     'clientId' : IDL.Text,
     'enabled' : IDL.Bool,
+  });
+  const PlantClaimStatusPublic = IDL.Record({
+    'pendingCount' : IDL.Nat,
+    'myStatus' : IDL.Opt(ClaimRequestStatus),
+    'sold' : IDL.Bool,
+    'hasNft' : IDL.Bool,
   });
   const PlantCountStats = IDL.Record({
     'total' : IDL.Nat,
@@ -1269,6 +1597,18 @@ export const idlFactory = ({ IDL }) => {
     'timestamp' : Timestamp,
     'tx_type' : TreasuryTxType,
   });
+  const TropicalAdeck = IDL.Record({
+    'gz' : IDL.Vec(IDL.Nat8),
+    'fetchedAt' : IDL.Int,
+    'stormName' : IDL.Text,
+    'wallet' : IDL.Text,
+  });
+  const CertifiedWeather_1 = IDL.Record({
+    'certificate' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'value' : IDL.Opt(TropicalSummary),
+    'witness' : IDL.Vec(IDL.Nat8),
+    'bodyDigest' : IDL.Text,
+  });
   const LifecycleUpgradeEvent = IDL.Record({
     'new_stage' : IDL.Text,
     'old_nft_id' : IDL.Opt(IDL.Text),
@@ -1326,6 +1666,46 @@ export const idlFactory = ({ IDL }) => {
     'sources' : IDL.Vec(VarietySource),
     'species' : IDL.Opt(IDL.Text),
     'breeder' : IDL.Opt(IDL.Text),
+  });
+  const WeatherBrief = IDL.Record({
+    'gridKey' : IDL.Text,
+    'generatedAt' : IDL.Int,
+    'text' : IDL.Text,
+    'almanacDateKey' : IDL.Opt(IDL.Text),
+    'tropicalFetchedAt' : IDL.Opt(IDL.Int),
+    'outlookFetchedAt' : IDL.Int,
+  });
+  const CertifiedWeather = IDL.Record({
+    'certificate' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'value' : IDL.Opt(WeatherOutlook),
+    'witness' : IDL.Vec(IDL.Nat8),
+    'bodyDigest' : IDL.Text,
+  });
+  const WeatherFreshnessStatus = IDL.Variant({
+    'fresh' : IDL.Null,
+    'error' : IDL.Null,
+    'stale' : IDL.Null,
+  });
+  const WeatherSourceKind = IDL.Variant({
+    'nws' : IDL.Null,
+    'model' : IDL.Null,
+    'geocode' : IDL.Null,
+    'tropical' : IDL.Null,
+    'ensemble' : IDL.Null,
+    'outlook' : IDL.Null,
+    'airQuality' : IDL.Null,
+    'almanac' : IDL.Null,
+  });
+  const WeatherSourceLedgerEntry = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : WeatherFreshnessStatus,
+    'gridKey' : IDL.Opt(IDL.Text),
+    'httpStatus' : IDL.Nat,
+    'parserVersion' : IDL.Text,
+    'fetchedAt' : IDL.Int,
+    'kind' : WeatherSourceKind,
+    'sourceUrl' : IDL.Text,
+    'bodyDigest' : IDL.Text,
   });
   const ZoneRecommendation = IDL.Record({
     'name' : IDL.Text,
@@ -1520,10 +1900,21 @@ export const idlFactory = ({ IDL }) => {
     'variety' : IDL.Text,
     'plant_id' : PlantId,
   });
+  const SwarmCanisterStatus = IDL.Record({
+    'spentTodayIcpE8s' : IDL.Nat,
+    'target' : SwarmCanisterTarget,
+  });
   const LoadStaticMetadataResult = IDL.Record({
     'skipped' : IDL.Nat,
     'errors' : IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Text)),
     'loaded' : IDL.Nat,
+  });
+  const ZipCoord = IDL.Record({
+    'lat' : IDL.Float64,
+    'lng' : IDL.Float64,
+    'zip' : IDL.Text,
+    'fetchedAt' : IDL.Int,
+    'displayLabel' : IDL.Text,
   });
   const Result_7 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const MintDesignNftResult = IDL.Record({ 'nftTokenId' : IDL.Nat });
@@ -1537,6 +1928,15 @@ export const idlFactory = ({ IDL }) => {
     'artwork_layer_id' : ArtworkLayerId,
     'rarity_tier' : IDL.Nat,
     'plant_id' : PlantId,
+  });
+  const LpFeeCyclesDryRun = IDL.Record({
+    'spicyOwedE8s' : IDL.Nat,
+    'backendPrincipal' : IDL.Text,
+    'icpOwedE8s' : IDL.Nat,
+    'ownerMatchesBackend' : IDL.Bool,
+    'positionFound' : IDL.Bool,
+    'configured' : IDL.Bool,
+    'message' : IDL.Text,
   });
   const PublishSlicerShareOk = IDL.Record({
     'url' : IDL.Text,
@@ -1741,6 +2141,7 @@ export const idlFactory = ({ IDL }) => {
     '_initializeAccessControl' : IDL.Func([], [], ['query']),
     'acceptOffer' : IDL.Func([IDL.Text], [Offer], []),
     'addAdmin' : IDL.Func([IDL.Principal], [], []),
+    'addAgentPrincipal' : IDL.Func([IDL.Principal], [], []),
     'addArtworkLayer' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Nat],
         [ArtworkLayer],
@@ -1825,6 +2226,11 @@ export const idlFactory = ({ IDL }) => {
     'addWeatherRecord' : IDL.Func([AddWeatherRecordInput], [WeatherRecord], []),
     'addWeatherSnapshot' : IDL.Func([PlantId, WeatherSnapshot], [IDL.Bool], []),
     'addZonePhoto' : IDL.Func([TrayId, IDL.Text], [], []),
+    'adminApproveClaimRequest' : IDL.Func(
+        [PlantId, IDL.Principal],
+        [IDL.Record({ 'message' : IDL.Text, 'success' : IDL.Bool })],
+        [],
+      ),
     'adminBatchAirdrop' : IDL.Func(
         [IDL.Vec(IDL.Principal), IDL.Bool, IDL.Opt(IDL.Nat)],
         [
@@ -1852,6 +2258,11 @@ export const idlFactory = ({ IDL }) => {
         [PurchaseCoopSeatResult],
         [],
       ),
+    'adminListClaimRequests' : IDL.Func(
+        [IDL.Opt(ClaimRequestStatus)],
+        [IDL.Vec(PlantClaimRequestPublic)],
+        ['query'],
+      ),
     'adminListCoopDesignatedSeats' : IDL.Func(
         [],
         [IDL.Vec(IDL.Nat)],
@@ -1862,23 +2273,57 @@ export const idlFactory = ({ IDL }) => {
         [AdminUserPage],
         ['query'],
       ),
+    'adminRefreshTropical' : IDL.Func([], [IDL.Opt(TropicalSummary)], []),
+    'adminRefreshWeatherGrid' : IDL.Func(
+        [IDL.Float64, IDL.Float64],
+        [IDL.Opt(WeatherOutlook)],
+        [],
+      ),
+    'adminRegisterSwarmCanister' : IDL.Func(
+        [SwarmCanisterInput],
+        [SwarmCanisterTarget],
+        [],
+      ),
+    'adminRejectClaimRequest' : IDL.Func(
+        [PlantId, IDL.Principal],
+        [IDL.Bool],
+        [],
+      ),
     'adminRemoveGameScore' : IDL.Func(
         [IDL.Text, IDL.Principal],
         [IDL.Bool],
         [],
       ),
+    'adminRemoveSwarmCanister' : IDL.Func([IDL.Text], [], []),
+    'adminRetractAlmanac' : IDL.Func([IDL.Text], [], []),
     'adminReturnToPool' : IDL.Func([IDL.Nat], [TransferResult], []),
     'adminRevokeSeat' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
     'adminRunDailyWeatherCapture' : IDL.Func([], [IDL.Nat], []),
+    'adminRunFleetAutoTopUp' : IDL.Func([], [IDL.Nat], []),
+    'adminRunLpFeeCyclesFunding' : IDL.Func(
+        [IDL.Bool],
+        [LpFeeCyclesRunResult],
+        [],
+      ),
     'adminSendNotification' : IDL.Func(
         [IDL.Principal, IDL.Text],
         [IDL.Bool],
         [],
       ),
     'adminSetLeaderboardExcluded' : IDL.Func([IDL.Principal, IDL.Bool], [], []),
+    'adminSetSwarmCanisterAutoTopUp' : IDL.Func(
+        [IDL.Text, SwarmAutoTopUpPolicy],
+        [SwarmCanisterTarget],
+        [],
+      ),
     'adminSubmitToDAB' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
+    'adminTopUpCanisterFromTreasuryIcp' : IDL.Func(
+        [IDL.Text, IDL.Nat],
+        [CanisterTopUpResult],
         [],
       ),
     'adminTransferFromPool' : IDL.Func(
@@ -1894,6 +2339,11 @@ export const idlFactory = ({ IDL }) => {
     'adminUnstickPepperHead' : IDL.Func(
         [IDL.Nat],
         [IDL.Record({ 'message' : IDL.Text, 'success' : IDL.Bool })],
+        [],
+      ),
+    'adminUpdateSwarmCanister' : IDL.Func(
+        [IDL.Text, SwarmCanisterInput],
+        [SwarmCanisterTarget],
         [],
       ),
     'adminWithdrawTokens' : IDL.Func(
@@ -1972,6 +2422,7 @@ export const idlFactory = ({ IDL }) => {
         [YieldEstimate],
         ['query'],
       ),
+    'cancelMyClaimRequest' : IDL.Func([PlantId], [IDL.Bool], []),
     'cancelOffer' : IDL.Func([IDL.Text], [Offer], []),
     'cancelProposal' : IDL.Func([ProposalId], [IDL.Bool], []),
     'cancelResaleListing' : IDL.Func(
@@ -2080,6 +2531,16 @@ export const idlFactory = ({ IDL }) => {
     'editPost' : IDL.Func([PostId, IDL.Text], [IDL.Bool], []),
     'ensureAdminProfile' : IDL.Func([], [], []),
     'ensureCallerProfile' : IDL.Func([], [], []),
+    'ensureTropicalSummary' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Opt(TropicalSummary)],
+        [],
+      ),
+    'ensureWeatherOutlook' : IDL.Func(
+        [IDL.Float64, IDL.Float64],
+        [IDL.Opt(WeatherOutlook)],
+        [],
+      ),
     'feedEntireTray' : IDL.Func(
         [TrayId, IDL.Text, IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Nat],
@@ -2227,12 +2688,23 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'getDailyAlmanac' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Opt(DailyAlmanac)],
+        ['query'],
+      ),
+    'getDailyAlmanacCertified' : IDL.Func(
+        [IDL.Text],
+        [CertifiedWeather_3],
+        ['query'],
+      ),
     'getFeaturedRecipes' : IDL.Func(
         [IDL.Nat],
         [IDL.Vec(RecipePublic)],
         ['query'],
       ),
-    'getFleetCanisterHealth' : IDL.Func([], [IDL.Vec(FleetEntry)], []),
+    'getFleetAutoTopUpPolicy' : IDL.Func([], [FleetAutoTopUpPolicy], ['query']),
+    'getFleetCanisterHealth' : IDL.Func([], [FleetHealthReport], []),
     'getFollowers' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Nat],
         [IDL.Vec(UserProfilePublic)],
@@ -2269,6 +2741,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getGraveyard' : IDL.Func([], [IDL.Vec(PlantLifecycle)], ['query']),
+    'getGrowerAlerts' : IDL.Func(
+        [IDL.Opt(IDL.Float64), IDL.Opt(IDL.Float64)],
+        [IDL.Vec(WeatherAlert)],
+        ['query'],
+      ),
     'getGrowerProvenanceMeta' : IDL.Func(
         [IDL.Nat],
         [IDL.Opt(GrowerProvenanceMeta)],
@@ -2288,8 +2765,24 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getLoadedMetadataCount' : IDL.Func([], [IDL.Nat], ['query']),
+    'getLpFeeCyclesConfig' : IDL.Func([], [LpFeeCyclesConfigView], ['query']),
+    'getLpFeeCyclesEvents' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(LpFeeCyclesEvent)],
+        ['query'],
+      ),
     'getMembershipPriceInToken' : IDL.Func([OracleToken], [IDL.Nat], ['query']),
+    'getModelGusts' : IDL.Func(
+        [IDL.Opt(IDL.Float64), IDL.Opt(IDL.Float64)],
+        [IDL.Opt(ModelGustSpread)],
+        ['query'],
+      ),
     'getMyBadges' : IDL.Func([], [IDL.Vec(BadgePublic)], ['query']),
+    'getMyClaimRequests' : IDL.Func(
+        [],
+        [IDL.Vec(PlantClaimRequestPublic)],
+        ['query'],
+      ),
     'getMyCoopStatus' : IDL.Func([], [IDL.Opt(CoopStatus)], ['query']),
     'getMyCrafterRecipes' : IDL.Func(
         [],
@@ -2338,6 +2831,12 @@ export const idlFactory = ({ IDL }) => {
     'getMySeedBank' : IDL.Func([], [IDL.Vec(SeedLotPublic)], ['query']),
     'getMyTrays' : IDL.Func([], [IDL.Vec(TrayPublic)], ['query']),
     'getMyVendors' : IDL.Func([], [IDL.Vec(SeedVendorPublic)], ['query']),
+    'getMyWeatherAlerts' : IDL.Func([], [IDL.Vec(WeatherAlert)], ['query']),
+    'getMyWeatherLocation' : IDL.Func(
+        [],
+        [IDL.Opt(WeatherLocation)],
+        ['query'],
+      ),
     'getMyWeatherRecords' : IDL.Func([IDL.Nat], [IDL.Vec(WeatherRecord)], []),
     'getNewOrderCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getNftPoolStatus' : IDL.Func([], [PlantPoolStatus], ['query']),
@@ -2347,6 +2846,12 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(ShopListingFile)],
         ['query'],
       ),
+    'getNurseryWeatherDesk' : IDL.Func(
+        [],
+        [IDL.Opt(WeatherOutlook)],
+        ['query'],
+      ),
+    'getNwsAlertsCertified' : IDL.Func([], [CertifiedWeather_2], ['query']),
     'getOffer' : IDL.Func([IDL.Text], [IDL.Opt(Offer)], ['query']),
     'getOffersForNft' : IDL.Func([IDL.Text], [IDL.Vec(Offer)], ['query']),
     'getOffersReceived' : IDL.Func([], [IDL.Vec(Offer)], ['query']),
@@ -2362,6 +2867,11 @@ export const idlFactory = ({ IDL }) => {
     'getPlantByNft' : IDL.Func([IDL.Nat], [IDL.Opt(PlantLifecycle)], ['query']),
     'getPlantByNftIdBackfillCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getPlantByNftIdMapSize' : IDL.Func([], [IDL.Nat], ['query']),
+    'getPlantClaimStatus' : IDL.Func(
+        [PlantId, IDL.Opt(IDL.Principal)],
+        [PlantClaimStatusPublic],
+        ['query'],
+      ),
     'getPlantClaimToken' : IDL.Func([PlantId], [IDL.Opt(IDL.Text)], ['query']),
     'getPlantCount' : IDL.Func([], [PlantCountStats], ['query']),
     'getPlantHealth' : IDL.Func([PlantId], [IDL.Opt(PlantHealth)], ['query']),
@@ -2509,6 +3019,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(SpawnEvent)],
         ['query'],
       ),
+    'getStormTrack' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(IDL.Vec(StormTrackPoint))],
+        ['query'],
+      ),
     'getTokenPriceInIcp' : IDL.Func([OracleToken], [IDL.Nat], ['query']),
     'getTokenPrices' : IDL.Func([], [IDL.Vec(TokenPrice)], ['query']),
     'getTray' : IDL.Func([TrayId], [IDL.Opt(TrayPublic)], ['query']),
@@ -2521,6 +3036,13 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getTrendingPosts' : IDL.Func([IDL.Nat], [IDL.Vec(PostPublic)], ['query']),
+    'getTropicalAdecks' : IDL.Func([], [IDL.Vec(TropicalAdeck)], ['query']),
+    'getTropicalSummary' : IDL.Func([], [IDL.Opt(TropicalSummary)], ['query']),
+    'getTropicalSummaryCertified' : IDL.Func(
+        [],
+        [CertifiedWeather_1],
+        ['query'],
+      ),
     'getUnreadCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getUpcomingEvents' : IDL.Func([], [IDL.Vec(PlantingEvent)], ['query']),
     'getUpgradeHistory' : IDL.Func(
@@ -2556,6 +3078,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(VarietyProvenancePublic)],
         ['query'],
       ),
+    'getWeatherBrief' : IDL.Func(
+        [IDL.Opt(IDL.Float64), IDL.Opt(IDL.Float64)],
+        [IDL.Opt(WeatherBrief)],
+        ['query'],
+      ),
     'getWeatherDebug' : IDL.Func(
         [],
         [
@@ -2565,6 +3092,36 @@ export const idlFactory = ({ IDL }) => {
             'lastUrl' : IDL.Text,
           }),
         ],
+        ['query'],
+      ),
+    'getWeatherHubDebug' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'zipBudgetRemaining' : IDL.Nat,
+            'gridCount' : IDL.Nat,
+            'lastTropicalError' : IDL.Text,
+            'lastError' : IDL.Text,
+            'seasonActive' : IDL.Bool,
+            'zipCount' : IDL.Nat,
+            'tropicalStormCount' : IDL.Nat,
+          }),
+        ],
+        ['query'],
+      ),
+    'getWeatherOutlook' : IDL.Func(
+        [IDL.Opt(IDL.Float64), IDL.Opt(IDL.Float64)],
+        [IDL.Opt(WeatherOutlook)],
+        ['query'],
+      ),
+    'getWeatherOutlookCertified' : IDL.Func(
+        [IDL.Opt(IDL.Float64), IDL.Opt(IDL.Float64)],
+        [CertifiedWeather],
+        ['query'],
+      ),
+    'getWeatherSourceLedger' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(WeatherSourceLedgerEntry)],
         ['query'],
       ),
     'getZoneCalendar' : IDL.Func([IDL.Text], [ZoneCalendar], ['query']),
@@ -2708,10 +3265,12 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isCallerAgent' : IDL.Func([], [IDL.Bool], ['query']),
     'isFollowing' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'isGrowerProvenanceToken' : IDL.Func([IDL.Nat], [IDL.Bool], ['query']),
     'isPepperHead' : IDL.Func([IDL.Nat], [IDL.Bool], ['query']),
     'isPepperHeadAvailable' : IDL.Func([], [IDL.Nat], ['query']),
+    'isPrincipalAdmin' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'isUserBanned' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'issueMembership' : IDL.Func(
         [
@@ -2729,6 +3288,7 @@ export const idlFactory = ({ IDL }) => {
     'likeComment' : IDL.Func([CommentId], [IDL.Bool], []),
     'likePost' : IDL.Func([PostId], [IDL.Bool], []),
     'linkWallet' : IDL.Func([IDL.Principal], [IDL.Bool], []),
+    'listAgentPrincipals' : IDL.Func([], [IDL.Vec(IDL.Principal)], ['query']),
     'listAllOrdersAdmin' : IDL.Func(
         [AdminOrderStatusFilter],
         [IDL.Vec(AdminOrderPublic)],
@@ -2756,6 +3316,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'listDAOProposals' : IDL.Func([], [IDL.Vec(ProposalPublic)], ['query']),
+    'listDailyAlmanacArchive' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(DailyAlmanac)],
+        ['query'],
+      ),
     'listGraveyard' : IDL.Func([], [IDL.Vec(PlantLifecycle)], ['query']),
     'listGrowerDirectory' : IDL.Func(
         [],
@@ -2819,6 +3384,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'listRecipes' : IDL.Func([], [IDL.Vec(RecipePublic)], ['query']),
     'listRecipesAdmin' : IDL.Func([], [IDL.Vec(RecipePublic)], ['query']),
+    'listSwarmCanisterTargets' : IDL.Func(
+        [],
+        [IDL.Vec(SwarmCanisterStatus)],
+        ['query'],
+      ),
     'listTrays' : IDL.Func([], [IDL.Vec(TrayPublic)], ['query']),
     'listVarieties' : IDL.Func([], [IDL.Vec(VarietyPublic)], ['query']),
     'listVarietyIntros' : IDL.Func(
@@ -2851,6 +3421,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'lookupCachedZip' : IDL.Func([IDL.Text], [IDL.Opt(ZipCoord)], ['query']),
     'markCellDead' : IDL.Func(
         [TrayId, IDL.Nat, DeathCause, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
         [IDL.Bool],
@@ -2945,6 +3516,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         [],
       ),
+    'previewLpFeeCyclesDryRun' : IDL.Func([], [LpFeeCyclesDryRun], []),
     'priceOracleTransform' : IDL.Func(
         [
           IDL.Record({
@@ -2956,6 +3528,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'pruneUsageData' : IDL.Func([], [], []),
+    'publishDailyAlmanac' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Vec(IDL.Nat)],
+        [],
+        [],
+      ),
     'publishProposal' : IDL.Func([ProposalId], [IDL.Bool], []),
     'publishRecipe' : IDL.Func([RecipeId], [IDL.Bool], []),
     'publishSlicerSharePage' : IDL.Func([IDL.Text], [Result_6], []),
@@ -3051,8 +3628,10 @@ export const idlFactory = ({ IDL }) => {
         ],
         [],
       ),
+    'refreshNurseryWeatherHub' : IDL.Func([], [IDL.Bool], []),
     'refreshRavenBalance' : IDL.Func([], [], []),
     'refreshTokenPrices' : IDL.Func([], [IDL.Bool], []),
+    'refreshTropicalDesk' : IDL.Func([], [IDL.Bool], []),
     'registerPlant' : IDL.Func(
         [RegisterPlantSharedData, IDL.Nat, IDL.Opt(RegisterPlantCellOverrides)],
         [RegisterPlantResult],
@@ -3065,11 +3644,17 @@ export const idlFactory = ({ IDL }) => {
       ),
     'rejectOffer' : IDL.Func([IDL.Text], [Offer], []),
     'removeAdmin' : IDL.Func([IDL.Principal], [], []),
+    'removeAgentPrincipal' : IDL.Func([IDL.Principal], [], []),
     'removePlant' : IDL.Func([PlantId], [IDL.Bool], []),
     'removePlantPhoto' : IDL.Func([PlantId, IDL.Text], [], []),
     'removeVariety' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'removeZonePhoto' : IDL.Func([TrayId, IDL.Text], [], []),
     'reorderRecipes' : IDL.Func([IDL.Vec(RecipeId)], [IDL.Bool], []),
+    'requestPlantClaim' : IDL.Func(
+        [PlantId, IDL.Opt(IDL.Text)],
+        [IDL.Record({ 'message' : IDL.Text, 'success' : IDL.Bool })],
+        [],
+      ),
     'resetOrphanPoolNFT' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'resetPoolNFT' : IDL.Func(
         [IDL.Nat],
@@ -3081,6 +3666,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(IDL.Principal)],
         ['query'],
       ),
+    'resolveZip' : IDL.Func([IDL.Text], [ZipCoord], []),
     'revivePlant' : IDL.Func([PlantId], [IDL.Bool], []),
     'revokeClaimTokenAdmin' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'runDailyWeatherCapture' : IDL.Func([], [IDL.Nat], []),
@@ -3116,9 +3702,38 @@ export const idlFactory = ({ IDL }) => {
       ),
     'seedDefaultRecipes' : IDL.Func([], [], []),
     'setCoopSeatPriceCents' : IDL.Func([IDL.Nat], [], []),
+    'setFleetAutoTopUpPolicy' : IDL.Func(
+        [IDL.Bool, IDL.Nat, IDL.Nat, IDL.Nat],
+        [],
+        [],
+      ),
     'setForSale' : IDL.Func([PlantId, IDL.Bool], [], []),
     'setFrontendCanisterId' : IDL.Func([IDL.Text], [], []),
     'setICPaySecretKey' : IDL.Func([IDL.Text], [], []),
+    'setLpFeeCyclesConfig' : IDL.Func(
+        [
+          IDL.Bool,
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Nat),
+          IDL.Bool,
+          IDL.Opt(IDL.Text),
+          IDL.Nat,
+        ],
+        [],
+        [],
+      ),
+    'setMyWeatherLocation' : IDL.Func(
+        [
+          WeatherLocationKind,
+          IDL.Opt(IDL.Text),
+          IDL.Float64,
+          IDL.Float64,
+          IDL.Text,
+        ],
+        [WeatherLocation],
+        [],
+      ),
     'setPayPalCredentials' : IDL.Func([IDL.Text, IDL.Text, IDL.Bool], [], []),
     'setPlantNFT' : IDL.Func([PlantId, IDL.Text], [], []),
     'setProfileBanner' : IDL.Func([IDL.Text], [], []),
@@ -3289,7 +3904,117 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'weatherAdeckTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
+    'weatherAirQualityTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
+    'weatherEnsembleTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
+    'weatherGeocodeTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
+    'weatherModelTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
+    'weatherNoaaForecastTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
+    'weatherNoaaOutlookTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
+    'weatherNoaaPastTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
+    'weatherNwsAlertsTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
+    'weatherOutlookTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
     'weatherProvenanceTransform' : IDL.Func(
+        [
+          IDL.Record({
+            'context' : IDL.Vec(IDL.Nat8),
+            'response' : http_request_result,
+          }),
+        ],
+        [http_request_result],
+        ['query'],
+      ),
+    'weatherTropicalTransform' : IDL.Func(
         [
           IDL.Record({
             'context' : IDL.Vec(IDL.Nat8),

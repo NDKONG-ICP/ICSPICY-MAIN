@@ -21,6 +21,11 @@ export const spicyAiIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
   const ChatRequest = IDL.Record({
     messages: IDL.Vec(ChatMessage),
   });
+  const WeatherChatRequest = IDL.Record({
+    messages: IDL.Vec(ChatMessage),
+    lat: IDL.Float64,
+    lng: IDL.Float64,
+  });
   const ChatError = IDL.Variant({
     rateLimited: IDL.Record({ resetInSeconds: IDL.Nat }),
     blocked: IDL.Null,
@@ -66,6 +71,7 @@ export const spicyAiIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
 
   return IDL.Service({
     chatWithLlm: IDL.Func([ChatRequest], [LlmChatResponse], []),
+    chatWithWeather: IDL.Func([WeatherChatRequest], [LlmChatResponse], []),
     startChat: IDL.Func([ChatRequest], [StartChatResponse], []),
     continueChat: IDL.Func([IDL.Text], [ContinueChatResponse], []),
     cancelChat: IDL.Func([IDL.Text], [], []),
@@ -76,6 +82,7 @@ export const spicyAiIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
     isAdminQuery: IDL.Func([IDL.Principal], [IDL.Bool], ["query"]),
     setLlamaCppId: IDL.Func([IDL.Text], [], []),
     setDocsBackendId: IDL.Func([IDL.Text], [], []),
+    setBackendCanisterId: IDL.Func([IDL.Text], [], []),
     setModelPath: IDL.Func([IDL.Text], [], []),
     setContextSize: IDL.Func([IDL.Nat], [], []),
     setTopK: IDL.Func([IDL.Nat], [], []),
@@ -113,6 +120,14 @@ export interface SpicyAiChatMessage {
 export interface SpicyAiActor {
   chatWithLlm(req: {
     messages: SpicyAiChatMessage[];
+  }): Promise<{
+    ok?: { response: string; docsReferenced: string[] };
+    err?: SpicyAiChatError;
+  }>;
+  chatWithWeather(req: {
+    messages: SpicyAiChatMessage[];
+    lat: number;
+    lng: number;
   }): Promise<{
     ok?: { response: string; docsReferenced: string[] };
     err?: SpicyAiChatError;

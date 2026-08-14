@@ -17,6 +17,7 @@ import NotificationsLib "../lib/notifications";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
+  agentPrincipalState : AccessControl.AgentPrincipalState,
   rateLimits : RateLimits.Bundle,
   posts : Map.Map<Common.PostId, CommunityTypes.Post>,
   comments : Map.Map<Common.CommentId, CommunityTypes.Comment>,
@@ -429,7 +430,7 @@ mixin (
     offset : Nat,
     limit : Nat,
   ) : async [CommunityTypes.PostPublic] {
-    AccessControl.requireAdmin(accessControlState, caller);
+    AccessControl.requireAdminOrAgent(accessControlState, agentPrincipalState, caller);
     CommunityLib.listAllPostsAdmin(
       posts, comments, tips, profiles, caller, offset, limit,
     );

@@ -3,7 +3,16 @@
   "short_name": "IC SPICY",
   "description": "Track plants with NIMS, shop hot peppers with NFT provenance, and design your garden — on the Internet Computer.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "shortcuts": [
+    {
+      "name": "Weather Desk",
+      "short_name": "Weather",
+      "description": "Florida grower weather, radar, and tropical desk",
+      "url": "/weather"
+    }
+  ],
   "background_color": "#161616",
   "theme_color": "#161616",
   "icons": [

@@ -1,4 +1,6 @@
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { PlantClaimQueue } from "@/components/admin/PlantClaimQueue";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +28,27 @@ export function AdminNimsPanel() {
 
   return (
     <div className="space-y-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-semibold">Phygital NFC tags</h3>
+          <p className="text-sm text-muted-foreground">
+            Assign plants, program NTAG215 stickers, approve buyer claims.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" asChild>
+            <Link to="/admin/nfc-assign">Assign NFC →</Link>
+          </Button>
+          <Button type="button" variant="outline" asChild>
+            <Link to="/admin/nfc-assign" search={{ tutorial: "1" }}>
+              iPhone tag tutorial
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      <PlantClaimQueue />
+
       <div>
         <h3 className="text-lg font-semibold mb-2">NFT Plant Pool</h3>
         {pool ? (

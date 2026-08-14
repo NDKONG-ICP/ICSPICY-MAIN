@@ -1,4 +1,4 @@
-import { Copy, Tag } from "lucide-react";
+import { Copy, Loader2, Radio, Tag } from "lucide-react";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { plantNfcUrl } from "../../lib/plant-nfc-url";
+import { webNfcSupported, writePlantUrlToNfcTag } from "../../lib/web-nfc";
 
 export function NfcTagLinkModal({
   open,
@@ -25,8 +26,10 @@ export function NfcTagLinkModal({
   plantId: bigint;
   plantLabel?: string;
 }) {
-  const url = plantNfcUrl(plantId);
+  const url = plantNfcUrl(plantId, { trackNfc: true });
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [writing, setWriting] = useState(false);
+  const canWriteNfc = webNfcSupported();
 
   useEffect(() => {
     if (!open) return;
@@ -41,6 +44,18 @@ export function NfcTagLinkModal({
       toast.success("Tag URL copied");
     } catch {
       toast.error("Could not copy URL");
+    }
+  };
+
+  const writeTag = async () => {
+    setWriting(true);
+    try {
+      await writePlantUrlToNfcTag(url);
+      toast.success("NFC tag programmed — hold it on the pot!");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "NFC write failed");
+    } finally {
+      setWriting(false);
     }
   };
 
@@ -76,11 +91,48 @@ export function NfcTagLinkModal({
             {url}
           </p>
 
+          {canWriteNfc ? (
+            <Button
+              type="button"
+              className="w-full"
+              disabled={writing}
+              onClick={() => void writeTag()}
+            >
+              {writing ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Hold phone to blank NTAG215…
+                </>
+              ) : (
+                <>
+                  <Radio className="mr-2 size-4" />
+                  Write to NFC tag (Android)
+                </>
+              )}
+            </Button>
+          ) : (
+            <div className="space-y-2 rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">iPhone / desktop</p>
+              <p>
+                Copy the URL, open{" "}
+                <a
+                  href="https://apps.apple.com/app/nfc-tools/id1252962749"
+                  className="text-primary underline"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  NFC Tools
+                </a>
+                , paste as a URL record, and write to your NTAG215 sticker (~10
+                sec per tag).
+              </p>
+            </div>
+          )}
+
           <p className="text-xs text-muted-foreground">
-            Write this URL to an NFC tag (NFC215 recommended) to create a smart
-            plant tag. iPhone Safari opens NFC URL records automatically;
-            Android Chrome Web NFC write support is planned when tags are
-            available for testing.
+            NTAG215 stickers store this URL. Anyone who taps the tag sees the
+            plant&apos;s NFT, lifecycle, and weather provenance — buyers can
+            request claim after purchase.
           </p>
         </div>
 

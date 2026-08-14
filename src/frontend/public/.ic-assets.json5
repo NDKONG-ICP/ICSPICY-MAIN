@@ -15,6 +15,20 @@
     }
   },
   {
+    "match": "weather-heroes/**/*",
+    "headers": {
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "Content-Type": "video/mp4"
+    }
+  },
+  {
+    "match": "weather-heroes/**/*.jpg",
+    "headers": {
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "Content-Type": "image/jpeg"
+    }
+  },
+  {
     "match": "**/index.html",
     "headers": {
       "Cache-Control": "public, max-age=300"

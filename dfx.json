@@ -50,6 +50,44 @@
       "type": "motoko",
       "main": "src/spicy_ai_canister/main.mo",
       "wasm_memory_persistence": "keep"
+    },
+    "agent_hub": {
+      "type": "motoko",
+      "main": "src/agent_hub/main.mo",
+      "wasm_memory_persistence": "keep"
+    },
+    "weather_mcp": {
+      "type": "custom",
+      "build": "bash scripts/build-weather-mcp.sh",
+      "wasm": "src/weather_mcp/weather_mcp.wasm",
+      "candid": "src/weather_mcp/weather_mcp.did",
+      "metadata": [
+        {
+          "name": "candid:service",
+          "path": "src/weather_mcp/weather_mcp.did"
+        }
+      ],
+      "wasm_memory_persistence": "keep"
+    },
+    "weather_concierge_canister": {
+      "type": "motoko",
+      "main": "src/weather_concierge_canister/main.mo",
+      "wasm_memory_persistence": "keep"
+    },
+    "weather_sentinel_canister": {
+      "type": "motoko",
+      "main": "src/weather_sentinel_canister/main.mo",
+      "wasm_memory_persistence": "keep"
+    },
+    "fleet_cycles_ops_canister": {
+      "type": "motoko",
+      "main": "src/fleet_cycles_ops_canister/main.mo",
+      "wasm_memory_persistence": "keep"
+    },
+    "newsletter_canister": {
+      "type": "motoko",
+      "main": "src/newsletter_canister/main.mo",
+      "wasm_memory_persistence": "keep"
     }
   },
   "defaults": {

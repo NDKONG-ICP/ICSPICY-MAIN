@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { AlertTriangle, Droplets, Wind } from "lucide-react";
 import { motion, useMotionValueEvent, useSpring } from "motion/react";
 import type { ReactNode } from "react";
@@ -395,6 +396,16 @@ export function WeatherImmersivePanel({
         })}
         {" · "}
         {data.current.weatherDescription}
+        {data.onChain ? " · on-chain" : ""}
+      </p>
+
+      <p className="pt-1">
+        <Link
+          to="/weather"
+          className="text-xs font-medium text-sky-400/90 underline-offset-2 hover:underline"
+        >
+          Open Weather Desk →
+        </Link>
       </p>
 
       {planting.length > 0 && (

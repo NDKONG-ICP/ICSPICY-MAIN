@@ -1043,7 +1043,11 @@ mixin (
   };
 
   /// Daily timer entry point — fetches nursery weather and records snapshots for active plants.
-  public func runDailyWeatherCapture() : async Nat {
+  /// Self-call (timer) or admin only — triggers a paid HTTPS outcall.
+  public shared ({ caller }) func runDailyWeatherCapture() : async Nat {
+    if (caller != selfPrincipal() and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: timer/admin only");
+    };
     switch (await fetchOpenMeteoForecast()) {
       case null 0;
       case (?parsed) {

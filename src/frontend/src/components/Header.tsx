@@ -32,6 +32,7 @@ const PRIMARY_NAV = [
   { label: "Home", to: "/" },
   { label: "Shop", to: "/marketplace" },
   { label: "NIMS", to: "/nims" },
+  { label: "Weather", to: "/weather" },
   { label: "Games", to: "/games", badge: "🌶️" as const },
   { label: "Masterclass", to: "/masterclass" },
   { label: "Community Garden", to: "/community" },

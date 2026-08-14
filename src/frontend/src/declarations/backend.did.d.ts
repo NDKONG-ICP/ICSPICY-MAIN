@@ -6,6 +6,18 @@ export interface Account {
   'owner' : Principal,
   'subaccount' : [] | [Subaccount],
 }
+export interface AceSeasonStats {
+  'seasonTotal' : number,
+  'storms' : Array<AceStormEntry>,
+  'seasonNames' : Array<string>,
+  'seasonAverage' : number,
+  'seasonRecord' : number,
+}
+export interface AceStormEntry {
+  'ace' : number,
+  'name' : string,
+  'maxWindKt' : bigint,
+}
 export interface ActivityEntry {
   'plantName' : string,
   'actionType' : string,
@@ -86,7 +98,18 @@ export interface AdminWithdrawTokensResult {
   'message' : string,
   'success' : boolean,
 }
+export interface AirQuality {
+  'pm10' : number,
+  'pm25' : number,
+  'usAqi' : bigint,
+}
 export interface AirdropAssignment { 'recipient' : Principal, 'nftId' : bigint }
+export type AlertKind = { 'heavyRain' : null } |
+  { 'nwsOfficial' : null } |
+  { 'highUv' : null } |
+  { 'extremeHeat' : null } |
+  { 'highWind' : null } |
+  { 'tropicalThreat' : null };
 export interface ApprovalInfo {
   'memo' : [] | [Uint8Array | number[]],
   'from_subaccount' : [] | [Uint8Array | number[]],
@@ -182,6 +205,19 @@ export interface CallerVoteInfo {
   'nft_token_id' : bigint,
   'option_id' : bigint,
 }
+export interface CanisterFundingDetail {
+  'icpSpentE8s' : bigint,
+  'name' : string,
+  'cyclesMinted' : bigint,
+  'canisterId' : string,
+}
+export interface CanisterTopUpResult {
+  'icpSpentE8s' : bigint,
+  'cyclesMinted' : [] | [bigint],
+  'message' : string,
+  'success' : boolean,
+  'ledgerBlockIndex' : [] | [bigint],
+}
 export interface CanisterTreasuryBalance {
   'balance' : bigint,
   'ledgerCanisterId' : string,
@@ -192,6 +228,33 @@ export type CellStatus = { 'Empty' : null } |
   { 'Germinated' : null } |
   { 'Planted' : null } |
   { 'Transplanted' : null };
+export interface CertifiedWeather {
+  'certificate' : [] | [Uint8Array | number[]],
+  'value' : [] | [WeatherOutlook],
+  'witness' : Uint8Array | number[],
+  'bodyDigest' : string,
+}
+export interface CertifiedWeather_1 {
+  'certificate' : [] | [Uint8Array | number[]],
+  'value' : [] | [TropicalSummary],
+  'witness' : Uint8Array | number[],
+  'bodyDigest' : string,
+}
+export interface CertifiedWeather_2 {
+  'certificate' : [] | [Uint8Array | number[]],
+  'value' : [] | [Array<WeatherAlert>],
+  'witness' : Uint8Array | number[],
+  'bodyDigest' : string,
+}
+export interface CertifiedWeather_3 {
+  'certificate' : [] | [Uint8Array | number[]],
+  'value' : [] | [DailyAlmanac],
+  'witness' : Uint8Array | number[],
+  'bodyDigest' : string,
+}
+export type ClaimRequestStatus = { 'pending' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null };
 export interface ClaimTokenAdminPublic {
   'token' : string,
   'token_id' : bigint,
@@ -346,12 +409,41 @@ export interface CreateTrayInput {
   'planting_date' : Timestamp,
   'nft_standard' : NFTStandard,
 }
+export interface CurrentConditions {
+  'precipInches' : number,
+  'tempF' : number,
+  'pressureHpa' : number,
+  'uvIndex' : number,
+  'humidity' : number,
+  'windDirDeg' : number,
+  'weatherCode' : bigint,
+  'windMph' : number,
+  'feelsLikeF' : number,
+}
+export interface DailyAlmanac {
+  'retracted' : boolean,
+  'title' : string,
+  'dateKey' : string,
+  'recipeSlug' : [] | [string],
+  'body' : string,
+  'publishedAt' : bigint,
+  'varietyIds' : Array<bigint>,
+}
 export interface DailyFeatureStat {
   'day' : DayBucket,
   'action' : string,
   'feature' : string,
   'count' : bigint,
   'uniqueUsers' : bigint,
+}
+export interface DailyOutlook {
+  'precipInches' : number,
+  'date' : string,
+  'windMphMax' : number,
+  'tempHighF' : number,
+  'tempLowF' : number,
+  'weatherCode' : bigint,
+  'uvIndexMax' : number,
 }
 export interface DashboardStats {
   'needsAttention' : bigint,
@@ -367,9 +459,24 @@ export type DeathCause = { 'DampingOff' : null } |
   { 'Unknown' : null } |
   { 'Other' : null } |
   { 'Drought' : null };
+export interface DevelopmentOutlook {
+  'risk2Day' : string,
+  'risk7Day' : string,
+  'prob2Day' : string,
+  'prob7Day' : string,
+  'basin' : string,
+  'centroidLat' : number,
+  'centroidLng' : number,
+}
 export type Difficulty = { 'Beginner' : null } |
   { 'Advanced' : null } |
   { 'Intermediate' : null };
+export interface EnsemblePlume {
+  'memberCount' : bigint,
+  'precipMembers' : Array<Array<number>>,
+  'dates' : Array<string>,
+  'tempHighMembers' : Array<Array<number>>,
+}
 export type FeedingId = bigint;
 export interface FeedingPublic {
   'id' : FeedingId,
@@ -384,12 +491,53 @@ export interface FinishVideoUploadResult {
   'posterKey' : [] | [string],
   'videoKey' : string,
 }
+export interface FleetAutoTopUpPolicy {
+  'spentTodayIcpE8s' : bigint,
+  'thresholdCycles' : bigint,
+  'icpPerTopUpE8s' : bigint,
+  'enabled' : boolean,
+  'maxIcpPerDayE8s' : bigint,
+}
 export interface FleetEntry {
+  'probeStatus' : FleetProbeStatus,
+  'isSwarm' : boolean,
+  'autoTopUpMaxIcpPerDayE8s' : bigint,
+  'autoTopUpIcpE8s' : bigint,
+  'probeMessage' : [] | [string],
   'name' : string,
+  'lastBurnSampleAt' : bigint,
+  'agentKind' : [] | [string],
+  'autoTopUpThresholdCycles' : bigint,
   'isHealthy' : boolean,
+  'category' : FleetTargetCategory,
+  'burnPerDay' : bigint,
   'cyclesBalance' : bigint,
+  'cumulativeBurned' : bigint,
   'memorySize' : bigint,
+  'autoTopUpEnabled' : boolean,
   'canisterId' : string,
+}
+export interface FleetHealthReport {
+  'appCumulativeBurned' : bigint,
+  'appBurnPerDay' : bigint,
+  'canisters' : Array<FleetEntry>,
+}
+export type FleetProbeStatus = { 'ok' : null } |
+  { 'denied' : null } |
+  { 'error' : null };
+export type FleetTargetCategory = { 'agent' : null } |
+  { 'asset' : null } |
+  { 'core' : null } |
+  { 'workerBridge' : null } |
+  { 'weather' : null };
+export interface ForecastPoint {
+  'lat' : number,
+  'lng' : number,
+  'pointLabel' : string,
+  'maxWindKt' : bigint,
+  'category' : bigint,
+  'forecastHour' : bigint,
+  'pressureMb' : bigint,
 }
 export interface FoundersMintInput {
   'layerCombination' : Array<bigint>,
@@ -489,6 +637,7 @@ export interface ICSpicy {
   '_initializeAccessControl' : ActorMethod<[], undefined>,
   'acceptOffer' : ActorMethod<[string], Offer>,
   'addAdmin' : ActorMethod<[Principal], undefined>,
+  'addAgentPrincipal' : ActorMethod<[Principal], undefined>,
   'addArtworkLayer' : ActorMethod<[string, string, bigint], ArtworkLayer>,
   'addComment' : ActorMethod<[PostId, string, boolean], CommentPublic>,
   'addFeedingEntry' : ActorMethod<
@@ -544,9 +693,16 @@ export interface ICSpicy {
     [PlantId, bigint, [] | [number], [] | [string]],
     boolean
   >,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
   'addWeatherRecord' : ActorMethod<[AddWeatherRecordInput], WeatherRecord>,
   'addWeatherSnapshot' : ActorMethod<[PlantId, WeatherSnapshot], boolean>,
   'addZonePhoto' : ActorMethod<[TrayId, string], undefined>,
+  'adminApproveClaimRequest' : ActorMethod<
+    [PlantId, Principal],
+    { 'message' : string, 'success' : boolean }
+  >,
   'adminBatchAirdrop' : ActorMethod<
     [Array<Principal>, boolean, [] | [bigint]],
     Array<
@@ -561,6 +717,9 @@ export interface ICSpicy {
   'adminDeleteComment' : ActorMethod<[CommentId], boolean>,
   'adminDeletePost' : ActorMethod<[PostId], boolean>,
   'adminDeleteVarietyGuide' : ActorMethod<[bigint, string], boolean>,
+  /**
+   * / Public query — used by agent_hub to sync admin access with backend admins.
+   */
   'adminGetGameStats' : ActorMethod<
     [string, Principal],
     [] | [GamePlayerStatsPublic]
@@ -569,18 +728,62 @@ export interface ICSpicy {
     [bigint, Principal],
     PurchaseCoopSeatResult
   >,
+  'adminListClaimRequests' : ActorMethod<
+    [[] | [ClaimRequestStatus]],
+    Array<PlantClaimRequestPublic>
+  >,
   'adminListCoopDesignatedSeats' : ActorMethod<[], Array<bigint>>,
   'adminListUsers' : ActorMethod<[bigint, bigint, string], AdminUserPage>,
+  'adminRefreshTropical' : ActorMethod<[], [] | [TropicalSummary]>,
+  'adminRefreshWeatherGrid' : ActorMethod<
+    [number, number],
+    [] | [WeatherOutlook]
+  >,
+  /**
+   * / Admin: register a dynamic swarm/agent canister for fleet monitoring.
+   */
+  'adminRegisterSwarmCanister' : ActorMethod<
+    [SwarmCanisterInput],
+    SwarmCanisterTarget
+  >,
+  'adminRejectClaimRequest' : ActorMethod<[PlantId, Principal], boolean>,
   'adminRemoveGameScore' : ActorMethod<[string, Principal], boolean>,
+  /**
+   * / Admin: remove a swarm canister from the dynamic fleet registry.
+   */
+  'adminRemoveSwarmCanister' : ActorMethod<[string], undefined>,
+  'adminRetractAlmanac' : ActorMethod<[string], undefined>,
   'adminReturnToPool' : ActorMethod<[bigint], TransferResult>,
   'adminRevokeSeat' : ActorMethod<[bigint, string], boolean>,
   'adminRunDailyWeatherCapture' : ActorMethod<[], bigint>,
+  /**
+   * / Admin: run auto top-up now (same logic as the 6-hour timer).
+   */
+  'adminRunFleetAutoTopUp' : ActorMethod<[], bigint>,
+  /**
+   * / Admin: harvest ICP LP fees and fund fleet canisters (marketable monthly event).
+   */
+  'adminRunLpFeeCyclesFunding' : ActorMethod<[boolean], LpFeeCyclesRunResult>,
   'adminSendNotification' : ActorMethod<[Principal, string], boolean>,
   'adminSetLeaderboardExcluded' : ActorMethod<[Principal, boolean], undefined>,
+  /**
+   * / Admin: set per-swarm-canister auto top-up policy.
+   */
+  'adminSetSwarmCanisterAutoTopUp' : ActorMethod<
+    [string, SwarmAutoTopUpPolicy],
+    SwarmCanisterTarget
+  >,
   'adminSubmitToDAB' : ActorMethod<
     [string, string, string, [] | [string]],
     { 'ok' : string } |
       { 'err' : string }
+  >,
+  /**
+   * / Admin: convert treasury ICP to cycles on a fleet canister via CMC.
+   */
+  'adminTopUpCanisterFromTreasuryIcp' : ActorMethod<
+    [string, bigint],
+    CanisterTopUpResult
   >,
   'adminTransferFromPool' : ActorMethod<[bigint, Account], TransferResult>,
   'adminUnstickOrder' : ActorMethod<
@@ -590,6 +793,13 @@ export interface ICSpicy {
   'adminUnstickPepperHead' : ActorMethod<
     [bigint],
     { 'message' : string, 'success' : boolean }
+  >,
+  /**
+   * / Admin: update a registered swarm canister target.
+   */
+  'adminUpdateSwarmCanister' : ActorMethod<
+    [string, SwarmCanisterInput],
+    SwarmCanisterTarget
   >,
   'adminWithdrawTokens' : ActorMethod<
     [string, Principal, bigint],
@@ -639,9 +849,7 @@ export interface ICSpicy {
   >,
   'calculateGardenYield' : ActorMethod<[bigint], [] | [YieldEstimate]>,
   'calculateGardenYieldInput' : ActorMethod<[GardenDesignInput], YieldEstimate>,
-  /**
-   * / Per-principal rate limiters for cycle-drain protection (CDA).
-   */
+  'cancelMyClaimRequest' : ActorMethod<[PlantId], boolean>,
   'cancelOffer' : ActorMethod<[string], Offer>,
   'cancelProposal' : ActorMethod<[ProposalId], boolean>,
   'cancelResaleListing' : ActorMethod<
@@ -718,6 +926,8 @@ export interface ICSpicy {
   'editPost' : ActorMethod<[PostId, string], boolean>,
   'ensureAdminProfile' : ActorMethod<[], undefined>,
   'ensureCallerProfile' : ActorMethod<[], undefined>,
+  'ensureTropicalSummary' : ActorMethod<[bigint], [] | [TropicalSummary]>,
+  'ensureWeatherOutlook' : ActorMethod<[number, number], [] | [WeatherOutlook]>,
   'feedEntireTray' : ActorMethod<
     [TrayId, string, string, string, [] | [string]],
     bigint
@@ -812,16 +1022,25 @@ export interface ICSpicy {
       'activeProposals' : bigint,
     }
   >,
+  'getDailyAlmanac' : ActorMethod<[[] | [string]], [] | [DailyAlmanac]>,
+  'getDailyAlmanacCertified' : ActorMethod<[string], CertifiedWeather_3>,
   'getFeaturedRecipes' : ActorMethod<[bigint], Array<RecipePublic>>,
   /**
-   * / Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
+   * / Admin: read automatic fleet top-up policy.
    */
-  'getFleetCanisterHealth' : ActorMethod<[], Array<FleetEntry>>,
+  'getFleetAutoTopUpPolicy' : ActorMethod<[], FleetAutoTopUpPolicy>,
+  /**
+   * / Admin: cycles, memory, and observed burn for all production canisters.
+   */
+  'getFleetCanisterHealth' : ActorMethod<[], FleetHealthReport>,
   'getFollowers' : ActorMethod<
     [Principal, bigint, bigint],
     Array<UserProfilePublic>
   >,
   'getFollowersCount' : ActorMethod<[Principal], bigint>,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
   'getFollowing' : ActorMethod<
     [Principal, bigint, bigint],
     Array<UserProfilePublic>
@@ -835,6 +1054,10 @@ export interface ICSpicy {
   'getGardenDesignForUser' : ActorMethod<[bigint], [] | [GardenDesign]>,
   'getGlobalFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
   'getGraveyard' : ActorMethod<[], Array<PlantLifecycle>>,
+  'getGrowerAlerts' : ActorMethod<
+    [[] | [number], [] | [number]],
+    Array<WeatherAlert>
+  >,
   'getGrowerProvenanceMeta' : ActorMethod<
     [bigint],
     [] | [GrowerProvenanceMeta]
@@ -845,8 +1068,21 @@ export interface ICSpicy {
   'getLinkedWallets' : ActorMethod<[], Array<Principal>>,
   'getListedNfts' : ActorMethod<[[] | [boolean]], Array<NftListingPublic>>,
   'getLoadedMetadataCount' : ActorMethod<[], bigint>,
+  /**
+   * / Admin: read monthly LP fee → cycles configuration.
+   */
+  'getLpFeeCyclesConfig' : ActorMethod<[], LpFeeCyclesConfigView>,
+  /**
+   * / Public: marketing/transparency log of monthly LP infrastructure funding events.
+   */
+  'getLpFeeCyclesEvents' : ActorMethod<[bigint], Array<LpFeeCyclesEvent>>,
   'getMembershipPriceInToken' : ActorMethod<[OracleToken], bigint>,
+  'getModelGusts' : ActorMethod<
+    [[] | [number], [] | [number]],
+    [] | [ModelGustSpread]
+  >,
   'getMyBadges' : ActorMethod<[], Array<BadgePublic>>,
+  'getMyClaimRequests' : ActorMethod<[], Array<PlantClaimRequestPublic>>,
   'getMyCoopStatus' : ActorMethod<[], [] | [CoopStatus]>,
   'getMyCrafterRecipes' : ActorMethod<[], Array<SavedCrafterRecipe>>,
   'getMyCrosses' : ActorMethod<[], Array<BreedingCrossPublic>>,
@@ -870,11 +1106,15 @@ export interface ICSpicy {
   'getMySeedBank' : ActorMethod<[], Array<SeedLotPublic>>,
   'getMyTrays' : ActorMethod<[], Array<TrayPublic>>,
   'getMyVendors' : ActorMethod<[], Array<SeedVendorPublic>>,
+  'getMyWeatherAlerts' : ActorMethod<[], Array<WeatherAlert>>,
+  'getMyWeatherLocation' : ActorMethod<[], [] | [WeatherLocation]>,
   'getMyWeatherRecords' : ActorMethod<[bigint], Array<WeatherRecord>>,
   'getNewOrderCount' : ActorMethod<[], bigint>,
   'getNftPoolStatus' : ActorMethod<[], PlantPoolStatus>,
   'getNimsDashboardStats' : ActorMethod<[], DashboardStats>,
   'getNimsPhotoFile' : ActorMethod<[string], [] | [ShopListingFile]>,
+  'getNurseryWeatherDesk' : ActorMethod<[], [] | [WeatherOutlook]>,
+  'getNwsAlertsCertified' : ActorMethod<[], CertifiedWeather_2>,
   'getOffer' : ActorMethod<[string], [] | [Offer]>,
   'getOffersForNft' : ActorMethod<[string], Array<Offer>>,
   'getOffersReceived' : ActorMethod<[], Array<Offer>>,
@@ -886,6 +1126,10 @@ export interface ICSpicy {
   'getPlantByNft' : ActorMethod<[bigint], [] | [PlantLifecycle]>,
   'getPlantByNftIdBackfillCount' : ActorMethod<[], bigint>,
   'getPlantByNftIdMapSize' : ActorMethod<[], bigint>,
+  'getPlantClaimStatus' : ActorMethod<
+    [PlantId, [] | [Principal]],
+    PlantClaimStatusPublic
+  >,
   'getPlantClaimToken' : ActorMethod<[PlantId], [] | [string]>,
   'getPlantCount' : ActorMethod<[], PlantCountStats>,
   'getPlantHealth' : ActorMethod<[PlantId], [] | [PlantHealth]>,
@@ -942,6 +1186,7 @@ export interface ICSpicy {
   'getSlicerSharePublic' : ActorMethod<[Principal], [] | [SlicerSharePublic]>,
   'getSlicerSubmitRejectionStats' : ActorMethod<[], Array<[string, bigint]>>,
   'getSpawnSequence' : ActorMethod<[bigint, bigint], Array<SpawnEvent>>,
+  'getStormTrack' : ActorMethod<[string], [] | [Array<StormTrackPoint>]>,
   'getTokenPriceInIcp' : ActorMethod<[OracleToken], bigint>,
   'getTokenPrices' : ActorMethod<[], Array<TokenPrice>>,
   'getTray' : ActorMethod<[TrayId], [] | [TrayPublic]>,
@@ -950,6 +1195,9 @@ export interface ICSpicy {
   'getTreasuryBalances' : ActorMethod<[], Array<TreasuryBalance>>,
   'getTreasuryLedger' : ActorMethod<[], Array<TreasuryTransaction>>,
   'getTrendingPosts' : ActorMethod<[bigint], Array<PostPublic>>,
+  'getTropicalAdecks' : ActorMethod<[], Array<TropicalAdeck>>,
+  'getTropicalSummary' : ActorMethod<[], [] | [TropicalSummary]>,
+  'getTropicalSummaryCertified' : ActorMethod<[], CertifiedWeather_1>,
   'getUnreadCount' : ActorMethod<[], bigint>,
   'getUpcomingEvents' : ActorMethod<[], Array<PlantingEvent>>,
   'getUpgradeHistory' : ActorMethod<[PlantId], Array<LifecycleUpgradeEvent>>,
@@ -967,9 +1215,37 @@ export interface ICSpicy {
     [bigint],
     [] | [VarietyProvenancePublic]
   >,
+  'getWeatherBrief' : ActorMethod<
+    [[] | [number], [] | [number]],
+    [] | [WeatherBrief]
+  >,
   'getWeatherDebug' : ActorMethod<
     [],
     { 'activeCount' : bigint, 'lastError' : string, 'lastUrl' : string }
+  >,
+  'getWeatherHubDebug' : ActorMethod<
+    [],
+    {
+      'zipBudgetRemaining' : bigint,
+      'gridCount' : bigint,
+      'lastTropicalError' : string,
+      'lastError' : string,
+      'seasonActive' : boolean,
+      'zipCount' : bigint,
+      'tropicalStormCount' : bigint,
+    }
+  >,
+  'getWeatherOutlook' : ActorMethod<
+    [[] | [number], [] | [number]],
+    [] | [WeatherOutlook]
+  >,
+  'getWeatherOutlookCertified' : ActorMethod<
+    [[] | [number], [] | [number]],
+    CertifiedWeather
+  >,
+  'getWeatherSourceLedger' : ActorMethod<
+    [bigint],
+    Array<WeatherSourceLedgerEntry>
   >,
   'getZoneCalendar' : ActorMethod<[string], ZoneCalendar>,
   'getZoneSchedule' : ActorMethod<[string, bigint], ZoneSchedule>,
@@ -1025,13 +1301,13 @@ export interface ICSpicy {
   'icrc7_default_take_value' : ActorMethod<[], [] | [bigint]>,
   'icrc7_description' : ActorMethod<[], [] | [string]>,
   'icrc7_logo' : ActorMethod<[], [] | [string]>,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
   'icrc7_max_memo_size' : ActorMethod<[], [] | [bigint]>,
   'icrc7_max_query_batch_size' : ActorMethod<[], [] | [bigint]>,
   'icrc7_max_take_value' : ActorMethod<[], [] | [bigint]>,
   'icrc7_max_update_batch_size' : ActorMethod<[], [] | [bigint]>,
-  /**
-   * / ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
-   */
   'icrc7_name' : ActorMethod<[], string>,
   'icrc7_owner_of' : ActorMethod<[Array<bigint>], Array<[] | [Account]>>,
   'icrc7_permitted_drift' : ActorMethod<[], [] | [bigint]>,
@@ -1065,10 +1341,15 @@ export interface ICSpicy {
     { 'skipped' : bigint, 'initialized' : bigint }
   >,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isCallerAgent' : ActorMethod<[], boolean>,
   'isFollowing' : ActorMethod<[Principal], boolean>,
   'isGrowerProvenanceToken' : ActorMethod<[bigint], boolean>,
   'isPepperHead' : ActorMethod<[bigint], boolean>,
   'isPepperHeadAvailable' : ActorMethod<[], bigint>,
+  /**
+   * / Public query — used by agent_hub to sync admin access with backend admins.
+   */
+  'isPrincipalAdmin' : ActorMethod<[Principal], boolean>,
   'isUserBanned' : ActorMethod<[Principal], boolean>,
   'issueMembership' : ActorMethod<
     [
@@ -1083,6 +1364,7 @@ export interface ICSpicy {
   'likeComment' : ActorMethod<[CommentId], boolean>,
   'likePost' : ActorMethod<[PostId], boolean>,
   'linkWallet' : ActorMethod<[Principal], boolean>,
+  'listAgentPrincipals' : ActorMethod<[], Array<Principal>>,
   'listAllOrdersAdmin' : ActorMethod<
     [AdminOrderStatusFilter],
     Array<AdminOrderPublic>
@@ -1096,6 +1378,7 @@ export interface ICSpicy {
   >,
   'listCommentsByPost' : ActorMethod<[PostId], Array<CommentPublic>>,
   'listDAOProposals' : ActorMethod<[], Array<ProposalPublic>>,
+  'listDailyAlmanacArchive' : ActorMethod<[bigint], Array<DailyAlmanac>>,
   'listGraveyard' : ActorMethod<[], Array<PlantLifecycle>>,
   'listGrowerDirectory' : ActorMethod<[], Array<GrowerDirectoryEntry>>,
   'listIcrc7PoolTokensAdmin' : ActorMethod<
@@ -1131,6 +1414,10 @@ export interface ICSpicy {
   'listRecipeVideoUrls' : ActorMethod<[], Array<[RecipeId, string]>>,
   'listRecipes' : ActorMethod<[], Array<RecipePublic>>,
   'listRecipesAdmin' : ActorMethod<[], Array<RecipePublic>>,
+  /**
+   * / Admin/agent: list registered swarm canister targets.
+   */
+  'listSwarmCanisterTargets' : ActorMethod<[], Array<SwarmCanisterStatus>>,
   'listTrays' : ActorMethod<[], Array<TrayPublic>>,
   'listVarieties' : ActorMethod<[], Array<VarietyPublic>>,
   'listVarietyIntros' : ActorMethod<[], Array<[bigint, string]>>,
@@ -1154,6 +1441,7 @@ export interface ICSpicy {
     [PlantId, bigint, [] | [number], [] | [string]],
     boolean
   >,
+  'lookupCachedZip' : ActorMethod<[string], [] | [ZipCoord]>,
   'markCellDead' : ActorMethod<
     [TrayId, bigint, DeathCause, [] | [string], [] | [string]],
     boolean
@@ -1196,9 +1484,6 @@ export interface ICSpicy {
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
   >,
-  /**
-   * / Admin: cycles + memory for backend, frontend, nft_assets, and uploads canisters.
-   */
   'paypalTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
@@ -1222,11 +1507,19 @@ export interface ICSpicy {
       'success' : boolean,
     }
   >,
+  /**
+   * / Admin: preview accrued LP fees without claiming.
+   */
+  'previewLpFeeCyclesDryRun' : ActorMethod<[], LpFeeCyclesDryRun>,
   'priceOracleTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
   >,
   'pruneUsageData' : ActorMethod<[], undefined>,
+  'publishDailyAlmanac' : ActorMethod<
+    [string, string, string, [] | [string], Array<bigint>],
+    undefined
+  >,
   'publishProposal' : ActorMethod<[ProposalId], boolean>,
   'publishRecipe' : ActorMethod<[RecipeId], boolean>,
   'publishSlicerSharePage' : ActorMethod<[string], Result_6>,
@@ -1279,8 +1572,10 @@ export interface ICSpicy {
     [string],
     { 'tokenId' : [] | [bigint], 'message' : string, 'success' : boolean }
   >,
+  'refreshNurseryWeatherHub' : ActorMethod<[], boolean>,
   'refreshRavenBalance' : ActorMethod<[], undefined>,
   'refreshTokenPrices' : ActorMethod<[], boolean>,
+  'refreshTropicalDesk' : ActorMethod<[], boolean>,
   'registerPlant' : ActorMethod<
     [RegisterPlantSharedData, bigint, [] | [RegisterPlantCellOverrides]],
     RegisterPlantResult
@@ -1291,11 +1586,16 @@ export interface ICSpicy {
   >,
   'rejectOffer' : ActorMethod<[string], Offer>,
   'removeAdmin' : ActorMethod<[Principal], undefined>,
+  'removeAgentPrincipal' : ActorMethod<[Principal], undefined>,
   'removePlant' : ActorMethod<[PlantId], boolean>,
   'removePlantPhoto' : ActorMethod<[PlantId, string], undefined>,
   'removeVariety' : ActorMethod<[bigint], boolean>,
   'removeZonePhoto' : ActorMethod<[TrayId, string], undefined>,
   'reorderRecipes' : ActorMethod<[Array<RecipeId>], boolean>,
+  'requestPlantClaim' : ActorMethod<
+    [PlantId, [] | [string]],
+    { 'message' : string, 'success' : boolean }
+  >,
   'resetOrphanPoolNFT' : ActorMethod<[bigint], boolean>,
   'resetPoolNFT' : ActorMethod<
     [bigint],
@@ -1303,6 +1603,7 @@ export interface ICSpicy {
       { 'err' : string }
   >,
   'resolveUsername' : ActorMethod<[string], [] | [Principal]>,
+  'resolveZip' : ActorMethod<[string], ZipCoord>,
   'revivePlant' : ActorMethod<[PlantId], boolean>,
   'revokeClaimTokenAdmin' : ActorMethod<[string], boolean>,
   'runDailyWeatherCapture' : ActorMethod<[], bigint>,
@@ -1324,9 +1625,35 @@ export interface ICSpicy {
   'searchVarieties' : ActorMethod<[string], Array<VarietyPublic>>,
   'seedDefaultRecipes' : ActorMethod<[], undefined>,
   'setCoopSeatPriceCents' : ActorMethod<[bigint], undefined>,
+  /**
+   * / Admin: update automatic fleet top-up policy.
+   */
+  'setFleetAutoTopUpPolicy' : ActorMethod<
+    [boolean, bigint, bigint, bigint],
+    undefined
+  >,
   'setForSale' : ActorMethod<[PlantId, boolean], undefined>,
   'setFrontendCanisterId' : ActorMethod<[string], undefined>,
   'setICPaySecretKey' : ActorMethod<[string], undefined>,
+  /**
+   * / Admin: update monthly LP fee → cycles configuration (toggle + pool IDs).
+   */
+  'setLpFeeCyclesConfig' : ActorMethod<
+    [
+      boolean,
+      [] | [string],
+      [] | [string],
+      [] | [bigint],
+      boolean,
+      [] | [string],
+      bigint,
+    ],
+    undefined
+  >,
+  'setMyWeatherLocation' : ActorMethod<
+    [WeatherLocationKind, [] | [string], number, number, string],
+    WeatherLocation
+  >,
   'setPayPalCredentials' : ActorMethod<[string, string, boolean], undefined>,
   'setPlantNFT' : ActorMethod<[PlantId, string], undefined>,
   'setProfileBanner' : ActorMethod<[string], undefined>,
@@ -1450,7 +1777,54 @@ export interface ICSpicy {
     [TrayId, bigint, [] | [number], [] | [string]],
     bigint
   >,
+  'weatherAdeckTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
+  'weatherAirQualityTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
+  'weatherEnsembleTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
+  'weatherGeocodeTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
+  'weatherModelTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
+  'weatherNoaaForecastTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
+  'weatherNoaaOutlookTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
+  'weatherNoaaPastTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
+  'weatherNwsAlertsTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
+  'weatherOutlookTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
   'weatherProvenanceTransform' : ActorMethod<
+    [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
+    http_request_result
+  >,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
+  'weatherTropicalTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
   >,
@@ -1521,6 +1895,46 @@ export interface LoadStaticMetadataResult {
   'errors' : Array<[bigint, string]>,
   'loaded' : bigint,
 }
+export interface LpFeeCyclesConfigView {
+  'enabledAt' : bigint,
+  'lastRunAt' : bigint,
+  'icpIsToken0' : boolean,
+  'positionId' : [] | [bigint],
+  'intervalDays' : bigint,
+  'swapPoolId' : [] | [string],
+  'enabled' : boolean,
+  'positionOwnerPrincipal' : [] | [string],
+  'spicyLedgerId' : [] | [string],
+}
+export interface LpFeeCyclesDryRun {
+  'spicyOwedE8s' : bigint,
+  'backendPrincipal' : string,
+  'icpOwedE8s' : bigint,
+  'ownerMatchesBackend' : boolean,
+  'positionFound' : boolean,
+  'configured' : boolean,
+  'message' : string,
+}
+export interface LpFeeCyclesEvent {
+  'ts' : Time,
+  'icpHarvestedE8s' : bigint,
+  'trigger' : string,
+  'spicyFeesSkippedE8s' : bigint,
+  'message' : string,
+  'totalCyclesMinted' : bigint,
+  'canistersToppedUp' : bigint,
+  'details' : Array<CanisterFundingDetail>,
+  'success' : boolean,
+}
+export interface LpFeeCyclesRunResult {
+  'icpHarvestedE8s' : bigint,
+  'spicyFeesSkippedE8s' : bigint,
+  'message' : string,
+  'totalCyclesMinted' : bigint,
+  'canistersToppedUp' : bigint,
+  'details' : Array<CanisterFundingDetail>,
+  'success' : boolean,
+}
 export interface MembershipNFTPublic {
   'id' : bigint,
   'nft_id' : [] | [string],
@@ -1547,6 +1961,28 @@ export interface MintRWAProvenanceInput {
   'artwork_layer_id' : ArtworkLayerId,
   'rarity_tier' : bigint,
   'plant_id' : PlantId,
+}
+export interface ModelDay {
+  'precipInches' : number,
+  'date' : string,
+  'tempHighF' : number,
+}
+export interface ModelGustDay { 'date' : string, 'windGustsMph' : number }
+export interface ModelGustSpread {
+  'gem' : Array<ModelGustDay>,
+  'gfs' : Array<ModelGustDay>,
+  'gridKey' : string,
+  'fetchedAt' : bigint,
+  'icon' : Array<ModelGustDay>,
+  'ecmwf' : Array<ModelGustDay>,
+}
+export interface ModelSpread {
+  'gem' : Array<ModelDay>,
+  'gfs' : Array<ModelDay>,
+  'icon' : Array<ModelDay>,
+  'ecmwf' : Array<ModelDay>,
+  'agreementScore' : bigint,
+  'ensemble' : [] | [EnsemblePlume],
 }
 export type NFTStandard = { 'EXT' : null } |
   { 'Hedera' : null } |
@@ -1666,6 +2102,20 @@ export interface PlantAwaitingNft {
   'tray_id' : [] | [TrayId],
   'variety' : string,
   'plant_id' : PlantId,
+}
+export interface PlantClaimRequestPublic {
+  'status' : ClaimRequestStatus,
+  'requester' : Principal,
+  'note' : [] | [string],
+  'nftTokenId' : bigint,
+  'plantId' : PlantId,
+  'requestedAt' : Timestamp,
+}
+export interface PlantClaimStatusPublic {
+  'pendingCount' : bigint,
+  'myStatus' : [] | [ClaimRequestStatus],
+  'sold' : boolean,
+  'hasNft' : boolean,
 }
 export interface PlantCountStats {
   'total' : bigint,
@@ -1859,6 +2309,9 @@ export interface PostWithComments {
   'has_liked' : boolean,
   'comments' : Array<CommentPublic>,
 }
+export type ProbeKind = { 'managementStatus' : null } |
+  { 'local' : null } |
+  { 'remoteHealthQuery' : null };
 export type ProductCategory = { 'Spice' : null } |
   { 'Seedling' : null } |
   { 'GardenInputs' : null } |
@@ -2236,6 +2689,14 @@ export interface StoredFile {
   'filename' : string,
   'uploaded_at' : Timestamp,
 }
+export type StormBasin = { 'eastPacific' : null } |
+  { 'atlantic' : null };
+export interface StormTrackPoint {
+  'lat' : number,
+  'lng' : number,
+  'maxWindKt' : bigint,
+  'timeUtc' : string,
+}
 export interface StructurePlacement {
   'x' : number,
   'y' : number,
@@ -2277,6 +2738,44 @@ export interface SubmitScoreOk {
   'bestScore' : bigint,
   'totalPlays' : bigint,
   'isNewBest' : boolean,
+}
+export interface SwarmAutoTopUpPolicy {
+  'thresholdCycles' : bigint,
+  'icpPerTopUpE8s' : bigint,
+  'enabled' : boolean,
+  'maxIcpPerDayE8s' : bigint,
+}
+export interface SwarmCanisterInput {
+  'thresholdCycles' : bigint,
+  'kind' : ProbeKind,
+  'name' : string,
+  'agentKind' : [] | [string],
+  'icpPerTopUpE8s' : bigint,
+  'enabled' : boolean,
+  'notes' : string,
+  'category' : FleetTargetCategory,
+  'autoTopUpEnabled' : boolean,
+  'canisterId' : string,
+  'maxIcpPerDayE8s' : bigint,
+}
+export interface SwarmCanisterStatus {
+  'spentTodayIcpE8s' : bigint,
+  'target' : SwarmCanisterTarget,
+}
+export interface SwarmCanisterTarget {
+  'thresholdCycles' : bigint,
+  'kind' : ProbeKind,
+  'name' : string,
+  'createdAt' : bigint,
+  'agentKind' : [] | [string],
+  'icpPerTopUpE8s' : bigint,
+  'enabled' : boolean,
+  'updatedAt' : bigint,
+  'notes' : string,
+  'category' : FleetTargetCategory,
+  'autoTopUpEnabled' : boolean,
+  'canisterId' : string,
+  'maxIcpPerDayE8s' : bigint,
 }
 export type Time = bigint;
 export type Timestamp = bigint;
@@ -2386,6 +2885,38 @@ export type TreasuryTxType = { 'Deposit' : null } |
   { 'Withdrawal' : null } |
   { 'OfferSettlement' : null } |
   { 'Transfer' : null };
+export interface TropicalAdeck {
+  'gz' : Uint8Array | number[],
+  'fetchedAt' : bigint,
+  'stormName' : string,
+  'wallet' : string,
+}
+export interface TropicalStorm {
+  'id' : string,
+  'lat' : number,
+  'lng' : number,
+  'track' : Array<StormTrackPoint>,
+  'name' : string,
+  'validAt' : bigint,
+  'movementText' : string,
+  'maxWindKt' : bigint,
+  'forecastTrack' : Array<ForecastPoint>,
+  'advisoryNum' : bigint,
+  'basin' : StormBasin,
+  'movementDirDeg' : bigint,
+  'movementSpeedKt' : bigint,
+  'pressureMb' : bigint,
+  'classification' : string,
+}
+export interface TropicalSummary {
+  'storms' : Array<TropicalStorm>,
+  'dataSource' : string,
+  'fetchedAt' : bigint,
+  'aceStats' : AceSeasonStats,
+  'developmentOutlooks' : Array<DevelopmentOutlook>,
+  'disclaimer' : string,
+  'seasonActive' : boolean,
+}
 export interface UpdateCellDataInput {
   'origin' : [] | [string],
   'common_name' : [] | [string],
@@ -2475,6 +3006,7 @@ export interface UserProfilePublic {
   'location' : [] | [string],
 }
 export type UserRole = { 'admin' : null } |
+  { 'agent' : null } |
   { 'user' : null } |
   { 'guest' : null };
 export type ValidationSeverity = { 'Error' : null } |
@@ -2542,6 +3074,51 @@ export interface WateringEntry {
   'timestamp' : Timestamp,
   'phLevel' : [] | [number],
 }
+export interface WeatherAlert {
+  'id' : bigint,
+  'gridKey' : string,
+  'title' : string,
+  'expiresAt' : bigint,
+  'body' : string,
+  'kind' : AlertKind,
+  'createdAt' : bigint,
+  'severity' : { 'warning' : null } |
+    { 'info' : null } |
+    { 'watch' : null },
+}
+export interface WeatherBrief {
+  'gridKey' : string,
+  'generatedAt' : bigint,
+  'text' : string,
+  'almanacDateKey' : [] | [string],
+  'tropicalFetchedAt' : [] | [bigint],
+  'outlookFetchedAt' : bigint,
+}
+export type WeatherFreshnessStatus = { 'fresh' : null } |
+  { 'error' : null } |
+  { 'stale' : null };
+export interface WeatherLocation {
+  'lat' : number,
+  'lng' : number,
+  'zip' : [] | [string],
+  'kind' : WeatherLocationKind,
+  'displayLabel' : string,
+  'updatedAt' : bigint,
+}
+export type WeatherLocationKind = { 'zip' : null } |
+  { 'coords' : null };
+export interface WeatherOutlook {
+  'lat' : number,
+  'lng' : number,
+  'gridKey' : string,
+  'fetchedAt' : bigint,
+  'source' : string,
+  'stale' : boolean,
+  'models' : [] | [ModelSpread],
+  'current' : CurrentConditions,
+  'daily' : Array<DailyOutlook>,
+  'airQuality' : [] | [AirQuality],
+}
 export interface WeatherRecord {
   'id' : WeatherRecordId,
   'latitude' : number,
@@ -2565,6 +3142,25 @@ export interface WeatherSnapshot {
   'humidity' : number,
   'tempLowF' : number,
 }
+export type WeatherSourceKind = { 'nws' : null } |
+  { 'model' : null } |
+  { 'geocode' : null } |
+  { 'tropical' : null } |
+  { 'ensemble' : null } |
+  { 'outlook' : null } |
+  { 'airQuality' : null } |
+  { 'almanac' : null };
+export interface WeatherSourceLedgerEntry {
+  'id' : bigint,
+  'status' : WeatherFreshnessStatus,
+  'gridKey' : [] | [string],
+  'httpStatus' : bigint,
+  'parserVersion' : string,
+  'fetchedAt' : bigint,
+  'kind' : WeatherSourceKind,
+  'sourceUrl' : string,
+  'bodyDigest' : string,
+}
 export interface YieldEstimate {
   'estimatedLbsMax' : number,
   'estimatedLbsMin' : number,
@@ -2572,6 +3168,13 @@ export interface YieldEstimate {
   'companionBonusPct' : number,
   'notes' : string,
   'totalPlantCount' : bigint,
+}
+export interface ZipCoord {
+  'lat' : number,
+  'lng' : number,
+  'zip' : string,
+  'fetchedAt' : bigint,
+  'displayLabel' : string,
 }
 export interface ZoneCalendar {
   'zone_label' : string,

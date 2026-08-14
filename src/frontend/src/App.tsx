@@ -6,7 +6,7 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
-import { Suspense, lazy, useEffect, useRef } from "react";
+import { Suspense, lazy, useEffect, useRef, type ReactNode } from "react";
 import { toast } from "sonner";
 import { ActorReadyProvider } from "./components/ActorReadyProvider";
 import { Layout } from "./components/Layout";
@@ -86,10 +86,12 @@ const CommunityPage = lazy(() => import("./pages/Community"));
 const CommunityPostPage = lazy(() => import("./pages/CommunityPost"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfile"));
 const AdminPage = lazy(() => import("./pages/Admin"));
+const AdminNfcAssignPage = lazy(() => import("./pages/AdminNfcAssign"));
 const CheckoutPage = lazy(() => import("./pages/Checkout"));
 const OrdersPage = lazy(() => import("./pages/Orders"));
 const WalletPage = lazy(() => import("./pages/Wallet"));
 const NIMSPage = lazy(() => import("./pages/NIMS"));
+const WeatherDeskPage = lazy(() => import("./pages/WeatherDesk"));
 const CookBookPage = lazy(() => import("./pages/CookBook"));
 const VarietyGuidePage = lazy(() => import("./pages/VarietyGuide"));
 const GuidesPage = lazy(() => import("./pages/Guides"));
@@ -121,8 +123,12 @@ const MasterclassLessonPage = lazy(
 const MasterclassQuizPage = lazy(
   () => import("./pages/masterclass/QuizPage"),
 );
+const NewsletterConfirmPage = lazy(() => import("./pages/NewsletterConfirm"));
+const NewsletterUnsubscribePage = lazy(
+  () => import("./pages/NewsletterUnsubscribe"),
+);
 
-// Admin guard component — shows a clear Access Denied message for non-admins.
+// Admin guard component
 // The tab is always visible in the nav; the gate lives here inside the route.
 //
 // CHROME FIX: After II full-page redirect, the sequence is:
@@ -130,7 +136,7 @@ const MasterclassQuizPage = lazy(
 //
 // We must NOT show "Access Denied" until BOTH isInitializing=false AND actorReady=true.
 // Before that, we show a loading spinner.
-function AdminGuard() {
+function AdminGate({ children }: { children: ReactNode }) {
   const { actorReady, probeError } = useActorReady();
   const { isAuthenticated, isInitializing, principal } = useAuth();
   const { isOisyConnected, isOisyInitializing, oisyPrincipal } = useOisyWallet();
@@ -291,11 +297,27 @@ function AdminGuard() {
     );
   }
 
-  // Case 7: Confirmed admin + actorReady — render the admin page.
+  // Case 7: Confirmed admin + actorReady — render protected admin content.
   return (
     <Suspense fallback={<PageLoader />}>
-      <AdminPage />
+      {children}
     </Suspense>
+  );
+}
+
+function AdminGuard() {
+  return (
+    <AdminGate>
+      <AdminPage />
+    </AdminGate>
+  );
+}
+
+function AdminNfcAssignGuard() {
+  return (
+    <AdminGate>
+      <AdminNfcAssignPage />
+    </AdminGate>
   );
 }
 
@@ -378,6 +400,12 @@ const adminRoute = createRoute({
   component: AdminGuard,
 });
 
+const adminNfcAssignRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin/nfc-assign",
+  component: AdminNfcAssignGuard,
+});
+
 const checkoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/checkout",
@@ -400,6 +428,12 @@ const nimsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/nims",
   component: NIMSPage,
+});
+
+const weatherRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/weather",
+  component: WeatherDeskPage,
 });
 
 const cookbookDetailRoute = createRoute({
@@ -547,6 +581,24 @@ const masterclassQuizRoute = createRoute({
   component: MasterclassQuizPage,
 });
 
+const newsletterConfirmRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/newsletter/confirm",
+  component: NewsletterConfirmPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    token: typeof search.token === "string" ? search.token : undefined,
+  }),
+});
+
+const newsletterUnsubscribeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/newsletter/unsubscribe",
+  component: NewsletterUnsubscribePage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    token: typeof search.token === "string" ? search.token : undefined,
+  }),
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   marketplaceRoute,
@@ -560,10 +612,12 @@ const routeTree = rootRoute.addChildren([
   communityPostRoute,
   communityRoute,
   adminRoute,
+  adminNfcAssignRoute,
   checkoutRoute,
   ordersRoute,
   walletRoute,
   nimsRoute,
+  weatherRoute,
   varietyGuideRoute,
   guidesRoute,
   growersRoute,
@@ -585,6 +639,8 @@ const routeTree = rootRoute.addChildren([
   claimRoute,
   nftDetailRoute,
   tiersRoute,
+  newsletterConfirmRoute,
+  newsletterUnsubscribeRoute,
 ]);
 
 const router = createRouter({ routeTree });

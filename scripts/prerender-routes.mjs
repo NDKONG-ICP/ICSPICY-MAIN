@@ -558,6 +558,7 @@ const NAV_LINKS = `<nav><ul>
       <li><a href="/marketplace">Shop Pepper Plants</a></li>
       <li><a href="/cookbook">Natural Farming CookBook</a></li>
       <li><a href="/nims">NIMS Plant Tracker</a></li>
+      <li><a href="/weather">Florida Weather Desk</a></li>
       <li><a href="/garden">3D Garden Designer</a></li>
     </ul></nav>`;
 

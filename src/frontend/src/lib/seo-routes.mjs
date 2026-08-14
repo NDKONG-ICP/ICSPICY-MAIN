@@ -174,6 +174,28 @@ export const STATIC_ROUTE_SEO = [
     ],
   },
   {
+    path: "/weather",
+    title:
+      "Florida Grower Weather Desk — On-Chain Forecast | IC SPICY",
+    description:
+      "Free on-chain Florida weather for growers. 7-day outlook, GFS vs ECMWF model comparison, and grower alerts — built after Hurricanes Charley and Ian. Powered by the Internet Computer.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: "IC SPICY Weather Desk",
+      url: "https://www.icspicy.app/weather",
+      applicationCategory: "WeatherApplication",
+      operatingSystem: "Web",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      description:
+        "On-chain Florida grower weather desk with 7-day outlook and model comparison.",
+    },
+    crawlParagraphs: [
+      "The IC SPICY Weather Desk is a free, on-chain Florida grower weather resource. It serves a 7-day outlook, GFS versus ECMWF model comparison, and grower alerts from canister HTTPS outcalls — no browser weather API in the critical path.",
+      "Built by a Port Charlotte nursery that took direct hits from Hurricanes Charley and Ian. Not a substitute for official NWS or NHC forecasts.",
+    ],
+  },
+  {
     path: "/games",
     title: "Games | IC SPICY — Slice, Grow & Craft the Heat",
     description:
