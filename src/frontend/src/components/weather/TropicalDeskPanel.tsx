@@ -632,11 +632,15 @@ export function TropicalDeskPanel({
         })}
       </div>
 
-      <div
-        ref={mapRef}
-        className="h-80 w-full overflow-hidden rounded-xl border border-white/10 sm:h-96"
-        aria-label="Tropical systems map"
-      />
+      {/* Fixed-height wrapper: global CSS forces .leaflet-container to
+          height:100% !important, so the map div must not carry the size. */}
+      <div className="h-80 w-full overflow-hidden rounded-xl border border-white/10 sm:h-96">
+        <div
+          ref={mapRef}
+          className="h-full w-full"
+          aria-label="Tropical systems map"
+        />
+      </div>
 
       {(toggles.alerts && activeAlertCodes.length > 0) ||
       (toggles.spaghetti && namedModels.length > 0) ? (

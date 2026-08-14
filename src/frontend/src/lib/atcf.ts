@@ -151,6 +151,13 @@ export function parseAdeckGz(
     if (!taus) continue;
     const points = [...taus.values()].sort((a, b) => a.tau - b.tau);
     if (points.length < 2) continue;
+    // Unwrap antimeridian crossings so Leaflet doesn't draw a line
+    // across the whole world (e.g. Central Pacific storms near ±180°).
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1].lng;
+      while (points[i].lng - prev > 180) points[i].lng -= 360;
+      while (points[i].lng - prev < -180) points[i].lng += 360;
+    }
     const isMember = ENSEMBLE_TECH.test(tech);
     const style = ADECK_MODEL_STYLES[tech];
     models.push({
