@@ -14,17 +14,25 @@
     },
     "frontend": {
       "type": "assets",
-      "source": ["src/frontend/dist"],
-      "dependencies": ["backend"]
+      "source": [
+        "src/frontend/dist"
+      ],
+      "dependencies": [
+        "backend"
+      ]
     },
     "nft_assets": {
       "type": "assets",
-      "source": ["nft_assets_src"],
+      "source": [
+        "nft_assets_src"
+      ],
       "build": []
     },
     "uploads": {
       "type": "assets",
-      "source": ["dist/uploads"],
+      "source": [
+        "dist/uploads"
+      ],
       "build": []
     },
     "llm": {
@@ -34,12 +42,19 @@
     "docs_backend": {
       "type": "motoko",
       "main": "src/docs_backend/main.mo",
-      "dependencies": ["llm"]
+      "dependencies": [
+        "llm"
+      ]
     },
     "docs_frontend": {
       "type": "assets",
-      "source": ["src/docs_frontend/dist"],
-      "dependencies": ["docs_backend", "spicy_ai_canister"]
+      "source": [
+        "src/docs_frontend/dist"
+      ],
+      "dependencies": [
+        "docs_backend",
+        "spicy_ai_canister"
+      ]
     },
     "llama_cpp": {
       "type": "custom",
@@ -87,6 +102,11 @@
     "newsletter_canister": {
       "type": "motoko",
       "main": "src/newsletter_canister/main.mo",
+      "wasm_memory_persistence": "keep"
+    },
+    "spicy_policy_canister": {
+      "type": "motoko",
+      "main": "src/spicy_policy_canister/main.mo",
       "wasm_memory_persistence": "keep"
     }
   },

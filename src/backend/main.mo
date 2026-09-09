@@ -1549,6 +1549,25 @@ shared(msg) persistent actor class ICSpicy() = Self {
     Prim.cyclesBalance();
   };
 
+  /// Admin-only: transfer cycles from this canister to another fleet canister
+  /// via the management canister. Capped at 2T per call so a single mistaken
+  /// call cannot drain the backend below operational levels.
+  public shared ({ caller }) func adminDepositCycles(target : Principal, amount : Nat) : async () {
+    AccessControl.requireAdmin(accessControlState, caller);
+    if (amount > 2_000_000_000_000) {
+      Runtime.trap("adminDepositCycles: amount exceeds 2T per-call cap");
+    };
+    let ic : actor { deposit_cycles : shared { canister_id : Principal } -> async () } =
+      actor ("aaaaa-aa");
+    await (with cycles = amount) ic.deposit_cycles({ canister_id = target });
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = Time.now();
+      admin = caller;
+      action = "cycles_deposited";
+      detail = "target=" # Principal.toText(target) # " amount=" # Nat.toText(amount);
+    });
+  };
+
   public type FleetHealthReport = {
     canisters : [CanisterHealth.FleetEntry];
     appBurnPerDay : Nat;

@@ -51,6 +51,7 @@ Phase 6 is correctly described as **extraction of other concerns out of backend*
 | `community_canister` | Posts, recipes, profiles | Extracted from backend Phase 6 |
 | `nims_canister` | Plants, trays, lifecycle, weather | Extracted from backend Phase 6 |
 | `spicy_ai_canister` | Chatbot via `mo:llm` | New canister Phase 6.5 |
+| `spicy_policy_canister` | SONS CustomCall governance target — DAO-controlled buyback policy params | **Deployed 2026-09-09: `xug4g-6aaaa-aaaao-bbjwq-cai`**; treasury_canister reads policy from it |
 
 **SPICY token flow note:** SPICY tokens don't exist until Phase 8 LGE. By then `treasury_canister` already exists (created Phase 6). The LGE allocation goes directly to `treasury_canister` — no intermediate hop through `backend`.
 
@@ -312,8 +313,72 @@ These are the only IC SPICY features gated on SPICY token balance:
 ### What the canister does NOT integrate
 - OHSHII governance proposal queries
 - OHSHII locker voting power queries
-- Cross-canister governance execution
-- DAO-controlled parameter pushes
+- Embedded DAO UI or voting-power display
+
+### SONS CustomCall governance target — `spicy_policy_canister` (LOCKED IN 2026-09, agreed with OHSHII dev)
+
+The one sanctioned path for DAO-controlled parameters is the dedicated
+`spicy_policy_canister`, targeted by the per-campaign **SONS** governance
+canister via CustomCall proposals. The main `backend` is NEVER a CustomCall
+target (we upgrade it too often — the module hash is pinned at proposal
+creation and re-verified at dispatch, so any upgrade kills open proposals).
+
+How SONS CustomCall works (their side, verified with OHSHII dev):
+- At proposal creation, SONS fetches our `candid:service` metadata, encodes the
+  proposer's Candid textual args against the real method signature, and pins
+  `{ target_module_hash, payload_sha256, render_normalized }` into the proposal.
+- The render voters read is derived from OUR interface by THEIR canister. Do
+  NOT ship `validate_*` render methods — SONS will not call them, and a
+  target-supplied render is the trust hole the pin removes.
+- No proposal id in the args — structurally impossible (blob frozen before id
+  assignment). Vote↔execution link is pull-based: SONS stores the dispatched
+  `method_args` blob on the proposal (`get_proposal_by_id`), which anyone can
+  decode against our published candid and compare to our decoded-args audit
+  log. Decoding is deterministic; never re-encode for comparison (Candid
+  encoding is not canonical).
+- Outcome policy: a reply (even a business `#err`) = Executed; ambiguous
+  (timeout/SysUnknown) = Executed + `outcome_unknown`; only a clean trap =
+  Failed. Therefore: **trap on invariant violations** (stale version, cap
+  exceeded, wrong caller) so bad proposals read as Failed, not
+  Executed-but-declined.
+- CustomCall is always Critical tier: 7-day window, critical quorum,
+  guardian-vetoable. Calls carry 0 cycles, 20 s bounded wait.
+- Reserved targets (typed paths, not CustomCall): management canister, SONS
+  itself, ICP/cycles ledgers, the campaign's own token ledger + index.
+
+Our canister's contract (all implemented in `src/spicy_policy_canister/main.mo`):
+- **Governance gate:** every governed method requires
+  `caller == governancePrincipal` — a stable var set post-LGE via admin-only
+  `setGovernancePrincipal` (per-campaign SONS principal is created dynamically
+  at launch; never compile-time).
+- **Version guard:** every governed method takes `expected_version : Nat` and
+  traps unless it equals `configVersion + 1`. This (a) appears verbatim in the
+  voter-facing render as a correlator, (b) makes re-fires after
+  `outcome_unknown` a harmless refusal, (c) serializes concurrent proposals.
+  Proposers read `getConfigVersion()` and propose `current + 1`.
+- **Fast + synchronous:** governed methods are pure parameter setters, no
+  `await`s. Execution (the actual buyback timer, §8) lives in
+  `treasury_canister` (Phase 6/8), which READS policy from this canister.
+- **Hard caps in code:** buyback ≤ 500 bps, slippage ≤ 500 bps. Raising a cap
+  requires a canister upgrade (code-review-visible, fails open proposals).
+- **Public audit log:** `(caller, method, decoded params, timestamp)` per
+  accepted call, queryable by anyone (`getGovernanceAuditLog`).
+- **candid:service published** as public metadata (dfx default for Motoko;
+  verify with `dfx canister --network ic metadata spicy_policy_canister candid:service`).
+
+Launch runbook (Phase 8, at/after LGE):
+1. `dfx canister --network ic update-settings spicy_policy_canister --add-controller <sons_governance>`
+   (co-controllership confirmed OK — their check is membership, not exclusivity).
+2. `setGovernancePrincipal(?<sons_governance>)` as admin.
+3. UPGRADE FREEZE RULE: before ANY upgrade of `spicy_policy_canister`, check
+   SONS `get_proposals_by_category_list(variant { CustomCall }, …)` for open
+   proposals targeting us; upgrading kills them (module-hash pin).
+4. Standing disclosure line in every proposal description we author: "IC SPICY
+   retains co-controllership of this canister; the approved call is guaranteed
+   against the pinned code at dispatch time, not indefinitely."
+5. Dry-run proposals with `custom_call_preview` (rate-limited 60/hr per SONS).
+6. Proposal creation costs a fee (`get_proposal_creation_fee`); voting power
+   comes from the campaign token.
 
 If future needs require DAO queries (Phase 9+), revisit the principal-linking design.
 

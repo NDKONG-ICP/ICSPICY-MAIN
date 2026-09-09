@@ -1801,6 +1801,10 @@ type ICSpicy =
    adminDeletePost: (post_id: PostId) -> (bool);
    adminDeleteVarietyGuide: (varietyId: nat, zone: text) -> (bool);
    adminDeleteVerifiedGrower: (id: text) -> ();
+   /// Admin-only: transfer cycles from this canister to another fleet canister
+   /// via the management canister. Capped at 2T per call so a single mistaken
+   /// call cannot drain the backend below operational levels.
+   adminDepositCycles: (target: principal, amount: nat) -> ();
    adminGetGameStats: (gameId: text, "principal": principal) ->
     (opt GamePlayerStatsPublic) query;
    adminGrantCoopSeat: (tokenId: nat, recipient: principal) ->

@@ -18,6 +18,9 @@ main = "src/spicy_ai_canister/main.mo"
 [canisters.agent_hub]
 main = "src/agent_hub/main.mo"
 
+[canisters.spicy_policy_canister]
+main = "src/spicy_policy_canister/main.mo"
+
 [toolchain]
 moc = "1.3.0"
 lintoko = "0.7.0"

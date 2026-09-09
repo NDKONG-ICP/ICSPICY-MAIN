@@ -717,6 +717,12 @@ export interface ICSpicy {
   'adminDeletePost' : ActorMethod<[PostId], boolean>,
   'adminDeleteVarietyGuide' : ActorMethod<[bigint, string], boolean>,
   'adminDeleteVerifiedGrower' : ActorMethod<[string], undefined>,
+  /**
+   * / Admin-only: transfer cycles from this canister to another fleet canister
+   * / via the management canister. Capped at 2T per call so a single mistaken
+   * / call cannot drain the backend below operational levels.
+   */
+  'adminDepositCycles' : ActorMethod<[Principal, bigint], undefined>,
   'adminGetGameStats' : ActorMethod<
     [string, Principal],
     [] | [GamePlayerStatsPublic]

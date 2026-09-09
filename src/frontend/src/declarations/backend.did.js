@@ -2287,6 +2287,7 @@ export const idlFactory = ({ IDL }) => {
     'adminDeletePost' : IDL.Func([PostId], [IDL.Bool], []),
     'adminDeleteVarietyGuide' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
     'adminDeleteVerifiedGrower' : IDL.Func([IDL.Text], [], []),
+    'adminDepositCycles' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
     'adminGetGameStats' : IDL.Func(
         [IDL.Text, IDL.Principal],
         [IDL.Opt(GamePlayerStatsPublic)],

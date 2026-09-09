@@ -312,6 +312,13 @@ Smoke test for Phase 4 to verify guard works:
 - **Two interactive prompts require two `yes` answers.** Upgraded backends with both Candid and stable-interface warnings show two separate prompts. Workaround: `TERM=xterm-256color dfx deploy --network ic backend <<< $'yes\nyes\n'`
 - **Frontend canister ID: `7rukv-hqaaa-aaaao-ba6ma-cai`.** Deployed 2026-05-16. `ii_derivation_origin` set to `https://7rukv-hqaaa-aaaao-ba6ma-cai.icp0.io`. ICPay publishable key embedded in build.
 
+### Phase 8 prep — spicy_policy_canister (2026-09)
+
+- **`spicy_policy_canister` (`xug4g-6aaaa-aaaao-bbjwq-cai`) is the only SONS CustomCall target.** Never target `backend` with governance proposals — SONS pins the module hash at proposal creation and any upgrade kills open proposals. UPGRADE FREEZE: before upgrading `spicy_policy_canister`, check SONS for open CustomCall proposals targeting it.
+- **Canister creation on our subnet costs 0.5T cycles** (not 0.1T). `--with-cycles 550000000000` left only ~49B after the creation fee — install then failed with IC0207 needing ~277B more. Budget ≥ 1.3T when creating a new mainnet canister (0.5T fee + ~0.3T install/reserve + runway).
+- **`adminDepositCycles(target, amount)` on backend** (admin-only, 2T per-call cap, audit-logged) transfers cycles to fleet canisters via the management canister's `deposit_cycles`. Use this instead of buying ICP when the backend has surplus. Syntax note: `await (with cycles = amount) ic.deposit_cycles({ canister_id })` works on moc 1.3.
+- **Cycles wallet (`daf6l`) is low (~0.16T)** after the policy-canister creation. Top up before the next canister creation.
+
 ## Last updated
 - Initial version: written for Claude Code in Cursor workflow, post-design-session
 - Owner: project lead — keep this file in sync with actual workflow as it evolves

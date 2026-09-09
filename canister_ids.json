@@ -29,6 +29,9 @@
   "spicy_ai_canister": {
     "ic": "pd5wn-sqaaa-aaaao-ba5ca-cai"
   },
+  "spicy_policy_canister": {
+    "ic": "xug4g-6aaaa-aaaao-bbjwq-cai"
+  },
   "uploads": {
     "ic": "r53pg-maaaa-aaaao-ba7na-cai"
   },
