@@ -58,6 +58,16 @@ BLOCKS = [
         ],
     ),
     Block(
+        "Live Mainnet Canister IDs",
+        [
+            "All canisters are deployed. Paste these into worker/.env:",
+            "AGENT_HUB_CANISTER_ID=swzzi-lyaaa-aaaao-bbfha-cai",
+            "BACKEND_CANISTER_ID=ghxmp-xiaaa-aaaao-ba4sq-cai",
+            "PUBLIC_SITE_URL=https://7rukv-hqaaa-aaaao-ba6ma-cai.icp0.io",
+            "Related fleet: newsletter qzcaz-uaaaa-aaaao-bbflq-cai, weather concierge qqblf-ciaaa-aaaao-bbfka-cai, weather sentinel qxanr-pqaaa-aaaao-bbfkq-cai, fleet cycles ops q6dgn-zyaaa-aaaao-bbfla-cai.",
+        ],
+    ),
+    Block(
         "Step 1 — Generate Worker Identity",
         [
             "cd worker && cp .env.example .env",
@@ -156,7 +166,10 @@ BLOCKS = [
 
 def strip_md(text: str) -> str:
     text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
-    return text.replace("->", "->")
+    # Helvetica Type1 + latin-1 can't encode these; swap for ASCII.
+    for src, dst in (("\u2192", "->"), ("\u2014", "-"), ("\u2013", "-"), ("\u2018", "'"), ("\u2019", "'"), ("\u201c", '"'), ("\u201d", '"'), ("\u2026", "...")):
+        text = text.replace(src, dst)
+    return text
 
 
 def esc_pdf(text: str) -> str:

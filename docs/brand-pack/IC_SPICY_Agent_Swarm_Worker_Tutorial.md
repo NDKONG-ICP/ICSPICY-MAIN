@@ -28,6 +28,18 @@ Admin access to icspicy.app Admin → Agent Swarm tab.
 
 ~3T cycles for agent_hub canister on mainnet (one-time create).
 
+## Live Mainnet Canister IDs
+
+All canisters are deployed. Paste these into worker/.env:
+
+AGENT_HUB_CANISTER_ID=swzzi-lyaaa-aaaao-bbfha-cai
+
+BACKEND_CANISTER_ID=ghxmp-xiaaa-aaaao-ba4sq-cai
+
+PUBLIC_SITE_URL=https://7rukv-hqaaa-aaaao-ba6ma-cai.icp0.io
+
+Related fleet: newsletter qzcaz-uaaaa-aaaao-bbflq-cai, weather concierge qqblf-ciaaa-aaaao-bbfka-cai, weather sentinel qxanr-pqaaa-aaaao-bbfkq-cai, fleet cycles ops q6dgn-zyaaa-aaaao-bbfla-cai.
+
 ## Step 1 — Generate Worker Identity
 
 - cd worker && cp .env.example .env
