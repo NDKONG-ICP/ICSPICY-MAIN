@@ -63,6 +63,26 @@ dfx deploy --network local backend
 See `AGENTS.md` for the full agent/contributor workflow and hard-won
 operational learnings, and `PROJECT_CONTEXT.md` for architectural decisions.
 
+## How we built it
+
+Deep-dive references for the parts people ask about most:
+
+- **[ICRC-7 NFT architecture](docs/icrc7-nft-architecture-explainer.md)** — how
+  the 8,888-token collection was launched: canister layout, deploy order,
+  `initializeNFTPool` minting, metadata seeding from JSON, the token-ID range
+  scheme (collection / grower provenance / soulbound badges), image serving,
+  and a "starting fresh" checklist. Written for developers coming from an
+  ERC-721 / IPFS mental model.
+- **[NIMS lifecycle provenance](docs/nims-guide.md)** — how physical plants are
+  tracked from seed tray to sale, and how lifecycle events (transplants,
+  feedings, weather snapshots, photos) become on-chain provenance metadata
+  bound to each NFT.
+- **[SpicyAi dual-model architecture](docs/spicyai-architecture.md)** — a
+  grounded AI assistant running on the IC: a fast path via DFINITY's LLM
+  canister (Llama 4 Scout) and a fully on-chain path running DeepSeek-R1-Distill-Qwen-1.5B
+  inside ONICAI's llama_cpp canister, both grounded by BM25 retrieval over an
+  on-chain knowledge base — grounding, not fine-tuning.
+
 ## Licensing
 
 This repository is dual-licensed:
