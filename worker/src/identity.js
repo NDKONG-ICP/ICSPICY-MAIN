@@ -10,12 +10,11 @@ import * as bip39 from "bip39";
  */
 export async function loadWorkerIdentity(mnemonic) {
   const words = mnemonic.trim().split(/\s+/);
-  if (!bip39.validateMnemonic(words.join(" "))) {
+  const phrase = words.join(" ");
+  if (!bip39.validateMnemonic(phrase)) {
     throw new Error("Invalid WORKER_MNEMONIC — must be valid BIP39");
   }
-  const seed = await bip39.mnemonicToSeed(words.join(" "));
-  const seed32 = seed.subarray(0, 32);
-  return Secp256k1KeyIdentity.fromSeed(seed32);
+  return Secp256k1KeyIdentity.fromSeedPhrase(phrase);
 }
 
 export function loadMnemonicFromEnv() {

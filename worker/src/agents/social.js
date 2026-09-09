@@ -15,7 +15,7 @@ export async function runSocialAgent(ctx, platformKey) {
 
   const [recipes, weather] = await Promise.all([
     backend.getFeaturedRecipes(1n),
-    backend.getWeatherBrief([null], [null]),
+    backend.getWeatherBrief([], []),
   ]);
   const recipe = recipes[0]?.title ?? "Natural Farming";
   const weatherNote = weather?.[0]?.text?.slice(0, 120) ?? "Zone 10a Florida";

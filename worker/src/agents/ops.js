@@ -36,7 +36,7 @@ export async function runFleetCyclesOps(ctx) {
 export async function runWeatherConcierge(ctx) {
   const { hub, backend, job, llm } = ctx;
   const [weather, tropical, recipes] = await Promise.all([
-    backend.getWeatherBrief([null], [null]),
+    backend.getWeatherBrief([], []),
     backend.getTropicalSummary(),
     backend.getFeaturedRecipes(1n),
   ]);
@@ -99,7 +99,7 @@ Never invent storms not in the brief. Max 900 words. Branded IC SPICY.`;
 export async function runWeatherSentinel(ctx) {
   const { hub, backend, job, llm } = ctx;
   const tropical = await backend.getTropicalSummary();
-  const weather = await backend.getWeatherBrief([null], [null]);
+  const weather = await backend.getWeatherBrief([], []);
   const text = weather?.[0]?.text ?? "";
   const summary = tropical?.[0];
   const tropText = tropicalToText(summary);

@@ -13,7 +13,7 @@ export async function runNewsletterAgent(ctx) {
   const [recipes, products, weather] = await Promise.all([
     backend.getFeaturedRecipes(3n),
     backend.listProducts(),
-    backend.getWeatherBrief([null], [null]),
+    backend.getWeatherBrief([], []),
   ]);
 
   const recipe = recipes[0];
