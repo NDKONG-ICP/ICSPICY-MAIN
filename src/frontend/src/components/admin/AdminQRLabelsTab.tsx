@@ -20,7 +20,9 @@ import type { _SERVICE } from "@/declarations/backend.did";
 import { useActorReady } from "@/hooks/useActorReady";
 import {
   type ClaimTokenAdminPublic,
+  useArmClaimToken,
   useClaimTokensAdmin,
+  useDisarmClaimToken,
   useGenerateClaimTokens,
   useRevokeClaimTokenAdmin,
 } from "@/hooks/useAdminShop";
@@ -35,6 +37,7 @@ import {
   Printer,
   QrCode,
   Search,
+  ShieldCheck,
   ShieldOff,
   Trash2,
 } from "lucide-react";
@@ -192,6 +195,8 @@ export function AdminQRLabelsTab(): ReactNode {
   const { data: tokensList = [], isLoading: tokensLoading } =
     useClaimTokensAdmin(tokenSearch);
   const revoke = useRevokeClaimTokenAdmin();
+  const armToken = useArmClaimToken();
+  const disarmToken = useDisarmClaimToken();
   const generateBatch = useGenerateClaimTokens();
 
   const parsedTray =
@@ -457,6 +462,26 @@ export function AdminQRLabelsTab(): ReactNode {
   };
 
   const handlePrint = () => window.print();
+
+  const handleArm = async (row: ClaimTokenAdminPublic) => {
+    try {
+      const res = await armToken.mutateAsync(row.token);
+      if (res.success) toast.success("Claim armed — redeemable for 72h.");
+      else toast.error(res.message);
+    } catch {
+      toast.error("Failed to arm claim token.");
+    }
+  };
+
+  const handleDisarm = async (row: ClaimTokenAdminPublic) => {
+    try {
+      const ok = await disarmToken.mutateAsync(row.token);
+      if (ok) toast.success("Claim disarmed.");
+      else toast.info("Token was not armed.");
+    } catch {
+      toast.error("Failed to disarm claim token.");
+    }
+  };
 
   const handleRevoke = async (row: ClaimTokenAdminPublic) => {
     if (!row.token) return;
@@ -731,7 +756,9 @@ export function AdminQRLabelsTab(): ReactNode {
               Backed by <span className="font-mono">listClaimTokensAdmin</span>;
               revoke with{" "}
               <span className="font-mono">revokeClaimTokenAdmin</span> when a
-              sticker is mis‑printed or compromised.
+              sticker is mis‑printed or compromised. Printed QR tags are
+              redeemable only while <em>armed</em> — arm at the point of sale
+              (72h window). Paid‑order pickup tokens arm automatically.
             </p>
           </header>
           <div className="relative w-full xs:w-auto min-w-[200px] sm:min-w-[280px] grow sm:grow-0">
@@ -789,6 +816,51 @@ export function AdminQRLabelsTab(): ReactNode {
                   >
                     {tbl.redeemed ? "Redeemed" : "Active"}
                   </Badge>
+                  {!tbl.redeemed && (
+                    <Badge
+                      variant={tbl.armed ? "default" : "outline"}
+                      className="text-[10px]"
+                    >
+                      {tbl.armed ? "Armed" : "Not armed"}
+                    </Badge>
+                  )}
+
+                  {!tbl.redeemed &&
+                    (tbl.armed ? (
+                      <Button
+                        variant="outline"
+                        disabled={disarmToken.isPending}
+                        size="sm"
+                        className="h-9 text-[11px] gap-2"
+                        type="button"
+                        onClick={() => void handleDisarm(tbl)}
+                        data-ocid="admin-qr-disarm-btn"
+                      >
+                        {disarmToken.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                        ) : (
+                          <ShieldOff className="w-4 h-4 shrink-0" />
+                        )}
+                        Disarm
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="default"
+                        disabled={armToken.isPending}
+                        size="sm"
+                        className="h-9 text-[11px] gap-2"
+                        type="button"
+                        onClick={() => void handleArm(tbl)}
+                        data-ocid="admin-qr-arm-btn"
+                      >
+                        {armToken.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                        ) : (
+                          <ShieldCheck className="w-4 h-4 shrink-0" />
+                        )}
+                        Arm
+                      </Button>
+                    ))}
 
                   <Button
                     variant="destructive"

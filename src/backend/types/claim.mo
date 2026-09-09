@@ -9,6 +9,16 @@ module {
     var redeemed : Bool;
   };
 
+  /// Arming record for QR claim tokens (side map — never add fields to NftClaimEntry,
+  /// its `var redeemed` makes the record type-invariant in stable memory).
+  /// A claim token is redeemable only while armed. Staff arm printed QR tags at the
+  /// point of sale (time-boxed window); paid-order pickup tokens are auto-armed at
+  /// payment settlement with no expiry (payment already proves entitlement).
+  public type ClaimArm = {
+    armedAt   : Int;
+    expiresAt : ?Int; // null = no expiry (paid orders)
+  };
+
   /// Admin-cosigned NFC / in-person sale — customer requests, nursery approves.
   public type ClaimRequestStatus = {
     #pending;

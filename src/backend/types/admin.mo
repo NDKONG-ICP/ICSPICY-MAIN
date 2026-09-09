@@ -42,6 +42,8 @@ module {
     token_id : Nat;
     plant_id : ?Common.PlantId;
     redeemed : Bool;
+    armed : Bool;
+    arm_expires_at : ?Int; // null while armed = no expiry (paid order)
   };
 
   public type Icrc7PoolStats = {

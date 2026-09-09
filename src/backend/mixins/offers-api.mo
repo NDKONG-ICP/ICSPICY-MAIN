@@ -62,7 +62,7 @@ mixin (
   public shared ({ caller }) func submitOffer(
     input : OfferTypes.SubmitOfferInput,
   ) : async OfferTypes.Offer {
-    if (caller.isAnonymous()) Runtime.trap("Anonymous callers cannot submit offers");
+    AccessControl.requireAuthenticated(caller);
     let oracleToken = offerTokenToOracle(input.offered_token);
     let icpEquiv = PriceOracleLib.toIcpEquivalent(priceOracleState, oracleToken, input.offered_amount);
     let seller = resolveSellerForNft(input.nft_id);
@@ -73,7 +73,7 @@ mixin (
   public shared ({ caller }) func counterOffer(
     input : OfferTypes.CounterOfferInput,
   ) : async OfferTypes.Offer {
-    if (caller.isAnonymous()) Runtime.trap("Anonymous callers cannot counter offers");
+    AccessControl.requireAuthenticated(caller);
     let oracleToken = offerTokenToOracle(input.counter_token);
     let icpEquiv = PriceOracleLib.toIcpEquivalent(priceOracleState, oracleToken, input.counter_amount);
     OffersLib.counterOffer(offers, caller, input, icpEquiv, Time.now());
@@ -89,7 +89,7 @@ mixin (
     //   CallerGuard.acquire(callerGuards, caller) → try { ... } finally { release }
     // The mixin signature will need callerGuards : CallerGuard.GuardMap added.
     // See main.mo _callerGuards declaration and AGENTS.md "Phase 4 wiring".
-    if (caller.isAnonymous()) Runtime.trap("Anonymous callers cannot accept offers");
+    AccessControl.requireAuthenticated(caller);
     let now = Time.now();
     let accepted = OffersLib.acceptOffer(offers, caller, offerId, now);
     // Route payment to treasury
@@ -112,7 +112,7 @@ mixin (
   public shared ({ caller }) func rejectOffer(
     offerId : Text,
   ) : async OfferTypes.Offer {
-    if (caller.isAnonymous()) Runtime.trap("Anonymous callers cannot reject offers");
+    AccessControl.requireAuthenticated(caller);
     OffersLib.rejectOffer(offers, caller, offerId, Time.now());
   };
 
@@ -120,7 +120,7 @@ mixin (
   public shared ({ caller }) func cancelOffer(
     offerId : Text,
   ) : async OfferTypes.Offer {
-    if (caller.isAnonymous()) Runtime.trap("Anonymous callers cannot cancel offers");
+    AccessControl.requireAuthenticated(caller);
     OffersLib.cancelOffer(offers, caller, offerId, Time.now());
   };
 

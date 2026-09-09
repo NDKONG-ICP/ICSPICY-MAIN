@@ -1866,6 +1866,11 @@ type ICSpicy =
    adminWithdrawTokens: (ledgerCanisterId: text, to: principal, amount:
     nat) -> (AdminWithdrawTokensResult);
    airdropNFT: (_token_id: text, _recipient: principal) -> ();
+   armClaimToken: (claimToken: text, windowHours: opt nat) ->
+    (record {
+       message: text;
+       success: bool;
+     });
    assignCallerUserRole: (_user: principal, _role: UserRole) -> ();
    assignPoolNFT: (nftId: nat, action: AssignAction) -> ();
    backfillWeatherHistory: (plantId: PlantId, startDate: text, endDate:
@@ -1972,6 +1977,7 @@ type ICSpicy =
        messages: vec text;
        skipped: nat;
      });
+   disarmClaimToken: (claimToken: text) -> (bool);
    editPost: (post_id: PostId, new_content: text) -> (bool);
    ensureAdminProfile: () -> ();
    ensureCallerProfile: () -> ();
@@ -2108,13 +2114,13 @@ type ICSpicy =
    getMyResaleListings: () -> (vec ResaleListingPublic) query;
    getMySchedule: (start_date: Timestamp, end_date: Timestamp) ->
     (vec PlantingEvent) query;
-   getMySchedules: () -> (vec SavedSchedule);
+   getMySchedules: () -> (vec SavedSchedule) query;
    getMySeedBank: () -> (vec SeedLotPublic) query;
    getMyTrays: () -> (vec TrayPublic) query;
    getMyVendors: () -> (vec SeedVendorPublic) query;
    getMyWeatherAlerts: () -> (vec WeatherAlert) query;
    getMyWeatherLocation: () -> (opt WeatherLocation) query;
-   getMyWeatherRecords: (limit: nat) -> (vec WeatherRecord);
+   getMyWeatherRecords: (limit: nat) -> (vec WeatherRecord) query;
    getNewOrderCount: () -> (nat) query;
    getNftPoolStatus: () -> (PlantPoolStatus) query;
    getNimsDashboardStats: () -> (DashboardStats) query;
@@ -2340,7 +2346,7 @@ type ICSpicy =
                                   text;
                                   nat;
                                 }) query;
-   listArtworkLayers: () -> (vec ArtworkLayer);
+   listArtworkLayers: () -> (vec ArtworkLayer) query;
    listClaimTokensAdmin: (search: opt text) ->
     (vec ClaimTokenAdminPublic) query;
    listCommentsByPost: (post_id: PostId) -> (vec CommentPublic) query;
@@ -2348,10 +2354,9 @@ type ICSpicy =
    listDailyAlmanacArchive: (limit: nat) -> (vec DailyAlmanac) query;
    listGraveyard: () -> (vec PlantLifecycle) query;
    listGrowerDirectory: () -> (vec GrowerDirectoryEntry) query;
-   /// Per-principal rate limiters for cycle-drain protection (CDA).
    listIcrc7PoolTokensAdmin: (filter: Icrc7TokenFilter, offset: nat, limit:
     nat) -> (vec Icrc7TokenAdminPublic) query;
-   listMyPlants: () -> (vec PlantPublic);
+   listMyPlants: () -> (vec PlantPublic) query;
    listNFTForResale: (plant_id: PlantId, price_icp: float64) ->
     (variant {
        err: text;
@@ -2473,6 +2478,7 @@ type ICSpicy =
        response: http_request_result;
      }) -> (http_request_result) query;
    pruneUsageData: () -> ();
+   /// Admin-managed dynamic swarm/agent canister targets.
    publishDailyAlmanac: (dateKey: text, title: text, body: text, recipeSlug:
     opt text, varietyIds: vec nat) -> ();
    publishProposal: (id: ProposalId) -> (bool);
@@ -2502,6 +2508,7 @@ type ICSpicy =
      });
    purchasePlant: (plantId: PlantId, token: PaymentToken, amount: nat) ->
     (PurchasePlantResult);
+   /// Admin-managed dynamic swarm/agent canister targets.
    purchasePlantICPay: (plantId: PlantId, paymentId: text) ->
     (PurchasePlantResult);
    purchasePlantPayPal: (plantId: PlantId, paypalOrderId: text) ->
@@ -3165,6 +3172,8 @@ type CommentId = nat;
 type ClaimTokenId = text;
 type ClaimTokenAdminPublic = 
  record {
+   arm_expires_at: opt int;
+   armed: bool;
    plant_id: opt PlantId;
    redeemed: bool;
    token: text;

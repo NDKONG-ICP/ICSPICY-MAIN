@@ -71,6 +71,7 @@ mixin (
   orderPickupClaimTokens  : Map.Map<Common.OrderId, [Text]>,
   nftClaimTokens          : Map.Map<Text, ClaimTypes.NftClaimEntry>,
   nftClaimPlantIds        : Map.Map<Text, Common.PlantId>,
+  nftClaimArms            : Map.Map<Text, ClaimTypes.ClaimArm>,
   plantClaimTokens        : Map.Map<Common.PlantId, Text>,
   nftTokenPlantIds        : Map.Map<Nat, Common.PlantId>,
   icrc7Owners             : Map.Map<Nat, ICRC7.Account>,
@@ -434,6 +435,11 @@ mixin (
         orderLineNftTokenIds.add(orderId, tokenIds);
         if (claimTokens.size() > 0) {
           orderPickupClaimTokens.add(orderId, claimTokens);
+          // Auto-arm paid-order pickup tokens — payment proves entitlement,
+          // no staff arming needed and no expiry.
+          for (t in claimTokens.vals()) {
+            nftClaimArms.add(t, { armedAt = Time.now(); expiresAt = null });
+          };
         };
       };
     };
@@ -592,6 +598,11 @@ mixin (
         orderLineNftTokenIds.add(orderId, settledTokenIds);
         if (claimTokens.size() > 0) {
           orderPickupClaimTokens.add(orderId, claimTokens);
+          // Auto-arm paid-order pickup tokens — payment proves entitlement,
+          // no staff arming needed and no expiry.
+          for (t in claimTokens.vals()) {
+            nftClaimArms.add(t, { armedAt = Time.now(); expiresAt = null });
+          };
         };
       };
     };
@@ -1542,6 +1553,11 @@ mixin (
         orderLineNftTokenIds.add(orderId, tokenIds);
         if (claimTokens.size() > 0) {
           orderPickupClaimTokens.add(orderId, claimTokens);
+          // Auto-arm paid-order pickup tokens — payment proves entitlement,
+          // no staff arming needed and no expiry.
+          for (t in claimTokens.vals()) {
+            nftClaimArms.add(t, { armedAt = Time.now(); expiresAt = null });
+          };
         };
       };
     };

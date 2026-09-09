@@ -1907,8 +1907,10 @@ export const idlFactory = ({ IDL }) => {
   });
   const ClaimTokenAdminPublic = IDL.Record({
     'token' : IDL.Text,
+    'armed' : IDL.Bool,
     'token_id' : IDL.Nat,
     'redeemed' : IDL.Bool,
+    'arm_expires_at' : IDL.Opt(IDL.Int),
     'plant_id' : IDL.Opt(PlantId),
   });
   const GrowerDirectoryEntry = IDL.Record({
@@ -2400,6 +2402,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'airdropNFT' : IDL.Func([IDL.Text, IDL.Principal], [], []),
+    'armClaimToken' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Nat)],
+        [IDL.Record({ 'message' : IDL.Text, 'success' : IDL.Bool })],
+        [],
+      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignPoolNFT' : IDL.Func([IDL.Nat, AssignAction], [], []),
     'backfillWeatherHistory' : IDL.Func(
@@ -2576,6 +2583,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         [],
       ),
+    'disarmClaimToken' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'editPost' : IDL.Func([PostId, IDL.Text], [IDL.Bool], []),
     'ensureAdminProfile' : IDL.Func([], [], []),
     'ensureCallerProfile' : IDL.Func([], [], []),
@@ -2875,7 +2883,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PlantingEvent)],
         ['query'],
       ),
-    'getMySchedules' : IDL.Func([], [IDL.Vec(SavedSchedule)], []),
+    'getMySchedules' : IDL.Func([], [IDL.Vec(SavedSchedule)], ['query']),
     'getMySeedBank' : IDL.Func([], [IDL.Vec(SeedLotPublic)], ['query']),
     'getMyTrays' : IDL.Func([], [IDL.Vec(TrayPublic)], ['query']),
     'getMyVendors' : IDL.Func([], [IDL.Vec(SeedVendorPublic)], ['query']),
@@ -2885,7 +2893,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(WeatherLocation)],
         ['query'],
       ),
-    'getMyWeatherRecords' : IDL.Func([IDL.Nat], [IDL.Vec(WeatherRecord)], []),
+    'getMyWeatherRecords' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(WeatherRecord)],
+        ['query'],
+      ),
     'getNewOrderCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getNftPoolStatus' : IDL.Func([], [PlantPoolStatus], ['query']),
     'getNimsDashboardStats' : IDL.Func([], [DashboardStats], ['query']),
@@ -3352,7 +3364,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
         ['query'],
       ),
-    'listArtworkLayers' : IDL.Func([], [IDL.Vec(ArtworkLayer)], []),
+    'listArtworkLayers' : IDL.Func([], [IDL.Vec(ArtworkLayer)], ['query']),
     'listClaimTokensAdmin' : IDL.Func(
         [IDL.Opt(IDL.Text)],
         [IDL.Vec(ClaimTokenAdminPublic)],
@@ -3380,7 +3392,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Icrc7TokenAdminPublic)],
         ['query'],
       ),
-    'listMyPlants' : IDL.Func([], [IDL.Vec(PlantPublic)], []),
+    'listMyPlants' : IDL.Func([], [IDL.Vec(PlantPublic)], ['query']),
     'listNFTForResale' : IDL.Func(
         [PlantId, IDL.Float64],
         [IDL.Variant({ 'ok' : ResaleListingPublic, 'err' : IDL.Text })],

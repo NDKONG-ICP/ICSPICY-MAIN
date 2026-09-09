@@ -25,6 +25,7 @@ mixin (
   agentPrincipalState : AccessControl.AgentPrincipalState,
   nftClaimTokens : Map.Map<Text, ClaimTypes.NftClaimEntry>,
   nftClaimPlantIds : Map.Map<Text, Common.PlantId>,
+  nftClaimArms : Map.Map<Text, ClaimTypes.ClaimArm>,
   plantClaimTokens : Map.Map<Common.PlantId, Text>,
   nftTokenPlantIds : Map.Map<Nat, Common.PlantId>,
   plantClaimRequests : ClaimRequests.RequestMap,
@@ -114,6 +115,55 @@ mixin (
     out
   };
 
+  /// Default arming window for staff-armed QR tags: 72 hours (ns).
+  let CLAIM_ARM_WINDOW_NS : Int = 72 * 3_600 * 1_000_000_000;
+
+  /// Admin: arm a printed QR claim token at the point of sale.
+  /// The customer can redeem only while the token is armed (default 72h window).
+  public shared ({ caller }) func armClaimToken(
+    claimToken : Text,
+    windowHours : ?Nat,
+  ) : async { success : Bool; message : Text } {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let entry = switch (nftClaimTokens.get(claimToken)) {
+      case null return { success = false; message = "Claim token not found" };
+      case (?e) e;
+    };
+    if (entry.redeemed) {
+      return { success = false; message = "Claim token already redeemed" };
+    };
+    let now = Time.now();
+    let windowNs : Int = switch (windowHours) {
+      case (?h) h * 3_600 * 1_000_000_000;
+      case null CLAIM_ARM_WINDOW_NS;
+    };
+    nftClaimArms.add(claimToken, { armedAt = now; expiresAt = ?(now + windowNs) });
+    auditLog.value := AuditLog.append(auditLog.value, {
+      ts = now;
+      admin = caller;
+      action = "claim_token_armed";
+      detail = "token=" # claimToken # " tokenId=" # Nat.toText(entry.tokenId);
+    });
+    { success = true; message = "Claim armed" };
+  };
+
+  /// Admin: disarm a claim token (e.g. armed by mistake, or sale fell through).
+  public shared ({ caller }) func disarmClaimToken(
+    claimToken : Text,
+  ) : async Bool {
+    AccessControl.requireAdmin(accessControlState, caller);
+    let existed = nftClaimArms.delete(claimToken);
+    if (existed) {
+      auditLog.value := AuditLog.append(auditLog.value, {
+        ts = Time.now();
+        admin = caller;
+        action = "claim_token_disarmed";
+        detail = "token=" # claimToken;
+      });
+    };
+    existed;
+  };
+
   public shared ({ caller }) func redeemClaim(
     claimToken : Text,
   ) : async { success : Bool; tokenId : ?Nat; message : Text } {
@@ -124,6 +174,24 @@ mixin (
     };
     if (entry.redeemed) {
       return { success = false; tokenId = null; message = "Claim token already redeemed" };
+    };
+    // Arming gate — printed QR tags can be scanned by anyone in the nursery,
+    // so a token is redeemable only after staff arm it at the point of sale.
+    // Paid-order pickup tokens are auto-armed at settlement (expiresAt = null).
+    switch (nftClaimArms.get(claimToken)) {
+      case null {
+        return { success = false; tokenId = null; message = "Claim not yet activated — ask nursery staff to activate it at checkout" };
+      };
+      case (?arm) {
+        switch (arm.expiresAt) {
+          case (?exp) {
+            if (Time.now() > exp) {
+              return { success = false; tokenId = null; message = "Claim activation expired — ask nursery staff to re-activate it" };
+            };
+          };
+          case null {};
+        };
+      };
     };
     let canister = selfPrincipal();
     let currentOwner = switch (icrc7Owners.get(entry.tokenId)) {

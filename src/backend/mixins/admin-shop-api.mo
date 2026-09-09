@@ -15,6 +15,7 @@ import Map "mo:core/Map";
 import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Text "mo:core/Text";
 import Time "mo:core/Time";
 
 mixin (
@@ -30,6 +31,7 @@ mixin (
   adminOrdersSeenUpTo : Map.Map<Principal, Nat>,
   nftClaimTokens : Map.Map<Text, ClaimTypes.NftClaimEntry>,
   nftClaimPlantIds : Map.Map<Text, Common.PlantId>,
+  nftClaimArms : Map.Map<Text, ClaimTypes.ClaimArm>,
   plantClaimTokens : Map.Map<Common.PlantId, Text>,
   icrc7Owners : Map.Map<Nat, ICRC7.Account>,
   nftTokenPlantIds : Map.Map<Nat, Common.PlantId>,
@@ -108,7 +110,7 @@ mixin (
     search : ?Text,
   ) : async [AdminTypes.ClaimTokenAdminPublic] {
     AccessControl.requireAdmin(accessControlState, caller);
-    AdminClaimsLib.listClaimTokens(nftClaimTokens, nftClaimPlantIds, search)
+    AdminClaimsLib.listClaimTokens(nftClaimTokens, nftClaimPlantIds, nftClaimArms, search)
   };
 
   public shared ({ caller }) func revokeClaimTokenAdmin(
@@ -119,6 +121,7 @@ mixin (
       nftClaimTokens, nftClaimPlantIds, plantClaimTokens, token,
     );
     if (ok) {
+      ignore nftClaimArms.delete(token);
       auditLog.value := AuditLog.append(auditLog.value, {
         ts = Time.now();
         admin = caller;

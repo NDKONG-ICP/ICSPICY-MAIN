@@ -23,6 +23,7 @@ module {
   public func listClaimTokens(
     nftClaimTokens : Map.Map<Text, ClaimTypes.NftClaimEntry>,
     nftClaimPlantIds : Map.Map<Text, Common.PlantId>,
+    nftClaimArms : Map.Map<Text, ClaimTypes.ClaimArm>,
     search : ?Text,
   ) : [AdminTypes.ClaimTokenAdminPublic] {
     let needle = switch (search) {
@@ -34,11 +35,17 @@ module {
         Iter.map(
           nftClaimTokens.entries(),
           func((token, entry) : (Text, ClaimTypes.NftClaimEntry)) : AdminTypes.ClaimTokenAdminPublic {
+            let arm = nftClaimArms.get(token);
             {
               token;
               token_id = entry.tokenId;
               plant_id = nftClaimPlantIds.get(token);
               redeemed = entry.redeemed;
+              armed = arm != null;
+              arm_expires_at = switch (arm) {
+                case (?a) a.expiresAt;
+                case null null;
+              };
             }
           },
         ),

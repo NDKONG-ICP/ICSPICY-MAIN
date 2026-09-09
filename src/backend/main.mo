@@ -495,6 +495,9 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // Phase 4: spcy_<10hex> → NftClaimEntry (tokenId + redeemed flag)
   let nftClaimTokens   = Map.empty<Text, ClaimTypes.NftClaimEntry>();
   let nftClaimPlantIds = Map.empty<Text, Common.PlantId>();
+  // Arming side map: token redeemable only while armed (staff arm printed QR
+  // tags at point of sale; paid-order tokens auto-armed at settlement).
+  let nftClaimArms     = Map.empty<Text, ClaimTypes.ClaimArm>();
   let plantClaimTokens = Map.empty<Common.PlantId, Text>();
   let nftTokenPlantIds = Map.empty<Nat, Common.PlantId>();
   let plantClaimRequests = ClaimRequests.emptyMap();
@@ -880,6 +883,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     agentPrincipalState,
     nftClaimTokens,
     nftClaimPlantIds,
+    nftClaimArms,
     plantClaimTokens,
     nftTokenPlantIds,
     plantClaimRequests,
@@ -978,6 +982,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     orderPickupClaimTokens,
     nftClaimTokens,
     nftClaimPlantIds,
+    nftClaimArms,
     plantClaimTokens,
     nftTokenPlantIds,
     icrc7Owners,
@@ -1024,6 +1029,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     adminOrdersSeenUpTo,
     nftClaimTokens,
     nftClaimPlantIds,
+    nftClaimArms,
     plantClaimTokens,
     icrc7Owners,
     nftTokenPlantIds,

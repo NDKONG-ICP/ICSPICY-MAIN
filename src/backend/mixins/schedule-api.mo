@@ -28,7 +28,7 @@ mixin (
   };
 
   // Authenticated: list all saved schedules owned by the caller
-  public shared ({ caller }) func getMySchedules() : async [ClaimTypes.SavedSchedule] {
+  public query ({ caller }) func getMySchedules() : async [ClaimTypes.SavedSchedule] {
     AccessControl.requireAuthenticated(caller);
     ScheduleLib.getMySchedules(savedSchedules, caller);
   };

@@ -374,6 +374,40 @@ export function useRevokeClaimTokenAdmin() {
   });
 }
 
+/** Arm a printed QR claim token at the point of sale (default 72h window). */
+export function useArmClaimToken() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (token: string) => {
+      const svc = rawService(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.armClaimToken(token, []);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["admin", "claimTokens"] });
+      void qc.invalidateQueries({ queryKey: ["auditLog"] });
+    },
+  });
+}
+
+/** Disarm a claim token (armed by mistake / sale fell through). */
+export function useDisarmClaimToken() {
+  const { actor } = useBackendActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (token: string) => {
+      const svc = rawService(actor);
+      if (!svc) throw new Error("Not connected");
+      return svc.disarmClaimToken(token);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["admin", "claimTokens"] });
+      void qc.invalidateQueries({ queryKey: ["auditLog"] });
+    },
+  });
+}
+
 export function useGenerateClaimTokens() {
   const { actor } = useBackendActor();
   const qc = useQueryClient();

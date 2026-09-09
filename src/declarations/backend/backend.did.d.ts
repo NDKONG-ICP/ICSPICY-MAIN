@@ -257,8 +257,10 @@ export type ClaimRequestStatus = { 'pending' : null } |
   { 'rejected' : null };
 export interface ClaimTokenAdminPublic {
   'token' : string,
+  'armed' : boolean,
   'token_id' : bigint,
   'redeemed' : boolean,
+  'arm_expires_at' : [] | [bigint],
   'plant_id' : [] | [PlantId],
 }
 export type ClaimTokenId = string;
@@ -810,6 +812,10 @@ export interface ICSpicy {
     AdminWithdrawTokensResult
   >,
   'airdropNFT' : ActorMethod<[string, Principal], undefined>,
+  'armClaimToken' : ActorMethod<
+    [string, [] | [bigint]],
+    { 'message' : string, 'success' : boolean }
+  >,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignPoolNFT' : ActorMethod<[bigint, AssignAction], undefined>,
   'backfillWeatherHistory' : ActorMethod<[PlantId, string, string], bigint>,
@@ -933,6 +939,7 @@ export interface ICSpicy {
     [Array<bigint>],
     { 'messages' : Array<string>, 'skipped' : bigint, 'designated' : bigint }
   >,
+  'disarmClaimToken' : ActorMethod<[string], boolean>,
   'editPost' : ActorMethod<[PostId, string], boolean>,
   'ensureAdminProfile' : ActorMethod<[], undefined>,
   'ensureCallerProfile' : ActorMethod<[], undefined>,
@@ -1385,9 +1392,6 @@ export interface ICSpicy {
   'listDailyAlmanacArchive' : ActorMethod<[bigint], Array<DailyAlmanac>>,
   'listGraveyard' : ActorMethod<[], Array<PlantLifecycle>>,
   'listGrowerDirectory' : ActorMethod<[], Array<GrowerDirectoryEntry>>,
-  /**
-   * / Per-principal rate limiters for cycle-drain protection (CDA).
-   */
   'listIcrc7PoolTokensAdmin' : ActorMethod<
     [Icrc7TokenFilter, bigint, bigint],
     Array<Icrc7TokenAdminPublic>
@@ -1524,6 +1528,9 @@ export interface ICSpicy {
     http_request_result
   >,
   'pruneUsageData' : ActorMethod<[], undefined>,
+  /**
+   * / Admin-managed dynamic swarm/agent canister targets.
+   */
   'publishDailyAlmanac' : ActorMethod<
     [string, string, string, [] | [string], Array<bigint>],
     undefined
@@ -1553,6 +1560,9 @@ export interface ICSpicy {
     [PlantId, PaymentToken, bigint],
     PurchasePlantResult
   >,
+  /**
+   * / Admin-managed dynamic swarm/agent canister targets.
+   */
   'purchasePlantICPay' : ActorMethod<[PlantId, string], PurchasePlantResult>,
   'purchasePlantPayPal' : ActorMethod<[PlantId, string], PurchasePlantResult>,
   'recordCross' : ActorMethod<

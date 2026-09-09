@@ -111,16 +111,19 @@ mixin (
 
   // Owner or admin: update cell NIMS data (common/latin name, origin, schedules, notes)
   public shared ({ caller }) func updateCellData(input : PlantTypes.UpdateCellDataInput) : async () {
+    AccessControl.requireAuthenticated(caller);
     PlantsLib.updateCellData(plants, caller, isAdmin, input);
   };
 
   // Owner or admin: toggle "Cooked" (dead) status for a plant cell
   public shared ({ caller }) func toggleCooked(plant_id : Common.PlantId) : async () {
+    AccessControl.requireAuthenticated(caller);
     PlantsLib.toggleCooked(plants, caller, isAdmin, plant_id);
   };
 
   // Owner or admin: transplant a cell — updates the same plant record and marks the tray cell transplanted
   public shared ({ caller }) func transplantCell(input : PlantTypes.TransplantInput) : async PlantTypes.PlantPublic {
+    AccessControl.requireAuthenticated(caller);
     let plant = PlantsLib.transplantCell(plants, trays, stageHistory, caller, isAdmin, input);
     let toLabel = PlantsLib.containerSizeText(input.container_size);
     appendPlantNote(
@@ -181,11 +184,13 @@ mixin (
 
   // Owner or admin: add a progress photo key to a plant
   public shared ({ caller }) func addPlantPhoto(plant_id : Common.PlantId, photo_key : Text) : async () {
+    AccessControl.requireAuthenticated(caller);
     PlantsLib.addPlantPhoto(plants, caller, isAdmin, plant_id, photo_key);
   };
 
   // Owner or admin: remove a progress photo key from a plant
   public shared ({ caller }) func removePlantPhoto(plant_id : Common.PlantId, photo_key : Text) : async () {
+    AccessControl.requireAuthenticated(caller);
     PlantsLib.removePlantPhoto(plants, caller, isAdmin, plant_id, photo_key);
   };
 
@@ -213,7 +218,7 @@ mixin (
   };
 
   // Authenticated user: get their own weather records (latest N)
-  public shared ({ caller }) func getMyWeatherRecords(limit : Nat) : async [PlantTypes.WeatherRecord] {
+  public query ({ caller }) func getMyWeatherRecords(limit : Nat) : async [PlantTypes.WeatherRecord] {
     AccessControl.requireAuthenticated(caller);
     PlantsLib.getWeatherRecords(weatherRecords, caller, limit);
   };
@@ -231,7 +236,7 @@ mixin (
   };
 
   // Admin: list all uploaded artwork layers
-  public shared ({ caller }) func listArtworkLayers() : async [PlantTypes.ArtworkLayer] {
+  public query ({ caller }) func listArtworkLayers() : async [PlantTypes.ArtworkLayer] {
     if (not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Admin only");
     };
@@ -271,7 +276,7 @@ mixin (
   };
 
   // Authenticated: list plants owned by the caller
-  public shared ({ caller }) func listMyPlants() : async [PlantTypes.PlantPublic] {
+  public query ({ caller }) func listMyPlants() : async [PlantTypes.PlantPublic] {
     AccessControl.requireAuthenticated(caller);
     PlantsLib.listMyPlants(plants, caller);
   };
