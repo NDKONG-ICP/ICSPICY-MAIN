@@ -43,3 +43,6 @@ vendor/
 labels/
 art-src/slicer/.preview/
 .env*
+# Worker runtime logs — may contain sensitive runtime output
+worker/logs/
+worker/.env

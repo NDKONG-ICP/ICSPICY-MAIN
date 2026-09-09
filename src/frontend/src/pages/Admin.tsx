@@ -91,6 +91,7 @@ import { AdminNimsPanel } from "../components/AdminNimsPanel";
 import { AdminTreasuryTab } from "../components/AdminTreasuryTab";
 import { AdminBatchGiftsTab } from "../components/admin/AdminBatchGiftsTab";
 import { AdminCommunityTab } from "../components/admin/AdminCommunityTab";
+import { AdminVerifiedGrowersTab } from "../components/admin/AdminVerifiedGrowersTab";
 import { AdminNFTPoolTab } from "../components/admin/AdminNFTPoolTab";
 import { AdminOrdersTab } from "../components/admin/AdminOrdersTab";
 import { AdminQRLabelsTab } from "../components/admin/AdminQRLabelsTab";
@@ -5077,6 +5078,14 @@ export default function AdminPage() {
               NIMS
             </TabsTrigger>
             <TabsTrigger
+              value="verified-growers"
+              className="text-xs gap-1.5 flex-1"
+              data-ocid="admin-tab-verified-growers"
+            >
+              <Sprout className="w-3.5 h-3.5" />
+              Verified Growers
+            </TabsTrigger>
+            <TabsTrigger
               value="products"
               className="text-xs gap-1.5 flex-1"
               data-ocid="admin-tab-products"
@@ -5230,6 +5239,9 @@ export default function AdminPage() {
           </TabsContent>
           <TabsContent value="nims">
             <AdminNimsPanel />
+          </TabsContent>
+          <TabsContent value="verified-growers">
+            <AdminVerifiedGrowersTab />
           </TabsContent>
           <TabsContent value="products">
             <ProductsTab />

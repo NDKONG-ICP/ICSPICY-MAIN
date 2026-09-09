@@ -157,6 +157,45 @@ type WateringEntry =
    phLevel: opt float64;
    timestamp: Timestamp;
  };
+type VerifiedGrowerUpsert = 
+ record {
+   categories: vec text;
+   description: text;
+   establishedYear: opt nat;
+   growerOfTheMonth: opt text;
+   id: text;
+   imageKey: text;
+   name: text;
+   owners: text;
+   sortOrder: nat;
+   stats: vec VerifiedGrowerStat;
+   story: text;
+   tagline: text;
+   url: text;
+ };
+type VerifiedGrowerStat = 
+ record {
+   statLabel: text;
+   value: text;
+ };
+type VerifiedGrower = 
+ record {
+   categories: vec text;
+   createdAt: int;
+   description: text;
+   establishedYear: opt nat;
+   growerOfTheMonth: opt text;
+   id: text;
+   imageKey: text;
+   name: text;
+   owners: text;
+   sortOrder: nat;
+   stats: vec VerifiedGrowerStat;
+   story: text;
+   tagline: text;
+   updatedAt: int;
+   url: text;
+ };
 type VarietySource = 
  record {
    url: text;
@@ -1740,7 +1779,6 @@ type ICSpicy =
    addVendor: (name: text, website: opt text, notes: opt text) -> (nat);
    addWateringEntry: (plantId: PlantId, amountMl: nat, phLevel: opt float64,
     notes: opt text) -> (bool);
-   /// Uploads asset canister — user images served via HTTP from this canister.
    addWeatherRecord: (input: AddWeatherRecordInput) -> (WeatherRecord);
    addWeatherSnapshot: (plantId: PlantId, snapshot: WeatherSnapshot) ->
     (bool);
@@ -1762,7 +1800,7 @@ type ICSpicy =
    adminDeleteComment: (comment_id: CommentId) -> (bool);
    adminDeletePost: (post_id: PostId) -> (bool);
    adminDeleteVarietyGuide: (varietyId: nat, zone: text) -> (bool);
-   /// Public query — used by agent_hub to sync admin access with backend admins.
+   adminDeleteVerifiedGrower: (id: text) -> ();
    adminGetGameStats: (gameId: text, "principal": principal) ->
     (opt GamePlayerStatsPublic) query;
    adminGrantCoopSeat: (tokenId: nat, recipient: principal) ->
@@ -1792,11 +1830,14 @@ type ICSpicy =
    /// Admin: harvest ICP LP fees and fund fleet canisters (marketable monthly event).
    adminRunLpFeeCyclesFunding: (dryRunOnly: bool) -> (LpFeeCyclesRunResult);
    adminSendNotification: (recipient: principal, message: text) -> (bool);
+   adminSetGrowerOfTheMonth: (id: text, monthLabel: text) -> ();
    adminSetLeaderboardExcluded: ("principal": principal, excluded: bool) ->
     ();
    /// Admin: set per-swarm-canister auto top-up policy.
    adminSetSwarmCanisterAutoTopUp: (canisterId: text, autoPolicy:
     SwarmAutoTopUpPolicy) -> (SwarmCanisterTarget);
+   adminStoreVerifiedGrowerImage: (path: text, data: vec nat8, mimeType:
+    text) -> (StoredFile);
    adminSubmitToDAB: (collectionName: text, collectionDescription: text,
     standard: text, canisterIdOverride: opt text) ->
     (variant {
@@ -1820,6 +1861,8 @@ type ICSpicy =
    /// Admin: update a registered swarm canister target.
    adminUpdateSwarmCanister: (canisterId: text, input: SwarmCanisterInput) ->
     (SwarmCanisterTarget);
+   adminUpsertVerifiedGrower: (input: VerifiedGrowerUpsert) ->
+    (VerifiedGrower);
    adminWithdrawTokens: (ledgerCanisterId: text, to: principal, amount:
     nat) -> (AdminWithdrawTokensResult);
    airdropNFT: (_token_id: text, _recipient: principal) -> ();
@@ -1861,6 +1904,7 @@ type ICSpicy =
     (YieldEstimate) query;
    cancelMyClaimRequest: (plantId: PlantId) -> (bool);
    cancelOffer: (offerId: text) -> (Offer);
+   /// Per-principal rate limiters for cycle-drain protection (CDA).
    cancelProposal: (id: ProposalId) -> (bool);
    cancelResaleListing: (listing_id: text) -> (variant {
                                                  err: text;
@@ -1902,6 +1946,7 @@ type ICSpicy =
    createPlant: (input: CreatePlantInput) -> (PlantPublic);
    createPlantingEvent: (input: CreatePlantingEventInput) -> (PlantingEvent);
    createPost: (input: CreatePostInput) -> (PostPublic);
+   /// Per-principal rate limiters for cycle-drain protection (CDA).
    createProduct: (input: CreateProductInput) -> (ProductPublic);
    createProposal: (input: CreateProposalInput) ->
     (record {proposalId: nat;});
@@ -2014,7 +2059,6 @@ type ICSpicy =
    getFollowers: (user: principal, offset: nat, limit: nat) ->
     (vec UserProfilePublic) query;
    getFollowersCount: (user: principal) -> (nat) query;
-   /// Uploads asset canister — user images served via HTTP from this canister.
    getFollowing: (user: principal, offset: nat, limit: nat) ->
     (vec UserProfilePublic) query;
    getFollowingCount: (user: principal) -> (nat) query;
@@ -2240,7 +2284,6 @@ type ICSpicy =
    icrc7_default_take_value: () -> (opt nat) query;
    icrc7_description: () -> (opt text) query;
    icrc7_logo: () -> (opt text) query;
-   /// Uploads asset canister — user images served via HTTP from this canister.
    icrc7_max_memo_size: () -> (opt nat) query;
    icrc7_max_query_batch_size: () -> (opt nat) query;
    icrc7_max_take_value: () -> (opt nat) query;
@@ -2305,6 +2348,7 @@ type ICSpicy =
    listDailyAlmanacArchive: (limit: nat) -> (vec DailyAlmanac) query;
    listGraveyard: () -> (vec PlantLifecycle) query;
    listGrowerDirectory: () -> (vec GrowerDirectoryEntry) query;
+   /// Per-principal rate limiters for cycle-drain protection (CDA).
    listIcrc7PoolTokensAdmin: (filter: Icrc7TokenFilter, offset: nat, limit:
     nat) -> (vec Icrc7TokenAdminPublic) query;
    listMyPlants: () -> (vec PlantPublic);
@@ -2350,6 +2394,7 @@ type ICSpicy =
                                  }) query;
    listVarietyProvenance: (offset: nat, limit: nat) ->
     (vec VarietyProvenancePublic) query;
+   listVerifiedGrowers: () -> (vec VerifiedGrower) query;
    loadStaticMetadata: (entries: vec record {
                                        nat;
                                        blob;
@@ -2547,6 +2592,7 @@ type ICSpicy =
                                              text;
                                              text;
                                            }) -> (bool);
+   /// ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
    setRecipeIntro: (id: RecipeId, intro: text) -> (bool);
    setRecipeVideo: (id: RecipeId, videoId: opt text) -> (Result_5);
    setRecipeVideoUrl: (id: RecipeId, videoUrl: opt text) -> (bool);
@@ -2565,6 +2611,7 @@ type ICSpicy =
     (StoredFile);
    storeProfileBannerFile: (data: vec nat8) -> (text);
    storeProfileWallpaperFile: (data: vec nat8) -> (text);
+   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    storeSlicerShareOgImage: (pngBytes: blob) -> (Result_3);
    submitGameScore: (gameId: text, score: nat, displayData: text) ->
     (Result_2);
@@ -2664,6 +2711,7 @@ type ICSpicy =
        context: blob;
        response: http_request_result;
      }) -> (http_request_result) query;
+   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    weatherNwsAlertsTransform:
     (record {
        context: blob;
@@ -2679,7 +2727,6 @@ type ICSpicy =
        context: blob;
        response: http_request_result;
      }) -> (http_request_result) query;
-   /// Uploads asset canister — user images served via HTTP from this canister.
    weatherTropicalTransform:
     (record {
        context: blob;

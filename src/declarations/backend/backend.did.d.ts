@@ -693,9 +693,6 @@ export interface ICSpicy {
     [PlantId, bigint, [] | [number], [] | [string]],
     boolean
   >,
-  /**
-   * / Uploads asset canister — user images served via HTTP from this canister.
-   */
   'addWeatherRecord' : ActorMethod<[AddWeatherRecordInput], WeatherRecord>,
   'addWeatherSnapshot' : ActorMethod<[PlantId, WeatherSnapshot], boolean>,
   'addZonePhoto' : ActorMethod<[TrayId, string], undefined>,
@@ -717,9 +714,7 @@ export interface ICSpicy {
   'adminDeleteComment' : ActorMethod<[CommentId], boolean>,
   'adminDeletePost' : ActorMethod<[PostId], boolean>,
   'adminDeleteVarietyGuide' : ActorMethod<[bigint, string], boolean>,
-  /**
-   * / Public query — used by agent_hub to sync admin access with backend admins.
-   */
+  'adminDeleteVerifiedGrower' : ActorMethod<[string], undefined>,
   'adminGetGameStats' : ActorMethod<
     [string, Principal],
     [] | [GamePlayerStatsPublic]
@@ -765,6 +760,7 @@ export interface ICSpicy {
    */
   'adminRunLpFeeCyclesFunding' : ActorMethod<[boolean], LpFeeCyclesRunResult>,
   'adminSendNotification' : ActorMethod<[Principal, string], boolean>,
+  'adminSetGrowerOfTheMonth' : ActorMethod<[string, string], undefined>,
   'adminSetLeaderboardExcluded' : ActorMethod<[Principal, boolean], undefined>,
   /**
    * / Admin: set per-swarm-canister auto top-up policy.
@@ -772,6 +768,10 @@ export interface ICSpicy {
   'adminSetSwarmCanisterAutoTopUp' : ActorMethod<
     [string, SwarmAutoTopUpPolicy],
     SwarmCanisterTarget
+  >,
+  'adminStoreVerifiedGrowerImage' : ActorMethod<
+    [string, Uint8Array | number[], string],
+    StoredFile
   >,
   'adminSubmitToDAB' : ActorMethod<
     [string, string, string, [] | [string]],
@@ -800,6 +800,10 @@ export interface ICSpicy {
   'adminUpdateSwarmCanister' : ActorMethod<
     [string, SwarmCanisterInput],
     SwarmCanisterTarget
+  >,
+  'adminUpsertVerifiedGrower' : ActorMethod<
+    [VerifiedGrowerUpsert],
+    VerifiedGrower
   >,
   'adminWithdrawTokens' : ActorMethod<
     [string, Principal, bigint],
@@ -851,6 +855,9 @@ export interface ICSpicy {
   'calculateGardenYieldInput' : ActorMethod<[GardenDesignInput], YieldEstimate>,
   'cancelMyClaimRequest' : ActorMethod<[PlantId], boolean>,
   'cancelOffer' : ActorMethod<[string], Offer>,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'cancelProposal' : ActorMethod<[ProposalId], boolean>,
   'cancelResaleListing' : ActorMethod<
     [string],
@@ -899,6 +906,9 @@ export interface ICSpicy {
     PlantingEvent
   >,
   'createPost' : ActorMethod<[CreatePostInput], PostPublic>,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'createProduct' : ActorMethod<[CreateProductInput], ProductPublic>,
   'createProposal' : ActorMethod<
     [CreateProposalInput],
@@ -1038,9 +1048,6 @@ export interface ICSpicy {
     Array<UserProfilePublic>
   >,
   'getFollowersCount' : ActorMethod<[Principal], bigint>,
-  /**
-   * / Uploads asset canister — user images served via HTTP from this canister.
-   */
   'getFollowing' : ActorMethod<
     [Principal, bigint, bigint],
     Array<UserProfilePublic>
@@ -1301,9 +1308,6 @@ export interface ICSpicy {
   'icrc7_default_take_value' : ActorMethod<[], [] | [bigint]>,
   'icrc7_description' : ActorMethod<[], [] | [string]>,
   'icrc7_logo' : ActorMethod<[], [] | [string]>,
-  /**
-   * / Uploads asset canister — user images served via HTTP from this canister.
-   */
   'icrc7_max_memo_size' : ActorMethod<[], [] | [bigint]>,
   'icrc7_max_query_batch_size' : ActorMethod<[], [] | [bigint]>,
   'icrc7_max_take_value' : ActorMethod<[], [] | [bigint]>,
@@ -1381,6 +1385,9 @@ export interface ICSpicy {
   'listDailyAlmanacArchive' : ActorMethod<[bigint], Array<DailyAlmanac>>,
   'listGraveyard' : ActorMethod<[], Array<PlantLifecycle>>,
   'listGrowerDirectory' : ActorMethod<[], Array<GrowerDirectoryEntry>>,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'listIcrc7PoolTokensAdmin' : ActorMethod<
     [Icrc7TokenFilter, bigint, bigint],
     Array<Icrc7TokenAdminPublic>
@@ -1425,6 +1432,7 @@ export interface ICSpicy {
     [bigint, bigint],
     Array<VarietyProvenancePublic>
   >,
+  'listVerifiedGrowers' : ActorMethod<[], Array<VerifiedGrower>>,
   'loadStaticMetadata' : ActorMethod<
     [Array<[bigint, Uint8Array | number[]]>],
     LoadStaticMetadataResult
@@ -1659,6 +1667,9 @@ export interface ICSpicy {
   'setProfileBanner' : ActorMethod<[string], undefined>,
   'setProfileWallpaper' : ActorMethod<[string], undefined>,
   'setRecipeFaqs' : ActorMethod<[RecipeId, Array<[string, string]>], boolean>,
+  /**
+   * / ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
+   */
   'setRecipeIntro' : ActorMethod<[RecipeId, string], boolean>,
   'setRecipeVideo' : ActorMethod<[RecipeId, [] | [string]], Result_5>,
   'setRecipeVideoUrl' : ActorMethod<[RecipeId, [] | [string]], boolean>,
@@ -1682,6 +1693,9 @@ export interface ICSpicy {
   >,
   'storeProfileBannerFile' : ActorMethod<[Uint8Array | number[]], string>,
   'storeProfileWallpaperFile' : ActorMethod<[Uint8Array | number[]], string>,
+  /**
+   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   */
   'storeSlicerShareOgImage' : ActorMethod<[Uint8Array | number[]], Result_3>,
   'submitGameScore' : ActorMethod<[string, bigint, string], Result_2>,
   'submitOffer' : ActorMethod<[SubmitOfferInput], Offer>,
@@ -1809,6 +1823,9 @@ export interface ICSpicy {
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
   >,
+  /**
+   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   */
   'weatherNwsAlertsTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
@@ -1821,9 +1838,6 @@ export interface ICSpicy {
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
   >,
-  /**
-   * / Uploads asset canister — user images served via HTTP from this canister.
-   */
   'weatherTropicalTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
@@ -3067,6 +3081,39 @@ export interface VarietyPublic {
   'daysToGermination' : [] | [bigint],
 }
 export interface VarietySource { 'url' : string, 'vendorName' : string }
+export interface VerifiedGrower {
+  'id' : string,
+  'url' : string,
+  'categories' : Array<string>,
+  'owners' : string,
+  'tagline' : string,
+  'sortOrder' : bigint,
+  'name' : string,
+  'createdAt' : bigint,
+  'description' : string,
+  'establishedYear' : [] | [bigint],
+  'updatedAt' : bigint,
+  'stats' : Array<VerifiedGrowerStat>,
+  'story' : string,
+  'imageKey' : string,
+  'growerOfTheMonth' : [] | [string],
+}
+export interface VerifiedGrowerStat { 'value' : string, 'statLabel' : string }
+export interface VerifiedGrowerUpsert {
+  'id' : string,
+  'url' : string,
+  'categories' : Array<string>,
+  'owners' : string,
+  'tagline' : string,
+  'sortOrder' : bigint,
+  'name' : string,
+  'description' : string,
+  'establishedYear' : [] | [bigint],
+  'stats' : Array<VerifiedGrowerStat>,
+  'story' : string,
+  'imageKey' : string,
+  'growerOfTheMonth' : [] | [string],
+}
 export interface WateringEntry {
   'amountMl' : bigint,
   'author' : Principal,

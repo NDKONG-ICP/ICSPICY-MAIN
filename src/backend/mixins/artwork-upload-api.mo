@@ -152,6 +152,19 @@ mixin (
     true;
   };
 
+  func isVerifiedGrowerImagePath(path : Text) : Bool {
+    let prefix = "verified-growers/";
+    if (path.size() < prefix.size()) return false;
+    var pathIter = path.chars();
+    for (pc in prefix.chars()) {
+      switch (pathIter.next()) {
+        case null return false;
+        case (?c) { if (c != pc) return false };
+      };
+    };
+    true
+  };
+
   func isCommunityImagePath(path : Text) : Bool {
     let prefix = "community-images/";
     if (path.size() < prefix.size()) return false;
@@ -221,6 +234,32 @@ mixin (
     };
     if (data.size() > 1_000_000) {
       Runtime.trap("File too large (max 1 MB)");
+    };
+    let now = Time.now();
+    await AssetUpload.storeToUploadsCanister(
+      uploadsCanisterPrincipal(),
+      path,
+      data,
+      mimeType,
+    );
+    ArtworkLib.buildStoredFileMetadata(path, data.size(), mimeType, now);
+  };
+
+  /// Admin: verified grower preview images (verified-growers/*).
+  public shared ({ caller }) func adminStoreVerifiedGrowerImage(
+    path     : Text,
+    data     : [Nat8],
+    mimeType : Text,
+  ) : async Types.StoredFile {
+    AccessControl.requireAdmin(accessControlState, caller);
+    if (not isVerifiedGrowerImagePath(path)) {
+      Runtime.trap("Invalid path: must start with verified-growers/");
+    };
+    if (data.size() > 2_000_000) {
+      Runtime.trap("File too large (max 2 MB)");
+    };
+    if (mimeType != "image/jpeg" and mimeType != "image/png" and mimeType != "image/webp") {
+      Runtime.trap("Invalid mime type");
     };
     let now = Time.now();
     await AssetUpload.storeToUploadsCanister(

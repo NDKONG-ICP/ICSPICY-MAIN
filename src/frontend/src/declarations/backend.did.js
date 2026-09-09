@@ -394,6 +394,15 @@ export const idlFactory = ({ IDL }) => {
     'enabled' : IDL.Bool,
     'maxIcpPerDayE8s' : IDL.Nat,
   });
+  const StoredFile = IDL.Record({
+    'data' : IDL.Vec(IDL.Nat8),
+    'path' : IDL.Text,
+    'size' : IDL.Nat,
+    'mime_type' : IDL.Text,
+    'layer' : IDL.Text,
+    'filename' : IDL.Text,
+    'uploaded_at' : Timestamp,
+  });
   const CanisterTopUpResult = IDL.Record({
     'icpSpentE8s' : IDL.Nat,
     'cyclesMinted' : IDL.Opt(IDL.Nat),
@@ -405,6 +414,42 @@ export const idlFactory = ({ IDL }) => {
   const Account = IDL.Record({
     'owner' : IDL.Principal,
     'subaccount' : IDL.Opt(Subaccount),
+  });
+  const VerifiedGrowerStat = IDL.Record({
+    'value' : IDL.Text,
+    'statLabel' : IDL.Text,
+  });
+  const VerifiedGrowerUpsert = IDL.Record({
+    'id' : IDL.Text,
+    'url' : IDL.Text,
+    'categories' : IDL.Vec(IDL.Text),
+    'owners' : IDL.Text,
+    'tagline' : IDL.Text,
+    'sortOrder' : IDL.Nat,
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+    'establishedYear' : IDL.Opt(IDL.Nat),
+    'stats' : IDL.Vec(VerifiedGrowerStat),
+    'story' : IDL.Text,
+    'imageKey' : IDL.Text,
+    'growerOfTheMonth' : IDL.Opt(IDL.Text),
+  });
+  const VerifiedGrower = IDL.Record({
+    'id' : IDL.Text,
+    'url' : IDL.Text,
+    'categories' : IDL.Vec(IDL.Text),
+    'owners' : IDL.Text,
+    'tagline' : IDL.Text,
+    'sortOrder' : IDL.Nat,
+    'name' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'description' : IDL.Text,
+    'establishedYear' : IDL.Opt(IDL.Nat),
+    'updatedAt' : IDL.Int,
+    'stats' : IDL.Vec(VerifiedGrowerStat),
+    'story' : IDL.Text,
+    'imageKey' : IDL.Text,
+    'growerOfTheMonth' : IDL.Opt(IDL.Text),
   });
   const AdminWithdrawTokensResult = IDL.Record({
     'blockIndex' : IDL.Opt(IDL.Nat),
@@ -2021,15 +2066,6 @@ export const idlFactory = ({ IDL }) => {
     'sessionId' : IDL.Text,
   });
   const Result_4 = IDL.Variant({ 'ok' : StartSessionOk, 'err' : IDL.Text });
-  const StoredFile = IDL.Record({
-    'data' : IDL.Vec(IDL.Nat8),
-    'path' : IDL.Text,
-    'size' : IDL.Nat,
-    'mime_type' : IDL.Text,
-    'layer' : IDL.Text,
-    'filename' : IDL.Text,
-    'uploaded_at' : Timestamp,
-  });
   const Result_3 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const SubmitScoreOk = IDL.Record({
     'bestScore' : IDL.Nat,
@@ -2248,6 +2284,7 @@ export const idlFactory = ({ IDL }) => {
     'adminDeleteComment' : IDL.Func([CommentId], [IDL.Bool], []),
     'adminDeletePost' : IDL.Func([PostId], [IDL.Bool], []),
     'adminDeleteVarietyGuide' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
+    'adminDeleteVerifiedGrower' : IDL.Func([IDL.Text], [], []),
     'adminGetGameStats' : IDL.Func(
         [IDL.Text, IDL.Principal],
         [IDL.Opt(GamePlayerStatsPublic)],
@@ -2310,10 +2347,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'adminSetGrowerOfTheMonth' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'adminSetLeaderboardExcluded' : IDL.Func([IDL.Principal, IDL.Bool], [], []),
     'adminSetSwarmCanisterAutoTopUp' : IDL.Func(
         [IDL.Text, SwarmAutoTopUpPolicy],
         [SwarmCanisterTarget],
+        [],
+      ),
+    'adminStoreVerifiedGrowerImage' : IDL.Func(
+        [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text],
+        [StoredFile],
         [],
       ),
     'adminSubmitToDAB' : IDL.Func(
@@ -2344,6 +2387,11 @@ export const idlFactory = ({ IDL }) => {
     'adminUpdateSwarmCanister' : IDL.Func(
         [IDL.Text, SwarmCanisterInput],
         [SwarmCanisterTarget],
+        [],
+      ),
+    'adminUpsertVerifiedGrower' : IDL.Func(
+        [VerifiedGrowerUpsert],
+        [VerifiedGrower],
         [],
       ),
     'adminWithdrawTokens' : IDL.Func(
@@ -3401,6 +3449,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(VarietyProvenancePublic)],
         ['query'],
       ),
+    'listVerifiedGrowers' : IDL.Func([], [IDL.Vec(VerifiedGrower)], ['query']),
     'loadStaticMetadata' : IDL.Func(
         [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Vec(IDL.Nat8)))],
         [LoadStaticMetadataResult],

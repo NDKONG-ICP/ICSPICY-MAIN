@@ -37,6 +37,9 @@ import MembershipAPI "mixins/membership-api";
 import NFTAPI "mixins/nft-api";
 import RecipesAPI "mixins/recipes-api";
 import ClaimAPI "mixins/claim-api";
+import VerifiedGrowersTypes "types/verified-growers";
+import VerifiedGrowersLib "lib/verified-growers";
+import VerifiedGrowersAPI "mixins/verified-growers-api";
 import ScheduleAPI "mixins/schedule-api";
 import LifecycleUpgradeAPI "mixins/lifecycle-upgrade-api";
 import BatchGiftAndResaleAPI "mixins/batch-gift-and-resale-api";
@@ -697,6 +700,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   // upgrade-compatible).
   let tropicalAdecks = Map.empty<Text, WeatherHubTypes.TropicalAdeck>();
   let weatherModelGusts = Map.empty<Text, WeatherHubTypes.ModelGustSpread>();
+  let verifiedGrowers = Map.empty<Text, VerifiedGrowersTypes.VerifiedGrower>();
 
   // ── Mixins ─────────────────────────────────────────────────────────────────
 
@@ -932,6 +936,8 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include ArtworkUploadAPI(accessControlState, rateLimits, artworkUploadSession, storedFiles, poolNFTs, selfPrincipalText, uploadsCanisterPrincipal);
   include CommunityVideoAPI(accessControlState, rateLimits, videoUploadSessions, nextVideoUploadId, uploadsCanisterPrincipal);
   include PoolAPI(accessControlState, nftPool, nextPoolProductId);
+  include VerifiedGrowersAPI(accessControlState, auditLog, verifiedGrowers);
+  ignore VerifiedGrowersLib.seedDefaultsIfEmpty(verifiedGrowers, Time.now());
   include CoopAPI(
     accessControlState,
     callerGuards,
@@ -1954,5 +1960,6 @@ shared(msg) persistent actor class ICSpicy() = Self {
       nftTokenPlantIds,
       plantByNftId,
     );
+    ignore VerifiedGrowersLib.seedDefaultsIfEmpty(verifiedGrowers, Time.now());
   };
 };

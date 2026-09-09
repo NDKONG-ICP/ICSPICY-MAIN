@@ -382,19 +382,19 @@ export const STATIC_ROUTE_SEO = [
   },
   {
     path: "/growers",
-    title: "Grower Co-op Directory — Founding Pepper Growers | IC SPICY",
+    title: "Verified Trusted Growers & Co-op Directory | IC SPICY",
     description:
-      "Public directory of IC SPICY Grower Co-op founding members — regenerative pepper farms and nurseries with on-chain plant provenance, profiles, and customer QR claims.",
+      "Meet IC SPICY verified regenerative pepper growers — featured partners like Plant Some Kindness plus on-chain co-op members with public profiles, plant provenance NFTs, and NFC checkout handoff.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
-      name: "IC SPICY Grower Directory",
+      name: "IC SPICY Verified Trusted Growers",
       url: "https://www.icspicy.app/growers",
       description:
-        "Founding members of the IC SPICY Grower Co-op with public grower profiles and blockchain plant provenance.",
+        "Verified regenerative pepper farms and IC SPICY Grower Co-op directory with on-chain plant provenance.",
     },
     crawlParagraphs: [
-      "The IC SPICY Grower Directory lists founding co-op members who completed their grower profile — farm name, location, plant counts, and provenance NFTs minted. Join the co-op on the marketplace to unlock pro NIMS, customer QR claims, and a public listing.",
+      "The IC SPICY Verified Trusted Growers showcase highlights exceptional regenerative farms we stand behind — including Grower of the Month features with product categories, farm stats, and links to partner shops. The Grower Co-op Directory lists founding members who completed their on-chain profile with plant counts and provenance NFTs minted through NIMS.",
     ],
   },
   {
