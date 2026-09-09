@@ -47,7 +47,7 @@ Phase 6 is correctly described as **extraction of other concerns out of backend*
 | `frontend` | React UI asset canister | Independent; already exists |
 | `nft_assets` | 8888 PNGs + JSON metadata, ~1.33GB asset canister | Independent; created Phase 2 |
 | `marketplace_canister` | Products, orders, offers, discount engine | Extracted from backend Phase 6 |
-| `treasury_canister` | ICP/ckBTC/SPICY custody, buybacks, burns | Extracted from backend Phase 6 |
+| `treasury_canister` | ICP/ckBTC/SPICY custody, buybacks, burns | **Deployed 2026-09-09: `x5fx2-iiaaa-aaaao-bbjxa-cai`** — §6.2 subaccounts, two-admin + 7-day timelock outflows, public audit/burn/buyback logs; reads policy from `spicy_policy_canister` |
 | `community_canister` | Posts, recipes, profiles | Extracted from backend Phase 6 |
 | `nims_canister` | Plants, trays, lifecycle, weather | Extracted from backend Phase 6 |
 | `spicy_ai_canister` | Chatbot via `mo:llm` | New canister Phase 6.5 |
@@ -72,11 +72,12 @@ Phases 0–5 happen in the existing single-canister `backend`; Phase 6 extracts 
   - Founder participates with verified wallet, capped at 18M tokens
   - Founder's 18M is voluntarily locked for 24 months via OHSHII Locker (6-month cliff + 18-month linear vest)
 - **ICPSwap LP: 200M (20%)** — locked 4 years via OHSHII Locker
-- **IC SPICY Treasury: 100M (10%)** — held by treasury_canister, structured by subaccount:
-  - 25M NFT redemption pool (PepperHeads excluded from burn redemption reduces required pool)
-  - 10M quarterly burn reserve
-  - 25M marketing/community
-  - 15M operational reserve
+- **IC SPICY Treasury: 100M (10%)** — held by treasury_canister, structured by subaccount (authoritative split: TOKENOMICS_DISCLOSURE.md §6.2):
+  - 40M NFT redemption pool (subaccount index 1)
+  - 25M marketing/community (index 2)
+  - 20M strategic reserve (index 3)
+  - 10M operational reserve (index 4)
+  - 5M quarterly burn reserve (index 5)
   - 25M strategic reserve
 
 ### Burn destination
@@ -623,7 +624,7 @@ URL pattern: `https://skills.internetcomputer.org/.well-known/skills/<skill-name
 **Pending (created in later phases):**
 
 - `marketplace_canister` — Phase 6 extraction
-- `treasury_canister` — Phase 6 extraction
+- ~~`treasury_canister`~~ — **deployed 2026-09-09: `x5fx2-iiaaa-aaaao-bbjxa-cai`**
 - `community_canister` — Phase 6 extraction
 - `nims_canister` — Phase 6 extraction
 - `spicy_ai_canister` — Phase 6.5

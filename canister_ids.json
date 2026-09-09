@@ -32,6 +32,9 @@
   "spicy_policy_canister": {
     "ic": "xug4g-6aaaa-aaaao-bbjwq-cai"
   },
+  "treasury_canister": {
+    "ic": "x5fx2-iiaaa-aaaao-bbjxa-cai"
+  },
   "uploads": {
     "ic": "r53pg-maaaa-aaaao-ba7na-cai"
   },

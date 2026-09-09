@@ -108,6 +108,11 @@
       "type": "motoko",
       "main": "src/spicy_policy_canister/main.mo",
       "wasm_memory_persistence": "keep"
+    },
+    "treasury_canister": {
+      "type": "motoko",
+      "main": "src/treasury_canister/main.mo",
+      "wasm_memory_persistence": "keep"
     }
   },
   "defaults": {

@@ -36,3 +36,6 @@ core = "2.2.0"
 llm = "2.1.0"
 ic-certification = "1.1.0"
 sha2 = "0.1.6"
+
+[canisters.treasury_canister]
+main = "src/treasury_canister/main.mo"

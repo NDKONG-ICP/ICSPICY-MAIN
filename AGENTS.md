@@ -317,7 +317,15 @@ Smoke test for Phase 4 to verify guard works:
 - **`spicy_policy_canister` (`xug4g-6aaaa-aaaao-bbjwq-cai`) is the only SONS CustomCall target.** Never target `backend` with governance proposals — SONS pins the module hash at proposal creation and any upgrade kills open proposals. UPGRADE FREEZE: before upgrading `spicy_policy_canister`, check SONS for open CustomCall proposals targeting it.
 - **Canister creation on our subnet costs 0.5T cycles** (not 0.1T). `--with-cycles 550000000000` left only ~49B after the creation fee — install then failed with IC0207 needing ~277B more. Budget ≥ 1.3T when creating a new mainnet canister (0.5T fee + ~0.3T install/reserve + runway).
 - **`adminDepositCycles(target, amount)` on backend** (admin-only, 2T per-call cap, audit-logged) transfers cycles to fleet canisters via the management canister's `deposit_cycles`. Use this instead of buying ICP when the backend has surplus. Syntax note: `await (with cycles = amount) ic.deposit_cycles({ canister_id })` works on moc 1.3.
-- **Cycles wallet (`daf6l`) is low (~0.16T)** after the policy-canister creation. Top up before the next canister creation.
+- **Cycles wallet (`daf6l`) topped up to ~11T (2026-09-09)**; ~9.3T remain after the treasury-canister creation.
+
+### Phase 6 — treasury_canister (2026-09-09)
+
+- **`treasury_canister` deployed: `x5fx2-iiaaa-aaaao-bbjxa-cai`** (1.5T cycles, 90-day freezing threshold, two admins). Enforces TOKENOMICS §6.3 in code: every outflow needs two distinct admin approvals AND a 7-day timelock; operational config (ledger IDs, policy canister, admin rotation) is admin-only without timelock but audit-logged. Burns to `2vxsx-fae` are auto-appended to the public burn log. SPICY ledger + ICPSwap pool IDs are admin-set post-LGE (`setSpicyLedger`, `setIcpswapPool`); the monthly buyback timer reads policy from `spicy_policy_canister` and logs every attempt — currently `skippedPaused`/`refusedNotConfigured` until Phase 8 lands the swap engine.
+- **Local PocketIC replica does NOT enforce `inspect_message`.** Anonymous ingress reaches the method locally (in-method guards catch it); on mainnet the inspect gate fires correctly. Don't debug a "broken" inspect gate against the local replica.
+- **`inspect_message` refusal surfaces as IC0503 "canister_inspect_message explicitly refused message".** It looks like an in-method trap in dfx output (same error code as `Runtime.trap`); read the reject message text to tell them apart.
+- **Approvals are revalidated at execute time.** `liveApprovalCount` only counts approvers who are STILL admins, so rotating out a compromised admin also voids their outstanding transfer approvals.
+- **Timer re-arming across upgrades: `transient let _t = Timer.recurringTimer<system>(...)`.** Transient initializers re-run on every upgrade, so the timer is re-armed automatically — no postupgrade hook needed.
 
 ## Last updated
 - Initial version: written for Claude Code in Cursor workflow, post-design-session
