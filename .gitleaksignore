@@ -1,0 +1,9 @@
+# Verified false positives — see fingerprint format: <commit>:<file>:<rule>:<line>
+
+# Mapbox public demo token (username "mapbox") from Mapbox documentation.
+# pk.* tokens are publishable by design; this one is Mapbox's own docs example.
+4f710a895567f22c1e06f68ae83ab4e079fe2b40:src/frontend/src/lib/satellite-tiles.ts:generic-api-key:185
+
+# mops.lock package integrity hashes (sha256), not secrets.
+e95d300b5a639067b5a71ca446a8f58455e7b5c6:mops.lock:generic-api-key:73
+e95d300b5a639067b5a71ca446a8f58455e7b5c6:mops.lock:generic-api-key:75
