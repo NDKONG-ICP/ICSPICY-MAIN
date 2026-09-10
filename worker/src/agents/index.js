@@ -1,5 +1,9 @@
 import { kindKey } from "../idl/agent-hub.js";
-import { runNewsletterAgent, sendApprovedNewsletters } from "./newsletter.js";
+import {
+  runNewsletterAgent,
+  sendApprovedNewsletters,
+  sendPendingConfirmations,
+} from "./newsletter.js";
 import { runEmailCorrespondenceAgent, runSocialAgent } from "./social.js";
 import {
   runAnalyticsDigest,
@@ -49,4 +53,4 @@ export async function dispatchJob(ctx, job) {
   }
 }
 
-export { sendApprovedNewsletters };
+export { sendApprovedNewsletters, sendPendingConfirmations };

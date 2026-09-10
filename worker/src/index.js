@@ -3,7 +3,11 @@ import { loadMnemonicFromEnv, loadWorkerIdentity } from "./identity.js";
 import { createHubActor, loadSecrets } from "./clients/hub.js";
 import { createBackendActor } from "./clients/hub.js";
 import { createLlmRouter, taskFamilyOf, LLM_SECRET_NAMES } from "./clients/llm.js";
-import { dispatchJob, sendApprovedNewsletters } from "./agents/index.js";
+import {
+  dispatchJob,
+  sendApprovedNewsletters,
+  sendPendingConfirmations,
+} from "./agents/index.js";
 
 const POLL_SEC = Number(process.env.POLL_INTERVAL_SEC ?? 60);
 const ONCE = process.argv.includes("--once");
@@ -47,6 +51,7 @@ async function tick(identity) {
   }
 
   await sendApprovedNewsletters({ hub, secrets });
+  await sendPendingConfirmations({ hub, secrets });
 }
 
 async function main() {

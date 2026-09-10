@@ -212,6 +212,10 @@ shared(msg) persistent actor class AgentHub() = Self {
   let subscribersByEmail = Map.empty<Text, SubscriberRecord>();
   let subscribersByConfirm = Map.empty<Text, Text>();
   let subscribersByUnsub = Map.empty<Text, Text>();
+  // Confirmation-email send log (side map — SubscriberRecord has var fields and
+  // is type-invariant in stable memory, so send tracking cannot live on it).
+  // Keyed by the subscribersByEmail map key; value = sent-at timestamp.
+  let confirmEmailsSent = Map.empty<Text, Int>();
   let secrets = Map.empty<Text, Text>();
   let newsletterArchive = Map.empty<Text, NewsletterIssue>();
   let auditLog = List.empty<AuditEntry>();
@@ -1075,6 +1079,30 @@ shared(msg) persistent actor class AgentHub() = Self {
       if (count >= limit) break scan;
     };
     out.toArray()
+  };
+
+  /// Agent/admin: pending subscribers who still need their confirmation email,
+  /// as (emailKey, confirmToken) pairs. Excludes anyone already sent one.
+  public query ({ caller }) func listPendingConfirmSends(limit : Nat) : async [(Text, Text)] {
+    requireAdminOrAgent(caller);
+    let out = List.empty<(Text, Text)>();
+    var count : Nat = 0;
+    label scan for ((emailKey, s) in subscribersByEmail.entries()) {
+      if (s.status != #pending) continue scan;
+      if (confirmEmailsSent.get(emailKey) != null) continue scan;
+      out.add((emailKey, s.confirmToken));
+      count += 1;
+      if (count >= limit) break scan;
+    };
+    out.toArray()
+  };
+
+  /// Agent/admin: record that the confirmation email went out so the worker
+  /// does not re-send it on every poll.
+  public shared ({ caller }) func markConfirmationSent(emailKey : Text) : async () {
+    requireAdminOrAgent(caller);
+    confirmEmailsSent.add(emailKey, Time.now());
+    appendAudit(caller, "confirmationEmailSent", emailKey);
   };
 
   /// Agent/admin: confirmed subscribers as (email, unsubscribeToken) pairs so the

@@ -136,6 +136,34 @@ export function renderNewsletterHtml({
 </body></html>`;
 }
 
+/** Branded double-opt-in confirmation email. */
+export function confirmEmailHtml(confirmUrl, siteUrl) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Confirm your IC SPICY subscription</title></head>
+<body style="margin:0;background:#0c0806;font-family:system-ui,-apple-system,sans-serif;color:#f8f0e8;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;">
+    <tr><td style="padding:32px 20px 16px;text-align:center;">
+      <div style="font-size:28px;font-weight:800;letter-spacing:-0.02em;">IC <span style="color:${ACCENT};">SPICY</span></div>
+      <div style="font-size:12px;color:${MUTED};margin-top:4px;">Rare. Hot. Alive.</div>
+    </td></tr>
+    <tr><td style="padding:0 20px 24px;">
+      <div style="background:#2a201a;border:1px solid #3d3028;border-radius:12px;padding:24px;text-align:center;">
+        <h1 style="margin:0 0 12px;font-size:20px;color:${ACCENT};">One click to confirm</h1>
+        <p style="margin:0 0 20px;line-height:1.6;font-size:15px;">You (or someone very spicy) asked for the weekly IC SPICY grower newsletter — featured growers, CookBook recipes, and a 7-day Zone 10a forecast with planting guidance.</p>
+        <a href="${confirmUrl}" style="display:inline-block;background:${ACCENT};color:#fff;text-decoration:none;font-size:15px;font-weight:700;padding:12px 28px;border-radius:8px;">Confirm subscription</a>
+        <p style="margin:20px 0 0;font-size:12px;color:${MUTED};">Didn't sign up? Ignore this email and you'll never hear from us.</p>
+      </div>
+    </td></tr>
+    <tr><td style="padding:0 20px 32px;text-align:center;font-size:11px;color:#8a7a6a;">
+      Port Charlotte, FL · FDACS Registered Nursery<br>
+      <a href="${siteUrl}" style="color:${MUTED};">icspicy.app</a>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
 export function productsListHtml(products) {
   const active = products
     .filter((p) => p.active && (p.inventory_remaining?.[0] ?? 1n) > 0n)

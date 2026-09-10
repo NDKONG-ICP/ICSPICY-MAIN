@@ -1,6 +1,7 @@
 import { fullComplianceCheck } from "../lib/compliance.js";
 import {
   UNSUBSCRIBE_PLACEHOLDER,
+  confirmEmailHtml,
   forecastTableHtml,
   growerSpotlightHtml,
   isoWeekKey,
@@ -186,5 +187,29 @@ export async function sendApprovedNewsletters(ctx) {
       draft.id,
       BigInt(recipients.length),
     );
+  }
+}
+
+/** Double-opt-in: email the confirm link to new pending subscribers (once each). */
+export async function sendPendingConfirmations(ctx) {
+  const { hub, secrets } = ctx;
+  const apiKey = secrets.resend_api_key;
+  const from = secrets.resend_from_email;
+  if (!apiKey || !from) return;
+  const siteUrl = process.env.PUBLIC_SITE_URL ?? "https://icspicy.app";
+
+  const pending = await hub.listPendingConfirmSends(50n);
+  for (const [email, confirmToken] of pending) {
+    const confirmUrl = `${siteUrl}/newsletter/confirm?token=${encodeURIComponent(confirmToken)}`;
+    await sendEmail({
+      apiKey,
+      from,
+      to: [email],
+      subject: "Confirm your IC SPICY newsletter subscription 🌶️",
+      html: confirmEmailHtml(confirmUrl, siteUrl),
+      idempotencyKey: `confirm-${email}`,
+    });
+    await hub.markConfirmationSent(email);
+    console.log(`[worker] confirmation email sent to ${email.slice(0, 3)}***`);
   }
 }

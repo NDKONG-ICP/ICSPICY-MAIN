@@ -99,6 +99,12 @@ export function agentHubIdlFactory({ IDL }) {
       [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
       ["query"],
     ),
+    listPendingConfirmSends: IDL.Func(
+      [IDL.Nat],
+      [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
+      ["query"],
+    ),
+    markConfirmationSent: IDL.Func([IDL.Text], [], []),
     listAgents: IDL.Func([], [IDL.Vec(IDL.Record({
       id: IDL.Nat,
       name: IDL.Text,
