@@ -31,6 +31,9 @@ export const agentHubIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
     orders_claims_ops: IDL.Null,
     community_moderator: IDL.Null,
     analytics_digest: IDL.Null,
+    ambassador_crumbeatr: IDL.Null,
+    ambassador_swop: IDL.Null,
+    ambassador_bonsai: IDL.Null,
   });
   const AgentStatus = IDL.Variant({
     active: IDL.Null,

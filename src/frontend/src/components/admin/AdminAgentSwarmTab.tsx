@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   CloudSun,
   KeyRound,
+  Leaf,
   Mail,
   PauseCircle,
   PlayCircle,
@@ -37,6 +38,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { AdminCapsaicinTab } from "./AdminCapsaicinTab";
 
 type AgentPublic = {
   id: bigint;
@@ -97,11 +99,19 @@ const SECRET_PRESETS = [
   "llm_route_analytics",
   "llm_route_compliance",
   "llm_route_email",
+  "llm_route_ambassador",
   "llm_api_key",
   "llm_provider",
   "llm_model",
   "admin_alert_email",
   "newsletter_reply_to",
+  "ambassador_sweep_principal",
+  "canopy_wallet_principal",
+  "crumbeatr_canister_id",
+  "swop_backend_canister_id",
+  "bonsai_registry_canister_id",
+  "bonsai_orbit_canister_id",
+  "bonsai_bazaar_canister_id",
 ] as const;
 
 function formatTs(ns: bigint): string {
@@ -375,6 +385,10 @@ export function AdminAgentSwarmTab() {
       <Tabs defaultValue="roster">
         <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="roster">Roster</TabsTrigger>
+          <TabsTrigger value="capsaicin" className="gap-1">
+            <Leaf className="w-3.5 h-3.5" />
+            Capsaicin
+          </TabsTrigger>
           <TabsTrigger value="queue">
             Approval Queue
             {pendingCount > 0 && (
@@ -435,6 +449,10 @@ export function AdminAgentSwarmTab() {
               </div>
             );
           })}
+        </TabsContent>
+
+        <TabsContent value="capsaicin" className="mt-4">
+          <AdminCapsaicinTab />
         </TabsContent>
 
         <TabsContent value="queue" className="space-y-4 mt-4">

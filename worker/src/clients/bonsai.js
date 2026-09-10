@@ -252,12 +252,26 @@ function nftLedgerIdlFactory({ IDL: I }) {
     owner: I.Principal,
     subaccount: I.Opt(I.Vec(I.Nat8)),
   });
+  const TransferArg = I.Record({
+    to: Account,
+    token_id: I.Nat,
+    from_subaccount: I.Opt(I.Vec(I.Nat8)),
+  });
+  const TransferError = I.Variant({
+    Unauthorized: I.Null,
+    NonExistingTokenId: I.Null,
+  });
   return I.Service({
     balance_of_collection: I.Func([Account, I.Nat], [I.Nat], ["query"]),
     icrc7_tokens_of: I.Func(
       [Account, I.Opt(I.Nat), I.Opt(I.Nat)],
       [I.Vec(I.Nat)],
       ["query"],
+    ),
+    icrc7_transfer: I.Func(
+      [I.Vec(TransferArg)],
+      [I.Vec(I.Opt(I.Variant({ Ok: I.Nat, Err: TransferError })))],
+      [],
     ),
   });
 }
@@ -418,6 +432,24 @@ export async function createBonsaiClient({ identity, host = "https://icp-api.io"
 
     async orbitBalance() {
       return nftLedger.balance_of_collection(account, ORBIT_SPOTS_COLLECTION_ID);
+    },
+
+    async transferNft(tokenId, toPrincipalText) {
+      const to = Principal.fromText(toPrincipalText);
+      const results = await nftLedger.icrc7_transfer([
+        {
+          to: { owner: to, subaccount: [] },
+          token_id: BigInt(tokenId),
+          from_subaccount: [],
+        },
+      ]);
+      const first = results?.[0];
+      const inner = first?.[0];
+      if (!inner) throw new Error("icrc7_transfer returned empty");
+      if ("Err" in inner) {
+        throw new Error(`icrc7_transfer: ${JSON.stringify(inner.Err)}`);
+      }
+      return inner.Ok;
     },
   };
 }

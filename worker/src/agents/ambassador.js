@@ -32,7 +32,7 @@ import { createSwopClient, SWOP_CORE, SWOP_SOCIAL } from "../clients/swop.js";
 import {
   createBonsaiClient,
   BONSAI_REGISTRY,
-  ORBIT_SPOTS_COLLECTION_ID,
+  ORBIT_SPOTS_MINT_E8S,
 } from "../clients/bonsai.js";
 
 const MAX_AUTO_REACTIONS = 3;
@@ -52,21 +52,34 @@ function parseJsonLoose(text) {
 }
 
 export async function runAmbassador(ctx, key) {
+  const payload = parseJsonLoose(String(ctx.job?.payload ?? "")) || {};
+  const action = payload.action;
+
+  // Cross-cutting admin actions (any Capsaicin agent id can carry them)
+  if (action === "sweep") {
+    await sweepAmbassadorFunds({
+      secrets: ctx.secrets,
+      captainIdentity: ctx.captainIdentity,
+    });
+    await ctx.hub.reportRun(kindVariant(key), `${key}: sweep completed`);
+    return null;
+  }
+
   switch (key) {
     case "ambassador_crumbeatr":
       return runCrumbeatr(ctx);
     case "ambassador_swop":
       return runSwop(ctx);
     case "ambassador_bonsai":
-      return runBonsaiGate(ctx, key);
+      return runBonsaiGate(ctx, key, payload);
     default:
       throw new Error(`Not an ambassador kind: ${key}`);
   }
 }
 
-/** BonsaiOS: Canopy principal + registry CRM status + Orbit holdings pulse. */
-async function runBonsaiGate(ctx, key) {
-  const { hub, secrets, captainIdentity, walletBook } = ctx;
+/** BonsaiOS: mint-first Orbit, CRM pulse, NFT transfer. Never secondary buy. */
+async function runBonsaiGate(ctx, key, payload = {}) {
+  const { hub, secrets, captainIdentity, walletBook, job } = ctx;
   const book = walletBook;
   const canopy =
     (book ? bonsaiPrincipal(book) : null) ||
@@ -80,17 +93,64 @@ async function runBonsaiGate(ctx, key) {
     return awaitingIntegration(ctx, key, "canopy_wallet_principal");
   }
 
+  const client = await createBonsaiClient({ identity: captainIdentity });
+  const action = payload.action || "status";
+
+  if (action === "transfer_nft") {
+    const tokenId = payload.tokenId ?? payload.token_id;
+    const to = payload.to;
+    if (!tokenId || !to) throw new Error("transfer_nft requires tokenId + to");
+    const tx = await client.transferNft(tokenId, to);
+    const msg = `${key}: transferred NFT ${tokenId} → ${to} (result ${tx})`;
+    console.log(`[ambassador] ${msg}`);
+    await hub.reportRun(kindVariant(key), msg);
+    return null;
+  }
+
+  if (action === "mint_orbit") {
+    const maxQty = BigInt(payload.maxQty ?? 1);
+    const minted = await client.mintPhase({
+      quantity: 1n,
+      maxQty,
+      maxUnitE8s: ORBIT_SPOTS_MINT_E8S,
+    });
+    const msg =
+      `${key}: minted Orbit Spot token=${minted.tokenId} serial=${minted.serial} ` +
+      `paid=${minted.priceE8s}e8s (mint-first, not floor buy)`;
+    console.log(`[ambassador] ${msg}`);
+    await hub.reportRun(kindVariant(key), msg);
+    return null;
+  }
+
+  // Default / timer: status + mint-first if under target holdings
   const registryId =
     secrets.bonsai_registry_canister_id?.trim() || BONSAI_REGISTRY;
-  const client = await createBonsaiClient({ identity: captainIdentity });
   const crm = await client.getCrmStatus();
   const orbitBal = await client.orbitBalance();
   const icpBal = await client.icpBalance();
+  const targetHoldings = BigInt(payload.targetOrbit ?? secrets.bonsai_orbit_target ?? 1);
+
+  let mintNote = "no mint";
+  if (orbitBal < targetHoldings && action !== "status_only") {
+    try {
+      const minted = await client.mintPhase({
+        quantity: 1n,
+        maxQty: 1n,
+        maxUnitE8s: ORBIT_SPOTS_MINT_E8S,
+      });
+      mintNote = `minted token=${minted.tokenId} serial=${minted.serial}`;
+    } catch (err) {
+      mintNote = `mint skipped: ${err instanceof Error ? err.message : String(err)}`;
+    }
+  } else if (orbitBal >= targetHoldings) {
+    mintNote = `holdings ${orbitBal} ≥ target ${targetHoldings}`;
+  }
+
   const msg =
     `${key}: Canopy ${canopy.slice(0, 12)}… registry=${registryId} ` +
     `crm(profile=${crm.hasProfile},score=${crm.score}) ` +
-    `orbitSpots(collection=${ORBIT_SPOTS_COLLECTION_ID})=${orbitBal} ` +
-    `icpE8s=${icpBal}`;
+    `orbitSpots=${await client.orbitBalance()} icpE8s=${await client.icpBalance()} ` +
+    `job=${job?.id ?? "?"} ${mintNote}`;
   console.log(`[ambassador] ${msg}`);
   await hub.reportRun(kindVariant(key), msg);
   return null;
