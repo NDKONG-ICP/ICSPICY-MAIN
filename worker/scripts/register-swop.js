@@ -36,12 +36,29 @@ async function main() {
 
   if (STATUS_ONLY) return;
 
-  const avatar = join(HERE, "..", "assets", "captain-capsaicin-256.jpg");
+  const avatar = join(HERE, "..", "assets", "captain-avatar-512.jpg");
   try {
     await swop.setAvatarFromFile(avatar, "image/jpeg");
     console.log("avatar set");
   } catch (e) {
     console.warn(`avatar failed: ${e.message}`);
+  }
+
+  const banner = join(HERE, "..", "assets", "captain-banner.jpg");
+  try {
+    await swop.setBannerFromFile(banner, "image/jpeg");
+    console.log("banner set");
+  } catch (e) {
+    console.warn(`banner failed: ${e.message}`);
+  }
+
+  try {
+    await swop.setBio(
+      "Captain Capsaicin — IC SPICY ambassador. Regenerative heat, rare peppers, living soil. 🌶️ https://icspicy.app",
+    );
+    console.log("bio set");
+  } catch (e) {
+    console.warn(`bio failed: ${e.message}`);
   }
 
   if (DO_POST) {

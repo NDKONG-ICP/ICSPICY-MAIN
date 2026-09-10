@@ -75,6 +75,9 @@ function coreIdl({ IDL }) {
     getUserByUsername: IDL.Func([IDL.Text], [IDL.Opt(UserRecord)], ["query"]),
     setProfileImageBlob: IDL.Func([IDL.Vec(IDL.Nat8), IDL.Text], [UnitResult], []),
     setProfileImageUrl: IDL.Func([IDL.Text], [UnitResult], []),
+    setBannerBlob: IDL.Func([IDL.Vec(IDL.Nat8), IDL.Text], [UnitResult], []),
+    setBannerUrl: IDL.Func([IDL.Text], [UnitResult], []),
+    setBio: IDL.Func([IDL.Text], [UnitResult], []),
     recordTip: IDL.Func(
       [FriendTarget, IDL.Nat, IDL.Opt(IDL.Text)],
       [UnitResult],
@@ -234,10 +237,26 @@ export async function createSwopClient({
 
     async setAvatarFromFile(path, mime = "image/jpeg") {
       const bytes = readFileSync(path);
-      return unwrap(
+      unwrap(
         await core.setProfileImageBlob([...bytes], mime),
         "setProfileImageBlob",
       );
+      // SWOP UI only renders the blob when profileImageUrl carries this marker.
+      const marker = `swop-avatar:v1:${Date.now()}`;
+      unwrap(await core.setProfileImageUrl(marker), "setProfileImageUrl");
+      return marker;
+    },
+
+    async setBannerFromFile(path, mime = "image/jpeg") {
+      const bytes = readFileSync(path);
+      unwrap(await core.setBannerBlob([...bytes], mime), "setBannerBlob");
+      const marker = `swop-banner:v1:${Date.now()}`;
+      unwrap(await core.setBannerUrl(marker), "setBannerUrl");
+      return marker;
+    },
+
+    async setBio(bio) {
+      return unwrap(await core.setBio(bio), "setBio");
     },
 
     async createPost(content, { stationId = null } = {}) {
