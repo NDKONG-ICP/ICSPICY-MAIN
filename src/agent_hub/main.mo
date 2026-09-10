@@ -1152,6 +1152,11 @@ shared(msg) persistent actor class AgentHub() = Self {
       "resend_api_key", "resend_from_email", "llm_api_key", "llm_provider",
       "llm_model", "admin_alert_email", "backend_canister_id",
       "spicy_ai_canister_id", "newsletter_reply_to",
+      // Per-task LLM routing (worker router)
+      "llm_api_key_anthropic", "llm_api_key_openai",
+      "llm_route_default", "llm_route_social", "llm_route_newsletter",
+      "llm_route_almanac", "llm_route_sentinel", "llm_route_analytics",
+      "llm_route_compliance", "llm_route_email",
     ];
     let out = List.empty<(Text, Text)>();
     for (name in names.vals()) {
