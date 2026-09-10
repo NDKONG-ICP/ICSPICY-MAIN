@@ -327,6 +327,10 @@ Smoke test for Phase 4 to verify guard works:
 - **Approvals are revalidated at execute time.** `liveApprovalCount` only counts approvers who are STILL admins, so rotating out a compromised admin also voids their outstanding transfer approvals.
 - **Timer re-arming across upgrades: `transient let _t = Timer.recurringTimer<system>(...)`.** Transient initializers re-run on every upgrade, so the timer is re-armed automatically — no postupgrade hook needed.
 
+### Agent hub — ambassador migration (2026-09)
+
+- **Spent Motoko migrations must be detached before the next upgrade.** After `PhaseAgentHubAmbassadors` landed on mainnet, leaving `(with migration = Migration.migration)` in `main.mo` made the *next* deploy fail M0170 (on-chain `AgentKind` already had `#ambassador_*`, but the migration still expected the pre-ambassador `OldAgentKind`). Fix: remove the `with migration` attribute once applied; keep the migration file for history. Additive changes that do not alter stable types (e.g. secret whitelist) then upgrade cleanly.
+
 ## Last updated
 - Initial version: written for Claude Code in Cursor workflow, post-design-session
 - Owner: project lead — keep this file in sync with actual workflow as it evolves
