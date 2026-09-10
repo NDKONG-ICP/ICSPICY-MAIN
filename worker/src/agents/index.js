@@ -6,6 +6,11 @@ import {
 } from "./newsletter.js";
 import { runEmailCorrespondenceAgent, runSocialAgent } from "./social.js";
 import {
+  runAmbassador,
+  publishApprovedAmbassadorDrafts,
+  sweepAmbassadorFunds,
+} from "./ambassador.js";
+import {
   runAnalyticsDigest,
   runCommunityModerator,
   runComplianceReviewer,
@@ -46,6 +51,10 @@ export async function dispatchJob(ctx, job) {
       return runAnalyticsDigest(ctx);
     case "compliance_reviewer":
       return runComplianceReviewer(ctx);
+    case "ambassador_crumbeatr":
+    case "ambassador_swop":
+    case "ambassador_bonsai":
+      return runAmbassador(ctx, key);
     case "orchestrator":
       return null;
     default:
@@ -53,4 +62,9 @@ export async function dispatchJob(ctx, job) {
   }
 }
 
-export { sendApprovedNewsletters, sendPendingConfirmations };
+export {
+  sendApprovedNewsletters,
+  sendPendingConfirmations,
+  publishApprovedAmbassadorDrafts,
+  sweepAmbassadorFunds,
+};

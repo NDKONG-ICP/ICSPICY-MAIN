@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en" class="dark landing-os landing-booting">
+  <head>
+    <script>
+      (function () {
+        try {
+          var keys = [
+            "bonsai_active_icp_wallet_v1",
+            "preferred_icp_wallet_v1",
+            "bonsai_radio_icp_wallet_v1",
+          ];
+          for (var i = 0; i < keys.length; i++) {
+            if (localStorage.getItem(keys[i]) === "plug") {
+              localStorage.removeItem(keys[i]);
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script>
+      (function () {
+        try {
+          var h = location.hostname;
+          if (h.length > 8 && h.slice(-8) === ".ic0.app") {
+            var u = new URL(location.href);
+            u.hostname = h.slice(0, -8) + ".icp0.io";
+            location.replace(u.href);
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script>
+      (function () {
+        try {
+          var h = location.hostname;
+          if (h === "candacemarquette.com" || h === "www.candacemarquette.com") {
+            if (!/candace\.html$/i.test(location.pathname)) {
+              location.replace("/candace.html");
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark only" />
+    <title>Bonsai OS — Ecosystem Shell on ICP</title>
+    <meta
+      name="description"
+      content="Bonsai OS — decentralized search ecosystem on the Internet Computer."
+    />
+    <meta name="theme-color" content="#010308" />
+    <!-- Critical boot paint: black only — no FOUC / no white flash before CSS modules. -->
+    <style>
+      html.landing-os,
+      html.landing-os body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #010308 !important;
+        background-color: #010308 !important;
+        color: #d1fae5;
+        color-scheme: dark only;
+        overflow: hidden;
+      }
+      html.landing-booting body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 2147483000;
+        background: #010308;
+        pointer-events: none;
+      }
+      html.landing-booting .landing-boot-hide {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+    </style>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/brand/bonsai-os/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/brand/bonsai-os/favicon-192.png" />
+    <link rel="icon" type="image/svg+xml" href="/brand/bonsai-os/icon-glyph.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/brand/bonsai-os/apple-touch-icon.png" />
+    <link rel="manifest" href="/brand/bonsai-os/manifest.json" />
+    <link rel="preload" as="image" href="/brand/bonsai-os/landing-hero-logo.png" />
+    <link rel="preload" as="image" href="/campaign/blade-grove/bga-bg-plate-1x1.png" />
+    <link rel="preload" as="image" href="/campaign/blade-grove/bga-arena-holo-16x9.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+    <script type="module" crossorigin src="/assets/index-PFcKOzEK.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-qeN_Mygc.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-dfinity-SDTh3rbR.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-BUYOx8nH.css">
+  </head>
+  <body style="background:#010308;background-color:#010308;margin:0">
+    <div class="blade-grove-holo-layer landing-boot-hide" aria-hidden="true"></div>
+    <div class="hero-bg landing-boot-hide" aria-hidden="true">
+      <div class="hero-aura hero-aura--green"></div>
+      <div class="hero-aura hero-aura--blue"></div>
+      <div class="hero-aura hero-aura--purple"></div>
+    </div>
+    <canvas id="matrix-canvas" class="landing-boot-hide" aria-hidden="true"></canvas>
+    <div id="landing-3d-menu" class="landing-3d-menu landing-boot-hide" aria-label="Bonsai OS interactive background menu"></div>
+    <div class="scanlines landing-boot-hide" aria-hidden="true"></div>
+    <div class="vignette landing-boot-hide" aria-hidden="true"></div>
+
+    <aside
+      id="blade-grove"
+      class="bga-campaign is-open landing-boot-hide"
+      data-bga-campaign
+      aria-label="Blade Grove Arena launch"
+      aria-roledescription="carousel"
+    >
+      <div class="bga-campaign__sheen" aria-hidden="true"></div>
+      <div
+        class="bga-campaign__drag"
+        data-bga-drag
+        title="Drag to move"
+        role="presentation"
+      >
+        <span class="bga-campaign__drag-grip" aria-hidden="true"></span>
+        <span class="bga-campaign__drag-label">Blade Grove Arena</span>
+      </div>
+      <button type="button" class="bga-campaign__dismiss" data-bga-dismiss aria-label="Dismiss Blade Grove">
+        ×
+      </button>
+      <div class="bga-campaign__scroll">
+        <div class="bga-campaign__pages" data-bga-pages>
+          <section class="bga-campaign__page is-active" data-bga-page="0" aria-label="Launch">
+            <div class="bga-campaign__media" aria-hidden="true">
+              <img
+                class="bga-campaign__arena"
+                src="/campaign/blade-grove/bga-arena-holo-16x9.png"
+                alt=""
+                width="640"
+                height="360"
+                decoding="async"
+              />
+              <img
+                class="bga-campaign__foil"
+                src="/campaign/blade-grove/bga-foil-cards-1x1.png"
+                alt=""
+                width="180"
+                height="180"
+                decoding="async"
+              />
+            </div>
+            <div class="bga-campaign__copy">
+              <p class="bga-campaign__date">Public launch · Thu 27 Aug 2026</p>
+              <h2 class="bga-campaign__title">Blade Grove Arena</h2>
+              <p class="bga-campaign__pitch">
+                Cyberpunk samurai-panda TCG auto-battler + holographic foil cards on Bonsai OS.
+                Grind Story and Siege. Prep your formation. Buy packs direct — no Gumroad.
+              </p>
+              <p class="bga-campaign__note" data-bga-play-note>
+                Pack Bay opens 27 Aug — practice &amp; community live on The Swop until then.
+              </p>
+            </div>
+          </section>
+
+          <section class="bga-campaign__page" data-bga-page="1" hidden aria-hidden="true" aria-label="Play and prep">
+            <div class="bga-campaign__thumb-row" aria-hidden="true">
+              <img src="/campaign/blade-grove/bga-grind-airdrop-1x1.png" alt="" width="96" height="96" loading="lazy" decoding="async" />
+              <img src="/campaign/blade-grove/bga-prep-planning-16x9.png" alt="" width="160" height="90" loading="lazy" decoding="async" />
+            </div>
+            <div class="bga-campaign__copy">
+              <p class="bga-campaign__kicker">Play loop</p>
+              <h2 class="bga-campaign__title">Grind, then plan</h2>
+              <p class="bga-campaign__pitch">
+                Clear <strong>Story</strong> nodes and run <strong>Siege</strong> for airdrop stamps and chronicle rewards.
+                Packs accelerate the collection — grind is the on-ramp.
+              </p>
+              <div class="bga-campaign__callout">
+                <strong>Prep / planning mode</strong>
+                <p>
+                  Before Fight arms, rearrange your board. Click a unit to <strong>bench</strong> it to the dock,
+                  re-equip from the dock, and lock formation. Hit Fight — the auto-battler <strong>resolves</strong>
+                  the combat. Prep is the skill layer, not click-spam.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section class="bga-campaign__page" data-bga-page="2" hidden aria-hidden="true" aria-label="Collect and pay">
+            <div class="bga-campaign__thumb-row" aria-hidden="true">
+              <img src="/campaign/blade-grove/bga-foil-cards-1x1.png" alt="" width="96" height="96" loading="lazy" decoding="async" />
+            </div>
+            <div class="bga-campaign__copy">
+              <p class="bga-campaign__kicker">Collect &amp; pay</p>
+              <h2 class="bga-campaign__title">Pack Bay rails</h2>
+              <p class="bga-campaign__pitch">
+                <strong>Warden $9.99</strong> · <strong>Captain $19.99</strong> (USD list). ICP and HBAR amounts are
+                ≈ live FX at Pack Bay checkout — not fixed ICP pairs.
+              </p>
+              <ul class="bga-campaign__rails">
+                <li><strong>Internet Identity</strong> — required to sign in and bind packs to your principal</li>
+                <li><strong>OISY</strong> — pay ICP; claim after the transfer lands</li>
+                <li><strong>HashPack</strong> — pay HBAR; claim after the transfer lands</li>
+                <li><strong>Stripe</strong> — USD card via stripe.bonsaios.app</li>
+              </ul>
+              <p class="bga-campaign__fine">Ownership on-chain. Direct mint — not Gumroad, not NFT Matrix.</p>
+            </div>
+          </section>
+
+          <section class="bga-campaign__page" data-bga-page="3" hidden aria-hidden="true" aria-label="Ranked and multi-chain">
+            <div class="bga-campaign__thumb-row" aria-hidden="true">
+              <img src="/campaign/blade-grove/bga-ranked-stake-16x9.png" alt="" width="160" height="90" loading="lazy" decoding="async" />
+              <img src="/campaign/blade-grove/bga-multichain-16x9.png" alt="" width="160" height="90" loading="lazy" decoding="async" />
+            </div>
+            <div class="bga-campaign__copy">
+              <p class="bga-campaign__kicker">Ranked &amp; multi-chain</p>
+              <h2 class="bga-campaign__title">Stake at launch</h2>
+              <p class="bga-campaign__pitch">
+                On <strong>27 Aug</strong>, Ranked opens with stake-to-enter PvP (ICP via OISY escrow when live flags flip).
+                Planned entry ≈ 0.5 ICP — confirm in-app. Practice Root Circuit until then.
+              </p>
+              <ul class="bga-campaign__rails">
+                <li><strong>ICP primary</strong> — pack checkout + Ranked stake rail</li>
+                <li><strong>HBAR packs</strong> — HashPack accepted at Pack Bay now</li>
+                <li><strong>Hedera dual-mint</strong> of card NFTs — Phase 2 roadmap (not day-one)</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="bga-campaign__page" data-bga-page="4" hidden aria-hidden="true" aria-label="FAQ">
+            <div class="bga-campaign__copy">
+              <p class="bga-campaign__kicker">FAQ</p>
+              <h2 class="bga-campaign__title">II · OISY · HashPack</h2>
+              <dl class="bga-campaign__faq">
+                <div>
+                  <dt>How do I sign in?</dt>
+                  <dd>
+                    Use <strong>Internet Identity</strong> (passkey). That principal owns your roster and pack credits.
+                    Allow the II popup if the browser blocks it.
+                  </dd>
+                </div>
+                <div>
+                  <dt>How do I pay with ICP?</dt>
+                  <dd>
+                    Connect <strong>OISY</strong>, pick Warden or Captain, approve the live ≈ ICP quote, then
+                    <strong>claim</strong> the pack after the transfer confirms.
+                  </dd>
+                </div>
+                <div>
+                  <dt>How do I pay with HBAR?</dt>
+                  <dd>
+                    Connect <strong>HashPack</strong>, pay the live ≈ HBAR quote, then claim. Wrong network or aborted
+                    tx = no credit until a successful transfer + claim.
+                  </dd>
+                </div>
+                <div>
+                  <dt>USD / card?</dt>
+                  <dd>
+                    Stripe checkout at <strong>stripe.bonsaios.app</strong> — packs credit to the II principal you signed in with.
+                  </dd>
+                </div>
+                <div>
+                  <dt>How do I play after buying?</dt>
+                  <dd>
+                    Open Arena → Collection shows owned cards. Enter Story/Siege/Ranked, prep formation (bench ↔ dock),
+                    then Fight to resolve.
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="bga-campaign__chrome">
+        <div class="bga-campaign__nav" role="group" aria-label="Launch pages">
+          <button type="button" class="bga-campaign__nav-btn" data-bga-prev aria-label="Previous page" disabled>Back</button>
+          <div class="bga-campaign__dots" data-bga-dots role="tablist" aria-label="Page indicators"></div>
+          <button type="button" class="bga-campaign__nav-btn" data-bga-next aria-label="Next page">Next</button>
+        </div>
+        <div class="bga-campaign__ctas" data-bga-ctas>
+          <a class="bga-campaign__cta bga-campaign__cta--primary" data-bga-packs href="https://theswop.app/station/bonsai-os"
+            >Pack Bay · 27 Aug</a
+          >
+          <a class="bga-campaign__cta" data-bga-play href="https://theswop.app/station/bonsai-os">Community</a>
+        </div>
+      </div>
+      <div class="bga-campaign__handles" aria-hidden="true">
+        <span class="bga-campaign__handle bga-campaign__handle--n" data-bga-resize="n"></span>
+        <span class="bga-campaign__handle bga-campaign__handle--s" data-bga-resize="s"></span>
+        <span class="bga-campaign__handle bga-campaign__handle--e" data-bga-resize="e"></span>
+        <span class="bga-campaign__handle bga-campaign__handle--w" data-bga-resize="w"></span>
+        <span class="bga-campaign__handle bga-campaign__handle--ne" data-bga-resize="ne"></span>
+        <span class="bga-campaign__handle bga-campaign__handle--nw" data-bga-resize="nw"></span>
+        <span class="bga-campaign__handle bga-campaign__handle--se" data-bga-resize="se"></span>
+        <span class="bga-campaign__handle bga-campaign__handle--sw" data-bga-resize="sw"></span>
+      </div>
+    </aside>
+    <button
+      type="button"
+      class="bga-campaign-chip landing-boot-hide"
+      data-bga-reopen
+      hidden
+      aria-expanded="false"
+      aria-controls="blade-grove"
+    >
+      Blade Grove · 27 Aug
+    </button>
+
+    <div class="landing-dock-copy landing-boot-hide">
+      <div class="tagline-stage" id="tagline-stage">
+        <p class="tagline-hash" id="tagline-hash" aria-label="#BonsaiOS"></p>
+        <p class="tagline-line tagline-line--hidden" id="tagline-line" aria-hidden="true"></p>
+      </div>
+      <p class="hero-hint">▼ Your APPS Live Here</p>
+    </div>
+
+    <div id="hub-root" class="landing-boot-hide"></div>
+
+    <footer
+      class="landing-legal-footer landing-boot-hide"
+      style="position:relative;z-index:20;padding:1rem 1.25rem 1.5rem;text-align:center;font-size:0.7rem;opacity:0.75"
+    >
+      <a href="/legal/privacy" style="color:inherit;margin:0 0.4rem">Privacy</a>
+      ·
+      <a href="/legal/terms" style="color:inherit;margin:0 0.4rem">Terms</a>
+      ·
+      <a href="/legal/ai" style="color:inherit;margin:0 0.4rem">AI Transparency</a>
+    </footer>
+
+  </body>
+</html>

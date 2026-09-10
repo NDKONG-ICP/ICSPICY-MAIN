@@ -19,7 +19,7 @@ const PROVIDER_DEFAULTS = {
   openai: { light: "gpt-4o-mini", heavy: "gpt-4o" },
 };
 
-const HEAVY_TASKS = new Set(["newsletter", "almanac", "sentinel"]);
+const HEAVY_TASKS = new Set(["newsletter", "almanac", "sentinel", "ambassador"]);
 
 export const LLM_TASKS = [
   "default",
@@ -30,6 +30,7 @@ export const LLM_TASKS = [
   "analytics",
   "compliance",
   "email",
+  "ambassador",
 ];
 
 export const LLM_SECRET_NAMES = [
@@ -44,6 +45,7 @@ export const LLM_SECRET_NAMES = [
 /** Map an agent job kind to its LLM task family. */
 export function taskFamilyOf(kindKey) {
   if (kindKey.startsWith("social_")) return "social";
+  if (kindKey.startsWith("ambassador_")) return "ambassador";
   switch (kindKey) {
     case "newsletter":
       return "newsletter";

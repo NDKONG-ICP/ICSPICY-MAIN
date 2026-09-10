@@ -21,6 +21,9 @@ import Time "mo:core/Time";
 import Timer "mo:core/Timer";
 import Prim "mo:⛔";
 
+import Migration "migrations/PhaseAgentHubAmbassadors";
+
+(with migration = Migration.migration)
 shared(msg) persistent actor class AgentHub() = Self {
 
   // ── Types ───────────────────────────────────────────────────────────────────
@@ -42,6 +45,9 @@ shared(msg) persistent actor class AgentHub() = Self {
     #orders_claims_ops;
     #community_moderator;
     #analytics_digest;
+    #ambassador_crumbeatr;
+    #ambassador_swop;
+    #ambassador_bonsai;
   };
 
   public type AgentStatus = { #active; #paused; #disabled };
@@ -301,6 +307,9 @@ shared(msg) persistent actor class AgentHub() = Self {
       case (#orders_claims_ops) "orders_claims_ops";
       case (#community_moderator) "community_moderator";
       case (#analytics_digest) "analytics_digest";
+      case (#ambassador_crumbeatr) "ambassador_crumbeatr";
+      case (#ambassador_swop) "ambassador_swop";
+      case (#ambassador_bonsai) "ambassador_bonsai";
     }
   };
 
@@ -419,6 +428,10 @@ shared(msg) persistent actor class AgentHub() = Self {
       case (#orders_claims_ops) 21_600;
       case (#community_moderator) 86_400;
       case (#analytics_digest) 604_800;
+      // Ambassadors engage a few times a day; posting itself is approval-gated.
+      case (#ambassador_crumbeatr) 21_600;
+      case (#ambassador_swop) 21_600;
+      case (#ambassador_bonsai) 43_200;
     }
   };
 
@@ -440,6 +453,9 @@ shared(msg) persistent actor class AgentHub() = Self {
       case (#orders_claims_ops) "Orders & Claims Ops";
       case (#community_moderator) "Community Moderator";
       case (#analytics_digest) "Analytics Digest";
+      case (#ambassador_crumbeatr) "Captain Capsaicin — Crumbeatr";
+      case (#ambassador_swop) "Captain Capsaicin — SWOP";
+      case (#ambassador_bonsai) "Captain Capsaicin — Bonsai OS";
     }
   };
 
@@ -479,6 +495,7 @@ shared(msg) persistent actor class AgentHub() = Self {
       #social_x, #social_instagram, #social_tiktok, #social_facebook, #social_youtube,
       #compliance_reviewer, #fleet_cycles_ops, #weather_sentinel, #weather_concierge, #nims_ops,
       #orders_claims_ops, #community_moderator, #analytics_digest,
+      #ambassador_crumbeatr, #ambassador_swop, #ambassador_bonsai,
     ];
     let now = Time.now();
     if (agents.size() == 0) {
@@ -1185,6 +1202,11 @@ shared(msg) persistent actor class AgentHub() = Self {
       "llm_route_default", "llm_route_social", "llm_route_newsletter",
       "llm_route_almanac", "llm_route_sentinel", "llm_route_analytics",
       "llm_route_compliance", "llm_route_email",
+      // Captain Capsaicin cross-dapp ambassador
+      "llm_route_ambassador", "ambassador_sweep_principal",
+      "crumbeatr_canister_id", "swop_backend_canister_id",
+      "bonsai_registry_canister_id", "bonsai_orbit_canister_id",
+      "bonsai_bazaar_canister_id",
     ];
     let out = List.empty<(Text, Text)>();
     for (name in names.vals()) {

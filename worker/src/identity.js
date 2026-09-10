@@ -17,6 +17,20 @@ export async function loadWorkerIdentity(mnemonic) {
   return Secp256k1KeyIdentity.fromSeedPhrase(phrase);
 }
 
+/**
+ * Derive the Captain Capsaicin ambassador identity from the same mnemonic at
+ * derivation index 1. Separate key from the hub-worker identity (index 0/default)
+ * so social-platform risk is isolated, but covered by the same seed backup.
+ */
+export async function loadCaptainIdentity(mnemonic) {
+  const words = mnemonic.trim().split(/\s+/);
+  const phrase = words.join(" ");
+  if (!bip39.validateMnemonic(phrase)) {
+    throw new Error("Invalid WORKER_MNEMONIC — must be valid BIP39");
+  }
+  return Secp256k1KeyIdentity.fromSeedPhrase(phrase, "m/44'/223'/0'/0/1");
+}
+
 export function loadMnemonicFromEnv() {
   const fromEnv = process.env.WORKER_MNEMONIC?.trim();
   if (fromEnv) return fromEnv;
