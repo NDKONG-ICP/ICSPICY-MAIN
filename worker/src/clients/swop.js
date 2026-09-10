@@ -70,6 +70,7 @@ function coreIdl({ IDL }) {
       [UserResult],
       [],
     ),
+    setUsername: IDL.Func([IDL.Text], [UnitResult], []),
     getUser: IDL.Func([IDL.Principal], [IDL.Opt(UserRecord)], ["query"]),
     getUserByUsername: IDL.Func([IDL.Text], [IDL.Opt(UserRecord)], ["query"]),
     setProfileImageBlob: IDL.Func([IDL.Vec(IDL.Nat8), IDL.Text], [UnitResult], []),
@@ -198,20 +199,37 @@ export async function createSwopClient({
     },
 
     async ensureRegistered(username = "CaptainCapsaicin") {
-      const existing = await this.getUser();
-      if (existing) return existing;
+      let existing = await this.getUser();
+      if (!existing) {
+        const legal = await core.getLegalVersions();
+        const consent = await core.recordConsent(
+          legal.termsVersion,
+          legal.privacyVersion,
+          legal.minimumAge,
+          "ic-spicy-captain-agent",
+        );
+        unwrap(consent, "recordConsent");
 
-      const legal = await core.getLegalVersions();
-      const consent = await core.recordConsent(
-        legal.termsVersion,
-        legal.privacyVersion,
-        legal.minimumAge,
-        "ic-spicy-captain-agent",
-      );
-      unwrap(consent, "recordConsent");
+        const res = await core.registerUser([username], []);
+        existing = unwrap(res, "registerUser");
+      }
 
-      const res = await core.registerUser([username], []);
-      return unwrap(res, "registerUser");
+      // registerUser can store username on the record without indexing it for
+      // /@handle lookups — setUsername claims the public handle index.
+      const indexed = await core.getUserByUsername(username);
+      if (!indexed?.[0]) {
+        try {
+          unwrap(await this.setUsername(username), "setUsername");
+        } catch (err) {
+          // Already claimed by us is fine; anything else surfaces.
+          if (!/AlreadyExists/i.test(err.message)) throw err;
+        }
+      }
+      return (await this.getUser()) ?? existing;
+    },
+
+    async setUsername(username) {
+      return core.setUsername(username);
     },
 
     async setAvatarFromFile(path, mime = "image/jpeg") {
