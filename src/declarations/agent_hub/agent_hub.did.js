@@ -168,6 +168,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Text)],
         ['query'],
       ),
+    'listConfirmedSubscribersForSend' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
+        ['query'],
+      ),
     'listDrafts' : IDL.Func(
         [IDL.Nat, IDL.Opt(DraftStatus)],
         [IDL.Vec(DraftPublic)],

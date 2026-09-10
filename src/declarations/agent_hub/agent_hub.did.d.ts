@@ -42,6 +42,14 @@ export interface AgentHub {
   'listAgentPrincipals' : ActorMethod<[], Array<Principal>>,
   'listAgents' : ActorMethod<[], Array<AgentPublic>>,
   'listConfirmedSubscriberEmails' : ActorMethod<[bigint], Array<string>>,
+  /**
+   * / Agent/admin: confirmed subscribers as (email, unsubscribeToken) pairs so the
+   * / worker can personalize the CAN-SPAM unsubscribe link at send time.
+   */
+  'listConfirmedSubscribersForSend' : ActorMethod<
+    [bigint],
+    Array<[string, string]>
+  >,
   'listDrafts' : ActorMethod<[bigint, [] | [DraftStatus]], Array<DraftPublic>>,
   'listJobs' : ActorMethod<[bigint, [] | [JobStatus]], Array<JobPublic>>,
   'listNewsletterIssues' : ActorMethod<[bigint], Array<NewsletterIssue>>,

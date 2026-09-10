@@ -2,7 +2,7 @@ import "dotenv/config";
 import { loadMnemonicFromEnv, loadWorkerIdentity } from "./identity.js";
 import { createHubActor, loadSecrets } from "./clients/hub.js";
 import { createBackendActor } from "./clients/hub.js";
-import { createLlmClient } from "./clients/llm.js";
+import { createLlmRouter, taskFamilyOf, LLM_SECRET_NAMES } from "./clients/llm.js";
 import { dispatchJob, sendApprovedNewsletters } from "./agents/index.js";
 
 const POLL_SEC = Number(process.env.POLL_INTERVAL_SEC ?? 60);
@@ -14,21 +14,28 @@ async function tick(identity) {
   const secrets = await loadSecrets(hub, [
     "resend_api_key",
     "resend_from_email",
-    "llm_api_key",
-    "llm_provider",
-    "llm_model",
     "admin_alert_email",
+    ...LLM_SECRET_NAMES,
   ]);
-  const llm = createLlmClient(secrets);
+  const llmRouter = createLlmRouter(secrets);
   const agents = await hub.listAgents();
   const agentById = Object.fromEntries(agents.map((a) => [String(a.id), a]));
 
   const jobs = await hub.claimJobs(5n);
   for (const job of jobs) {
     const agent = agentById[String(job.agentId)];
-    const ctx = { hub, backend, llm, secrets, job, agent };
+    const kindKey = Object.keys(job.kind)[0];
+    const ctx = {
+      hub,
+      backend,
+      llm: llmRouter.for(taskFamilyOf(kindKey)),
+      llmCompliance: llmRouter.for("compliance"),
+      secrets,
+      job,
+      agent,
+    };
     try {
-      console.log(`[worker] job ${job.id} kind=${Object.keys(job.kind)[0]}`);
+      console.log(`[worker] job ${job.id} kind=${kindKey} model=${ctx.llm?.model ?? "none"}`);
       await dispatchJob(ctx, job);
       await hub.reportJobComplete(job.id, true, []);
     } catch (err) {

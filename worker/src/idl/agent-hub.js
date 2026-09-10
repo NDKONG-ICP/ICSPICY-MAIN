@@ -94,6 +94,11 @@ export function agentHubIdlFactory({ IDL }) {
       [],
     ),
     listConfirmedSubscriberEmails: IDL.Func([IDL.Nat], [IDL.Vec(IDL.Text)], ["query"]),
+    listConfirmedSubscribersForSend: IDL.Func(
+      [IDL.Nat],
+      [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
+      ["query"],
+    ),
     listAgents: IDL.Func([], [IDL.Vec(IDL.Record({
       id: IDL.Nat,
       name: IDL.Text,

@@ -34,7 +34,7 @@ export async function runFleetCyclesOps(ctx) {
 }
 
 export async function runWeatherConcierge(ctx) {
-  const { hub, backend, job, llm } = ctx;
+  const { hub, backend, job, llm, llmCompliance } = ctx;
   const [weather, tropical, recipes] = await Promise.all([
     backend.getWeatherBrief([], []),
     backend.getTropicalSummary(),
@@ -63,7 +63,7 @@ Never invent storms not in the brief. Max 900 words. Branded IC SPICY.`;
 
   // Compliance gate: never auto-publish content that fails review.
   // Failures go to the draft queue for human sign-off instead.
-  const compliance = await fullComplianceCheck(llm, `${title}\n${body}`);
+  const compliance = await fullComplianceCheck(llmCompliance ?? llm, `${title}\n${body}`);
   if (!compliance.passed) {
     await hub.submitDraft(
       kindVariant("weather_concierge"),

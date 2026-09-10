@@ -39,22 +39,14 @@ export function backendIdlFactory({ IDL }) {
     storms: IDL.Vec(TropicalStormLite),
   });
 
+  // Subset of ProductPublic — Candid decoding skips wire fields we don't declare.
   const Product = IDL.Record({
     id: IDL.Nat,
     name: IDL.Text,
     description: IDL.Text,
     price_cents: IDL.Nat,
-    category: IDL.Variant({
-      seedlings: IDL.Null,
-      one_gallon: IDL.Null,
-      five_gallon: IDL.Null,
-      spices: IDL.Null,
-      inputs: IDL.Null,
-      other: IDL.Null,
-    }),
-    image_url: IDL.Text,
     active: IDL.Bool,
-    inventory: IDL.Nat,
+    inventory_remaining: IDL.Opt(IDL.Nat),
   });
 
   const WeatherBrief = IDL.Record({
@@ -63,6 +55,44 @@ export function backendIdlFactory({ IDL }) {
     text: IDL.Text,
     outlookFetchedAt: IDL.Int,
     tropicalFetchedAt: IDL.Opt(IDL.Int),
+  });
+
+  // Subset records: Candid decoding skips extra wire fields, so we only
+  // declare the fields the worker reads.
+  const VerifiedGrowerStat = IDL.Record({
+    statLabel: IDL.Text,
+    value: IDL.Text,
+  });
+
+  const VerifiedGrower = IDL.Record({
+    id: IDL.Text,
+    name: IDL.Text,
+    owners: IDL.Text,
+    tagline: IDL.Text,
+    story: IDL.Text,
+    url: IDL.Text,
+    imageKey: IDL.Text,
+    growerOfTheMonth: IDL.Opt(IDL.Text),
+    establishedYear: IDL.Opt(IDL.Nat),
+    stats: IDL.Vec(VerifiedGrowerStat),
+    sortOrder: IDL.Nat,
+  });
+
+  const DailyOutlook = IDL.Record({
+    date: IDL.Text,
+    tempHighF: IDL.Float64,
+    tempLowF: IDL.Float64,
+    precipInches: IDL.Float64,
+    windMphMax: IDL.Float64,
+    uvIndexMax: IDL.Float64,
+    weatherCode: IDL.Nat,
+  });
+
+  const WeatherOutlookLite = IDL.Record({
+    gridKey: IDL.Text,
+    fetchedAt: IDL.Int,
+    stale: IDL.Bool,
+    daily: IDL.Vec(DailyOutlook),
   });
 
   const DailyFeatureStat = IDL.Record({
@@ -89,6 +119,8 @@ export function backendIdlFactory({ IDL }) {
       ["query"],
     ),
     getTropicalSummary: IDL.Func([], [IDL.Opt(TropicalSummaryLite)], ["query"]),
+    listVerifiedGrowers: IDL.Func([], [IDL.Vec(VerifiedGrower)], ["query"]),
+    getNurseryWeatherDesk: IDL.Func([], [IDL.Opt(WeatherOutlookLite)], ["query"]),
     getUsageRollups: IDL.Func([IDL.Nat], [IDL.Vec(DailyFeatureStat)], ["query"]),
     listAllOrdersAdmin: IDL.Func(
       [AdminOrderStatusFilter],

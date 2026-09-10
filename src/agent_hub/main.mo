@@ -1064,12 +1064,28 @@ shared(msg) persistent actor class AgentHub() = Self {
     out.toArray()
   };
 
-  public query func listConfirmedSubscriberEmails(limit : Nat) : async [Text] {
+  public query ({ caller }) func listConfirmedSubscriberEmails(limit : Nat) : async [Text] {
+    requireAdminOrAgent(caller); // privacy: subscriber emails must not be publicly enumerable
     let out = List.empty<Text>();
     var count : Nat = 0;
     label scan for ((_, s) in subscribersByEmail.entries()) {
       if (s.status != #confirmed) continue scan;
       out.add(s.email);
+      count += 1;
+      if (count >= limit) break scan;
+    };
+    out.toArray()
+  };
+
+  /// Agent/admin: confirmed subscribers as (email, unsubscribeToken) pairs so the
+  /// worker can personalize the CAN-SPAM unsubscribe link at send time.
+  public query ({ caller }) func listConfirmedSubscribersForSend(limit : Nat) : async [(Text, Text)] {
+    requireAdminOrAgent(caller);
+    let out = List.empty<(Text, Text)>();
+    var count : Nat = 0;
+    label scan for ((_, s) in subscribersByEmail.entries()) {
+      if (s.status != #confirmed) continue scan;
+      out.add((s.email, s.unsubscribeToken));
       count += 1;
       if (count >= limit) break scan;
     };

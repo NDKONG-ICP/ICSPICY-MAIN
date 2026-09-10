@@ -10,7 +10,7 @@ const VOICES = {
 };
 
 export async function runSocialAgent(ctx, platformKey) {
-  const { hub, backend, llm, job } = ctx;
+  const { hub, backend, llm, llmCompliance, job } = ctx;
   const voice = VOICES[platformKey] ?? "Social media post";
 
   const [recipes, weather] = await Promise.all([
@@ -28,7 +28,7 @@ export async function runSocialAgent(ctx, platformKey) {
     );
   }
 
-  const compliance = await fullComplianceCheck(llm, body);
+  const compliance = await fullComplianceCheck(llmCompliance ?? llm, body);
   const title = `${platformKey} daily draft`;
   const draftId = await hub.submitDraft(
     kindVariant(platformKey),
@@ -46,14 +46,14 @@ export async function runSocialAgent(ctx, platformKey) {
 }
 
 export async function runEmailCorrespondenceAgent(ctx) {
-  const { hub, llm, job } = ctx;
+  const { hub, llm, llmCompliance, job } = ctx;
   const body = llm
     ? await llm.complete(
         "Draft a friendly IC SPICY email template for replying to a customer asking about plant care in Zone 10a. 3 short paragraphs. No health/investment claims.",
       )
     : "Thank you for reaching out to IC SPICY! We'd love to help with your pepper plants in Zone 10a.";
 
-  const compliance = await fullComplianceCheck(llm, body);
+  const compliance = await fullComplianceCheck(llmCompliance ?? llm, body);
   const draftId = await hub.submitDraft(
     kindVariant("email_correspondence"),
     [job.id],
