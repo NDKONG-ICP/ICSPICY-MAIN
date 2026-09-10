@@ -1,4 +1,23 @@
-export async function sendEmail({ apiKey, from, to, subject, html, idempotencyKey }) {
+export async function sendEmail({
+  apiKey,
+  from,
+  to,
+  subject,
+  html,
+  idempotencyKey,
+  unsubscribeUrl,
+  replyTo,
+}) {
+  // List-Unsubscribe (RFC 8058) is a major Gmail/Outlook spam-score factor —
+  // one-click unsubscribe signals a legitimate, compliant sender.
+  const body = { from, to, subject, html };
+  if (replyTo) body.reply_to = replyTo;
+  if (unsubscribeUrl) {
+    body.headers = {
+      "List-Unsubscribe": `<${unsubscribeUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    };
+  }
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -6,7 +25,7 @@ export async function sendEmail({ apiKey, from, to, subject, html, idempotencyKe
       "content-type": "application/json",
       "Idempotency-Key": idempotencyKey,
     },
-    body: JSON.stringify({ from, to, subject, html }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const text = await res.text();

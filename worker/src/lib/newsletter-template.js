@@ -95,6 +95,12 @@ export function recipeCardHtml(recipe, siteUrl) {
   </div>`;
 }
 
+function logoHeaderHtml(siteUrl) {
+  return `<tr><td style="padding:28px 20px 12px;text-align:center;">
+      <img src="${siteUrl}/newsletter-logo.png" alt="IC SPICY — Regenerative Heat" width="160" style="width:160px;max-width:160px;height:auto;display:block;margin:0 auto;" />
+    </td></tr>`;
+}
+
 export function renderNewsletterHtml({
   subject,
   intro,
@@ -111,10 +117,7 @@ export function renderNewsletterHtml({
 <title>${escapeHtml(subject)}</title></head>
 <body style="margin:0;background:#0c0806;font-family:system-ui,-apple-system,sans-serif;color:#f8f0e8;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;">
-    <tr><td style="padding:32px 20px 16px;text-align:center;">
-      <div style="font-size:28px;font-weight:800;letter-spacing:-0.02em;">IC <span style="color:${ACCENT};">SPICY</span></div>
-      <div style="font-size:12px;color:${MUTED};margin-top:4px;">Rare. Hot. Alive.</div>
-    </td></tr>
+    ${logoHeaderHtml(siteUrl)}
     <tr><td style="padding:0 20px 24px;">
       <div style="background:#2a201a;border:1px solid #3d3028;border-radius:12px;padding:20px;">
         <h1 style="margin:0 0 12px;font-size:20px;color:${ACCENT};">${escapeHtml(subject)}</h1>
@@ -144,10 +147,7 @@ export function confirmEmailHtml(confirmUrl, siteUrl) {
 <title>Confirm your IC SPICY subscription</title></head>
 <body style="margin:0;background:#0c0806;font-family:system-ui,-apple-system,sans-serif;color:#f8f0e8;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;">
-    <tr><td style="padding:32px 20px 16px;text-align:center;">
-      <div style="font-size:28px;font-weight:800;letter-spacing:-0.02em;">IC <span style="color:${ACCENT};">SPICY</span></div>
-      <div style="font-size:12px;color:${MUTED};margin-top:4px;">Rare. Hot. Alive.</div>
-    </td></tr>
+    ${logoHeaderHtml(siteUrl)}
     <tr><td style="padding:0 20px 24px;">
       <div style="background:#2a201a;border:1px solid #3d3028;border-radius:12px;padding:24px;text-align:center;">
         <h1 style="margin:0 0 12px;font-size:20px;color:${ACCENT};">One click to confirm</h1>

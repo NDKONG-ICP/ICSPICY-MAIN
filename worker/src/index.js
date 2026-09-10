@@ -18,6 +18,7 @@ async function tick(identity) {
   const secrets = await loadSecrets(hub, [
     "resend_api_key",
     "resend_from_email",
+    "newsletter_reply_to",
     "admin_alert_email",
     ...LLM_SECRET_NAMES,
   ]);

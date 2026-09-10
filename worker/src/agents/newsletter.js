@@ -166,6 +166,7 @@ export async function sendApprovedNewsletters(ctx) {
     const recipients = await hub.listConfirmedSubscribersForSend(5000n);
     if (!recipients.length) continue;
 
+    const replyTo = secrets.newsletter_reply_to || undefined;
     for (const [email, unsubToken] of recipients) {
       const unsubUrl = `${siteUrl}/newsletter/unsubscribe?token=${encodeURIComponent(unsubToken)}`;
       const personalized = draft.body.split(UNSUBSCRIBE_PLACEHOLDER).join(unsubUrl);
@@ -176,6 +177,8 @@ export async function sendApprovedNewsletters(ctx) {
         subject: draft.title,
         html: personalized,
         idempotencyKey: `newsletter-${weekKey}-${email}`,
+        unsubscribeUrl: unsubUrl,
+        replyTo,
       });
     }
 
