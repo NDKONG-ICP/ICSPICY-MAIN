@@ -21,9 +21,10 @@ import Time "mo:core/Time";
 import Timer "mo:core/Timer";
 import Prim "mo:⛔";
 
-import Migration "migrations/PhaseAgentHubAmbassadors";
+// PhaseAgentHubAmbassadors migration already applied on mainnet — do not re-attach
+// (with migration = ...) or upgrades fail M0170 (on-chain AgentKind already has
+// #ambassador_*). File kept at migrations/PhaseAgentHubAmbassadors.mo for history.
 
-(with migration = Migration.migration)
 shared(msg) persistent actor class AgentHub() = Self {
 
   // ── Types ───────────────────────────────────────────────────────────────────
