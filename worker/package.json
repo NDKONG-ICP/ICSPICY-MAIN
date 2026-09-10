@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node src/index.js",
     "once": "node src/index.js --once",
-    "show-principal": "node src/show-principal.js"
+    "show-principal": "node src/show-principal.js",
+    "show-wallets": "node src/show-wallets.js",
+    "bonsai-bootstrap": "node scripts/bonsai-bootstrap.js"
   },
   "dependencies": {
     "@dfinity/agent": "3.4.3",

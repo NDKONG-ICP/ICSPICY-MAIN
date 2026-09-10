@@ -1,31 +1,47 @@
-# Bonsai OS API map (Captain Capsaicin) — partial
+# Bonsai OS API map (Captain Capsaicin)
 
-## Feasibility
-**Unknown / blocked without friend-dev help for SPOT Orbit mint path.**
+## Status — LIVE (2026-09-10)
 
-Frontend is II-first (`bonsaios.app` → `2dxs4-nyaaa-aaaau-agzda-cai`). Bundle is agentic-friendly and references Orbit UI keys (`bonsai_os_orbit_v1`) plus a market registry, but mint economics and whether plain (non-II) principals can mint were not verified end-to-end.
+| Step | Result |
+|------|--------|
+| Canopy / Bonsai principal | `26mw6-xnm4d-zfj7n-rjrrj-pnr3u-jasxq-wnmkp-4gfgt-xrtma-i7ghg-6qe` (same as Capsaicin operating; plain principal — friend-confirmed) |
+| Registry CRM | Profile saved as `@CaptainCapsaicin` on `vxhwo-…` (`hasProfile=true`, public resolve works) |
+| Orbit Spots mint | **1 minted** — `tokenId=5502`, `serial=5117`, `saleId=14174`, paid **0.05 ICP** (block `38308536`) |
+| Limits | Hard-capped at 1 mint / ≤0.05 ICP unit price |
 
-## Canisters spotted in frontend config
-| Role (guess from config keys) | ID |
+Re-run: `cd worker && node scripts/bonsai-bootstrap.js --status`
+
+## Wallets (multi-treasury)
+
+| Role | Principal | Ecosystem |
+|------|-----------|-----------|
+| `captain_operating` | `26mw6-…` | Crumbeatr + SWOP + ICP float |
+| `canopy_bonsai` | `26mw6-…` (env `CANOPY_WALLET_PRINCIPAL`) | **Entire BonsaiOS** via Canopy wallet path |
+| `sweep_destination` | hub `ambassador_sweep_principal` | IC SPICY admin |
+
+Canopy UI (`7h6n6-…`) is II-fronted for humans; agent path uses the same plain principal for CRM/mint/trade (friend: plain principals coincide with Bonsai ecosystem). If a future Canopy login yields a **different** principal, update `CANOPY_WALLET_PRINCIPAL` / hub secret and fund that address.
+
+## Mint economics (Orbit Spots / collection 18)
+- Launchpad: `i4fsp-oqaaa-aaaau-agwnq-cai`
+- Phase: **14** Public · `priceE8s = 5_000_000` (0.05 ICP)
+- Floor (secondary): ~0.0638 ICP → **mint first** (done)
+- Pay ICP → treasury `j7j3j-2iaaa-aaaau-agwla-cai`, then `mint(phaseId, blockIndex, to)`
+
+## Canisters
+| Role | ID |
 |------|-----|
-| Shell / frontend | `2dxs4-nyaaa-aaaau-agzda-cai` |
+| Registry / CRM | `vxhwo-oiaaa-aaaau-aghdq-cai` |
 | Market registry | `jyi55-xqaaa-aaaau-agwlq-cai` |
-| Market holder directory | `x7l5j-2iaaa-aaaau-agyka-cai` |
-| Feed proxy | `c53tg-waaaa-aaaau-agxwq-cai` |
-| Bonsai Cloud | `336h7-dyaaa-aaaau-agzha-cai` |
-| Bonsai Works | `z2htg-hqaaa-aaaau-agzkq-cai` |
-| Blade Grove game | `bq37j-miaaa-aaaau-ag4nq-cai` |
+| Launchpad | `i4fsp-oqaaa-aaaau-agwnq-cai` |
+| Treasury | `j7j3j-2iaaa-aaaau-agwla-cai` |
+| ICRC-7 ledger | `ivgzt-yyaaa-aaaau-agwma-cai` |
+| Bazaar UI | `iabi6-zqaaa-aaaau-agwpq-cai` |
+| Canopy UI | `7h6n6-eqaaa-aaaau-ag6da-cai` |
 
-Also embeds SWOP + Crumbeatr IDs for social badges.
+Also: collection `1` = IC SPICY / PepperHeads on the same market registry.
 
-## Blockers for the Bonsai friend
-1. Exact canister ID + candid for **SPOT Orbit NFT** mint (cost, payment rail: ICP/OISY/Stripe).
-2. Confirm backends accept **self-authenticating principals** (not only II delegations).
-3. Bazaar list/buy/sell method names (ICRC-7 vs custom).
-4. Registry profile create + avatar upload method.
-
-## Transfer-out
-Once NFT/token canister IDs are known: standard `icrc7_transfer` / `icrc1_transfer` from Captain principal `26mw6-...` to admin — same sweep pattern as Crumbeatr/SWOP.
-
-## Status
-Ambassador kind `ambassador_bonsai` is seeded on hub and awaits `bonsai_registry_canister_id` (+ orbit/bazaar secrets) before the client is wired.
+## Code
+- `worker/src/lib/wallets.js` — multi-wallet book
+- `worker/src/clients/bonsai.js` — CRM + mint client
+- `worker/scripts/bonsai-bootstrap.js` — one-shot bootstrap
+- Hub whitelist: `canopy_wallet_principal` (deploy `agent_hub` to activate on mainnet)

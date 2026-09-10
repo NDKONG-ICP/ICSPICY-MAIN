@@ -1207,6 +1207,8 @@ shared(msg) persistent actor class AgentHub() = Self {
       "crumbeatr_canister_id", "swop_backend_canister_id",
       "bonsai_registry_canister_id", "bonsai_orbit_canister_id",
       "bonsai_bazaar_canister_id",
+      // Canopy wallet principal for Capsaicin on BonsaiOS (CRM / mint / trade)
+      "canopy_wallet_principal",
     ];
     let out = List.empty<(Text, Text)>();
     for (name in names.vals()) {

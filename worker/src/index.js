@@ -14,6 +14,7 @@ import {
   sendPendingConfirmations,
   sweepAmbassadorFunds,
 } from "./agents/index.js";
+import { buildWalletBook, formatWalletBook } from "./lib/wallets.js";
 
 const POLL_SEC = Number(process.env.POLL_INTERVAL_SEC ?? 60);
 const ONCE = process.argv.includes("--once");
@@ -32,11 +33,16 @@ async function tick(identity, captainIdentity) {
     "bonsai_registry_canister_id",
     "bonsai_orbit_canister_id",
     "bonsai_bazaar_canister_id",
+    "canopy_wallet_principal",
     ...LLM_SECRET_NAMES,
   ]);
   const llmRouter = createLlmRouter(secrets);
   const agents = await hub.listAgents();
   const agentById = Object.fromEntries(agents.map((a) => [String(a.id), a]));
+  const walletBook = buildWalletBook({
+    captainPrincipal: captainIdentity.getPrincipal().toText(),
+    secrets,
+  });
 
   const jobs = await hub.claimJobs(5n);
   for (const job of jobs) {
@@ -51,6 +57,7 @@ async function tick(identity, captainIdentity) {
       job,
       agent,
       captainIdentity,
+      walletBook,
     };
     try {
       console.log(`[worker] job ${job.id} kind=${kindKey} model=${ctx.llm?.model ?? "none"}`);
@@ -94,6 +101,18 @@ async function main() {
   console.log(`[worker] captain ${captainIdentity.getPrincipal().toText()}`);
   console.log(`[worker] network ${process.env.DFX_NETWORK ?? "ic"}`);
   console.log(`[worker] hub ${process.env.AGENT_HUB_CANISTER_ID ?? "(unset)"}`);
+  console.log(
+    formatWalletBook(
+      buildWalletBook({
+        workerPrincipal: identity.getPrincipal().toText(),
+        captainPrincipal: captainIdentity.getPrincipal().toText(),
+        secrets: {
+          canopy_wallet_principal: process.env.CANOPY_WALLET_PRINCIPAL,
+          ambassador_sweep_principal: process.env.AMBASSADOR_SWEEP_PRINCIPAL,
+        },
+      }),
+    ),
+  );
 
   if (ONCE) {
     await tick(identity, captainIdentity);

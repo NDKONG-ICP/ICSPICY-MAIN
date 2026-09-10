@@ -11,8 +11,9 @@
 //   4. sweepAmbassadorFunds() moves earned tokens/tips above a small float to
 //      the admin-set `ambassador_sweep_principal`.
 //
-// SWOP and Bonsai activate automatically once their backend canister IDs are
-// set as hub secrets (swop_backend_canister_id / bonsai_registry_canister_id).
+// SWOP activates once swop_backend_canister_id is set. BonsaiOS uses a
+// SEPARATE Canopy wallet (ctx.walletBook / canopy_wallet_principal) for CRM,
+// mint, and trade — never assume captain_operating is the Bonsai identity.
 
 import { Principal } from "@dfinity/principal";
 import { fullComplianceCheck } from "../lib/compliance.js";
@@ -22,11 +23,17 @@ import {
   pillarForToday,
   postPrompt,
 } from "../lib/persona.js";
+import { bonsaiPrincipal } from "../lib/wallets.js";
 import {
   createCrumbeatrClient,
   REACTION_HEART,
 } from "../clients/crumbeatr.js";
 import { createSwopClient, SWOP_CORE, SWOP_SOCIAL } from "../clients/swop.js";
+import {
+  createBonsaiClient,
+  BONSAI_REGISTRY,
+  ORBIT_SPOTS_COLLECTION_ID,
+} from "../clients/bonsai.js";
 
 const MAX_AUTO_REACTIONS = 3;
 const MAX_AUTO_LIKES = 3;
@@ -51,10 +58,42 @@ export async function runAmbassador(ctx, key) {
     case "ambassador_swop":
       return runSwop(ctx);
     case "ambassador_bonsai":
-      return awaitingIntegration(ctx, key, "bonsai_registry_canister_id");
+      return runBonsaiGate(ctx, key);
     default:
       throw new Error(`Not an ambassador kind: ${key}`);
   }
+}
+
+/** BonsaiOS: Canopy principal + registry CRM status + Orbit holdings pulse. */
+async function runBonsaiGate(ctx, key) {
+  const { hub, secrets, captainIdentity, walletBook } = ctx;
+  const book = walletBook;
+  const canopy =
+    (book ? bonsaiPrincipal(book) : null) ||
+    secrets.canopy_wallet_principal?.trim() ||
+    process.env.CANOPY_WALLET_PRINCIPAL?.trim() ||
+    null;
+  if (!canopy) {
+    console.log(
+      `[ambassador] bonsai: Canopy wallet not set yet (pending_login).`,
+    );
+    return awaitingIntegration(ctx, key, "canopy_wallet_principal");
+  }
+
+  const registryId =
+    secrets.bonsai_registry_canister_id?.trim() || BONSAI_REGISTRY;
+  const client = await createBonsaiClient({ identity: captainIdentity });
+  const crm = await client.getCrmStatus();
+  const orbitBal = await client.orbitBalance();
+  const icpBal = await client.icpBalance();
+  const msg =
+    `${key}: Canopy ${canopy.slice(0, 12)}… registry=${registryId} ` +
+    `crm(profile=${crm.hasProfile},score=${crm.score}) ` +
+    `orbitSpots(collection=${ORBIT_SPOTS_COLLECTION_ID})=${orbitBal} ` +
+    `icpE8s=${icpBal}`;
+  console.log(`[ambassador] ${msg}`);
+  await hub.reportRun(kindVariant(key), msg);
+  return null;
 }
 
 async function awaitingIntegration(ctx, key, secretName) {
