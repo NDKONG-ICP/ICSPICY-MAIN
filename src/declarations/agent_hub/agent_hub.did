@@ -127,6 +127,8 @@ type AgentHub =
     draftId: nat, recipientCount: nat) -> ();
    claimJobs: (limit: nat) -> (vec JobPublic);
    confirmSubscription: (token: text) -> (SubscribeResult);
+   /// True pending backlog size (not capped like listDrafts limit).
+   countPendingDrafts: () -> (nat) query;
    editDraft: (draftId: nat, title: text, body: text) -> ();
    enqueueJob: (agentId: nat, payload: text) -> (nat);
    /// Register caller as agent_hub admin when they are a backend admin (one-time sync).
@@ -155,6 +157,9 @@ type AgentHub =
    listSubscribers: (limit: nat) -> (vec SubscriberPublic) query;
    markDraftSent: (draftId: nat) -> ();
    recordLlmCall: (agentId: nat) -> (bool);
+   /// Admin: reject every pending draft in one call. Returns how many were rejected.
+   /// One summary audit line (not one per draft) to keep the log readable during backlog clears.
+   rejectAllPendingDrafts: (reason: text) -> (nat);
    rejectDraft: (draftId: nat, reason: text) -> ();
    removeAdmin: (p: principal) -> ();
    removeAgentPrincipal: (p: principal) -> ();

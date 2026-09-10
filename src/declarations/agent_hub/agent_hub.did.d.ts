@@ -20,6 +20,10 @@ export interface AgentHub {
   >,
   'claimJobs' : ActorMethod<[bigint], Array<JobPublic>>,
   'confirmSubscription' : ActorMethod<[string], SubscribeResult>,
+  /**
+   * / True pending backlog size (not capped like listDrafts limit).
+   */
+  'countPendingDrafts' : ActorMethod<[], bigint>,
   'editDraft' : ActorMethod<[bigint, string, string], undefined>,
   'enqueueJob' : ActorMethod<[bigint, string], bigint>,
   /**
@@ -45,6 +49,11 @@ export interface AgentHub {
   'listSubscribers' : ActorMethod<[bigint], Array<SubscriberPublic>>,
   'markDraftSent' : ActorMethod<[bigint], undefined>,
   'recordLlmCall' : ActorMethod<[bigint], boolean>,
+  /**
+   * / Admin: reject every pending draft in one call. Returns how many were rejected.
+   * / One summary audit line (not one per draft) to keep the log readable during backlog clears.
+   */
+  'rejectAllPendingDrafts' : ActorMethod<[string], bigint>,
   'rejectDraft' : ActorMethod<[bigint, string], undefined>,
   'removeAdmin' : ActorMethod<[Principal], undefined>,
   'removeAgentPrincipal' : ActorMethod<[Principal], undefined>,

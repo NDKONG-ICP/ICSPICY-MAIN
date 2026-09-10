@@ -127,6 +127,8 @@ export const agentHubIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
     ),
     approveDraft: IDL.Func([IDL.Nat], [], []),
     rejectDraft: IDL.Func([IDL.Nat, IDL.Text], [], []),
+    rejectAllPendingDrafts: IDL.Func([IDL.Text], [IDL.Nat], []),
+    countPendingDrafts: IDL.Func([], [IDL.Nat], ["query"]),
     editDraft: IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [], []),
     markDraftSent: IDL.Func([IDL.Nat], [], []),
     getApprovedDraftsForSend: IDL.Func([IDL.Nat], [IDL.Vec(DraftPublic)], ["query"]),
@@ -195,6 +197,8 @@ export interface AgentHubActor {
   >;
   approveDraft(draftId: bigint): Promise<void>;
   rejectDraft(draftId: bigint, reason: string): Promise<void>;
+  rejectAllPendingDrafts(reason: string): Promise<bigint>;
+  countPendingDrafts(): Promise<bigint>;
   editDraft(draftId: bigint, title: string, body: string): Promise<void>;
   markDraftSent(draftId: bigint): Promise<void>;
   getApprovedDraftsForSend(limit: bigint): Promise<unknown[]>;

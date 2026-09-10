@@ -125,6 +125,8 @@ export function AdminAgentSwarmTab() {
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const [rejectReason, setRejectReason] = useState("");
+  const [pendingCount, setPendingCount] = useState(0);
+  const [bulkRejecting, setBulkRejecting] = useState(false);
   const [almanacDateKey, setAlmanacDateKey] = useState(() =>
     new Date().toISOString().slice(0, 10),
   );
@@ -172,7 +174,7 @@ export function AdminAgentSwarmTab() {
         return;
       }
       await hub.ensureAdminRegistration();
-      const [agentList, draftList, auditList, subList, names, principals] =
+      const [agentList, draftList, auditList, subList, names, principals, pendingTotal] =
         await Promise.all([
           hub.listAgents(),
           hub.listDrafts(50n, [{ pending: null }]),
@@ -180,12 +182,14 @@ export function AdminAgentSwarmTab() {
           hub.listSubscribers(200n),
           hub.listSecretNames(),
           hub.listAgentPrincipals(),
+          hub.countPendingDrafts(),
         ]);
       setAgents(agentList as AgentPublic[]);
       setDrafts(draftList as DraftPublic[]);
       setAudit(auditList as AuditEntry[]);
       setSubscribers(subList as SubscriberPublic[]);
       setSecretNames(names as string[]);
+      setPendingCount(Number(pendingTotal));
       setAgentPrincipals(
         (principals as import("@dfinity/principal").Principal[]).map((p) =>
           p.toText(),
@@ -246,6 +250,32 @@ export function AdminAgentSwarmTab() {
     toast.success("Draft rejected");
     setRejectReason("");
     await loadAll();
+  }
+
+  async function rejectAllPending() {
+    if (pendingCount === 0) return;
+    const reason =
+      rejectReason.trim() || "bulk clear — template / backlog";
+    if (
+      !window.confirm(
+        `Reject ALL ${pendingCount} pending draft(s)?\n\nReason: ${reason}\n\nThis cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    const hub = await getAuthenticatedAgentHubActor();
+    if (!hub) return;
+    setBulkRejecting(true);
+    try {
+      const n = await hub.rejectAllPendingDrafts(reason);
+      toast.success(`Rejected ${String(n)} pending draft(s)`);
+      setRejectReason("");
+      await loadAll();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Bulk reject failed");
+    } finally {
+      setBulkRejecting(false);
+    }
   }
 
   async function saveDraftEdit() {
@@ -337,9 +367,9 @@ export function AdminAgentSwarmTab() {
           <TabsTrigger value="roster">Roster</TabsTrigger>
           <TabsTrigger value="queue">
             Approval Queue
-            {pendingDrafts.length > 0 && (
+            {pendingCount > 0 && (
               <Badge variant="destructive" className="ml-1.5 h-5">
-                {pendingDrafts.length}
+                {pendingCount}
               </Badge>
             )}
           </TabsTrigger>
@@ -398,6 +428,33 @@ export function AdminAgentSwarmTab() {
         </TabsContent>
 
         <TabsContent value="queue" className="space-y-4 mt-4">
+          {pendingCount > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-between rounded-xl border border-border bg-card p-3">
+              <p className="text-sm text-muted-foreground">
+                {pendingCount} pending total
+                {pendingDrafts.length < pendingCount
+                  ? ` · showing ${pendingDrafts.length}`
+                  : ""}
+              </p>
+              <div className="flex flex-wrap gap-2 items-center">
+                <Input
+                  placeholder="Bulk reject reason"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  className="max-w-xs h-8"
+                />
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={bulkRejecting}
+                  onClick={() => void rejectAllPending()}
+                >
+                  <XCircle className="w-4 h-4 mr-1" />
+                  {bulkRejecting ? "Rejecting…" : "Reject all pending"}
+                </Button>
+              </div>
+            </div>
+          )}
           {pendingDrafts.length === 0 ? (
             <p className="text-sm text-muted-foreground">No pending drafts.</p>
           ) : (

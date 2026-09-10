@@ -892,6 +892,35 @@ shared(msg) persistent actor class AgentHub() = Self {
     };
   };
 
+  /// Admin: reject every pending draft in one call. Returns how many were rejected.
+  /// One summary audit line (not one per draft) to keep the log readable during backlog clears.
+  public shared ({ caller }) func rejectAllPendingDrafts(reason : Text) : async Nat {
+    requireAdmin(caller);
+    let note = if (reason == "") { "bulk reject" } else { reason };
+    let now = Time.now();
+    var n : Nat = 0;
+    for ((_, d) in drafts.entries()) {
+      if (d.status == #pending) {
+        d.status := #rejected;
+        d.reviewedAt := ?now;
+        d.reviewedBy := ?caller;
+        d.complianceNotes := note;
+        n += 1;
+      };
+    };
+    appendAudit(caller, "rejectAllPendingDrafts", Nat.toText(n) # ": " # note);
+    n
+  };
+
+  /// True pending backlog size (not capped like listDrafts limit).
+  public query func countPendingDrafts() : async Nat {
+    var n : Nat = 0;
+    for ((_, d) in drafts.entries()) {
+      if (d.status == #pending) { n += 1 };
+    };
+    n
+  };
+
   public shared ({ caller }) func editDraft(
     draftId : Nat,
     title : Text,
