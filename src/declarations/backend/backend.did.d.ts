@@ -98,6 +98,10 @@ export interface AdminWithdrawTokensResult {
   'message' : string,
   'success' : boolean,
 }
+export interface AgeAttestationPublic {
+  'method' : string,
+  'attestedAt' : bigint,
+}
 export interface AirQuality {
   'pm10' : number,
   'pm25' : number,
@@ -252,6 +256,54 @@ export interface CertifiedWeather_3 {
   'witness' : Uint8Array | number[],
   'bodyDigest' : string,
 }
+export type ChallengeId = string;
+export interface ChallengeLeaderboardEntry {
+  'photoKeys' : Array<string>,
+  'principal' : Principal,
+  'username' : [] | [string],
+  'value' : bigint,
+  'updatedAt' : Timestamp,
+}
+export interface ChallengeMemberPublic {
+  'principal' : Principal,
+  'username' : [] | [string],
+  'role' : ChallengeRole,
+  'challengeId' : ChallengeId,
+  'suspended' : boolean,
+  'enteredAt' : Timestamp,
+}
+export interface ChallengeMetricsPublic {
+  'photoKeys' : Array<string>,
+  'principal' : Principal,
+  'totalWeightG' : bigint,
+  'username' : [] | [string],
+  'note' : string,
+  'plantHeightCm' : bigint,
+  'pepperCount' : bigint,
+  'updatedAt' : Timestamp,
+  'challengeId' : ChallengeId,
+  'largestPepperMm' : bigint,
+}
+export interface ChallengePublic {
+  'id' : ChallengeId,
+  'status' : ChallengeStatus,
+  'title' : string,
+  'germinateAt' : bigint,
+  'tagline' : string,
+  'memberCount' : bigint,
+  'created_at' : Timestamp,
+  'rulesSummary' : string,
+  'prizeSponsor' : string,
+  'seedSponsor' : string,
+  'registrationOpen' : boolean,
+  'registrationClosesAt' : bigint,
+}
+export type ChallengeRole = { 'moderator' : null } |
+  { 'contestant' : null } |
+  { 'sponsor' : null };
+export type ChallengeStatus = { 'closed' : null } |
+  { 'open' : null } |
+  { 'archived' : null };
 export type ClaimRequestStatus = { 'pending' : null } |
   { 'approved' : null } |
   { 'rejected' : null };
@@ -277,6 +329,10 @@ export interface CommentPublic {
   'is_anonymous' : boolean,
   'caller_liked' : boolean,
 }
+export type CompeteCategory = { 'largestPlant' : null } |
+  { 'mostPeppers' : null } |
+  { 'largestPepper' : null } |
+  { 'totalWeight' : null };
 export interface ConfirmOrderPaymentDirectResult {
   'claim_tokens' : Array<string>,
   'message' : string,
@@ -635,6 +691,16 @@ export interface Health {
   'cyclesBalance' : bigint,
   'memoryUsed' : bigint,
 }
+export interface HederaMirrorPublic {
+  'htsTokenId' : string,
+  'serial' : bigint,
+  'mintedAt' : bigint,
+}
+export interface HederaMirrorRecord {
+  'htsTokenId' : string,
+  'serial' : bigint,
+  'mintedAt' : bigint,
+}
 export interface ICSpicy {
   '_initializeAccessControl' : ActorMethod<[], undefined>,
   'acceptOffer' : ActorMethod<[string], Offer>,
@@ -750,6 +816,7 @@ export interface ICSpicy {
     SwarmCanisterTarget
   >,
   'adminRejectClaimRequest' : ActorMethod<[PlantId, Principal], boolean>,
+  'adminRelockHederaTwin' : ActorMethod<[bigint], TransferResult>,
   'adminRemoveGameScore' : ActorMethod<[string, Principal], boolean>,
   /**
    * / Admin: remove a swarm canister from the dynamic fleet registry.
@@ -768,7 +835,19 @@ export interface ICSpicy {
    */
   'adminRunLpFeeCyclesFunding' : ActorMethod<[boolean], LpFeeCyclesRunResult>,
   'adminSendNotification' : ActorMethod<[Principal, string], boolean>,
+  'adminSetChallengeMemberRole' : ActorMethod<
+    [string, Principal, ChallengeRole],
+    undefined
+  >,
+  'adminSetChallengeSuspended' : ActorMethod<
+    [string, Principal, boolean],
+    undefined
+  >,
   'adminSetGrowerOfTheMonth' : ActorMethod<[string, string], undefined>,
+  'adminSetHederaMirror' : ActorMethod<
+    [Array<[bigint, HederaMirrorRecord]>],
+    bigint
+  >,
   'adminSetLeaderboardExcluded' : ActorMethod<[Principal, boolean], undefined>,
   /**
    * / Admin: set per-swarm-canister auto top-up policy.
@@ -786,6 +865,7 @@ export interface ICSpicy {
     { 'ok' : string } |
       { 'err' : string }
   >,
+  'adminSyncHederaTwin' : ActorMethod<[bigint, Account], TransferResult>,
   /**
    * / Admin: convert treasury ICP to cycles on a fleet canister via CMC.
    */
@@ -867,9 +947,6 @@ export interface ICSpicy {
   'calculateGardenYieldInput' : ActorMethod<[GardenDesignInput], YieldEstimate>,
   'cancelMyClaimRequest' : ActorMethod<[PlantId], boolean>,
   'cancelOffer' : ActorMethod<[string], Offer>,
-  /**
-   * / Per-principal rate limiters for cycle-drain protection (CDA).
-   */
   'cancelProposal' : ActorMethod<[ProposalId], boolean>,
   'cancelResaleListing' : ActorMethod<
     [string],
@@ -900,6 +977,7 @@ export interface ICSpicy {
     { 'ok' : BatchGiftPackPublic } |
       { 'err' : string }
   >,
+  'createChallengePost' : ActorMethod<[string, CreatePostInput], PostPublic>,
   'createComment' : ActorMethod<[CreateCommentInput], CommentPublic>,
   'createDAOProposal' : ActorMethod<[CreateProposalInput], ProposalPublic>,
   'createGardenDesign' : ActorMethod<
@@ -911,6 +989,9 @@ export interface ICSpicy {
     { 'proposalId' : bigint }
   >,
   'createNimsTray' : ActorMethod<[string, Timestamp, [] | [bigint]], TrayId>,
+  /**
+   * / Uploads asset canister — user images served via HTTP from this canister.
+   */
   'createOrder' : ActorMethod<[Principal, CreateOrderInput], OrderPublic>,
   'createPlant' : ActorMethod<[CreatePlantInput], PlantPublic>,
   'createPlantingEvent' : ActorMethod<
@@ -918,9 +999,6 @@ export interface ICSpicy {
     PlantingEvent
   >,
   'createPost' : ActorMethod<[CreatePostInput], PostPublic>,
-  /**
-   * / Per-principal rate limiters for cycle-drain protection (CDA).
-   */
   'createProduct' : ActorMethod<[CreateProductInput], ProductPublic>,
   'createProposal' : ActorMethod<
     [CreateProposalInput],
@@ -1011,6 +1089,12 @@ export interface ICSpicy {
     [],
     Array<CanisterTreasuryBalance>
   >,
+  'getChallenge' : ActorMethod<[string], [] | [ChallengePublic]>,
+  'getChallengeFeed' : ActorMethod<[string, bigint, bigint], Array<PostPublic>>,
+  'getChallengeLeaderboard' : ActorMethod<
+    [string, CompeteCategory, bigint],
+    Array<ChallengeLeaderboardEntry>
+  >,
   'getClaimInfo' : ActorMethod<
     [string],
     [] | [
@@ -1073,6 +1157,9 @@ export interface ICSpicy {
   'getGardenDesign' : ActorMethod<[bigint], [] | [GardenDesign]>,
   'getGardenDesignForUser' : ActorMethod<[bigint], [] | [GardenDesign]>,
   'getGlobalFeed' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
+  /**
+   * / Frontend asset canister for share-time OG HTML publish (append-only slot).
+   */
   'getGraveyard' : ActorMethod<[], Array<PlantLifecycle>>,
   'getGrowerAlerts' : ActorMethod<
     [[] | [number], [] | [number]],
@@ -1082,6 +1169,8 @@ export interface ICSpicy {
     [bigint],
     [] | [GrowerProvenanceMeta]
   >,
+  'getHederaMirror' : ActorMethod<[bigint], [] | [HederaMirrorPublic]>,
+  'getHederaTwinOwner' : ActorMethod<[bigint], [] | [Principal]>,
   'getIcrc7PoolStatsAdmin' : ActorMethod<[], Icrc7PoolStats>,
   'getLatestNurseryWeather' : ActorMethod<[], [] | [WeatherSnapshot]>,
   'getLessonQuiz' : ActorMethod<[string], [] | [QuizPublic]>,
@@ -1101,7 +1190,16 @@ export interface ICSpicy {
     [[] | [number], [] | [number]],
     [] | [ModelGustSpread]
   >,
+  'getMyAgeAttestation' : ActorMethod<[], [] | [AgeAttestationPublic]>,
   'getMyBadges' : ActorMethod<[], Array<BadgePublic>>,
+  'getMyChallengeMembership' : ActorMethod<
+    [string],
+    [] | [ChallengeMemberPublic]
+  >,
+  'getMyChallengeMetrics' : ActorMethod<
+    [string],
+    [] | [ChallengeMetricsPublic]
+  >,
   'getMyClaimRequests' : ActorMethod<[], Array<PlantClaimRequestPublic>>,
   'getMyCoopStatus' : ActorMethod<[], [] | [CoopStatus]>,
   'getMyCrafterRecipes' : ActorMethod<[], Array<SavedCrafterRecipe>>,
@@ -1135,6 +1233,9 @@ export interface ICSpicy {
   'getNimsPhotoFile' : ActorMethod<[string], [] | [ShopListingFile]>,
   'getNurseryWeatherDesk' : ActorMethod<[], [] | [WeatherOutlook]>,
   'getNwsAlertsCertified' : ActorMethod<[], CertifiedWeather_2>,
+  /**
+   * / Per-principal rate limiters for cycle-drain protection (CDA).
+   */
   'getOffer' : ActorMethod<[string], [] | [Offer]>,
   'getOffersForNft' : ActorMethod<[string], Array<Offer>>,
   'getOffersReceived' : ActorMethod<[], Array<Offer>>,
@@ -1142,6 +1243,9 @@ export interface ICSpicy {
   'getOrderPickupClaimTokens' : ActorMethod<[OrderId], Array<string>>,
   'getOverdueEvents' : ActorMethod<[], Array<PlantingEvent>>,
   'getPayPalCheckoutConfig' : ActorMethod<[], PayPalCheckoutConfig>,
+  /**
+   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   */
   'getPlant' : ActorMethod<[PlantId], [] | [PlantPublic]>,
   'getPlantByNft' : ActorMethod<[bigint], [] | [PlantLifecycle]>,
   'getPlantByNftIdBackfillCount' : ActorMethod<[], bigint>,
@@ -1327,6 +1431,9 @@ export interface ICSpicy {
   'icrc7_max_update_batch_size' : ActorMethod<[], [] | [bigint]>,
   'icrc7_name' : ActorMethod<[], string>,
   'icrc7_owner_of' : ActorMethod<[Array<bigint>], Array<[] | [Account]>>,
+  /**
+   * / ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
+   */
   'icrc7_permitted_drift' : ActorMethod<[], [] | [bigint]>,
   'icrc7_supply_cap' : ActorMethod<[], [] | [bigint]>,
   'icrc7_symbol' : ActorMethod<[], string>,
@@ -1378,6 +1485,7 @@ export interface ICSpicy {
     ],
     MembershipNFTPublic
   >,
+  'joinChallenge' : ActorMethod<[JoinChallengeInput], ChallengeMemberPublic>,
   'likeComment' : ActorMethod<[CommentId], boolean>,
   'likePost' : ActorMethod<[PostId], boolean>,
   'linkWallet' : ActorMethod<[Principal], boolean>,
@@ -1389,6 +1497,11 @@ export interface ICSpicy {
   'listAllPostsAdmin' : ActorMethod<[bigint, bigint], Array<PostPublic>>,
   'listArtworkFiles' : ActorMethod<[], Array<[string, bigint]>>,
   'listArtworkLayers' : ActorMethod<[], Array<ArtworkLayer>>,
+  'listChallengeMembers' : ActorMethod<
+    [string, bigint, bigint],
+    Array<ChallengeMemberPublic>
+  >,
+  'listChallenges' : ActorMethod<[], Array<ChallengePublic>>,
   'listClaimTokensAdmin' : ActorMethod<
     [[] | [string]],
     Array<ClaimTokenAdminPublic>
@@ -1534,9 +1647,6 @@ export interface ICSpicy {
     http_request_result
   >,
   'pruneUsageData' : ActorMethod<[], undefined>,
-  /**
-   * / Admin-managed dynamic swarm/agent canister targets.
-   */
   'publishDailyAlmanac' : ActorMethod<
     [string, string, string, [] | [string], Array<bigint>],
     undefined
@@ -1566,9 +1676,6 @@ export interface ICSpicy {
     [PlantId, PaymentToken, bigint],
     PurchasePlantResult
   >,
-  /**
-   * / Admin-managed dynamic swarm/agent canister targets.
-   */
   'purchasePlantICPay' : ActorMethod<[PlantId, string], PurchasePlantResult>,
   'purchasePlantPayPal' : ActorMethod<[PlantId, string], PurchasePlantResult>,
   'recordCross' : ActorMethod<
@@ -1611,6 +1718,9 @@ export interface ICSpicy {
   'rejectOffer' : ActorMethod<[string], Offer>,
   'removeAdmin' : ActorMethod<[Principal], undefined>,
   'removeAgentPrincipal' : ActorMethod<[Principal], undefined>,
+  /**
+   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
+   */
   'removePlant' : ActorMethod<[PlantId], boolean>,
   'removePlantPhoto' : ActorMethod<[PlantId, string], undefined>,
   'removeVariety' : ActorMethod<[bigint], boolean>,
@@ -1648,6 +1758,7 @@ export interface ICSpicy {
   'searchUsers' : ActorMethod<[string, bigint], Array<UserProfilePublic>>,
   'searchVarieties' : ActorMethod<[string], Array<VarietyPublic>>,
   'seedDefaultRecipes' : ActorMethod<[], undefined>,
+  'setAgeAttestation' : ActorMethod<[], AgeAttestationPublic>,
   'setCoopSeatPriceCents' : ActorMethod<[bigint], undefined>,
   /**
    * / Admin: update automatic fleet top-up policy.
@@ -1683,9 +1794,6 @@ export interface ICSpicy {
   'setProfileBanner' : ActorMethod<[string], undefined>,
   'setProfileWallpaper' : ActorMethod<[string], undefined>,
   'setRecipeFaqs' : ActorMethod<[RecipeId, Array<[string, string]>], boolean>,
-  /**
-   * / ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
-   */
   'setRecipeIntro' : ActorMethod<[RecipeId, string], boolean>,
   'setRecipeVideo' : ActorMethod<[RecipeId, [] | [string]], Result_5>,
   'setRecipeVideoUrl' : ActorMethod<[RecipeId, [] | [string]], boolean>,
@@ -1709,10 +1817,11 @@ export interface ICSpicy {
   >,
   'storeProfileBannerFile' : ActorMethod<[Uint8Array | number[]], string>,
   'storeProfileWallpaperFile' : ActorMethod<[Uint8Array | number[]], string>,
-  /**
-   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
-   */
   'storeSlicerShareOgImage' : ActorMethod<[Uint8Array | number[]], Result_3>,
+  'submitChallengeMetrics' : ActorMethod<
+    [SubmitMetricsInput],
+    ChallengeMetricsPublic
+  >,
   'submitGameScore' : ActorMethod<[string, bigint, string], Result_2>,
   'submitOffer' : ActorMethod<[SubmitOfferInput], Offer>,
   'submitQuizResult' : ActorMethod<[string, string], Result_1>,
@@ -1839,9 +1948,6 @@ export interface ICSpicy {
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
   >,
-  /**
-   * / ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
-   */
   'weatherNwsAlertsTransform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : http_request_result }],
     http_request_result
@@ -1901,6 +2007,12 @@ export interface IsApprovedArg {
   'token_id' : bigint,
   'from_subaccount' : [] | [Uint8Array | number[]],
   'spender' : Account,
+}
+export interface JoinChallengeInput {
+  'indoorOnly' : boolean,
+  'onePlant' : boolean,
+  'challengeId' : ChallengeId,
+  'agreedRules' : boolean,
 }
 export interface LayerSummary {
   'file_names' : Array<string>,
@@ -2738,6 +2850,15 @@ export interface StructurePlacement {
   'structureType' : string,
 }
 export type Subaccount = Uint8Array | number[];
+export interface SubmitMetricsInput {
+  'photoKeys' : Array<string>,
+  'totalWeightG' : bigint,
+  'note' : string,
+  'plantHeightCm' : bigint,
+  'pepperCount' : bigint,
+  'challengeId' : ChallengeId,
+  'largestPepperMm' : bigint,
+}
 export interface SubmitOfferInput {
   'nft_id' : string,
   'offered_token' : OfferToken,

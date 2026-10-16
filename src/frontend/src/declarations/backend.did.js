@@ -388,6 +388,16 @@ export const idlFactory = ({ IDL }) => {
     'details' : IDL.Vec(CanisterFundingDetail),
     'success' : IDL.Bool,
   });
+  const ChallengeRole = IDL.Variant({
+    'moderator' : IDL.Null,
+    'contestant' : IDL.Null,
+    'sponsor' : IDL.Null,
+  });
+  const HederaMirrorRecord = IDL.Record({
+    'htsTokenId' : IDL.Text,
+    'serial' : IDL.Nat,
+    'mintedAt' : IDL.Nat,
+  });
   const SwarmAutoTopUpPolicy = IDL.Record({
     'thresholdCycles' : IDL.Nat,
     'icpPerTopUpE8s' : IDL.Nat,
@@ -403,17 +413,17 @@ export const idlFactory = ({ IDL }) => {
     'filename' : IDL.Text,
     'uploaded_at' : Timestamp,
   });
+  const Subaccount = IDL.Vec(IDL.Nat8);
+  const Account = IDL.Record({
+    'owner' : IDL.Principal,
+    'subaccount' : IDL.Opt(Subaccount),
+  });
   const CanisterTopUpResult = IDL.Record({
     'icpSpentE8s' : IDL.Nat,
     'cyclesMinted' : IDL.Opt(IDL.Nat),
     'message' : IDL.Text,
     'success' : IDL.Bool,
     'ledgerBlockIndex' : IDL.Opt(IDL.Nat),
-  });
-  const Subaccount = IDL.Vec(IDL.Nat8);
-  const Account = IDL.Record({
-    'owner' : IDL.Principal,
-    'subaccount' : IDL.Opt(Subaccount),
   });
   const VerifiedGrowerStat = IDL.Record({
     'value' : IDL.Text,
@@ -655,6 +665,32 @@ export const idlFactory = ({ IDL }) => {
     'claim_token_id' : ClaimTokenId,
     'highest_rarity_pct' : IDL.Nat,
   });
+  const CreatePostInput = IDL.Record({
+    'content' : IDL.Text,
+    'nft_token_id' : IDL.Opt(IDL.Nat),
+    'image_key' : IDL.Opt(IDL.Text),
+    'image_keys' : IDL.Vec(IDL.Text),
+    'anonymous' : IDL.Bool,
+    'plant_id' : IDL.Opt(IDL.Nat),
+  });
+  const PostPublic = IDL.Record({
+    'id' : PostId,
+    'updated_at' : Timestamp,
+    'content' : IDL.Text,
+    'author_text' : IDL.Text,
+    'comment_count' : IDL.Nat,
+    'nft_token_id' : IDL.Opt(IDL.Nat),
+    'image_key' : IDL.Opt(IDL.Text),
+    'like_count' : IDL.Nat,
+    'created_at' : Timestamp,
+    'author_principal' : IDL.Opt(IDL.Principal),
+    'image_keys' : IDL.Vec(IDL.Text),
+    'tip_count' : IDL.Nat,
+    'author_username' : IDL.Opt(IDL.Text),
+    'is_anonymous' : IDL.Bool,
+    'caller_liked' : IDL.Bool,
+    'plant_id' : IDL.Opt(IDL.Nat),
+  });
   const CreateCommentInput = IDL.Record({
     'post_id' : PostId,
     'content' : IDL.Text,
@@ -805,32 +841,6 @@ export const idlFactory = ({ IDL }) => {
     'notes' : IDL.Text,
     'scheduled_at' : Timestamp,
     'event_type' : PlantingEventType,
-  });
-  const CreatePostInput = IDL.Record({
-    'content' : IDL.Text,
-    'nft_token_id' : IDL.Opt(IDL.Nat),
-    'image_key' : IDL.Opt(IDL.Text),
-    'image_keys' : IDL.Vec(IDL.Text),
-    'anonymous' : IDL.Bool,
-    'plant_id' : IDL.Opt(IDL.Nat),
-  });
-  const PostPublic = IDL.Record({
-    'id' : PostId,
-    'updated_at' : Timestamp,
-    'content' : IDL.Text,
-    'author_text' : IDL.Text,
-    'comment_count' : IDL.Nat,
-    'nft_token_id' : IDL.Opt(IDL.Nat),
-    'image_key' : IDL.Opt(IDL.Text),
-    'like_count' : IDL.Nat,
-    'created_at' : Timestamp,
-    'author_principal' : IDL.Opt(IDL.Principal),
-    'image_keys' : IDL.Vec(IDL.Text),
-    'tip_count' : IDL.Nat,
-    'author_username' : IDL.Opt(IDL.Text),
-    'is_anonymous' : IDL.Bool,
-    'caller_liked' : IDL.Bool,
-    'plant_id' : IDL.Opt(IDL.Nat),
   });
   const Difficulty = IDL.Variant({
     'Beginner' : IDL.Null,
@@ -1097,6 +1107,39 @@ export const idlFactory = ({ IDL }) => {
     'ledgerCanisterId' : IDL.Text,
     'symbol' : IDL.Text,
   });
+  const ChallengeId = IDL.Text;
+  const ChallengeStatus = IDL.Variant({
+    'closed' : IDL.Null,
+    'open' : IDL.Null,
+    'archived' : IDL.Null,
+  });
+  const ChallengePublic = IDL.Record({
+    'id' : ChallengeId,
+    'status' : ChallengeStatus,
+    'title' : IDL.Text,
+    'germinateAt' : IDL.Int,
+    'tagline' : IDL.Text,
+    'memberCount' : IDL.Nat,
+    'created_at' : Timestamp,
+    'rulesSummary' : IDL.Text,
+    'prizeSponsor' : IDL.Text,
+    'seedSponsor' : IDL.Text,
+    'registrationOpen' : IDL.Bool,
+    'registrationClosesAt' : IDL.Int,
+  });
+  const CompeteCategory = IDL.Variant({
+    'largestPlant' : IDL.Null,
+    'mostPeppers' : IDL.Null,
+    'largestPepper' : IDL.Null,
+    'totalWeight' : IDL.Null,
+  });
+  const ChallengeLeaderboardEntry = IDL.Record({
+    'photoKeys' : IDL.Vec(IDL.Text),
+    'principal' : IDL.Principal,
+    'username' : IDL.Opt(IDL.Text),
+    'value' : IDL.Nat,
+    'updatedAt' : Timestamp,
+  });
   const ShopListingFile = IDL.Record({
     'data' : IDL.Vec(IDL.Nat8),
     'mime_type' : IDL.Text,
@@ -1230,6 +1273,11 @@ export const idlFactory = ({ IDL }) => {
     'growerName' : IDL.Text,
     'variety' : IDL.Text,
   });
+  const HederaMirrorPublic = IDL.Record({
+    'htsTokenId' : IDL.Text,
+    'serial' : IDL.Nat,
+    'mintedAt' : IDL.Nat,
+  });
   const Icrc7PoolStats = IDL.Record({
     'total' : IDL.Nat,
     'pepperhead_total' : IDL.Nat,
@@ -1309,6 +1357,30 @@ export const idlFactory = ({ IDL }) => {
     'fetchedAt' : IDL.Int,
     'icon' : IDL.Vec(ModelGustDay),
     'ecmwf' : IDL.Vec(ModelGustDay),
+  });
+  const AgeAttestationPublic = IDL.Record({
+    'method' : IDL.Text,
+    'attestedAt' : IDL.Int,
+  });
+  const ChallengeMemberPublic = IDL.Record({
+    'principal' : IDL.Principal,
+    'username' : IDL.Opt(IDL.Text),
+    'role' : ChallengeRole,
+    'challengeId' : ChallengeId,
+    'suspended' : IDL.Bool,
+    'enteredAt' : Timestamp,
+  });
+  const ChallengeMetricsPublic = IDL.Record({
+    'photoKeys' : IDL.Vec(IDL.Text),
+    'principal' : IDL.Principal,
+    'totalWeightG' : IDL.Nat,
+    'username' : IDL.Opt(IDL.Text),
+    'note' : IDL.Text,
+    'plantHeightCm' : IDL.Nat,
+    'pepperCount' : IDL.Nat,
+    'updatedAt' : Timestamp,
+    'challengeId' : ChallengeId,
+    'largestPepperMm' : IDL.Nat,
   });
   const CoopSeatPublic = IDL.Record({
     'revoked' : IDL.Bool,
@@ -1897,6 +1969,12 @@ export const idlFactory = ({ IDL }) => {
     'from_subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
     'created_at_time' : IDL.Opt(IDL.Nat64),
   });
+  const JoinChallengeInput = IDL.Record({
+    'indoorOnly' : IDL.Bool,
+    'onePlant' : IDL.Bool,
+    'challengeId' : ChallengeId,
+    'agreedRules' : IDL.Bool,
+  });
   const AdminOrderStatusFilter = IDL.Variant({
     'All' : IDL.Null,
     'Paid' : IDL.Null,
@@ -2069,6 +2147,15 @@ export const idlFactory = ({ IDL }) => {
   });
   const Result_4 = IDL.Variant({ 'ok' : StartSessionOk, 'err' : IDL.Text });
   const Result_3 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
+  const SubmitMetricsInput = IDL.Record({
+    'photoKeys' : IDL.Vec(IDL.Text),
+    'totalWeightG' : IDL.Nat,
+    'note' : IDL.Text,
+    'plantHeightCm' : IDL.Nat,
+    'pepperCount' : IDL.Nat,
+    'challengeId' : ChallengeId,
+    'largestPepperMm' : IDL.Nat,
+  });
   const SubmitScoreOk = IDL.Record({
     'bestScore' : IDL.Nat,
     'totalPlays' : IDL.Nat,
@@ -2329,6 +2416,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'adminRelockHederaTwin' : IDL.Func([IDL.Nat], [TransferResult], []),
     'adminRemoveGameScore' : IDL.Func(
         [IDL.Text, IDL.Principal],
         [IDL.Bool],
@@ -2350,7 +2438,22 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'adminSetChallengeMemberRole' : IDL.Func(
+        [IDL.Text, IDL.Principal, ChallengeRole],
+        [],
+        [],
+      ),
+    'adminSetChallengeSuspended' : IDL.Func(
+        [IDL.Text, IDL.Principal, IDL.Bool],
+        [],
+        [],
+      ),
     'adminSetGrowerOfTheMonth' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'adminSetHederaMirror' : IDL.Func(
+        [IDL.Vec(IDL.Tuple(IDL.Nat, HederaMirrorRecord))],
+        [IDL.Nat],
+        [],
+      ),
     'adminSetLeaderboardExcluded' : IDL.Func([IDL.Principal, IDL.Bool], [], []),
     'adminSetSwarmCanisterAutoTopUp' : IDL.Func(
         [IDL.Text, SwarmAutoTopUpPolicy],
@@ -2367,6 +2470,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
+    'adminSyncHederaTwin' : IDL.Func([IDL.Nat, Account], [TransferResult], []),
     'adminTopUpCanisterFromTreasuryIcp' : IDL.Func(
         [IDL.Text, IDL.Nat],
         [CanisterTopUpResult],
@@ -2511,6 +2615,11 @@ export const idlFactory = ({ IDL }) => {
     'createBatchGiftPack' : IDL.Func(
         [IDL.Vec(PlantId)],
         [IDL.Variant({ 'ok' : BatchGiftPackPublic, 'err' : IDL.Text })],
+        [],
+      ),
+    'createChallengePost' : IDL.Func(
+        [IDL.Text, CreatePostInput],
+        [PostPublic],
         [],
       ),
     'createComment' : IDL.Func([CreateCommentInput], [CommentPublic], []),
@@ -2699,6 +2808,21 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(CanisterTreasuryBalance)],
         [],
       ),
+    'getChallenge' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(ChallengePublic)],
+        ['query'],
+      ),
+    'getChallengeFeed' : IDL.Func(
+        [IDL.Text, IDL.Nat, IDL.Nat],
+        [IDL.Vec(PostPublic)],
+        ['query'],
+      ),
+    'getChallengeLeaderboard' : IDL.Func(
+        [IDL.Text, CompeteCategory, IDL.Nat],
+        [IDL.Vec(ChallengeLeaderboardEntry)],
+        ['query'],
+      ),
     'getClaimInfo' : IDL.Func(
         [IDL.Text],
         [
@@ -2808,6 +2932,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(GrowerProvenanceMeta)],
         ['query'],
       ),
+    'getHederaMirror' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Opt(HederaMirrorPublic)],
+        ['query'],
+      ),
+    'getHederaTwinOwner' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Opt(IDL.Principal)],
+        ['query'],
+      ),
     'getIcrc7PoolStatsAdmin' : IDL.Func([], [Icrc7PoolStats], ['query']),
     'getLatestNurseryWeather' : IDL.Func(
         [],
@@ -2834,7 +2968,22 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(ModelGustSpread)],
         ['query'],
       ),
+    'getMyAgeAttestation' : IDL.Func(
+        [],
+        [IDL.Opt(AgeAttestationPublic)],
+        ['query'],
+      ),
     'getMyBadges' : IDL.Func([], [IDL.Vec(BadgePublic)], ['query']),
+    'getMyChallengeMembership' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(ChallengeMemberPublic)],
+        ['query'],
+      ),
+    'getMyChallengeMetrics' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(ChallengeMetricsPublic)],
+        ['query'],
+      ),
     'getMyClaimRequests' : IDL.Func(
         [],
         [IDL.Vec(PlantClaimRequestPublic)],
@@ -3346,6 +3495,11 @@ export const idlFactory = ({ IDL }) => {
         [MembershipNFTPublic],
         [],
       ),
+    'joinChallenge' : IDL.Func(
+        [JoinChallengeInput],
+        [ChallengeMemberPublic],
+        [],
+      ),
     'likeComment' : IDL.Func([CommentId], [IDL.Bool], []),
     'likePost' : IDL.Func([PostId], [IDL.Bool], []),
     'linkWallet' : IDL.Func([IDL.Principal], [IDL.Bool], []),
@@ -3366,6 +3520,12 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'listArtworkLayers' : IDL.Func([], [IDL.Vec(ArtworkLayer)], ['query']),
+    'listChallengeMembers' : IDL.Func(
+        [IDL.Text, IDL.Nat, IDL.Nat],
+        [IDL.Vec(ChallengeMemberPublic)],
+        ['query'],
+      ),
+    'listChallenges' : IDL.Func([], [IDL.Vec(ChallengePublic)], ['query']),
     'listClaimTokensAdmin' : IDL.Func(
         [IDL.Opt(IDL.Text)],
         [IDL.Vec(ClaimTokenAdminPublic)],
@@ -3763,6 +3923,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'seedDefaultRecipes' : IDL.Func([], [], []),
+    'setAgeAttestation' : IDL.Func([], [AgeAttestationPublic], []),
     'setCoopSeatPriceCents' : IDL.Func([IDL.Nat], [], []),
     'setFleetAutoTopUpPolicy' : IDL.Func(
         [IDL.Bool, IDL.Nat, IDL.Nat, IDL.Nat],
@@ -3840,6 +4001,11 @@ export const idlFactory = ({ IDL }) => {
     'storeProfileBannerFile' : IDL.Func([IDL.Vec(IDL.Nat8)], [IDL.Text], []),
     'storeProfileWallpaperFile' : IDL.Func([IDL.Vec(IDL.Nat8)], [IDL.Text], []),
     'storeSlicerShareOgImage' : IDL.Func([IDL.Vec(IDL.Nat8)], [Result_3], []),
+    'submitChallengeMetrics' : IDL.Func(
+        [SubmitMetricsInput],
+        [ChallengeMetricsPublic],
+        [],
+      ),
     'submitGameScore' : IDL.Func([IDL.Text, IDL.Nat, IDL.Text], [Result_2], []),
     'submitOffer' : IDL.Func([SubmitOfferInput], [Offer], []),
     'submitQuizResult' : IDL.Func([IDL.Text, IDL.Text], [Result_1], []),

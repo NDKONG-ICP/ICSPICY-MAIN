@@ -26,6 +26,7 @@ import RecipesLib "lib/recipes";
 import Cert "lib/cert";
 import ICRC7 "types/icrc7";
 import ICRC37 "types/icrc37";
+import HederaMirrorTypes "types/hedera-mirror";
 import ICRC7API "mixins/icrc7-api";
 import PlantsAPI "mixins/plants-api";
 import MarketplaceAPI "mixins/marketplace-api";
@@ -40,6 +41,11 @@ import ClaimAPI "mixins/claim-api";
 import VerifiedGrowersTypes "types/verified-growers";
 import VerifiedGrowersLib "lib/verified-growers";
 import VerifiedGrowersAPI "mixins/verified-growers-api";
+import ChallengeLib "lib/challenge";
+import ChallengeAPI "mixins/challenge-api";
+import ComplianceTypes "types/compliance";
+import ComplianceLib "lib/compliance";
+import ComplianceAPI "mixins/compliance-api";
 import ScheduleAPI "mixins/schedule-api";
 import LifecycleUpgradeAPI "mixins/lifecycle-upgrade-api";
 import BatchGiftAndResaleAPI "mixins/batch-gift-and-resale-api";
@@ -398,6 +404,10 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let icrc37Approvals : Map.Map<Nat, Map.Map<Principal, ICRC37.ApprovalInfo>> =
     Map.empty<Nat, Map.Map<Principal, ICRC37.ApprovalInfo>>();
 
+  // Hedera HTS mirror (ICRC-7 tokenId → HTS serial). Additive side map.
+  let hederaMirror : Map.Map<Nat, HederaMirrorTypes.HederaMirrorRecord> =
+    Map.empty<Nat, HederaMirrorTypes.HederaMirrorRecord>();
+
   // Collection-level configuration constants. `transient` because they are
   // compile-time literals — no migration story needed across upgrades.
   transient let collectionName : Text = "IC SPICY";
@@ -429,6 +439,9 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let profileBanners = Map.empty<Principal, Text>();
   let profileWallpapers = Map.empty<Principal, Text>();
   let profileTop8 = Map.empty<Principal, [Principal]>();
+
+  // COPPA age self-attestation (13+). Side map — not stored on UserProfile.
+  let ageAttestations = Map.empty<Principal, ComplianceTypes.AgeAttestation>();
 
   // On-chain notification inbox (append-only, capped per user in lib)
   let notifications = Map.empty<Principal, List.List<NotificationTypes.Notification>>();
@@ -705,6 +718,9 @@ shared(msg) persistent actor class ICSpicy() = Self {
   let weatherModelGusts = Map.empty<Text, WeatherHubTypes.ModelGustSpread>();
   let verifiedGrowers = Map.empty<Text, VerifiedGrowersTypes.VerifiedGrower>();
 
+  // Special challenge groups (Winter Grow) — additive side maps only.
+  let challengeStore = ChallengeLib.empty();
+
   // ── Mixins ─────────────────────────────────────────────────────────────────
 
   include PlantsAPI(accessControlState, plants, trays, trayOwners, feedings, stageHistory, weatherRecords, weatherIndex, artworkLayers, rwaTokens, plantNotesLog, nextPlantId, nextTrayId, nextFeedingId, nextWeatherRecordId, nextArtworkLayerId);
@@ -788,9 +804,11 @@ shared(msg) persistent actor class ICSpicy() = Self {
     nextBreedingCrossId,
     nextSeedVendorId,
   );
+  include ComplianceAPI(accessControlState, ageAttestations);
   include MarketplaceAPI(
     accessControlState,
     rateLimits,
+    ageAttestations,
     products,
     orders,
     plants,
@@ -818,6 +836,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     accessControlState,
     agentPrincipalState,
     rateLimits,
+    ageAttestations,
     posts,
     comments,
     profiles,
@@ -829,6 +848,20 @@ shared(msg) persistent actor class ICSpicy() = Self {
     auditLog,
     notifications,
     nextNotificationId,
+    challengeStore.scopedPosts,
+  );
+  include ChallengeAPI(
+    accessControlState,
+    rateLimits,
+    ageAttestations,
+    posts,
+    comments,
+    communityTips,
+    profiles,
+    communityBannedUsers,
+    nextPostId,
+    auditLog,
+    challengeStore,
   );
   include NotificationsAPI(
     accessControlState,
@@ -876,6 +909,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
     icrc37Approvals,
     certStore,
     linkedWallets,
+    hederaMirror,
   );
   include RecipesAPI(accessControlState, recipes, recipeFavorites, recipeVideoUrls, recipeBonsaiVideoIds, recipeIntros, recipeFaqs, nextRecipeId, auditLog);
   include ClaimAPI(
@@ -942,6 +976,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include PoolAPI(accessControlState, nftPool, nextPoolProductId);
   include VerifiedGrowersAPI(accessControlState, auditLog, verifiedGrowers);
   ignore VerifiedGrowersLib.seedDefaultsIfEmpty(verifiedGrowers, Time.now());
+  ChallengeLib.seedWinterGrowIfMissing(challengeStore, Time.now());
   include CoopAPI(
     accessControlState,
     callerGuards,
@@ -1134,6 +1169,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
   include GamesAPI(
     accessControlState,
     rateLimits,
+    ageAttestations,
     profiles,
     gameScores,
     gameLeaderboardCache,
@@ -1457,6 +1493,7 @@ shared(msg) persistent actor class ICSpicy() = Self {
 
   public shared ({ caller }) func linkWallet(walletPrincipal : Principal) : async Bool {
     AccessControl.requireAuthenticated(caller);
+    ComplianceLib.requireAgeAttested(ageAttestations, caller);
     // Reject anonymous, self-links, and canister principal.
     if (Principal.isAnonymous(walletPrincipal)) return false;
     if (Principal.equal(caller, walletPrincipal)) Runtime.trap("Cannot link your own identity as a wallet");
@@ -1986,5 +2023,6 @@ shared(msg) persistent actor class ICSpicy() = Self {
       plantByNftId,
     );
     ignore VerifiedGrowersLib.seedDefaultsIfEmpty(verifiedGrowers, Time.now());
+    ChallengeLib.seedWinterGrowIfMissing(challengeStore, Time.now());
   };
 };

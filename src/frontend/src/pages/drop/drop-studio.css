@@ -1,0 +1,172 @@
+.drop-studio {
+  --ink: #f6efe6;
+  --muted: #c4b4a4;
+  --ember: #ff5a1f;
+  --gold: #f0c27a;
+  --panel: rgba(28, 16, 12, 0.88);
+  margin: -1rem -1rem 0;
+  min-height: 100%;
+  color: var(--ink);
+  background:
+    radial-gradient(900px 420px at 50% -10%, rgba(255, 90, 31, 0.28), transparent 60%),
+    #120c09;
+  padding: 1.25rem 1rem 4rem;
+}
+
+.drop-studio__inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.drop-studio h1 {
+  font-size: clamp(2.4rem, 8vw, 4rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.drop-studio__kicker {
+  color: var(--gold);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.drop-studio__lead {
+  color: var(--muted);
+  max-width: 38rem;
+}
+
+.drop-studio__panel {
+  margin-top: 1.25rem;
+  background: var(--panel);
+  border: 1px solid rgba(240, 194, 122, 0.2);
+  border-radius: 1.25rem;
+  padding: 1rem;
+}
+
+.drop-studio__modes {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.drop-studio__modes button {
+  border-radius: 999px;
+  border: 1px solid rgba(246, 239, 230, 0.18);
+  background: transparent;
+  color: var(--ink);
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.drop-studio__modes button[aria-pressed="true"] {
+  background: rgba(240, 194, 122, 0.22);
+  border-color: var(--gold);
+}
+
+.drop-studio__hint {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin: 0.5rem 0 0.75rem;
+  line-height: 1.45;
+}
+
+.drop-studio__hint code {
+  font-size: 0.78rem;
+  color: var(--gold);
+}
+
+.drop-studio textarea {
+  width: 100%;
+  min-height: 7rem;
+  resize: vertical;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(246, 239, 230, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+  padding: 0.9rem 1rem;
+  font: inherit;
+}
+
+.drop-studio__textarea--json {
+  min-height: 11rem;
+  font-family: ui-monospace, "DM Mono", monospace;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.drop-studio__error a {
+  color: var(--gold);
+}
+
+.drop-studio__styles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.8rem 0;
+}
+
+.drop-studio__styles button,
+.drop-studio__actions button {
+  border-radius: 999px;
+  border: 1px solid rgba(246, 239, 230, 0.18);
+  background: transparent;
+  color: var(--ink);
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+}
+
+.drop-studio__styles button[aria-pressed="true"] {
+  background: var(--ember);
+  border-color: transparent;
+  color: white;
+}
+
+.drop-studio__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.drop-studio__actions button[data-primary="true"] {
+  background: var(--gold);
+  color: #1a100c;
+  border-color: transparent;
+  font-weight: 700;
+}
+
+.drop-studio__frame {
+  margin-top: 1rem;
+  aspect-ratio: 1;
+  border-radius: 1.1rem;
+  overflow: hidden;
+  background:
+    linear-gradient(160deg, rgba(255, 90, 31, 0.16), transparent 40%),
+    #1a100c;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.drop-studio__frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drop-studio__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.drop-studio__error {
+  color: #ffb4a2;
+  margin-top: 0.75rem;
+}

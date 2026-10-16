@@ -84,6 +84,8 @@ const ProfilePage = lazy(() => import("./pages/Profile"));
 const DAOPage = lazy(() => import("./pages/DAO"));
 const CommunityPage = lazy(() => import("./pages/Community"));
 const CommunityPostPage = lazy(() => import("./pages/CommunityPost"));
+const WinterGrowPage = lazy(() => import("./pages/challenge/WinterGrowPage"));
+const DropStudioPage = lazy(() => import("./pages/drop/DropStudioPage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfile"));
 const AdminPage = lazy(() => import("./pages/Admin"));
 const AdminNfcAssignPage = lazy(() => import("./pages/AdminNfcAssign"));
@@ -97,6 +99,9 @@ const VarietyGuidePage = lazy(() => import("./pages/VarietyGuide"));
 const GuidesPage = lazy(() => import("./pages/Guides"));
 const GrowersPage = lazy(() => import("./pages/Growers"));
 const CreditsPage = lazy(() => import("./pages/Credits"));
+const PrivacyPage = lazy(() => import("./pages/legal/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
+const DmcaPage = lazy(() => import("./pages/legal/DmcaPage"));
 const CookbookRecipeDetailPage = lazy(
   () => import("./pages/CookbookRecipeDetail"),
 );
@@ -114,6 +119,12 @@ const GamesLeaderboardPage = lazy(
   () => import("./pages/games/GamesLeaderboardPage"),
 );
 const SlicerSharePage = lazy(() => import("./pages/games/SlicerSharePage"));
+const CaptainProofPage = lazy(
+  () => import("./pages/captain/CaptainProofPage"),
+);
+const CaptainProofIndexPage = lazy(
+  () => import("./pages/captain/CaptainProofIndexPage"),
+);
 const MasterclassHubPage = lazy(
   () => import("./pages/masterclass/MasterclassHubPage"),
 );
@@ -381,6 +392,24 @@ const communityRoute = createRoute({
   component: CommunityPage,
 });
 
+const winterGrowRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/challenge/winter-grow",
+  component: WinterGrowPage,
+});
+
+const dropStudioRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/drop",
+  component: DropStudioPage,
+});
+
+const winterGrowAliasRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/c/winter-grow",
+  component: WinterGrowPage,
+});
+
 // Legacy path — same component as /u/$user so old links keep working.
 const communityProfileRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -517,6 +546,24 @@ const creditsRoute = createRoute({
   component: CreditsPage,
 });
 
+const privacyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/privacy",
+  component: PrivacyPage,
+});
+
+const termsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/terms",
+  component: TermsPage,
+});
+
+const dmcaRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dmca",
+  component: DmcaPage,
+});
+
 const gamesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/games",
@@ -561,6 +608,18 @@ const slicerShareRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/s/slicer/$principal",
   component: SlicerSharePage,
+});
+
+const captainProofIndexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/p/captain",
+  component: CaptainProofIndexPage,
+});
+
+const captainProofRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/p/captain/$id",
+  component: CaptainProofPage,
 });
 
 const masterclassRoute = createRoute({
@@ -611,6 +670,9 @@ const routeTree = rootRoute.addChildren([
   daoRoute,
   communityPostRoute,
   communityRoute,
+  winterGrowRoute,
+  winterGrowAliasRoute,
+  dropStudioRoute,
   adminRoute,
   adminNfcAssignRoute,
   checkoutRoute,
@@ -622,12 +684,17 @@ const routeTree = rootRoute.addChildren([
   guidesRoute,
   growersRoute,
   creditsRoute,
+  privacyRoute,
+  termsRoute,
+  dmcaRoute,
   gamesRoute,
   slicerGameRoute,
   pepperPatchGameRoute,
   crafterGameRoute,
   gamesLeaderboardRoute,
   slicerShareRoute,
+  captainProofIndexRoute,
+  captainProofRoute,
   masterclassRoute,
   masterclassLessonRoute,
   masterclassQuizRoute,

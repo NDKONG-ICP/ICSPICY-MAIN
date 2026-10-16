@@ -60,6 +60,8 @@ import GrowerProvLib "../lib/grower-provenance";
 import AchievementsLib "../lib/achievements";
 import CoopTypes "../types/coop";
 import AchievementTypes "../types/achievements";
+import HederaMirrorTypes "../types/hedera-mirror";
+import HederaLockLib "../lib/hedera-lock";
 
 mixin (
   accessControlState     : AccessControl.AccessControlState,
@@ -79,7 +81,31 @@ mixin (
   icrc37Approvals        : Map.Map<Nat, Map.Map<Principal, ICRC37.ApprovalInfo>>,
   certStore              : Cert.Store,
   linkedWallets          : Map.Map<Principal, [Principal]>,
+  hederaMirror           : Map.Map<Nat, HederaMirrorTypes.HederaMirrorRecord>,
 ) {
+
+  func isHederaTwinToken(tokenId : Nat) : Bool {
+    switch (hederaMirror.get(tokenId)) {
+      case null false;
+      case (?_) true;
+    };
+  };
+
+  func appendHederaMetadata(
+    tokenId : Nat,
+    base : [(Text, ICRC7.Value)],
+  ) : [(Text, ICRC7.Value)] {
+    switch (hederaMirror.get(tokenId)) {
+      case null base;
+      case (?rec) {
+        base.concat([
+          ("icspicy:hedera_token_id", #Text(rec.htsTokenId)),
+          ("icspicy:hedera_serial", #Nat(rec.serial)),
+          ("icspicy:hedera_locked", #Text("true")),
+        ]);
+      };
+    };
+  };
 
   // ── Admin: bulk-load static metadata ──────────────────────────────────────
 
@@ -249,7 +275,7 @@ mixin (
                 case (#err _) null;
                 case (#ok value) {
                   switch value {
-                    case (#Map entries) ?entries;
+                    case (#Map entries) ?appendHederaMetadata(id, entries);
                     case _              null;
                   };
                 };
@@ -377,6 +403,12 @@ mixin (
       return #Err(#GenericError {
         error_code = 200_000;
         message = "soulbound: achievement badges are non-transferable";
+      });
+    };
+    if (isHederaTwinToken(arg.token_id)) {
+      return #Err(#GenericError {
+        error_code = 200_001;
+        message = "soulbound: Hedera mirror twin is display-only on ICP";
       });
     };
 
@@ -646,6 +678,12 @@ mixin (
         message = "soulbound: achievement badges are non-transferable";
       });
     };
+    if (isHederaTwinToken(arg.token_id)) {
+      return #Err(#GenericError {
+        error_code = 200_001;
+        message = "soulbound: Hedera mirror twin is display-only on ICP";
+      });
+    };
 
     let currentOwner = icrc7Owners.get(arg.token_id);
     let isApprovedSpender = Icrc37Lib.isApproved(icrc37Approvals, arg.token_id, caller, now);
@@ -791,6 +829,111 @@ mixin (
 
   // Returns count of PepperHead tokens still owned by the canister itself.
   // Used by the Phase 4 frontend "X of 888 remaining" indicator.
+  public shared({caller}) func adminSetHederaMirror(
+    entries : [(Nat, HederaMirrorTypes.HederaMirrorRecord)],
+  ) : async Nat {
+    AccessControl.requireAdmin(accessControlState, caller);
+    var n : Nat = 0;
+    for ((tokenId, rec) in entries.vals()) {
+      hederaMirror.add(tokenId, rec);
+      n += 1;
+    };
+    n;
+  };
+
+  public query func getHederaMirror(tokenId : Nat) : async ?HederaMirrorTypes.HederaMirrorPublic {
+    switch (hederaMirror.get(tokenId)) {
+      case null null;
+      case (?rec) ?{
+        htsTokenId = rec.htsTokenId;
+        serial = rec.serial;
+        mintedAt = rec.mintedAt;
+      };
+    };
+  };
+
+  public query func getHederaTwinOwner(tokenId : Nat) : async ?Principal {
+    switch (hederaMirror.get(tokenId)) {
+      case null null;
+      case (?_) {
+        switch (icrc7Owners.get(tokenId)) {
+          case null null;
+          case (?acc) ?acc.owner;
+        };
+      };
+    };
+  };
+
+  public shared({caller}) func adminSyncHederaTwin(
+    tokenId : Nat,
+    to      : ICRC7.Account,
+  ) : async ICRC7.TransferResult {
+    AccessControl.requireAdmin(accessControlState, caller);
+    switch (hederaMirror.get(tokenId)) {
+      case null {
+        return #Err(#GenericError {
+          error_code = 200_002;
+          message = "not a Hedera mirror token";
+        });
+      };
+      case (?_) {};
+    };
+    let canister = selfPrincipal();
+    let lock = HederaLockLib.lockAccount(canister);
+    let currentOwner = switch (icrc7Owners.get(tokenId)) {
+      case null return #Err(#NonExistingTokenId);
+      case (?o) o;
+    };
+    if (not HederaLockLib.isLockAccount(currentOwner, canister)) {
+      return #Err(#GenericError {
+        error_code = 200_003;
+        message = "twin not in hedera-lock; use adminRelockHederaTwin first or already claimed";
+      });
+    };
+    switch (IcrcLib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?currentOwner, to)) {
+      case (#err msg) {
+        return #Err(#GenericError { error_code = 2; message = msg });
+      };
+      case (#ok) {};
+    };
+    ignore Icrc37Lib.removeAllApprovals(icrc37Approvals, tokenId);
+    let blockIndex = nextBlockIndex.value;
+    nextBlockIndex.value += 1;
+    #Ok(blockIndex);
+  };
+
+  public shared({caller}) func adminRelockHederaTwin(tokenId : Nat) : async ICRC7.TransferResult {
+    AccessControl.requireAdmin(accessControlState, caller);
+    switch (hederaMirror.get(tokenId)) {
+      case null {
+        return #Err(#GenericError {
+          error_code = 200_002;
+          message = "not a Hedera mirror token";
+        });
+      };
+      case (?_) {};
+    };
+    let canister = selfPrincipal();
+    let lock = HederaLockLib.lockAccount(canister);
+    let currentOwner = switch (icrc7Owners.get(tokenId)) {
+      case null return #Err(#NonExistingTokenId);
+      case (?o) o;
+    };
+    if (HederaLockLib.isLockAccount(currentOwner, canister)) {
+      return #Err(#GenericError { error_code = 1; message = "Already in hedera-lock" });
+    };
+    switch (IcrcLib.assignOwnership(icrc7Owners, icrc7Balances, tokenId, ?currentOwner, lock)) {
+      case (#err msg) {
+        return #Err(#GenericError { error_code = 2; message = msg });
+      };
+      case (#ok) {};
+    };
+    ignore Icrc37Lib.removeAllApprovals(icrc37Approvals, tokenId);
+    let blockIndex = nextBlockIndex.value;
+    nextBlockIndex.value += 1;
+    #Ok(blockIndex);
+  };
+
   public query func isPepperHeadAvailable() : async Nat {
     let self = selfPrincipal();
     switch (icrc7Balances.get(self)) {

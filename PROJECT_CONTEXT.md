@@ -19,7 +19,7 @@ The dapp is built and deployed by the project owner using **standard `dfx` + `mo
 These are the result of a multi-session design process. Do not deviate without explicit user approval.
 
 ### Chain & custody
-- **Single-chain on ICP.** No Hedera bridge, no cross-chain provenance, no Ethereum integration.
+- **Primary chain: ICP** (ICRC-7 collection, shop, lifecycle). **Approved extension (2026-10):** a separate **888 NFT Hedera HTS drop** mirrors randomly selected pool tokens; mirrored ICRC-7 IDs are locked in a canister subaccount and expose `icspicy:hedera_*` metadata keys — not a two-way bridge, no Ethereum integration.
 - **Self-custody wallets.** OISY/Plug via ICRC-25/49 signer integration for all financial actions.
 - **No in-canister custodial wallet.** The simulated wallet code in the existing codebase will be deleted in Phase 4.
 - **Internet Identity** is used for app login (chat, profile, lifecycle).

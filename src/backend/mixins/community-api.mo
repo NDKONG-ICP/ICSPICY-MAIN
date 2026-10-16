@@ -14,11 +14,14 @@ import Time "mo:core/Time";
 import RateLimits "../lib/rate-limits";
 import RateLimit "../lib/rate-limit";
 import NotificationsLib "../lib/notifications";
+import ComplianceLib "../lib/compliance";
+import ComplianceTypes "../types/compliance";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
   agentPrincipalState : AccessControl.AgentPrincipalState,
   rateLimits : RateLimits.Bundle,
+  ageAttestations : Map.Map<Principal, ComplianceTypes.AgeAttestation>,
   posts : Map.Map<Common.PostId, CommunityTypes.Post>,
   comments : Map.Map<Common.CommentId, CommunityTypes.Comment>,
   profiles : Map.Map<Principal, CommunityTypes.UserProfile>,
@@ -30,6 +33,7 @@ mixin (
   auditLog : { var value : AuditLog.AuditLog },
   notifications : NotificationsLib.Inbox,
   nextNotificationId : { var value : Nat },
+  challengeScopedPosts : Map.Map<Common.PostId, Text>,
 ) {
   // ── Notification emission helpers ──────────────────────────────────────────
 
@@ -82,6 +86,7 @@ mixin (
     input : CommunityTypes.CreatePostInput,
   ) : async CommunityTypes.PostPublic {
     AccessControl.requireAuthenticated(caller);
+    ComplianceLib.requireAgeAttested(ageAttestations, caller);
     RateLimit.trapIfLimited(rateLimits.communityPost, caller, "Rate limited. Try again in a minute.");
     let post = CommunityLib.createPost(
       posts, profiles, bannedUsers, nextPostId.value, caller, input,
@@ -130,6 +135,7 @@ mixin (
     input : CommunityTypes.CreateCommentInput,
   ) : async CommunityTypes.CommentPublic {
     AccessControl.requireAuthenticated(caller);
+    ComplianceLib.requireAgeAttested(ageAttestations, caller);
     RateLimit.trapIfLimited(rateLimits.communityComment, caller, "Rate limited. Try again in a minute.");
     let comment = CommunityLib.createComment(
       comments, posts, profiles, bannedUsers, nextCommentId.value, caller, input,
@@ -258,6 +264,7 @@ mixin (
     input : CommunityTypes.SaveProfileInput,
   ) : async Bool {
     AccessControl.requireAuthenticated(caller);
+    ComplianceLib.requireAgeAttested(ageAttestations, caller);
     let wasNew = not profileExisted(caller);
     let ok = CommunityLib.saveProfile(profiles, caller, input);
     notifyIfNewProfile(caller, wasNew);
@@ -268,6 +275,7 @@ mixin (
     input : CommunityTypes.SaveProfileInput,
   ) : async Bool {
     AccessControl.requireAuthenticated(caller);
+    ComplianceLib.requireAgeAttested(ageAttestations, caller);
     let wasNew = not profileExisted(caller);
     let ok = CommunityLib.saveProfile(profiles, caller, input);
     notifyIfNewProfile(caller, wasNew);
@@ -276,6 +284,7 @@ mixin (
 
   public shared ({ caller }) func ensureCallerProfile() : async () {
     AccessControl.requireAuthenticated(caller);
+    ComplianceLib.requireAgeAttested(ageAttestations, caller);
     let wasNew = not profileExisted(caller);
     CommunityLib.ensureCallerProfile(profiles, caller);
     notifyIfNewProfile(caller, wasNew);
@@ -313,7 +322,7 @@ mixin (
   // ── Feeds ───────────────────────────────────────────────────────────────────
 
   public query ({ caller }) func listPosts() : async [CommunityTypes.PostPublic] {
-    CommunityLib.listPosts(posts, comments, tips, profiles, bannedUsers, caller);
+    CommunityLib.listPosts(posts, comments, tips, profiles, bannedUsers, caller, challengeScopedPosts);
   };
 
   public query ({ caller }) func getGlobalFeed(
@@ -321,7 +330,7 @@ mixin (
     limit : Nat,
   ) : async [CommunityTypes.PostPublic] {
     CommunityLib.getGlobalFeed(
-      posts, comments, tips, profiles, bannedUsers, caller, offset, limit,
+      posts, comments, tips, profiles, bannedUsers, caller, offset, limit, challengeScopedPosts,
     );
   };
 
@@ -330,13 +339,13 @@ mixin (
     limit : Nat,
   ) : async [CommunityTypes.PostPublic] {
     CommunityLib.getFollowingFeed(
-      posts, comments, tips, profiles, bannedUsers, caller, offset, limit,
+      posts, comments, tips, profiles, bannedUsers, caller, offset, limit, challengeScopedPosts,
     );
   };
 
   public query ({ caller }) func getTrendingPosts(limit : Nat) : async [CommunityTypes.PostPublic] {
     CommunityLib.getTrendingPosts(
-      posts, comments, tips, profiles, bannedUsers, caller, limit,
+      posts, comments, tips, profiles, bannedUsers, caller, limit, challengeScopedPosts,
     );
   };
 

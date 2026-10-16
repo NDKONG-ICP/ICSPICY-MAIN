@@ -99,6 +99,9 @@ type AgentPublic =
  };
 type AgentKind = 
  variant {
+   ambassador_bonsai;
+   ambassador_crumbeatr;
+   ambassador_swop;
    analytics_digest;
    community_moderator;
    compliance_reviewer;
@@ -160,8 +163,17 @@ type AgentHub =
    listJobs: (limit: nat, statusFilter: opt JobStatus) ->
     (vec JobPublic) query;
    listNewsletterIssues: (limit: nat) -> (vec NewsletterIssue) query;
+   /// Agent/admin: pending subscribers who still need their confirmation email,
+   /// as (emailKey, confirmToken) pairs. Excludes anyone already sent one.
+   listPendingConfirmSends: (limit: nat) -> (vec record {
+                                                   text;
+                                                   text;
+                                                 }) query;
    listSecretNames: () -> (vec text) query;
    listSubscribers: (limit: nat) -> (vec SubscriberPublic) query;
+   /// Agent/admin: record that the confirmation email went out so the worker
+   /// does not re-send it on every poll.
+   markConfirmationSent: (emailKey: text) -> ();
    markDraftSent: (draftId: nat) -> ();
    recordLlmCall: (agentId: nat) -> (bool);
    /// Admin: reject every pending draft in one call. Returns how many were rejected.
@@ -174,6 +186,8 @@ type AgentHub =
    reportRun: (kind: AgentKind, summary: text) -> ();
    setAgentBudgets: (agentId: nat, budgetDailyJobs: nat, budgetDailyLlmCalls:
     nat) -> ();
+   setAgentCadence: (agentId: nat, cadenceSeconds: nat, resetNextRun:
+    bool) -> ();
    setAgentStatus: (agentId: nat, status: AgentStatus) -> ();
    setBackendCanisterId: (id: text) -> ();
    setSecret: (name: text, value: text) -> ();

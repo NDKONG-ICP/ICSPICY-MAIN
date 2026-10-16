@@ -38,10 +38,45 @@ Canopy UI (`7h6n6-…`) is II-fronted for humans; agent path uses the same plain
 | Bazaar UI | `iabi6-zqaaa-aaaau-agwpq-cai` |
 | Canopy UI | `7h6n6-eqaaa-aaaau-ag6da-cai` |
 
-Also: collection `1` = IC SPICY / PepperHeads on the same market registry.
+Also: collection `1` = IC SPICY / PepperHeads on the same market registry (`ledger = ghxmp`, external ICRC-7).
+
+## Bazaar listings (IC SPICY ledger on collection 1)
+
+External ledger sell path (verified on mainnet):
+
+1. Owner (Captain `26mw6-…`) calls **our** `icrc37_approve_tokens` with spender = marketplace `i3eu3-diaaa-aaaau-agwna-cai`.
+2. Owner calls marketplace `createListing(collectionId, tokenId, priceE8s)`.
+3. Buyer pays ICP; marketplace calls our `icrc37_transfer_from` and pays seller.
+
+| Canister | ID |
+|----------|-----|
+| Marketplace | `i3eu3-diaaa-aaaau-agwna-cai` |
+| Indexer (activity) | `iodfw-caaaa-aaaau-agwoq-cai` |
+
+Public manifest (after publish): `https://7rukv-hqaaa-aaaao-ba6ma-cai.icp0.io/bonsai-drop/manifest.json`
+
+### Bonsai 888 drop runbook (1.2 ICP flat)
+
+```bash
+cd worker
+node scripts/bonsai-drop-select.js          # seeded draw → data/bonsai-drop/manifest.json
+node scripts/bonsai-drop-transfer.js --pem ~/.config/dfx/identity/ic_deploy_plain/identity.pem
+node scripts/bonsai-drop-list.js            # Captain mnemonic; approve + list
+node scripts/bonsai-drop-publish.js         # upload manifest to frontend canister
+```
+
+Admin UI: **Admin → Agents → Bonsai drop** (listings, sales, holders).
+
+**Bonsai team ask (non-blocking):** rename collection 1 display away from “PepperHeads-only” and raise `maxSupply` above 888 so registry stats match the drop.
 
 ## Code
 - `worker/src/lib/wallets.js` — multi-wallet book
 - `worker/src/clients/bonsai.js` — CRM + mint client
 - `worker/scripts/bonsai-bootstrap.js` — one-shot bootstrap
+- `worker/scripts/bonsai-drop-*.js` — 888 Bazaar drop (select / transfer / list / publish)
+- `worker/src/lib/bonsai-drop/` — manifest, PRNG, actors
+- `worker/scripts/hedera-*.js` — Hedera mirror drop (select / lock / mint / sync ICRC metadata)
+- `worker/src/clients/hedera.js` — HTS + mirror helpers
+- `worker/src/clients/blade-grove/` — Blade Grove Arena Story combat + ownership
+- `worker/research/blade-grove-arena.md` — Arena canisters + pack receive address
 - Hub whitelist: `canopy_wallet_principal` (deploy `agent_hub` to activate on mainnet)

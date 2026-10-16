@@ -398,3 +398,80 @@ export async function fetchCrumbBalance(principalText: string): Promise<bigint> 
     subaccount: [],
   });
 }
+
+export const BGA_OWNERSHIP = "bx2z5-bqaaa-aaaau-ag4na-cai";
+export const BGA_FOIL_LEDGER = "i6rxy-gaaaa-aaaau-ahaba-cai";
+export const BGA_ARENA_URL = "https://bq37j-miaaa-aaaau-ag4nq-cai.icp0.io/";
+
+const bgaOwnershipIdl: LooseIdl = ({ IDL: I }) => {
+  const Bal = I.Record({
+    warden: I.Nat,
+    captain: I.Nat,
+    wardenHedera: I.Nat,
+    captainHedera: I.Nat,
+  });
+  return I.Service({
+    getPackBalance: I.Func([I.Principal], [Bal], ["query"]),
+    getOwnedCardIds: I.Func([I.Principal], [I.Vec(I.Nat)], ["query"]),
+    getPlayableCardIds: I.Func([I.Principal], [I.Vec(I.Nat)], ["query"]),
+  });
+};
+
+const bgaFoilIdl: LooseIdl = ({ IDL: I }) =>
+  I.Service({
+    packsCollectionId: I.Func([], [I.Nat], ["query"]),
+    tokensOfCollection: I.Func(
+      [I.Principal, I.Nat],
+      [I.Vec(I.Nat)],
+      ["query"],
+    ),
+  });
+
+export type BladeGroveOnChain = {
+  wardenCredits: number;
+  captainCredits: number;
+  ownedCards: number;
+  playableCards: number;
+  sealedPacks: number;
+};
+
+export async function fetchBladeGroveOnChain(
+  principalText: string,
+): Promise<BladeGroveOnChain> {
+  const agent = await anonAgent();
+  const owner = Principal.fromText(principalText);
+  const ownership = Actor.createActor(bgaOwnershipIdl as never, {
+    agent,
+    canisterId: BGA_OWNERSHIP,
+  }) as ActorSubclass<{
+    getPackBalance: (p: Principal) => Promise<{
+      warden: bigint;
+      captain: bigint;
+      wardenHedera: bigint;
+      captainHedera: bigint;
+    }>;
+    getOwnedCardIds: (p: Principal) => Promise<bigint[]>;
+    getPlayableCardIds: (p: Principal) => Promise<bigint[]>;
+  }>;
+  const foil = Actor.createActor(bgaFoilIdl as never, {
+    agent,
+    canisterId: BGA_FOIL_LEDGER,
+  }) as ActorSubclass<{
+    packsCollectionId: () => Promise<bigint>;
+    tokensOfCollection: (p: Principal, c: bigint) => Promise<bigint[]>;
+  }>;
+  const [bal, owned, playable, packsColl] = await Promise.all([
+    ownership.getPackBalance(owner),
+    ownership.getOwnedCardIds(owner),
+    ownership.getPlayableCardIds(owner),
+    foil.packsCollectionId(),
+  ]);
+  const sealed = await foil.tokensOfCollection(owner, packsColl);
+  return {
+    wardenCredits: Number(bal.warden),
+    captainCredits: Number(bal.captain),
+    ownedCards: owned.length,
+    playableCards: playable.length,
+    sealedPacks: sealed.length,
+  };
+}

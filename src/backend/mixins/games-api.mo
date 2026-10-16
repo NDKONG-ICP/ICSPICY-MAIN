@@ -25,10 +25,13 @@ import ICRC7 "../types/icrc7";
 import RunTypes "../types/slicer-run";
 import SlicerSpawnTypes "../types/slicer-spawn";
 import RateLimits "../lib/rate-limits";
+import ComplianceLib "../lib/compliance";
+import ComplianceTypes "../types/compliance";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
   rateLimits : RateLimits.Bundle,
+  ageAttestations : Map.Map<Principal, ComplianceTypes.AgeAttestation>,
   profiles : Map.Map<Principal, CommunityTypes.UserProfile>,
   gameScores : Map.Map<Text, GamesTypes.GamePlayerStats>,
   gameLeaderboardCache : Map.Map<Text, [GamesTypes.LeaderboardEntry]>,
@@ -52,6 +55,7 @@ mixin (
     gameId : Text,
   ) : async Result.Result<GameSessionsTypes.StartSessionOk, Text> {
     AccessControl.requireAuthenticated(caller);
+    ComplianceLib.requireAgeAttested(ageAttestations, caller);
     RateLimit.trapIfLimited(
       rateLimits.gameSession,
       caller,

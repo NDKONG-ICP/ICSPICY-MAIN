@@ -22,10 +22,13 @@ import Set "mo:core/Set";
 import RateLimits "../lib/rate-limits";
 import RateLimit "../lib/rate-limit";
 import NotificationsLib "../lib/notifications";
+import ComplianceLib "../lib/compliance";
+import ComplianceTypes "../types/compliance";
 
 mixin (
   accessControlState : AccessControl.AccessControlState,
   rateLimits : RateLimits.Bundle,
+  ageAttestations : Map.Map<Principal, ComplianceTypes.AgeAttestation>,
   products : Map.Map<Common.ProductId, MarketTypes.Product>,
   orders : Map.Map<Common.OrderId, MarketTypes.Order>,
   plants : Map.Map<Common.PlantId, PlantTypes.Plant>,
@@ -298,6 +301,7 @@ mixin (
 
   public shared ({ caller }) func placeOrder(input : MarketTypes.CreateOrderInput) : async MarketTypes.OrderPublic {
     AccessControl.requireAuthenticated(caller);
+    ComplianceLib.requireAgeAttested(ageAttestations, caller);
     RateLimit.trapIfLimited(rateLimits.order, caller, "Rate limited. Try again in a minute.");
     toPublicOrder(placeOrderInternal(caller, input));
   };

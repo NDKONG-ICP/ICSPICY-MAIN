@@ -1,7 +1,8 @@
-import { Actor, HttpAgent } from "@dfinity/agent";
+import { Actor, HttpAgent, type Identity } from "@dfinity/agent";
 import { AuthClient } from "@dfinity/auth-client";
 import type { IDL } from "@dfinity/candid";
 import type { Principal } from "@dfinity/principal";
+import { IC_HOST } from "./auth-config";
 
 export const AGENT_HUB_CANISTER_ID =
   (process.env.CANISTER_ID_AGENT_HUB ?? "").trim() ||
@@ -122,6 +123,7 @@ export const agentHubIdlFactory: IDL.InterfaceFactory = ({ IDL }) => {
     listAgents: IDL.Func([], [IDL.Vec(AgentPublic)], ["query"]),
     setAgentStatus: IDL.Func([IDL.Nat, AgentStatus], [], []),
     setAgentBudgets: IDL.Func([IDL.Nat, IDL.Nat, IDL.Nat], [], []),
+    setAgentCadence: IDL.Func([IDL.Nat, IDL.Nat, IDL.Bool], [], []),
     enqueueJob: IDL.Func([IDL.Nat, IDL.Text], [IDL.Nat], []),
     listDrafts: IDL.Func(
       [IDL.Nat, IDL.Opt(DraftStatus)],
@@ -175,6 +177,11 @@ export interface AgentHubActor {
     agentId: bigint,
     budgetDailyJobs: bigint,
     budgetDailyLlmCalls: bigint,
+  ): Promise<void>;
+  setAgentCadence(
+    agentId: bigint,
+    cadenceSeconds: bigint,
+    resetNextRun: boolean,
   ): Promise<void>;
   enqueueJob(agentId: bigint, payload: string): Promise<bigint>;
   listDrafts(
@@ -240,16 +247,16 @@ export interface AgentHubActor {
 
 let cachedAgent: AgentHubActor | null = null;
 let cachedAuthAgent: AgentHubActor | null = null;
+let cachedAuthPrincipal: string | null = null;
 
-async function createAgent(identity?: import("@dfinity/agent").Identity) {
+async function createAgent(identity?: Identity) {
   const canisterId = AGENT_HUB_CANISTER_ID;
   if (!canisterId) return null;
-  const host =
-    typeof window !== "undefined" && window.location.hostname.includes("localhost")
-      ? "http://127.0.0.1:4943"
-      : "https://icp0.io";
-  const agent = new HttpAgent({ host, identity });
-  if (host.includes("127.0.0.1")) {
+  const agent = await HttpAgent.create({
+    host: IC_HOST,
+    identity,
+  });
+  if (IC_HOST.includes("127.0.0.1") || IC_HOST.includes("localhost")) {
     await agent.fetchRootKey();
   }
   return Actor.createActor<AgentHubActor>(agentHubIdlFactory, {
@@ -258,18 +265,46 @@ async function createAgent(identity?: import("@dfinity/agent").Identity) {
   });
 }
 
+/** Drop cached actors (call on logout so a stale signed session is never reused). */
+export function clearAgentHubActorCache(): void {
+  cachedAgent = null;
+  cachedAuthAgent = null;
+  cachedAuthPrincipal = null;
+}
+
 export async function getAgentHubActor(): Promise<AgentHubActor | null> {
   if (cachedAgent) return cachedAgent;
   cachedAgent = await createAgent();
   return cachedAgent;
 }
 
-export async function getAuthenticatedAgentHubActor(): Promise<AgentHubActor | null> {
-  if (cachedAuthAgent) return cachedAuthAgent;
-  const authClient = await AuthClient.create();
-  const identity = authClient.getIdentity();
-  if (identity.getPrincipal().isAnonymous()) return null;
-  cachedAuthAgent = await createAgent(identity);
+/**
+ * Authenticated agent_hub actor.
+ * Prefer passing the live AuthProvider identity — a fresh AuthClient alone can
+ * diverge from the app session and produce EcdsaP256 verification failures.
+ */
+export async function getAuthenticatedAgentHubActor(
+  identity?: Identity | null,
+): Promise<AgentHubActor | null> {
+  let id = identity ?? null;
+  if (!id) {
+    const authClient = await AuthClient.create({
+      idleOptions: {
+        disableIdle: true,
+        disableDefaultIdleCallback: true,
+      },
+    });
+    id = authClient.getIdentity();
+  }
+  if (!id || id.getPrincipal().isAnonymous()) return null;
+
+  const principalText = id.getPrincipal().toText();
+  if (cachedAuthAgent && cachedAuthPrincipal === principalText) {
+    return cachedAuthAgent;
+  }
+
+  cachedAuthAgent = await createAgent(id);
+  cachedAuthPrincipal = principalText;
   return cachedAuthAgent;
 }
 

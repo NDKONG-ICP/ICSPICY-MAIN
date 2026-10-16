@@ -4,6 +4,8 @@ export interface StaticRouteSeo {
   path: string;
   title: string;
   description: string;
+  /** Absolute OG image URL when the route has a dedicated share card. */
+  ogImage?: string;
   jsonLd: object | object[] | null;
   crawlParagraphs: string[];
 }

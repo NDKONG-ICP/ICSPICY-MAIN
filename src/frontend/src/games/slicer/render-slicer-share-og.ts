@@ -8,8 +8,7 @@ import { formatShareScore } from "./slicer-share-copy";
 const OG_W = 1200;
 const OG_H = 630;
 
-const RYE_FONT_URL =
-  "https://fonts.googleapis.com/css2?family=Rye&display=swap";
+const RYE_FONT_URL = "/assets/fonts/Rye.woff2";
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -22,20 +21,15 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 async function ensureRyeFont(): Promise<void> {
-  if (typeof document === "undefined") return;
-  if (!document.querySelector(`link[href*="family=Rye"]`)) {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = RYE_FONT_URL;
-    document.head.appendChild(link);
-  }
-  if ("fonts" in document) {
-    try {
-      await document.fonts.load('700 48px "Rye"');
-      await document.fonts.ready;
-    } catch {
-      /* fall back to serif stack */
-    }
+  if (typeof document === "undefined" || !("fonts" in document)) return;
+  try {
+    const face = new FontFace("Rye", `url(${RYE_FONT_URL})`, { weight: "400" });
+    await face.load();
+    document.fonts.add(face);
+    await document.fonts.load('400 48px "Rye"');
+    await document.fonts.ready;
+  } catch {
+    /* fall back to serif stack */
   }
 }
 

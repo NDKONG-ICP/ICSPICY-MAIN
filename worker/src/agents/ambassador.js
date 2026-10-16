@@ -2,13 +2,12 @@
 //
 // Flow per platform job:
 //   1. Engage: read the platform feed, auto-react to a few quality posts
-//      (cheap, low-risk), and let the LLM draft one comment + one standalone
-//      post in the Captain Capsaicin voice.
-//   2. Every outbound post/comment becomes a hub DRAFT (approval-gated in the
-//      admin UI) with metadata describing how to publish it.
-//   3. publishApprovedAmbassadorDrafts() runs each tick and pushes approved
-//      drafts to the platform.
-//   4. sweepAmbassadorFunds() moves earned tokens/tips above a small float to
+//      (cheap, low-risk), then auto-publish daily posts and comment replies.
+//   2. Standalone posts auto-publish (Community + Crumbeatr + SWOP) with a
+//      unique OWNER-PAID MiniRouter image — fail closed if image missing.
+//   3. Comment replies auto-publish on Community, Crumbeatr, and SWOP (capped).
+//   4. publishApprovedAmbassadorDrafts() drains legacy approved drafts only.
+//   5. sweepAmbassadorFunds() moves earned tokens/tips above a small float to
 //      the admin-set `ambassador_sweep_principal`.
 //
 // SWOP activates once swop_backend_canister_id is set. BonsaiOS uses a
@@ -16,13 +15,8 @@
 // mint, and trade — never assume captain_operating is the Bonsai identity.
 
 import { Principal } from "@dfinity/principal";
-import { fullComplianceCheck } from "../lib/compliance.js";
 import { kindVariant, kindKey } from "../idl/agent-hub.js";
-import {
-  engagementPrompt,
-  pillarForToday,
-  postPrompt,
-} from "../lib/persona.js";
+import { bladeGrovePostPrompt } from "../lib/persona.js";
 import { bonsaiPrincipal } from "../lib/wallets.js";
 import {
   createCrumbeatrClient,
@@ -34,6 +28,19 @@ import {
   BONSAI_REGISTRY,
   ORBIT_SPOTS_MINT_E8S,
 } from "../clients/bonsai.js";
+import {
+  createBladeGroveClient,
+  playStory,
+  statusSnapshot,
+} from "../clients/blade-grove/index.js";
+import { prepareCaptainPostMedia } from "../lib/images/captain-post-image.js";
+import { patchCaptainProofPosts } from "../lib/images/host-frontend.js";
+import { publishCaptainStandalonePost } from "../lib/captain-publish.js";
+import { attemptCaptainStandaloneDailyPost } from "../lib/captain-standalone-daily.js";
+import { standaloneSlotsRemainingTodayET } from "../lib/captain-daily.js";
+import { runCaptainCommentReplies } from "../lib/captain-replies.js";
+import { runHederaTwinSync } from "../lib/hedera-twin-sync.js";
+import { runHederaCollectorTick } from "../lib/hedera-collector.js";
 
 const MAX_AUTO_REACTIONS = 3;
 const MAX_AUTO_LIKES = 3;
@@ -77,7 +84,7 @@ export async function runAmbassador(ctx, key) {
   }
 }
 
-/** BonsaiOS: mint-first Orbit, CRM pulse, NFT transfer. Never secondary buy. */
+/** BonsaiOS: mint-first Orbit, CRM pulse, NFT transfer, Blade Grove Arena. */
 async function runBonsaiGate(ctx, key, payload = {}) {
   const { hub, secrets, captainIdentity, walletBook, job } = ctx;
   const book = walletBook;
@@ -122,6 +129,14 @@ async function runBonsaiGate(ctx, key, payload = {}) {
     return null;
   }
 
+  if (
+    action === "blade_grove_status" ||
+    action === "play_blade_grove" ||
+    action === "open_packs"
+  ) {
+    return runBladeGrove(ctx, key, payload);
+  }
+
   // Default / timer: status + mint-first if under target holdings
   const registryId =
     secrets.bonsai_registry_canister_id?.trim() || BONSAI_REGISTRY;
@@ -146,14 +161,131 @@ async function runBonsaiGate(ctx, key, payload = {}) {
     mintNote = `holdings ${orbitBal} ≥ target ${targetHoldings}`;
   }
 
+  let twinNote = "";
+  try {
+    const twin = await runHederaTwinSync();
+    twinNote = ` twinSync=${JSON.stringify(twin)}`;
+  } catch (err) {
+    twinNote = ` twinSync_err=${err instanceof Error ? err.message : String(err)}`;
+  }
+
+  let collectNote = "";
+  try {
+    const collect = await runHederaCollectorTick({ maxHbar: 50 });
+    collectNote = ` collect=${JSON.stringify(collect.alerts?.slice(0, 2) ?? [])}`;
+  } catch (err) {
+    collectNote = ` collect_err=${err instanceof Error ? err.message : String(err)}`;
+  }
+
   const msg =
     `${key}: Canopy ${canopy.slice(0, 12)}… registry=${registryId} ` +
     `crm(profile=${crm.hasProfile},score=${crm.score}) ` +
     `orbitSpots=${await client.orbitBalance()} icpE8s=${await client.icpBalance()} ` +
-    `job=${job?.id ?? "?"} ${mintNote}`;
+    `job=${job?.id ?? "?"} ${mintNote}${twinNote}${collectNote}`;
   console.log(`[ambassador] ${msg}`);
   await hub.reportRun(kindVariant(key), msg);
   return null;
+}
+
+async function runBladeGrove(ctx, key, payload) {
+  const { hub, secrets, captainIdentity, llm, llmCompliance } = ctx;
+  const action = payload.action;
+  const bga = await createBladeGroveClient({ identity: captainIdentity });
+
+  if (action === "blade_grove_status") {
+    const chain = await bga.onChainStatus();
+    const story = statusSnapshot();
+    const msg =
+      `${key}: Blade Grove status packs(w=${chain.packCredits.warden},c=${chain.packCredits.captain}) ` +
+      `sealed=${chain.sealedPackTokenIds.length} playable=${chain.playableCardIds.length} ` +
+      `story ${story.cleared}/${story.totalNodes} sap=${story.sap} record=${story.wins}-${story.losses} ` +
+      `pending=${story.pending.slice(0, 3).join(",") || "none"} stakesOpen=${chain.stakesOpen}`;
+    console.log(`[ambassador] ${msg}`);
+    await hub.reportRun(kindVariant(key), msg);
+    return null;
+  }
+
+  if (action === "open_packs") {
+    const opened = await bga.openAllPacks();
+    const msg =
+      `${key}: opened ${opened.opened.length} pack(s); playable now ${opened.playableCardIds.length}` +
+      (opened.notes.length ? `; notes=${opened.notes.slice(0, 3).join(" | ")}` : "");
+    console.log(`[ambassador] ${msg}`);
+    await hub.reportRun(kindVariant(key), msg);
+    return null;
+  }
+
+  // play_blade_grove
+  let packNote = "no packs";
+  try {
+    const opened = await bga.openAllPacks();
+    if (opened.opened.length) {
+      packNote = `opened ${opened.opened.length} pack(s) → +${opened.opened.reduce((n, o) => n + o.cardIds.length, 0)} cards`;
+    } else if (opened.notes.length) {
+      packNote = `packs: ${opened.notes[0]}`;
+    }
+  } catch (err) {
+    packNote = `pack open skipped: ${err instanceof Error ? err.message : String(err)}`;
+  }
+
+  let chainCards = [];
+  try {
+    const chain = await bga.onChainStatus();
+    chainCards = chain.playableCardIds;
+  } catch {
+    /* story still works offline */
+  }
+
+  const maxNodes = Number(payload.maxNodes ?? payload.max_nodes ?? 3);
+  const session = playStory({
+    maxNodes,
+    extraCardIds: chainCards,
+    seedBase: Date.now(),
+  });
+
+  const publishNote = await autoPublishBladeGrove(ctx, session);
+  const msg =
+    `${key}: Blade Grove play — ${session.summary} (${packNote}); ${publishNote}`;
+  console.log(`[ambassador] ${msg}`);
+  await hub.reportRun(kindVariant(key), msg);
+  return null;
+}
+
+/** Compliance-gated auto-publish to Crumbeatr + SWOP (no draft queue). */
+async function autoPublishBladeGrove(ctx, session) {
+  const { llm, hub, job } = ctx;
+  if (!session.results?.some((r) => r.won)) {
+    return "no wins — skipped social posts";
+  }
+
+  const prompt = bladeGrovePostPrompt({
+    platform: "Crumbeatr, The Swop, and IC SPICY Community Garden",
+    summary: session.summary,
+    results: session.results,
+  });
+  let body = "";
+  try {
+    body = String(await llm.complete(prompt)).trim();
+  } catch (err) {
+    return `LLM draft failed: ${err instanceof Error ? err.message : String(err)}`;
+  }
+  if (!body || body.length < 20) return "empty LLM body — skipped posts";
+
+  try {
+    const { notes } = await publishCaptainStandalonePost(ctx, body);
+    await hub.reportRun(
+      kindVariant("ambassador_bonsai"),
+      `Blade Grove auto-published: ${notes}`,
+    );
+    return notes;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await hub.reportRun(
+      kindVariant("ambassador_bonsai"),
+      `Blade Grove publish failed: ${msg}`,
+    );
+    return msg;
+  }
 }
 
 async function awaitingIntegration(ctx, key, secretName) {
@@ -169,8 +301,14 @@ async function awaitingIntegration(ctx, key, secretName) {
 }
 
 async function runCrumbeatr(ctx) {
-  const { hub, llm, llmCompliance, secrets, job, captainIdentity } = ctx;
+  const { hub, llm, secrets, job, captainIdentity } = ctx;
   if (!captainIdentity) throw new Error("captain identity missing from ctx");
+
+  const replyResult = await runCaptainCommentReplies(ctx);
+  const replyNote =
+    replyResult.replied > 0
+      ? `replied=${replyResult.replied}`
+      : "replies=0";
 
   const client = await createCrumbeatrClient({
     identity: captainIdentity,
@@ -186,16 +324,13 @@ async function runCrumbeatr(ctx) {
     return null;
   }
   const myId = profile.id;
-  const credits = profile.cycles ?? profile.credits ?? 0;
 
-  // ── Read feed ─────────────────────────────────────────────────────────────
   const feed = (await client.hotPosts(0)) ?? [];
   const candidates = feed
     .filter((p) => p.user !== myId)
     .filter((p) => typeof p.body === "string" && p.body.length > 20)
     .slice(0, 12);
 
-  // ── Auto-react (hearts are cheap: 2 credits) ──────────────────────────────
   let reacted = 0;
   for (const post of candidates) {
     if (reacted >= MAX_AUTO_REACTIONS) break;
@@ -207,90 +342,52 @@ async function runCrumbeatr(ctx) {
       reacted++;
     } catch (err) {
       console.warn(`[ambassador] react on ${post.id} failed: ${err.message}`);
-      break; // likely out of credits — stop trying
+      break;
     }
   }
+
+  const notes = [replyNote, `reacted=${reacted}`];
 
   if (!llm) {
     await hub.reportRun(
       kindVariant("ambassador_crumbeatr"),
-      `Engaged (${reacted} reactions); no LLM configured, skipping drafts`,
+      notes.join("; ") + "; no LLM — skipped daily post",
     );
     return null;
   }
 
-  let draftIds = [];
-
-  // ── Draft one comment on the best candidate ───────────────────────────────
-  if (candidates.length > 0) {
-    await hub.recordLlmCall(job.agentId);
-    const authors = candidates.map((p) => ({
-      id: p.id,
-      author: p.meta?.author_name ?? String(p.user),
-      body: p.body,
-    }));
-    const raw = await llm.complete(
-      engagementPrompt({ platform: "Crumbeatr", posts: authors }),
-    );
-    const pick = parseJsonLoose(raw);
-    if (
-      pick &&
-      Number.isInteger(pick.index) &&
-      pick.index >= 0 &&
-      pick.index < candidates.length &&
-      pick.comment
-    ) {
-      const target = candidates[pick.index];
-      const compliance = await fullComplianceCheck(
-        llmCompliance ?? llm,
-        pick.comment,
-      );
-      const id = await hub.submitDraft(
-        kindVariant("ambassador_crumbeatr"),
-        [job.id],
-        `Comment on Crumbeatr post #${target.id}`,
-        pick.comment,
-        ["crumbeatr"],
-        compliance.passed,
-        compliance.notes,
-        JSON.stringify({ action: "comment", parent: Number(target.id) }),
-      );
-      draftIds.push(id);
+  if (standaloneSlotsRemainingTodayET() > 0) {
+    const daily = await attemptCaptainStandaloneDailyPost(ctx, {
+      contextPrefix: `Reacted to ${reacted} Crumbeatr posts this run. `,
+      skipHubReport: true,
+    });
+    if (daily.ok) {
+      notes.push(daily.summary);
+    } else if (daily.reason === "duplicate_body") {
+      notes.push(`daily=skipped(duplicate after retry, ${daily.slotLabel})`);
+    } else if (daily.reason === "publish_failed") {
+      notes.push(`daily_${daily.slotLabel}_failed=${daily.error}`);
+    } else if (daily.reason !== "all_slots_filled") {
+      notes.push(`daily=skipped(${daily.reason})`);
     }
+  } else {
+    notes.push("daily=skipped(all ET slots filled today)");
   }
 
-  // ── Draft one standalone post ─────────────────────────────────────────────
-  await hub.recordLlmCall(job.agentId);
-  const body = await llm.complete(
-    postPrompt({
-      platform: "Crumbeatr",
-      pillarHint: pillarForToday(),
-      contextNote: `Captain currently has ${credits} credits and ${reacted} fresh reactions given today.`,
-    }),
-  );
-  const compliance = await fullComplianceCheck(llmCompliance ?? llm, body);
-  const postDraftId = await hub.submitDraft(
-    kindVariant("ambassador_crumbeatr"),
-    [job.id],
-    "Crumbeatr post — Captain Capsaicin",
-    body,
-    ["crumbeatr"],
-    compliance.passed,
-    compliance.notes,
-    JSON.stringify({ action: "post" }),
-  );
-  draftIds.push(postDraftId);
-
-  await hub.reportRun(
-    kindVariant("ambassador_crumbeatr"),
-    `Reacted to ${reacted} posts; drafts ${draftIds.join(", ")} awaiting approval`,
-  );
-  return draftIds;
+  await hub.reportRun(kindVariant("ambassador_crumbeatr"), notes.join("; "));
+  return notes;
 }
 
 async function runSwop(ctx) {
-  const { hub, llm, llmCompliance, secrets, job, captainIdentity } = ctx;
+  const { hub, llm, secrets, job, captainIdentity } = ctx;
   if (!captainIdentity) throw new Error("captain identity missing from ctx");
+
+  const replyResult = await runCaptainCommentReplies(ctx);
+  const notes = [
+    replyResult.replied > 0
+      ? `replied=${replyResult.replied}`
+      : "replies=0",
+  ];
 
   const client = await createSwopClient({
     identity: captainIdentity,
@@ -325,80 +422,11 @@ async function runSwop(ctx) {
       break;
     }
   }
+  notes.push(`liked=${liked}`);
+  notes.push("daily=coordinator(crumbeatr agent)");
 
-  if (!llm) {
-    await hub.reportRun(
-      kindVariant("ambassador_swop"),
-      `Engaged (${liked} likes); no LLM configured, skipping drafts`,
-    );
-    return null;
-  }
-
-  const draftIds = [];
-
-  if (candidates.length > 0) {
-    await hub.recordLlmCall(job.agentId);
-    const authors = candidates.map((p) => ({
-      id: p.id,
-      author: p.author.toText().slice(0, 12),
-      body: p.content,
-    }));
-    const raw = await llm.complete(
-      engagementPrompt({ platform: "The Swop", posts: authors }),
-    );
-    const pick = parseJsonLoose(raw);
-    if (
-      pick &&
-      Number.isInteger(pick.index) &&
-      pick.index >= 0 &&
-      pick.index < candidates.length &&
-      pick.comment
-    ) {
-      const target = candidates[pick.index];
-      const compliance = await fullComplianceCheck(
-        llmCompliance ?? llm,
-        pick.comment,
-      );
-      const id = await hub.submitDraft(
-        kindVariant("ambassador_swop"),
-        [job.id],
-        `Comment on SWOP ${target.id}`,
-        pick.comment,
-        ["swop"],
-        compliance.passed,
-        compliance.notes,
-        JSON.stringify({ action: "comment", postId: target.id }),
-      );
-      draftIds.push(id);
-    }
-  }
-
-  await hub.recordLlmCall(job.agentId);
-  const body = await llm.complete(
-    postPrompt({
-      platform: "The Swop",
-      pillarHint: pillarForToday(),
-      contextNote: `Captain liked ${liked} posts this run. Station: ic-spicy (add agent as contributor when ready).`,
-    }),
-  );
-  const compliance = await fullComplianceCheck(llmCompliance ?? llm, body);
-  const postDraftId = await hub.submitDraft(
-    kindVariant("ambassador_swop"),
-    [job.id],
-    "SWOP post — Captain Capsaicin",
-    body,
-    ["swop"],
-    compliance.passed,
-    compliance.notes,
-    JSON.stringify({ action: "post" }),
-  );
-  draftIds.push(postDraftId);
-
-  await hub.reportRun(
-    kindVariant("ambassador_swop"),
-    `Liked ${liked} posts; drafts ${draftIds.join(", ")} awaiting approval`,
-  );
-  return draftIds;
+  await hub.reportRun(kindVariant("ambassador_swop"), notes.join("; "));
+  return notes;
 }
 
 // ── Publish approved drafts ───────────────────────────────────────────────────
@@ -435,11 +463,45 @@ export async function publishApprovedAmbassadorDrafts({
           canisterId: secrets.crumbeatr_canister_id || undefined,
         });
         const parent = meta.action === "comment" ? meta.parent : null;
-        const postId = await crumbClient.addPost(draft.body, { parent });
+        let postBody = draft.body;
+        let blobs = [];
+        let powNote = "";
+        let mediaBlobId = null;
+        let shareUrl = null;
+        if (meta.action !== "comment") {
+          const media = await prepareCaptainPostMedia(draft.body, {
+            platform: "crumbeatr",
+          });
+          postBody = media.bodyCrumbeatr;
+          blobs = media.crumbeatrBlobs;
+          if (media.pow) powNote = media.pow;
+          mediaBlobId = media.blobId || null;
+          shareUrl = media.shareUrl || null;
+        }
+        const postId = await crumbClient.addPost(postBody, {
+          parent,
+          blobs,
+        });
         await hub.markDraftSent(draft.id);
-        console.log(
-          `[ambassador] published draft ${draft.id} → crumbeatr post ${postId}`,
-        );
+        if (powNote && mediaBlobId) {
+          try {
+            await patchCaptainProofPosts(mediaBlobId, {
+              crumbeatr: String(postId),
+            });
+          } catch (err) {
+            console.warn(
+              `[ambassador] proof patch crumbeatr failed: ${
+                err instanceof Error ? err.message : String(err)
+              }`,
+            );
+          }
+        }
+        const crumbMsg =
+          `published draft ${draft.id} → crumbeatr#${postId}` +
+          (powNote ? `; ${powNote}` : "") +
+          (shareUrl ? `; share=${shareUrl}` : "");
+        console.log(`[ambassador] ${crumbMsg}`);
+        await hub.reportRun(kindVariant(kind), crumbMsg);
       } else if (kind === "ambassador_swop") {
         swopClient ??= await createSwopClient({
           identity: captainIdentity,
@@ -453,11 +515,34 @@ export async function publishApprovedAmbassadorDrafts({
             `[ambassador] published draft ${draft.id} → swop comment ${c.id}`,
           );
         } else {
-          const post = await swopClient.createPost(draft.body);
+          const media = await prepareCaptainPostMedia(draft.body, {
+            platform: "swop",
+          });
+          const post = await swopClient.createPost(media.bodySwop, {
+            mediaUrl: media.imageUrl && !media.mock ? media.imageUrl : null,
+            mimeType: "image/jpeg",
+          });
           await hub.markDraftSent(draft.id);
-          console.log(
-            `[ambassador] published draft ${draft.id} → swop ${post.id}`,
-          );
+          if (media.blobId && !media.mock) {
+            try {
+              await patchCaptainProofPosts(media.blobId, {
+                swop: String(post.id),
+              });
+            } catch (err) {
+              console.warn(
+                `[ambassador] proof patch swop failed: ${
+                  err instanceof Error ? err.message : String(err)
+                }`,
+              );
+            }
+          }
+          const swopMsg =
+            `published draft ${draft.id} → swop#${post.id}` +
+            (media.pow ? `; ${media.pow}` : media.mock ? "; image=mock" : "") +
+            (media.imageUrl && !media.mock ? "; swop_media=ref" : "") +
+            (media.shareUrl ? `; share=${media.shareUrl}` : "");
+          console.log(`[ambassador] ${swopMsg}`);
+          await hub.reportRun(kindVariant(kind), swopMsg);
         }
       } else {
         console.log(

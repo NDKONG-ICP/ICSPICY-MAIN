@@ -170,6 +170,7 @@ function socialIdl({ IDL }) {
     getPublicRecentPosts: IDL.Func([IDL.Nat], [IDL.Vec(Post)], ["query"]),
     getPostsByUser: IDL.Func([IDL.Principal], [IDL.Vec(Post)], ["query"]),
     getLikeCount: IDL.Func([PostId], [IDL.Nat], ["query"]),
+    getCommentsForPost: IDL.Func([PostId], [IDL.Vec(CommentView)], ["query"]),
   });
 }
 
@@ -259,11 +260,21 @@ export async function createSwopClient({
       return unwrap(await core.setBio(bio), "setBio");
     },
 
-    async createPost(content, { stationId = null } = {}) {
+    async createPost(content, { stationId = null, mediaUrl = null, mimeType = "image/jpeg" } = {}) {
+      const media =
+        mediaUrl && String(mediaUrl).startsWith("http")
+          ? {
+              mediaId: String(mediaUrl),
+              mimeType: mimeType || "image/jpeg",
+              accessPolicy: { Public: null },
+            }
+          : null;
+      // SWOP UI renders images from mediaRef.mediaId (must be https URL) —
+      // markdown ![…](url) in content is NOT displayed as an image.
       const input = {
         content,
-        mediaRef: [],
-        mediaRefs: [],
+        mediaRef: media ? [media] : [],
+        mediaRefs: media ? [[media]] : [],
         referencedAssets: [],
         repostOf: [],
         scope: [],
@@ -280,6 +291,15 @@ export async function createSwopClient({
 
     async addLike(postId) {
       return unwrap(await social.addLike(postId), "addLike");
+    },
+
+    async getCommentsForPost(postId) {
+      try {
+        return await social.getCommentsForPost(postId);
+      } catch (e) {
+        console.warn(`[swop] getCommentsForPost failed: ${e.message}`);
+        return [];
+      }
     },
 
     async publicFeed(limit = 20n) {

@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getAgentHubActor } from "@/lib/agent-hub-idl";
+import { isAgeBlocked, runWithAgeGate } from "@/lib/age-attestation";
+import { Link } from "@tanstack/react-router";
 import { Flame, Mail } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -9,8 +11,7 @@ export function FooterNewsletterSignup() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function subscribe() {
     if (!email.trim()) return;
     setLoading(true);
     try {
@@ -33,6 +34,14 @@ export function FooterNewsletterSignup() {
     }
   }
 
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (isAgeBlocked()) return;
+    runWithAgeGate(() => {
+      void subscribe();
+    });
+  }
+
   return (
     <form
       onSubmit={(e) => void onSubmit(e)}
@@ -45,6 +54,11 @@ export function FooterNewsletterSignup() {
       </p>
       <p className="text-xs text-muted-foreground">
         Recipes from the CookBook, nursery updates, and Zone 10a weather notes.
+        For subscribers 13+. See our{" "}
+        <Link to="/privacy" className="underline">
+          Privacy Policy
+        </Link>
+        .
       </p>
       <div className="flex gap-2 max-w-sm">
         <Input

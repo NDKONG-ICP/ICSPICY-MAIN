@@ -161,10 +161,15 @@ function buildRemoteIndex(existingAssets) {
   return index;
 }
 
-function isBackendManagedShareKey(key) {
+function isProtectedRemoteKey(key) {
   // Backend publishSlicerSharePage() uploads crawler HTML under /s/slicer/{principal}/index.html.
-  // Never prune — diff upload would delete OG share pages and can break certification on the path.
-  return /^\/s\/slicer\/[^/]+\/index\.html$/.test(key);
+  // Worker hosts Capsaicin MiniRouter proof JPEGs + JSON under /captain-posts/.
+  // Never prune — diff upload would delete those and break certification on the path.
+  return (
+    /^\/s\/slicer\/[^/]+\/index\.html$/.test(key) ||
+    key === "/captain-posts" ||
+    key.startsWith("/captain-posts/")
+  );
 }
 
 function classify(localEntries, remoteIndex, { forceAll, doPrune }) {
@@ -197,7 +202,7 @@ function classify(localEntries, remoteIndex, { forceAll, doPrune }) {
 
   if (doPrune) {
     for (const key of remoteIndex.keys()) {
-      if (!localKeys.has(key) && !isBackendManagedShareKey(key)) {
+      if (!localKeys.has(key) && !isProtectedRemoteKey(key)) {
         toPrune.push(key);
       }
     }

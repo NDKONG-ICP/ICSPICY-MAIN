@@ -632,6 +632,16 @@ type SubmitOfferInput =
    offered_amount: nat;
    offered_token: OfferToken;
  };
+type SubmitMetricsInput = 
+ record {
+   challengeId: ChallengeId;
+   largestPepperMm: nat;
+   note: text;
+   pepperCount: nat;
+   photoKeys: vec text;
+   plantHeightCm: nat;
+   totalWeightG: nat;
+ };
 type Subaccount = blob;
 type StructurePlacement = 
  record {
@@ -1692,6 +1702,13 @@ type LayerSummary =
    file_names: vec text;
    layer: text;
  };
+type JoinChallengeInput = 
+ record {
+   agreedRules: bool;
+   challengeId: ChallengeId;
+   indoorOnly: bool;
+   onePlant: bool;
+ };
 type IsApprovedArg = 
  record {
    from_subaccount: opt blob;
@@ -1822,6 +1839,7 @@ type ICSpicy =
     (SwarmCanisterTarget);
    adminRejectClaimRequest: (plantId: PlantId, requester: principal) ->
     (bool);
+   adminRelockHederaTwin: (tokenId: nat) -> (TransferResult);
    adminRemoveGameScore: (gameId: text, "principal": principal) -> (bool);
    /// Admin: remove a swarm canister from the dynamic fleet registry.
    adminRemoveSwarmCanister: (canisterId: text) -> ();
@@ -1834,7 +1852,15 @@ type ICSpicy =
    /// Admin: harvest ICP LP fees and fund fleet canisters (marketable monthly event).
    adminRunLpFeeCyclesFunding: (dryRunOnly: bool) -> (LpFeeCyclesRunResult);
    adminSendNotification: (recipient: principal, message: text) -> (bool);
+   adminSetChallengeMemberRole: (challengeId: text, target: principal, role:
+    ChallengeRole) -> ();
+   adminSetChallengeSuspended: (challengeId: text, target: principal,
+    suspended: bool) -> ();
    adminSetGrowerOfTheMonth: (id: text, monthLabel: text) -> ();
+   adminSetHederaMirror: (entries: vec record {
+                                         nat;
+                                         HederaMirrorRecord;
+                                       }) -> (nat);
    adminSetLeaderboardExcluded: ("principal": principal, excluded: bool) ->
     ();
    /// Admin: set per-swarm-canister auto top-up policy.
@@ -1848,6 +1874,7 @@ type ICSpicy =
        err: text;
        ok: text;
      });
+   adminSyncHederaTwin: (tokenId: nat, to: Account) -> (TransferResult);
    /// Admin: convert treasury ICP to cycles on a fleet canister via CMC.
    adminTopUpCanisterFromTreasuryIcp: (targetCanisterId: text, icpE8s:
     nat) -> (CanisterTopUpResult);
@@ -1913,7 +1940,6 @@ type ICSpicy =
     (YieldEstimate) query;
    cancelMyClaimRequest: (plantId: PlantId) -> (bool);
    cancelOffer: (offerId: text) -> (Offer);
-   /// Per-principal rate limiters for cycle-drain protection (CDA).
    cancelProposal: (id: ProposalId) -> (bool);
    cancelResaleListing: (listing_id: text) -> (variant {
                                                  err: text;
@@ -1943,6 +1969,8 @@ type ICSpicy =
        err: text;
        ok: BatchGiftPackPublic;
      });
+   createChallengePost: (challengeId: text, input: CreatePostInput) ->
+    (PostPublic);
    createComment: (input: CreateCommentInput) -> (CommentPublic);
    createDAOProposal: (input: CreateProposalInput) -> (ProposalPublic);
    createGardenDesign: (input: GardenDesignInput) ->
@@ -1951,11 +1979,11 @@ type ICSpicy =
     (record {proposalId: nat;});
    createNimsTray: (name: text, date: Timestamp, varietyId: opt nat) ->
     (TrayId);
+   /// Uploads asset canister — user images served via HTTP from this canister.
    createOrder: (buyer: principal, input: CreateOrderInput) -> (OrderPublic);
    createPlant: (input: CreatePlantInput) -> (PlantPublic);
    createPlantingEvent: (input: CreatePlantingEventInput) -> (PlantingEvent);
    createPost: (input: CreatePostInput) -> (PostPublic);
-   /// Per-principal rate limiters for cycle-drain protection (CDA).
    createProduct: (input: CreateProductInput) -> (ProductPublic);
    createProposal: (input: CreateProposalInput) ->
     (record {proposalId: nat;});
@@ -2032,6 +2060,11 @@ type ICSpicy =
    getCanisterHealth: () -> (Health) query;
    getCanisterId: () -> (text) query;
    getCanisterTreasuryBalances: () -> (vec CanisterTreasuryBalance);
+   getChallenge: (challengeId: text) -> (opt ChallengePublic) query;
+   getChallengeFeed: (challengeId: text, offset: nat, limit: nat) ->
+    (vec PostPublic) query;
+   getChallengeLeaderboard: (challengeId: text, category: CompeteCategory,
+    limit: nat) -> (vec ChallengeLeaderboardEntry) query;
    getClaimInfo: (token: text) ->
     (opt
       record {
@@ -2080,11 +2113,14 @@ type ICSpicy =
    getGardenDesign: (designId: nat) -> (opt GardenDesign) query;
    getGardenDesignForUser: (designId: nat) -> (opt GardenDesign) query;
    getGlobalFeed: (offset: nat, limit: nat) -> (vec PostPublic) query;
+   /// Frontend asset canister for share-time OG HTML publish (append-only slot).
    getGraveyard: () -> (vec PlantLifecycle) query;
    getGrowerAlerts: (lat: opt float64, lng: opt float64) ->
     (vec WeatherAlert) query;
    getGrowerProvenanceMeta: (tokenId: nat) ->
     (opt GrowerProvenanceMeta) query;
+   getHederaMirror: (tokenId: nat) -> (opt HederaMirrorPublic) query;
+   getHederaTwinOwner: (tokenId: nat) -> (opt principal) query;
    getIcrc7PoolStatsAdmin: () -> (Icrc7PoolStats) query;
    getLatestNurseryWeather: () -> (opt WeatherSnapshot) query;
    getLessonQuiz: (lessonId: text) -> (opt QuizPublic) query;
@@ -2098,7 +2134,12 @@ type ICSpicy =
    getMembershipPriceInToken: (token: OracleToken) -> (nat) query;
    getModelGusts: (lat: opt float64, lng: opt float64) ->
     (opt ModelGustSpread) query;
+   getMyAgeAttestation: () -> (opt AgeAttestationPublic) query;
    getMyBadges: () -> (vec BadgePublic) query;
+   getMyChallengeMembership: (challengeId: text) ->
+    (opt ChallengeMemberPublic) query;
+   getMyChallengeMetrics: (challengeId: text) ->
+    (opt ChallengeMetricsPublic) query;
    getMyClaimRequests: () -> (vec PlantClaimRequestPublic) query;
    getMyCoopStatus: () -> (opt CoopStatus) query;
    getMyCrafterRecipes: () -> (vec SavedCrafterRecipe) query;
@@ -2131,6 +2172,7 @@ type ICSpicy =
    getNimsPhotoFile: (path: text) -> (opt ShopListingFile) query;
    getNurseryWeatherDesk: () -> (opt WeatherOutlook) query;
    getNwsAlertsCertified: () -> (CertifiedWeather_2) query;
+   /// Per-principal rate limiters for cycle-drain protection (CDA).
    getOffer: (offerId: text) -> (opt Offer) query;
    getOffersForNft: (nftId: text) -> (vec Offer) query;
    getOffersReceived: () -> (vec Offer) query;
@@ -2138,6 +2180,7 @@ type ICSpicy =
    getOrderPickupClaimTokens: (order_id: OrderId) -> (vec text) query;
    getOverdueEvents: () -> (vec PlantingEvent) query;
    getPayPalCheckoutConfig: () -> (PayPalCheckoutConfig) query;
+   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    getPlant: (plant_id: PlantId) -> (opt PlantPublic) query;
    getPlantByNft: (nftTokenId: nat) -> (opt PlantLifecycle) query;
    getPlantByNftIdBackfillCount: () -> (nat) query;
@@ -2300,6 +2343,7 @@ type ICSpicy =
    icrc7_max_update_batch_size: () -> (opt nat) query;
    icrc7_name: () -> (text) query;
    icrc7_owner_of: (token_ids: vec nat) -> (vec opt Account) query;
+   /// ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
    icrc7_permitted_drift: () -> (opt nat) query;
    icrc7_supply_cap: () -> (opt nat) query;
    icrc7_symbol: () -> (text) query;
@@ -2339,6 +2383,7 @@ type ICSpicy =
       Hedera;
       ICRC37;
     }) -> (MembershipNFTPublic);
+   joinChallenge: (input: JoinChallengeInput) -> (ChallengeMemberPublic);
    likeComment: (comment_id: CommentId) -> (bool);
    likePost: (post_id: PostId) -> (bool);
    linkWallet: (walletPrincipal: principal) -> (bool);
@@ -2351,6 +2396,9 @@ type ICSpicy =
                                   nat;
                                 }) query;
    listArtworkLayers: () -> (vec ArtworkLayer) query;
+   listChallengeMembers: (challengeId: text, offset: nat, limit: nat) ->
+    (vec ChallengeMemberPublic) query;
+   listChallenges: () -> (vec ChallengePublic) query;
    listClaimTokensAdmin: (search: opt text) ->
     (vec ClaimTokenAdminPublic) query;
    listCommentsByPost: (post_id: PostId) -> (vec CommentPublic) query;
@@ -2482,7 +2530,6 @@ type ICSpicy =
        response: http_request_result;
      }) -> (http_request_result) query;
    pruneUsageData: () -> ();
-   /// Admin-managed dynamic swarm/agent canister targets.
    publishDailyAlmanac: (dateKey: text, title: text, body: text, recipeSlug:
     opt text, varietyIds: vec nat) -> ();
    publishProposal: (id: ProposalId) -> (bool);
@@ -2512,7 +2559,6 @@ type ICSpicy =
      });
    purchasePlant: (plantId: PlantId, token: PaymentToken, amount: nat) ->
     (PurchasePlantResult);
-   /// Admin-managed dynamic swarm/agent canister targets.
    purchasePlantICPay: (plantId: PlantId, paymentId: text) ->
     (PurchasePlantResult);
    purchasePlantPayPal: (plantId: PlantId, paypalOrderId: text) ->
@@ -2545,6 +2591,7 @@ type ICSpicy =
    rejectOffer: (offerId: text) -> (Offer);
    removeAdmin: (p: principal) -> ();
    removeAgentPrincipal: (p: principal) -> ();
+   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    removePlant: (plantId: PlantId) -> (bool);
    removePlantPhoto: (plant_id: PlantId, photo_key: text) -> ();
    removeVariety: (id: nat) -> (bool);
@@ -2581,6 +2628,7 @@ type ICSpicy =
    searchUsers: (search: text, limit: nat) -> (vec UserProfilePublic) query;
    searchVarieties: (searchQuery: text) -> (vec VarietyPublic) query;
    seedDefaultRecipes: () -> ();
+   setAgeAttestation: () -> (AgeAttestationPublic);
    setCoopSeatPriceCents: (cents: nat) -> ();
    /// Admin: update automatic fleet top-up policy.
    setFleetAutoTopUpPolicy: (enabled: bool, thresholdCycles: nat,
@@ -2603,7 +2651,6 @@ type ICSpicy =
                                              text;
                                              text;
                                            }) -> (bool);
-   /// ICRC-10: supported standards declaration (includes ICRC-28 for trusted origins).
    setRecipeIntro: (id: RecipeId, intro: text) -> (bool);
    setRecipeVideo: (id: RecipeId, videoId: opt text) -> (Result_5);
    setRecipeVideoUrl: (id: RecipeId, videoUrl: opt text) -> (bool);
@@ -2622,8 +2669,9 @@ type ICSpicy =
     (StoredFile);
    storeProfileBannerFile: (data: vec nat8) -> (text);
    storeProfileWallpaperFile: (data: vec nat8) -> (text);
-   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    storeSlicerShareOgImage: (pngBytes: blob) -> (Result_3);
+   submitChallengeMetrics: (input: SubmitMetricsInput) ->
+    (ChallengeMetricsPublic);
    submitGameScore: (gameId: text, score: nat, displayData: text) ->
     (Result_2);
    submitOffer: (input: SubmitOfferInput) -> (Offer);
@@ -2722,7 +2770,6 @@ type ICSpicy =
        context: blob;
        response: http_request_result;
      }) -> (http_request_result) query;
-   /// ICRC-28: HTTPS origins allowed for wallet signer delegation flows (IdentityKit / OISY).
    weatherNwsAlertsTransform:
     (record {
        context: blob;
@@ -2743,6 +2790,18 @@ type ICSpicy =
        context: blob;
        response: http_request_result;
      }) -> (http_request_result) query;
+ };
+type HederaMirrorRecord = 
+ record {
+   htsTokenId: text;
+   mintedAt: nat;
+   serial: nat;
+ };
+type HederaMirrorPublic = 
+ record {
+   htsTokenId: text;
+   mintedAt: nat;
+   serial: nat;
  };
 type Health = 
  record {
@@ -3159,6 +3218,13 @@ type ConfirmOrderPaymentDirectResult =
    nft_token_ids: vec nat;
    success: bool;
  };
+type CompeteCategory = 
+ variant {
+   largestPepper;
+   largestPlant;
+   mostPeppers;
+   totalWeight;
+ };
 type CommentPublic = 
  record {
    author: principal;
@@ -3189,6 +3255,64 @@ type ClaimRequestStatus =
    pending;
    rejected;
  };
+type ChallengeStatus = 
+ variant {
+   archived;
+   closed;
+   open;
+ };
+type ChallengeRole = 
+ variant {
+   contestant;
+   moderator;
+   sponsor;
+ };
+type ChallengePublic = 
+ record {
+   created_at: Timestamp;
+   germinateAt: int;
+   id: ChallengeId;
+   memberCount: nat;
+   prizeSponsor: text;
+   registrationClosesAt: int;
+   registrationOpen: bool;
+   rulesSummary: text;
+   seedSponsor: text;
+   status: ChallengeStatus;
+   tagline: text;
+   title: text;
+ };
+type ChallengeMetricsPublic = 
+ record {
+   challengeId: ChallengeId;
+   largestPepperMm: nat;
+   note: text;
+   pepperCount: nat;
+   photoKeys: vec text;
+   plantHeightCm: nat;
+   "principal": principal;
+   totalWeightG: nat;
+   updatedAt: Timestamp;
+   username: opt text;
+ };
+type ChallengeMemberPublic = 
+ record {
+   challengeId: ChallengeId;
+   enteredAt: Timestamp;
+   "principal": principal;
+   role: ChallengeRole;
+   suspended: bool;
+   username: opt text;
+ };
+type ChallengeLeaderboardEntry = 
+ record {
+   photoKeys: vec text;
+   "principal": principal;
+   updatedAt: Timestamp;
+   username: opt text;
+   value: nat;
+ };
+type ChallengeId = text;
 type CertifiedWeather_3 = 
  record {
    bodyDigest: text;
@@ -3393,6 +3517,11 @@ type AirQuality =
    pm10: float64;
    pm25: float64;
    usAqi: nat;
+ };
+type AgeAttestationPublic = 
+ record {
+   attestedAt: int;
+   method: text;
  };
 type AdminWithdrawTokensResult = 
  record {

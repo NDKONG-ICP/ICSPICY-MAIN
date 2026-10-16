@@ -15,6 +15,10 @@ export const BONSAI_TREASURY = "j7j3j-2iaaa-aaaau-agwla-cai";
 export const BONSAI_NFT_LEDGER = "ivgzt-yyaaa-aaaau-agwma-cai";
 export const BONSAI_BAZAAR_UI = "iabi6-zqaaa-aaaau-agwpq-cai";
 export const BONSAI_CANOPY_UI = "7h6n6-eqaaa-aaaau-ag6da-cai";
+/** Bazaar marketplace (listings + settlement). */
+export const BONSAI_MARKETPLACE = "i3eu3-diaaa-aaaau-agwna-cai";
+/** Activity feed + traits indexer. */
+export const BONSAI_INDEXER = "iodfw-caaaa-aaaau-agwoq-cai";
 export const ICP_LEDGER = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 
 /** Orbit Spots (SPOT Orbit) — collection 18, public phase 14 @ 0.05 ICP. */
@@ -181,6 +185,80 @@ function registryIdlFactory({ IDL: I }) {
   });
 }
 
+export function marketplaceIdlFactory({ IDL: I }) {
+  const Listing = I.Record({
+    id: I.Nat,
+    active: I.Bool,
+    collectionId: I.Nat,
+    tokenId: I.Nat,
+    priceE8s: I.Nat,
+    seller: I.Principal,
+    createdAt: I.Nat64,
+  });
+  return I.Service({
+    createListing: I.Func([I.Nat, I.Nat, I.Nat], [I.Opt(I.Nat)], []),
+    cancelListing: I.Func([I.Nat], [I.Bool], []),
+    getListing: I.Func([I.Nat], [I.Opt(Listing)], ["query"]),
+    listCollectionListings: I.Func([I.Nat], [I.Vec(Listing)], ["query"]),
+    listActiveListings: I.Func([I.Nat, I.Nat], [I.Vec(Listing)], ["query"]),
+  });
+}
+
+export function indexerIdlFactory({ IDL: I }) {
+  const ActivityItem = I.Record({
+    id: I.Nat,
+    kind: I.Variant({
+      Sale: I.Null,
+      List: I.Null,
+      CancelList: I.Null,
+      Mint: I.Null,
+      Offer: I.Null,
+    }),
+    collectionId: I.Nat,
+    tokenId: I.Opt(I.Nat),
+    priceE8s: I.Opt(I.Nat),
+    who: I.Principal,
+    timestamp: I.Nat64,
+  });
+  return I.Service({
+    getCollectionActivity: I.Func(
+      [I.Nat, I.Nat, I.Nat],
+      [I.Vec(ActivityItem)],
+      ["query"],
+    ),
+    getTraits: I.Func(
+      [I.Nat, I.Nat],
+      [I.Opt(I.Vec(I.Tuple(I.Text, I.Text)))],
+      ["query"],
+    ),
+  });
+}
+
+export function marketRegistryIdlFactory({ IDL: I }) {
+  const CollectionRecord = I.Record({
+    id: I.Nat,
+    name: I.Text,
+    symbol: I.Text,
+    ledger: I.Principal,
+    minted: I.Nat,
+    maxSupply: I.Nat,
+    listedCount: I.Nat,
+    floorPriceE8s: I.Nat,
+    volumeE8s: I.Nat,
+    royaltyBps: I.Nat,
+    status: I.Variant({
+      Live: I.Null,
+      Draft: I.Null,
+      Paused: I.Null,
+      PendingReview: I.Null,
+      Rejected: I.Null,
+    }),
+  });
+  return I.Service({
+    getCollection: I.Func([I.Nat], [I.Opt(CollectionRecord)], ["query"]),
+  });
+}
+
 function launchpadIdlFactory({ IDL: I }) {
   const MintErr = I.Variant({
     CapReached: I.Null,
@@ -287,6 +365,18 @@ export async function createBonsaiClient({ identity, host = "https://icp-api.io"
     agent,
     canisterId: BONSAI_REGISTRY,
   });
+  const marketRegistry = Actor.createActor(marketRegistryIdlFactory, {
+    agent,
+    canisterId: BONSAI_MARKET_REGISTRY,
+  });
+  const marketplace = Actor.createActor(marketplaceIdlFactory, {
+    agent,
+    canisterId: BONSAI_MARKETPLACE,
+  });
+  const indexer = Actor.createActor(indexerIdlFactory, {
+    agent,
+    canisterId: BONSAI_INDEXER,
+  });
   const launchpad = Actor.createActor(launchpadIdlFactory, {
     agent,
     canisterId: BONSAI_LAUNCHPAD,
@@ -305,6 +395,9 @@ export async function createBonsaiClient({ identity, host = "https://icp-api.io"
   return {
     principal: me,
     registry,
+    marketRegistry,
+    marketplace,
+    indexer,
     launchpad,
     icp,
     nftLedger,
@@ -432,6 +525,32 @@ export async function createBonsaiClient({ identity, host = "https://icp-api.io"
 
     async orbitBalance() {
       return nftLedger.balance_of_collection(account, ORBIT_SPOTS_COLLECTION_ID);
+    },
+
+    async createBazaarListing(collectionId, tokenId, priceE8s) {
+      const idOpt = await marketplace.createListing(
+        BigInt(collectionId),
+        BigInt(tokenId),
+        BigInt(priceE8s),
+      );
+      return idOpt?.[0] ?? null;
+    },
+
+    async listCollectionListings(collectionId) {
+      return marketplace.listCollectionListings(BigInt(collectionId));
+    },
+
+    async getCollectionRecord(collectionId) {
+      const opt = await marketRegistry.getCollection(BigInt(collectionId));
+      return opt?.[0] ?? null;
+    },
+
+    async getCollectionActivity(collectionId, offset = 0, limit = 200) {
+      return indexer.getCollectionActivity(
+        BigInt(collectionId),
+        BigInt(offset),
+        BigInt(limit),
+      );
     },
 
     async transferNft(tokenId, toPrincipalText) {

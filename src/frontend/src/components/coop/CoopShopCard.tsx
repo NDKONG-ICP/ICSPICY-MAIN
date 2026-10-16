@@ -23,6 +23,8 @@ import { useTokenPrices } from "@/hooks/useTokenPrices";
 import { PayPalCheckoutPanel } from "@/components/PayPalCheckoutPanel";
 import { isPayPalCheckoutEnabled } from "@/lib/paypal";
 import { usePayPalCheckoutConfig } from "@/hooks/useBackend";
+import { PurchaseDisclosure } from "@/components/compliance/PurchaseDisclosure";
+import { formatUsdFromCents } from "@/lib/token-payment";
 
 const BENEFITS = [
   "Pro NIMS — mint unlimited grower provenance NFTs",
@@ -95,6 +97,7 @@ export function CoopShopCard() {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
+        <PurchaseDisclosure amountLabel={formatUsdFromCents(usdCents)} />
         <ul className="space-y-1.5 text-sm text-muted-foreground">
           {BENEFITS.map((b) => (
             <li key={b}>✓ {b}</li>

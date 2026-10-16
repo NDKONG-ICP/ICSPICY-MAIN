@@ -2,17 +2,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useBackendActor } from "@/hooks/useBackend";
+import { useAuth } from "@/hooks/useAuth";
 import {
   agentKindLabel,
   getAuthenticatedAgentHubActor,
@@ -39,6 +33,11 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminCapsaicinTab } from "./AdminCapsaicinTab";
+import { AdminBonsaiDropTab } from "./AdminBonsaiDropTab";
+import { AdminCaptainDeskTab } from "./AdminCaptainDeskTab";
+import { AdminCaptainSpendTab } from "./AdminCaptainSpendTab";
+import { AdminDappRegistryTab } from "./AdminDappRegistryTab";
+import { AdminDropStudioTab } from "./AdminDropStudioTab";
 
 type AgentPublic = {
   id: bigint;
@@ -109,9 +108,14 @@ const SECRET_PRESETS = [
   "canopy_wallet_principal",
   "crumbeatr_canister_id",
   "swop_backend_canister_id",
+  "swop_social_canister_id",
   "bonsai_registry_canister_id",
   "bonsai_orbit_canister_id",
   "bonsai_bazaar_canister_id",
+  "x_captain_client_id",
+  "x_captain_client_secret",
+  "x_captain_access_token",
+  "x_captain_refresh_token",
 ] as const;
 
 function formatTs(ns: bigint): string {
@@ -127,8 +131,17 @@ function cadenceLabel(seconds: bigint): string {
   return `${s}s`;
 }
 
+const CADENCE_PRESETS: { label: string; seconds: number }[] = [
+  { label: "1 hour", seconds: 3600 },
+  { label: "6 hours (default ambassadors)", seconds: 21_600 },
+  { label: "8 hours (3× / day)", seconds: 28_800 },
+  { label: "12 hours", seconds: 43_200 },
+  { label: "24 hours", seconds: 86_400 },
+];
+
 export function AdminAgentSwarmTab() {
   const { actor: backendActor } = useBackendActor();
+  const { identity } = useAuth();
   const [loading, setLoading] = useState(true);
   const [agents, setAgents] = useState<AgentPublic[]>([]);
   const [drafts, setDrafts] = useState<DraftPublic[]>([]);
@@ -188,7 +201,7 @@ export function AdminAgentSwarmTab() {
     setLoading(true);
     setError(null);
     try {
-      const hub = await getAuthenticatedAgentHubActor();
+      const hub = await getAuthenticatedAgentHubActor(identity);
       if (!hub) {
         setError("Sign in as admin and configure CANISTER_ID_AGENT_HUB.");
         return;
@@ -220,7 +233,7 @@ export function AdminAgentSwarmTab() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [identity]);
 
   useEffect(() => {
     void loadAll();
@@ -231,7 +244,7 @@ export function AdminAgentSwarmTab() {
   }, [loadAlmanac]);
 
   async function setAgentPaused(agentId: bigint, pause: boolean) {
-    const hub = await getAuthenticatedAgentHubActor();
+    const hub = await getAuthenticatedAgentHubActor(identity);
     if (!hub) return;
     await hub.setAgentStatus(agentId, pause ? { paused: null } : { active: null });
     toast.success(pause ? "Agent paused" : "Agent resumed");
@@ -248,15 +261,46 @@ export function AdminAgentSwarmTab() {
       String(agent.budgetDailyLlmCalls),
     );
     if (!jobs || !llm) return;
-    const hub = await getAuthenticatedAgentHubActor();
+    const hub = await getAuthenticatedAgentHubActor(identity);
     if (!hub) return;
     await hub.setAgentBudgets(agent.id, BigInt(jobs), BigInt(llm));
     toast.success("Budget updated");
     await loadAll();
   }
 
+  async function saveCadence(agent: AgentPublic) {
+    const presetLines = CADENCE_PRESETS.map(
+      (p, i) => `${i + 1}. ${p.label} (${p.seconds}s)`,
+    ).join("\n");
+    const choice = prompt(
+      `Cadence for ${agent.name}\n\n${presetLines}\n\nEnter preset number (1–${CADENCE_PRESETS.length}) or seconds (600–604800):`,
+      String(agent.cadenceSeconds),
+    );
+    if (choice === null || choice.trim() === "") return;
+    let seconds: number;
+    const n = Number(choice.trim());
+    if (Number.isInteger(n) && n >= 1 && n <= CADENCE_PRESETS.length) {
+      seconds = CADENCE_PRESETS[n - 1].seconds;
+    } else if (Number.isFinite(n) && n >= 600 && n <= 604_800) {
+      seconds = Math.floor(n);
+    } else {
+      toast.error("Invalid cadence (use preset 1–5 or 600–604800 seconds)");
+      return;
+    }
+    const resetNextRun = window.confirm(
+      "Run this agent on the next orchestrator tick?\n\nOK = reset schedule now\nCancel = keep current next-run time",
+    );
+    const hub = await getAuthenticatedAgentHubActor(identity);
+    if (!hub) return;
+    await hub.setAgentCadence(agent.id, BigInt(seconds), resetNextRun);
+    toast.success(
+      `Cadence set to ${cadenceLabel(BigInt(seconds))}${resetNextRun ? " (next run reset)" : ""}`,
+    );
+    await loadAll();
+  }
+
   async function approveDraft(id: bigint) {
-    const hub = await getAuthenticatedAgentHubActor();
+    const hub = await getAuthenticatedAgentHubActor(identity);
     if (!hub) return;
     await hub.approveDraft(id);
     toast.success("Draft approved");
@@ -264,7 +308,7 @@ export function AdminAgentSwarmTab() {
   }
 
   async function rejectDraft(id: bigint) {
-    const hub = await getAuthenticatedAgentHubActor();
+    const hub = await getAuthenticatedAgentHubActor(identity);
     if (!hub) return;
     await hub.rejectDraft(id, rejectReason || "Rejected by admin");
     toast.success("Draft rejected");
@@ -283,7 +327,7 @@ export function AdminAgentSwarmTab() {
     ) {
       return;
     }
-    const hub = await getAuthenticatedAgentHubActor();
+    const hub = await getAuthenticatedAgentHubActor(identity);
     if (!hub) return;
     setBulkRejecting(true);
     try {
@@ -300,7 +344,7 @@ export function AdminAgentSwarmTab() {
 
   async function saveDraftEdit() {
     if (editDraftId === null) return;
-    const hub = await getAuthenticatedAgentHubActor();
+    const hub = await getAuthenticatedAgentHubActor(identity);
     if (!hub) return;
     await hub.editDraft(editDraftId, editTitle, editBody);
     toast.success("Draft updated");
@@ -309,7 +353,7 @@ export function AdminAgentSwarmTab() {
   }
 
   async function saveSecret() {
-    const hub = await getAuthenticatedAgentHubActor();
+    const hub = await getAuthenticatedAgentHubActor(identity);
     if (!hub) return;
     await hub.setSecret(secretName, secretValue);
     toast.success(`Secret "${secretName}" saved`);
@@ -318,7 +362,7 @@ export function AdminAgentSwarmTab() {
   }
 
   async function registerAgentPrincipal() {
-    const hub = await getAuthenticatedAgentHubActor();
+    const hub = await getAuthenticatedAgentHubActor(identity);
     if (!hub || !newAgentPrincipal.trim()) return;
     const { Principal } = await import("@dfinity/principal");
     const p = Principal.fromText(newAgentPrincipal.trim());
@@ -334,7 +378,7 @@ export function AdminAgentSwarmTab() {
   }
 
   async function removePrincipal(principal: string) {
-    const hub = await getAuthenticatedAgentHubActor();
+    const hub = await getAuthenticatedAgentHubActor(identity);
     if (!hub) return;
     const { Principal } = await import("@dfinity/principal");
     await hub.removeAgentPrincipal(Principal.fromText(principal));
@@ -389,6 +433,11 @@ export function AdminAgentSwarmTab() {
             <Leaf className="w-3.5 h-3.5" />
             Capsaicin
           </TabsTrigger>
+          <TabsTrigger value="bonsai">Bonsai drop</TabsTrigger>
+          <TabsTrigger value="desk">Captain desk</TabsTrigger>
+          <TabsTrigger value="spend">Captain spend</TabsTrigger>
+          <TabsTrigger value="dapps">Dapp registry</TabsTrigger>
+          <TabsTrigger value="drop">Drop studio</TabsTrigger>
           <TabsTrigger value="queue">
             Approval Queue
             {pendingCount > 0 && (
@@ -445,6 +494,13 @@ export function AdminAgentSwarmTab() {
                   >
                     Budget
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void saveCadence(agent)}
+                  >
+                    Cadence
+                  </Button>
                 </div>
               </div>
             );
@@ -453,6 +509,25 @@ export function AdminAgentSwarmTab() {
 
         <TabsContent value="capsaicin" className="mt-4">
           <AdminCapsaicinTab />
+        </TabsContent>
+
+        <TabsContent value="bonsai" className="mt-4">
+          <AdminBonsaiDropTab />
+        </TabsContent>
+
+        <TabsContent value="desk" className="mt-4">
+          <AdminCaptainDeskTab />
+        </TabsContent>
+
+        <TabsContent value="spend" className="mt-4">
+          <AdminCaptainSpendTab />
+        </TabsContent>
+
+        <TabsContent value="dapps" className="mt-4">
+          <AdminDappRegistryTab />
+        </TabsContent>
+        <TabsContent value="drop" className="mt-4">
+          <AdminDropStudioTab />
         </TabsContent>
 
         <TabsContent value="queue" className="space-y-4 mt-4">
@@ -676,20 +751,25 @@ export function AdminAgentSwarmTab() {
               API secrets
             </h3>
             <div className="grid gap-3 md:grid-cols-2">
-              <div>
-                <Label>Secret name</Label>
-                <Select value={secretName} onValueChange={setSecretName}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SECRET_PRESETS.map((name) => (
-                      <SelectItem key={name} value={name}>
-                        {name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-2">
+                <Label htmlFor="agent-secret-name">Secret name</Label>
+                <Input
+                  id="agent-secret-name"
+                  list="agent-secret-presets"
+                  value={secretName}
+                  onChange={(e) => setSecretName(e.target.value.trim())}
+                  placeholder="e.g. x_captain_access_token"
+                  className="font-mono text-sm"
+                />
+                <datalist id="agent-secret-presets">
+                  {SECRET_PRESETS.map((name) => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
+                <p className="text-xs text-muted-foreground">
+                  Pick from suggestions or type any hub secret name (Captain X:
+                  x_captain_*).
+                </p>
               </div>
               <div>
                 <Label>Value</Label>

@@ -355,6 +355,43 @@ async function generateSlicerTierOgCards(sharp) {
   }
 }
 
+function winterGrowOgSvg() {
+  return `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="45%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1c0508"/>
+    </linearGradient>
+    <linearGradient id="ice" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <linearGradient id="heat" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#7f1d1d"/>
+      <stop offset="55%" stop-color="#e11d2e"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="10" fill="url(#heat)"/>
+  <circle cx="980" cy="120" r="220" fill="#38bdf8" opacity="0.12"/>
+  <circle cx="180" cy="520" r="260" fill="#e11d2e" opacity="0.14"/>
+  <text x="80" y="110" font-family="Arial Black, Impact, sans-serif" font-size="28" font-weight="700" fill="#e11d2e" letter-spacing="5">HOSTED BY BOBBY PEPPERS — BUILT TO BURN</text>
+  <text x="80" y="250" font-family="Arial Black, Impact, sans-serif" font-size="96" font-weight="900" fill="url(#ice)" letter-spacing="-2">WINTER</text>
+  <text x="80" y="340" font-family="Arial Black, Impact, sans-serif" font-size="64" font-weight="900" fill="#b8ff3c" letter-spacing="4">GROW CHALLENGE</text>
+  <text x="80" y="410" font-family="Georgia, serif" font-size="32" font-style="italic" fill="#e11d2e">Real growers. Real rewards.</text>
+  <text x="80" y="500" font-family="Arial, sans-serif" font-size="26" fill="#cbd5e1">Seeds · Plant Some Kindness   ·   Prizes · IC SPICY (TBD)</text>
+  <text x="80" y="560" font-family="Arial, sans-serif" font-size="24" fill="#64748b">🌶❄ icspicy.app/challenge/winter-grow — one plant · same variety · Nov 1</text>
+</svg>`;
+}
+
+async function generateWinterGrowOgCard(sharp) {
+  await fs.mkdir(path.join(DIST, "og"), { recursive: true });
+  const out = path.join(DIST, "og", "winter-grow.png");
+  await sharp(Buffer.from(winterGrowOgSvg())).png({ compressionLevel: 9 }).toFile(out);
+}
+
 function formatScoville(max) {
   if (max >= 1_000_000) return `${(max / 1_000_000).toFixed(1)}M`;
   if (max >= 1_000) return `${Math.round(max / 1_000)}K`;
@@ -671,6 +708,8 @@ async function main() {
       title: entry.title,
       description: entry.description,
       canonicalPath: entry.path,
+      ogImage: entry.ogImage ?? null,
+      ogImageSize: entry.ogImage ? [1200, 630] : null,
       jsonLds: entry.path === "/" ? entry.jsonLd : [entry.jsonLd],
       crawlHtml: staticCrawlHtml(entry),
     });
@@ -702,8 +741,10 @@ async function main() {
     const sharp = (await import("sharp")).default;
     await generateSlicerTierOgCards(sharp);
     ogCount += SLICER_TIER_OG.length;
+    await generateWinterGrowOgCard(sharp);
+    ogCount += 1;
   } catch (e) {
-    console.warn(`⚠ Slicer tier OG cards skipped (${e.message})`);
+    console.warn(`⚠ Slicer/Winter Grow OG cards skipped (${e.message})`);
   }
 
   // 2. Recipes + variety guides (live backend fetch — never break the build)

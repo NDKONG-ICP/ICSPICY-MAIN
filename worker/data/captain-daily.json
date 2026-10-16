@@ -1,0 +1,31 @@
+{
+  "days": {
+    "2026-10-16": {
+      "slotsPosted": 3,
+      "slots": [
+        {
+          "slot": 0,
+          "label": "morning",
+          "at": "2026-10-16T15:21:12.980Z",
+          "communityPostId": "9"
+        },
+        {
+          "slot": 1,
+          "label": "midday",
+          "at": "2026-10-16T16:29:43.961Z",
+          "communityPostId": "10"
+        },
+        {
+          "slot": 2,
+          "label": "evening",
+          "at": "2026-10-16T17:29:06.560Z",
+          "communityPostId": "11"
+        }
+      ],
+      "triggers": {
+        "morning": "2026-10-16T15:21:12.980Z"
+      },
+      "lastAt": "2026-10-16T17:29:06.560Z"
+    }
+  }
+}

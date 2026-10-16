@@ -2,7 +2,16 @@ import { Toaster } from "@/components/ui/sonner";
 import type { ReactNode } from "react";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
+import { AgeGateHost } from "./compliance/AgeGateHost";
+import { CookieConsentBanner } from "./compliance/CookieConsentBanner";
+import { useSyncAgeAttestation } from "@/hooks/useSyncAgeAttestation";
+import { OnboardingHost } from "./onboarding/OnboardingHost";
 import { SpicyAiWidget } from "./SpicyAiWidget";
+
+function ComplianceLayoutExtras() {
+  useSyncAgeAttestation();
+  return <AgeGateHost />;
+}
 
 interface LayoutProps {
   children: ReactNode;
@@ -18,7 +27,7 @@ export function Layout({
   mainClassName,
 }: LayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className="min-h-screen flex flex-col bg-background text-foreground overflow-x-hidden max-w-[100vw]">
       <Header />
       <main
         className={[
@@ -33,6 +42,9 @@ export function Layout({
       </main>
       {!noFooter && <Footer />}
       <SpicyAiWidget />
+      <OnboardingHost />
+      <ComplianceLayoutExtras />
+      <CookieConsentBanner />
       <Toaster richColors position="bottom-right" />
     </div>
   );

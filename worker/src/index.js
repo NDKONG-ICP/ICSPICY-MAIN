@@ -15,6 +15,8 @@ import {
   sweepAmbassadorFunds,
 } from "./agents/index.js";
 import { buildWalletBook, formatWalletBook } from "./lib/wallets.js";
+import { startDropStudioServer } from "./drop-studio-server.js";
+import { runCaptainEtScheduler } from "./lib/captain-et-scheduler.js";
 
 const POLL_SEC = Number(process.env.POLL_INTERVAL_SEC ?? 60);
 const ONCE = process.argv.includes("--once");
@@ -34,6 +36,11 @@ async function tick(identity, captainIdentity) {
     "bonsai_orbit_canister_id",
     "bonsai_bazaar_canister_id",
     "canopy_wallet_principal",
+    "swop_social_canister_id",
+    "x_captain_client_id",
+    "x_captain_client_secret",
+    "x_captain_access_token",
+    "x_captain_refresh_token",
     ...LLM_SECRET_NAMES,
   ]);
   const llmRouter = createLlmRouter(secrets);
@@ -91,6 +98,17 @@ async function tick(identity, captainIdentity) {
   } catch (err) {
     console.error("[worker] ambassador sweep error:", err.message ?? err);
   }
+  try {
+    await runCaptainEtScheduler({
+      hub,
+      llmRouter,
+      secrets,
+      captainIdentity,
+      agents,
+    });
+  } catch (err) {
+    console.error("[worker] captain ET scheduler error:", err.message ?? err);
+  }
 }
 
 async function main() {
@@ -113,6 +131,14 @@ async function main() {
       }),
     ),
   );
+
+  if (process.env.DROP_STUDIO_PORT) {
+    try {
+      startDropStudioServer();
+    } catch (err) {
+      console.error("[worker] drop studio failed to listen:", err);
+    }
+  }
 
   if (ONCE) {
     await tick(identity, captainIdentity);

@@ -347,6 +347,28 @@ export const STATIC_ROUTE_SEO = [
     ],
   },
   {
+    path: "/challenge/winter-grow",
+    title:
+      "Winter Grow Challenge with Bobby Peppers — Plant Some Kindness × IC SPICY",
+    description:
+      "Hosted by Bobby Peppers — Built to Burn. Same variety, one plant, Nov 1 start. Seeds by Plant Some Kindness. Official photos & weights on IC SPICY. Crypto prize pool TBD.",
+    ogImage: `${SITE_ORIGIN}/og/winter-grow.png`,
+    jsonLd: null,
+    crawlParagraphs: [
+      "The Winter Grow Challenge is hosted by Bobby Peppers (Built to Burn). Plant Some Kindness sponsors seeds of one variety for every grower. IC SPICY records official photos and weights on-app and sponsors crypto prizes (amounts TBD). Categories: most peppers, largest pepper, total weight, largest plant. Growers register on IC SPICY, then post weekly check-in photos, comment, like, and compete in the challenge group feed.",
+    ],
+  },
+  {
+    path: "/drop",
+    title: "Hedera Drop Studio — Make a Picture | IC SPICY",
+    description:
+      "Holders of the IC SPICY Hedera Drop connect HashPack and generate MiniRouter images. Ten images per NFT every 24 hours.",
+    jsonLd: null,
+    crawlParagraphs: [
+      "IC SPICY Hedera Drop holders connect HashPack on icspicy.app and generate images through MiniRouter. Each NFT allows ten generations per 24 hours, and the studio has a daily site ceiling.",
+    ],
+  },
+  {
     path: "/guides",
     title: "Pepperpedia — Variety Index & KNF Growing Guides | IC SPICY",
     description:
@@ -362,6 +384,45 @@ export const STATIC_ROUTE_SEO = [
     crawlParagraphs: [
       "Pepperpedia is IC SPICY's permanent variety index — searchable by species, heat class, and breeder, with original cultivar credits and vendor source links. Every entry links to a free regenerative growing guide covering soil preparation with IMO, planting windows for your USDA zone, stage-by-stage Korean Natural Farming nutrition, natural pest control, and harvest.",
     ],
+  },
+  {
+    path: "/privacy",
+    title: "Privacy Policy | IC SPICY",
+    description:
+      "How IC SPICY handles Internet Identity, wallet connect, newsletter email, orders, and first-party usage analytics — no session replay.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Privacy Policy",
+      url: "https://www.icspicy.app/privacy",
+    },
+    crawlParagraphs: [
+      "IC SPICY privacy policy: age attestation for users 13+, CAN-SPAM compliant newsletter, and no session replay SDKs.",
+    ],
+  },
+  {
+    path: "/terms",
+    title: "Terms of Use | IC SPICY",
+    description: "Terms for using icspicy.app, the marketplace, NFT tools, and community features.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Terms of Use",
+      url: "https://www.icspicy.app/terms",
+    },
+    crawlParagraphs: ["IC SPICY terms of use and eligibility (13+)."],
+  },
+  {
+    path: "/dmca",
+    title: "DMCA & Copyright | IC SPICY",
+    description: "Copyright complaint and counter-notification information for IC SPICY user content.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "DMCA Policy",
+      url: "https://www.icspicy.app/dmca",
+    },
+    crawlParagraphs: ["DMCA agent contact and safe-harbor status for IC SPICY."],
   },
   {
     path: "/credits",

@@ -21,6 +21,7 @@ import {
 import { useOisyWallet } from "../providers/OisyWalletProvider";
 import { TOKEN_DISPLAY } from "../types";
 import { OisyConnectButton } from "./OisyConnectButton";
+import { PurchaseDisclosure } from "./compliance/PurchaseDisclosure";
 
 type PayHandler = (args: {
   token: PaymentTokenSymbol;
@@ -169,6 +170,7 @@ export function TokenPaymentPanel({
       <p className="text-sm text-muted-foreground">
         Pay {formatUsdFromCents(usdCents)} with Internet Identity + ICRC-2
       </p>
+      <PurchaseDisclosure amountLabel={formatUsdFromCents(usdCents)} />
       {pricesLoading && (
         <p className="text-xs text-muted-foreground">
           Loading prices from CoinGecko…

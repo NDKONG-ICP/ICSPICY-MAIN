@@ -1,6 +1,7 @@
 import { Flame, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouterState } from "@tanstack/react-router";
+import { isAgeBlocked, runWithAgeGate } from "@/lib/age-attestation";
 import { lazy, Suspense, useEffect, useState } from "react";
 
 const OPEN_EVENT = "spicyai:open";
@@ -21,7 +22,7 @@ export type SpicyAiOpenDetail = {
  * Optionally auto-sends a prompt (e.g. "Tell me about the FPJ recipe.").
  * Pass weather coords from /weather so answers use the on-chain brief.
  */
-export function openSpicyAi(
+function dispatchOpenSpicyAi(
   prompt?: string,
   opts?: { weather?: { lat: number; lng: number } },
 ) {
@@ -33,6 +34,16 @@ export function openSpicyAi(
       } satisfies SpicyAiOpenDetail,
     }),
   );
+}
+
+export function openSpicyAi(
+  prompt?: string,
+  opts?: { weather?: { lat: number; lng: number } },
+) {
+  if (isAgeBlocked()) return;
+  runWithAgeGate(() => {
+    dispatchOpenSpicyAi(prompt, opts);
+  });
 }
 
 export function SpicyAiWidget() {
@@ -76,9 +87,17 @@ export function SpicyAiWidget() {
 
   if (hideOnGames) return null;
 
+  const openPanel = () => {
+    setEverOpened(true);
+    setIsOpen(true);
+  };
+
   const toggle = () => {
-    if (!isOpen) setEverOpened(true);
-    setIsOpen((v) => !v);
+    if (isOpen) {
+      setIsOpen(false);
+      return;
+    }
+    runWithAgeGate(openPanel);
   };
 
   // Before: fixed bottom-6 right-6 (24px) — overlapped IdentityKit OISY

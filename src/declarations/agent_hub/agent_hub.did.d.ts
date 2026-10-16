@@ -53,8 +53,18 @@ export interface AgentHub {
   'listDrafts' : ActorMethod<[bigint, [] | [DraftStatus]], Array<DraftPublic>>,
   'listJobs' : ActorMethod<[bigint, [] | [JobStatus]], Array<JobPublic>>,
   'listNewsletterIssues' : ActorMethod<[bigint], Array<NewsletterIssue>>,
+  /**
+   * / Agent/admin: pending subscribers who still need their confirmation email,
+   * / as (emailKey, confirmToken) pairs. Excludes anyone already sent one.
+   */
+  'listPendingConfirmSends' : ActorMethod<[bigint], Array<[string, string]>>,
   'listSecretNames' : ActorMethod<[], Array<string>>,
   'listSubscribers' : ActorMethod<[bigint], Array<SubscriberPublic>>,
+  /**
+   * / Agent/admin: record that the confirmation email went out so the worker
+   * / does not re-send it on every poll.
+   */
+  'markConfirmationSent' : ActorMethod<[string], undefined>,
   'markDraftSent' : ActorMethod<[bigint], undefined>,
   'recordLlmCall' : ActorMethod<[bigint], boolean>,
   /**
@@ -71,6 +81,7 @@ export interface AgentHub {
   >,
   'reportRun' : ActorMethod<[AgentKind, string], undefined>,
   'setAgentBudgets' : ActorMethod<[bigint, bigint, bigint], undefined>,
+  'setAgentCadence' : ActorMethod<[bigint, bigint, boolean], undefined>,
   'setAgentStatus' : ActorMethod<[bigint, AgentStatus], undefined>,
   'setBackendCanisterId' : ActorMethod<[string], undefined>,
   'setSecret' : ActorMethod<[string, string], undefined>,
@@ -94,16 +105,19 @@ export type AgentKind = { 'social_x' : null } |
   { 'orders_claims_ops' : null } |
   { 'community_moderator' : null } |
   { 'social_facebook' : null } |
+  { 'ambassador_swop' : null } |
   { 'social_tiktok' : null } |
   { 'email_correspondence' : null } |
   { 'weather_sentinel' : null } |
   { 'analytics_digest' : null } |
   { 'orchestrator' : null } |
+  { 'ambassador_crumbeatr' : null } |
   { 'nims_ops' : null } |
   { 'weather_concierge' : null } |
   { 'fleet_cycles_ops' : null } |
   { 'newsletter' : null } |
   { 'social_youtube' : null } |
+  { 'ambassador_bonsai' : null } |
   { 'social_instagram' : null } |
   { 'compliance_reviewer' : null };
 export interface AgentPublic {

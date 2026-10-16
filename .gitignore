@@ -43,6 +43,14 @@ vendor/
 labels/
 art-src/slicer/.preview/
 .env*
+worker/data/blade-grove-progress.json
+worker/data/minirouter-image-spend.jsonl
+worker/data/bonsai-drop/manifest.json
+worker/data/hedera/
+worker/data/captain-policy-blotter.json
+worker/data/captain-venues-status.json
+worker/data/hedera-drop-studio.json
+worker/data/hedera-drop/
 # Worker runtime logs — may contain sensitive runtime output
 worker/logs/
 worker/.env

@@ -395,13 +395,13 @@ module {
     bannedUsers.contains(user);
   };
 
-  func countTipsForPost(tips : Map.Map<Nat, Types.Tip>, post_id : Common.PostId) : Nat {
+  public func countTipsForPost(tips : Map.Map<Nat, Types.Tip>, post_id : Common.PostId) : Nat {
     tips.values()
       .filter(func(t : Types.Tip) : Bool { t.post_id == post_id })
       .size();
   };
 
-  func countCommentsForPost(
+  public func countCommentsForPost(
     comments : Map.Map<Common.CommentId, Types.Comment>,
     post_id : Common.PostId,
   ) : Nat {
@@ -576,10 +576,11 @@ module {
     caller : Principal,
     offset : Nat,
     limit : Nat,
+    scopedPosts : Map.Map<Common.PostId, Text>,
   ) : [Types.PostPublic] {
     var arr = collectPosts(
       posts, comments, tips, profiles, bannedUsers, caller, false,
-      func(_p : Types.Post) : Bool { true },
+      func(p : Types.Post) : Bool { scopedPosts.get(p.id) == null },
     );
     ignore arr.sort(func(a : Types.PostPublic, b : Types.PostPublic) : { #less; #equal; #greater } {
       Int.compare(b.created_at, a.created_at)
@@ -596,6 +597,7 @@ module {
     caller : Principal,
     offset : Nat,
     limit : Nat,
+    scopedPosts : Map.Map<Common.PostId, Text>,
   ) : [Types.PostPublic] {
     let following = switch (profiles.get(caller)) {
       case (?p) { p.follows };
@@ -603,7 +605,9 @@ module {
     };
     var arr = collectPosts(
       posts, comments, tips, profiles, bannedUsers, caller, false,
-      func(p : Types.Post) : Bool { following.contains(p.author) },
+      func(p : Types.Post) : Bool {
+        following.contains(p.author) and scopedPosts.get(p.id) == null
+      },
     );
     ignore arr.sort(func(a : Types.PostPublic, b : Types.PostPublic) : { #less; #equal; #greater } {
       Int.compare(b.created_at, a.created_at)
@@ -619,11 +623,14 @@ module {
     bannedUsers : Set.Set<Principal>,
     caller : Principal,
     limit : Nat,
+    scopedPosts : Map.Map<Common.PostId, Text>,
   ) : [Types.PostPublic] {
     let now = Time.now();
     var arr = collectPosts(
       posts, comments, tips, profiles, bannedUsers, caller, false,
-      func(p : Types.Post) : Bool { now - p.created_at <= TRENDING_WINDOW_NS },
+      func(p : Types.Post) : Bool {
+        now - p.created_at <= TRENDING_WINDOW_NS and scopedPosts.get(p.id) == null
+      },
     );
     ignore arr.sort(func(a : Types.PostPublic, b : Types.PostPublic) : { #less; #equal; #greater } {
       switch (Nat.compare(b.like_count, a.like_count)) {
@@ -720,8 +727,9 @@ module {
     profiles : Map.Map<Principal, Types.UserProfile>,
     bannedUsers : Set.Set<Principal>,
     caller : Principal,
+    scopedPosts : Map.Map<Common.PostId, Text>,
   ) : [Types.PostPublic] {
-    getGlobalFeed(posts, comments, tips, profiles, bannedUsers, caller, 0, 1000);
+    getGlobalFeed(posts, comments, tips, profiles, bannedUsers, caller, 0, 1000, scopedPosts);
   };
 
   public func getCallerUserProfile(

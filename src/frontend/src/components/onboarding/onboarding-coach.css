@@ -1,0 +1,221 @@
+.ob-dialog {
+  --ob-crimson: #e11d2e;
+  --ob-ice: #7dd3fc;
+}
+
+.ob-phone {
+  margin: 0 auto;
+  width: min(100%, 220px);
+  border-radius: 1.35rem;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: #0a0a0a;
+  padding: 0.55rem 0.45rem 0.7rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.ob-phone-notch {
+  width: 38%;
+  height: 0.35rem;
+  margin: 0 auto 0.45rem;
+  border-radius: 999px;
+  background: #222;
+}
+
+.ob-phone-screen {
+  min-height: 11.5rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(180deg, #1a1010 0%, #0c0c0c 100%);
+  border: 1px solid rgba(225, 29, 46, 0.25);
+  overflow: hidden;
+  position: relative;
+}
+
+.ob-scene {
+  padding: 0.55rem;
+  min-height: 11.5rem;
+}
+
+.ob-url-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.45rem;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.ob-share-btn {
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 0.3rem;
+  background: rgba(225, 29, 46, 0.35);
+  color: #fff;
+}
+
+.ob-hero-mini {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #e11d2e;
+  letter-spacing: 0.04em;
+}
+
+.ob-sheet {
+  position: absolute;
+  left: 0.4rem;
+  right: 0.4rem;
+  bottom: 0.4rem;
+  border-radius: 0.65rem 0.65rem 0.4rem 0.4rem;
+  background: rgba(20, 20, 22, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.35rem;
+  font-size: 0.62rem;
+}
+
+.ob-sheet.tall {
+  bottom: 0.35rem;
+}
+
+.ob-sheet-row {
+  padding: 0.4rem 0.45rem;
+  border-radius: 0.35rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ob-sheet-row.muted {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.ob-sheet-row.highlight {
+  background: rgba(225, 29, 46, 0.35);
+  color: #fff;
+  font-weight: 700;
+  outline: 1px solid rgba(251, 191, 36, 0.55);
+}
+
+.ob-app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  margin-bottom: 0.5rem;
+}
+
+.ob-brand {
+  font-weight: 800;
+  color: #fff;
+}
+
+.ob-burger {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.3rem;
+  background: rgba(225, 29, 46, 0.4);
+  color: #fff;
+}
+
+.ob-menu-list {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.ob-menu-list > div {
+  padding: 0.3rem 0.4rem;
+  border-radius: 0.3rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ob-menu-list.dim {
+  opacity: 0.45;
+}
+
+.ob-connect-fab {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.55rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.4rem;
+  background: #e11d2e;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  box-shadow: 0 0 16px rgba(225, 29, 46, 0.55);
+}
+
+.ob-ii {
+  display: grid;
+  place-content: center;
+  gap: 0.4rem;
+  text-align: center;
+  min-height: 10rem;
+  padding: 0.75rem;
+}
+
+.ob-ii-title {
+  font-weight: 800;
+  color: #fff;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.ob-ii-sub {
+  margin: 0;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ob-ii-btns {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.ob-ii-btns span {
+  padding: 0.4rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.68rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ob-ii-btns span.ob-pulse {
+  border-color: rgba(125, 211, 252, 0.55);
+  background: rgba(14, 165, 233, 0.2);
+}
+
+.ob-done {
+  display: grid;
+  place-content: center;
+  gap: 0.35rem;
+  min-height: 10rem;
+  text-align: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.ob-home-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 0 12px rgba(225, 29, 46, 0.5));
+}
+
+.ob-pulse {
+  box-shadow: 0 0 0 0 rgba(225, 29, 46, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ob-pulse {
+    animation: none !important;
+  }
+}

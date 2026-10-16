@@ -17,6 +17,7 @@
 2. `setProfileImageBlob(jpeg, "image/jpeg")`
 3. Fund wallet: `getVaultAccount()` → ICRC-1 transfer to that account → `notifyDeposit(block)` → `moveVaultToSpending({ICP}, amount)`
 4. `createPostV1(input, 0)` / `addComment` / `addLike`
+   - Images: set `mediaRef` / `mediaRefs` with `{ mediaId: "https://…jpg", mimeType: "image/jpeg", accessPolicy: { Public: null } }`. SWOP uses `mediaId` as the `<img src>`. Markdown `![](url)` in content does **not** render.
 5. Tips: `recordTip({User: principal}, amountE8s, ?postId)`
 
 ## Station

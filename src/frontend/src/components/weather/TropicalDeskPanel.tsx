@@ -13,6 +13,7 @@ import {
   parseAdeckGz,
   type ParsedAdeck,
 } from "@/lib/atcf";
+import { addDarkBasemap } from "@/lib/map-basemap";
 import {
   fetchNhcGisLayers,
   hasAnyGisData,
@@ -278,10 +279,7 @@ export function TropicalDeskPanel({
       zoomControl: true,
       attributionControl: false,
     });
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      { maxZoom: 19, subdomains: "abcd" },
-    ).addTo(map);
+    addDarkBasemap(map);
     stormGroup.current = L.layerGroup().addTo(map);
     coneGroup.current = L.layerGroup().addTo(map);
     alertGroup.current = L.layerGroup().addTo(map);

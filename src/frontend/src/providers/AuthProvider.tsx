@@ -19,6 +19,8 @@ import {
   II_DERIVATION_ORIGIN,
   II_PROVIDER,
 } from "../lib/auth-config";
+import { clearAgentHubActorCache } from "../lib/agent-hub-idl";
+import { runWithAgeGate } from "../lib/age-attestation";
 
 async function uploadFile(file: ExternalBlob): Promise<Uint8Array> {
   return file.getBytes();
@@ -105,10 +107,13 @@ export function ICSpicyAuthProvider({ children }: { children: ReactNode }) {
     authClient == null || actorQuery.isFetching || actorQuery.isPending;
 
   const login = useCallback(() => {
-    void authLogin();
+    runWithAgeGate(() => {
+      void authLogin();
+    });
   }, [authLogin]);
 
   const logout = useCallback(() => {
+    clearAgentHubActorCache();
     void authLogout().then(() => {
       queryClient.clear();
     });

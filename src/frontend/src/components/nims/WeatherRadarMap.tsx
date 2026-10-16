@@ -2,6 +2,7 @@ import L from "leaflet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 
+import { addDarkBasemap } from "@/lib/map-basemap";
 import {
   buildRainViewerTileTemplate,
   fetchRainViewerRadarData,
@@ -101,13 +102,7 @@ export function WeatherRadarMap({
         setMapZoom(map.getZoom());
       });
 
-      L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        {
-          maxZoom: 19,
-          subdomains: "abcd",
-        },
-      ).addTo(map);
+      addDarkBasemap(map);
 
       markerRef.current = L.circleMarker([lat, lng], {
         radius: 8,

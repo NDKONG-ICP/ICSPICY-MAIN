@@ -42,6 +42,7 @@ import { toast } from "sonner";
 import type { Offer, ResaleListingPublic } from "../backend";
 import { OfferStatus, ProductCategory, RarityTier } from "../backend";
 import { NftResaleSection } from "../components/NftResaleSection";
+import { PurchaseDisclosure } from "../components/compliance/PurchaseDisclosure";
 import { CoopShopCard } from "../components/coop/CoopShopCard";
 import { ShopListingImage } from "../components/ShopListingImage";
 import { ShopPlantsSection } from "../components/ShopPlantsSection";
@@ -1415,6 +1416,7 @@ function PepperHeadShopCard() {
         early access, and provenance rights. Pay with Internet Identity or OISY
         to custody your NFT directly in OISY.
       </p>
+      <PurchaseDisclosure amountLabel="$25.00" />
 
       {/* II payment — only when signed in */}
       {isAuthenticated && (

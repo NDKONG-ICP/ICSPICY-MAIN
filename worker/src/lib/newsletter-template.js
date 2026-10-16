@@ -10,6 +10,8 @@ export function isoWeekKey(date = new Date()) {
 export const UNSUBSCRIBE_PLACEHOLDER = "{{UNSUBSCRIBE_URL}}";
 
 const ACCENT = "#ee502b";
+const POSTAL_LINE =
+  "IC SPICY, 20225 Renwick Ave, Port Charlotte, FL 33954 · FDACS Registered Nursery";
 const GOLD = "#e6b258";
 const MUTED = "#c4a894";
 
@@ -131,7 +133,7 @@ export function renderNewsletterHtml({
       </div>
     </td></tr>
     <tr><td style="padding:0 20px 32px;text-align:center;font-size:11px;color:#8a7a6a;">
-      Port Charlotte, FL · FDACS Registered Nursery<br>
+      ${POSTAL_LINE}<br>
       <a href="${siteUrl}" style="color:${MUTED};">icspicy.app</a> &nbsp;·&nbsp;
       <a href="${UNSUBSCRIBE_PLACEHOLDER}" style="color:#8a7a6a;">Unsubscribe</a>
     </td></tr>
@@ -157,7 +159,7 @@ export function confirmEmailHtml(confirmUrl, siteUrl) {
       </div>
     </td></tr>
     <tr><td style="padding:0 20px 32px;text-align:center;font-size:11px;color:#8a7a6a;">
-      Port Charlotte, FL · FDACS Registered Nursery<br>
+      ${POSTAL_LINE}<br>
       <a href="${siteUrl}" style="color:${MUTED};">icspicy.app</a>
     </td></tr>
   </table>

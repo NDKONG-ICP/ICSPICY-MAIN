@@ -15,7 +15,8 @@ import { IdentityKitProvider, IdentityKitTheme } from "@nfid/identitykit/react";
 import { useAuth as useIdentityKitAuth } from "@nfid/identitykit/react";
 import { useAccounts } from "@nfid/identitykit/react";
 import { useAgent } from "@nfid/identitykit/react";
-import { type ReactNode, createContext, useContext, useMemo } from "react";
+import { type ReactNode, createContext, useCallback, useContext, useMemo } from "react";
+import { runWithAgeGate } from "../lib/age-attestation";
 import { Backend, ExternalBlob } from "../backend";
 import type { _SERVICE } from "../declarations/backend.did";
 import { idlFactory as backendIdlFactory } from "../declarations/backend.did.js";
@@ -107,13 +108,21 @@ function OisyWalletInner({ children }: { children: ReactNode }) {
     return new Backend(oisyBackendActor as any, uploadFile, downloadFile);
   }, [oisyBackendActor]);
 
+  const connectOisy = useCallback(async () => {
+    await new Promise<void>((resolve, reject) => {
+      runWithAgeGate(() => {
+        connect(OISY.id).then(() => resolve()).catch(reject);
+      });
+    });
+  }, [connect]);
+
   const value = useMemo<OisyWalletState>(
     () => ({
       oisyPrincipal,
       oisyAccount,
       isOisyConnected,
       isOisyInitializing: isConnecting,
-      connectOisy: () => connect(OISY.id),
+      connectOisy,
       disconnectOisy: disconnect,
       oisyAgent,
       oisyBackendActor,
@@ -124,7 +133,7 @@ function OisyWalletInner({ children }: { children: ReactNode }) {
       oisyAccount,
       isOisyConnected,
       isConnecting,
-      connect,
+      connectOisy,
       disconnect,
       oisyAgent,
       oisyBackendActor,

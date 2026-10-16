@@ -11,6 +11,7 @@ import {
   isPayPalCheckoutEnabled,
   resolvePayPalClientId,
 } from "../lib/paypal";
+import { PurchaseDisclosure } from "./compliance/PurchaseDisclosure";
 
 export interface PayPalCheckoutPanelProps {
   usdCents: bigint | number;
@@ -89,6 +90,7 @@ export function PayPalCheckoutPanel({
       <p className="text-xs text-muted-foreground">
         US buyers · USD only. Venmo appears when eligible on your device.
       </p>
+      <PurchaseDisclosure amountLabel={`$${amount}`} />
       <PayPalScriptProvider options={options}>
         <div className={disabled || busy ? "pointer-events-none opacity-60" : ""}>
           {busy && (

@@ -1,0 +1,112 @@
+{
+  "version": 2,
+  "updatedAt": "2026-10-09T16:10:00.000Z",
+  "dapps": [
+    {
+      "id": "icpixel",
+      "chain": "icp",
+      "name": "ICPixel",
+      "url": "https://icpixel.org",
+      "status": "watch",
+      "budgetIcp": 2,
+      "notes": "Browser editor only. No public mint method. Dvinity scratch cards include an Icpixel card on enjrz-zqaaa-aaaad-qjtpq-cai."
+    },
+    {
+      "id": "dvinity-lottery",
+      "chain": "icp",
+      "name": "Dvinity",
+      "url": "https://dvinity.eu",
+      "status": "watch",
+      "budgetIcp": 1,
+      "notes": "Queries are live: slots qhfek-wyaaa-aaaad-qlfxq-cai, scratch enjrz-zqaaa-aaaad-qjtpq-cai, yearly zo5wt-ziaaa-aaaad-qimua-cai, daily lottery uls2e-uiaaa-aaaae-qf37q-cai. Paid play needs an ICRC deposit first and is not sent by the worker."
+    },
+    {
+      "id": "ruggy-riches",
+      "chain": "icp",
+      "name": "Ruggy Riches",
+      "url": "https://dvinity.eu",
+      "status": "watch",
+      "budgetIcp": 1,
+      "notes": "Same spend ledger as Dvinity. No unsupervised play."
+    },
+    {
+      "id": "icpswap",
+      "chain": "icp",
+      "name": "ICPSwap",
+      "url": "https://app.icpswap.com",
+      "status": "paper",
+      "budgetIcp": 0,
+      "notes": "Quotes only. Venue allowlist is empty, so swaps and stakes reject."
+    },
+    {
+      "id": "oisy",
+      "chain": "icp",
+      "name": "Oisy",
+      "url": "https://oisy.com",
+      "status": "paper",
+      "budgetIcp": 0,
+      "notes": "ckBTC, ckETH, ckUSDC quotes. Tokenized stocks need an allowlist entry."
+    },
+    {
+      "id": "clown",
+      "chain": "social",
+      "name": "Clown",
+      "url": "https://clown.it.com",
+      "status": "manual",
+      "budgetIcp": 0,
+      "notes": "Needs an X account this project controls. No engagement farming."
+    },
+    {
+      "id": "maptf",
+      "chain": "icp",
+      "name": "MAPTF",
+      "url": "https://maptf.io",
+      "status": "paper",
+      "budgetIcp": 0,
+      "notes": "Pro-trader watch. Live leverage stays off."
+    },
+    {
+      "id": "caffeine",
+      "chain": "icp",
+      "name": "Caffeine",
+      "url": "https://caffeine.ai",
+      "status": "manual",
+      "budgetIcp": 0,
+      "notes": "Operator-started builds, linked from icspicy.app. Captain does not deploy canisters."
+    }
+  ],
+  "collections": [
+    {
+      "id": "wild-tigers",
+      "name": "Wild Tigers",
+      "chain": "hedera",
+      "htsTokenId": "0.0.6024491",
+      "status": "approved",
+      "budgetHbar": 100
+    },
+    {
+      "id": "rooster-cartel",
+      "name": "Rooster Cartel",
+      "chain": "hedera",
+      "htsTokenId": "0.0.855050",
+      "status": "approved",
+      "budgetHbar": 100
+    },
+    {
+      "id": "gilmore-estates",
+      "name": "Gilmore Estates",
+      "chain": "hedera",
+      "htsTokenId": "0.0.2145122",
+      "status": "approved",
+      "budgetHbar": 100
+    },
+    {
+      "id": "grumpy-ducks",
+      "name": "Grumpy Ducks",
+      "chain": "hedera",
+      "htsTokenId": "0.0.10818349",
+      "status": "approved",
+      "budgetHbar": 100
+    }
+  ]
+}

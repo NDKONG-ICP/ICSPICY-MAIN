@@ -740,6 +740,41 @@ shared(msg) persistent actor class AgentHub() = Self {
     };
   };
 
+  let MIN_CADENCE_SECONDS : Nat = 600;
+  let MAX_CADENCE_SECONDS : Nat = 604_800;
+
+  public shared ({ caller }) func setAgentCadence(
+    agentId : Nat,
+    cadenceSeconds : Nat,
+    resetNextRun : Bool,
+  ) : async () {
+    requireAdmin(caller);
+    if (cadenceSeconds < MIN_CADENCE_SECONDS) {
+      Runtime.trap("cadence minimum 600 seconds (10 minutes)");
+    };
+    if (cadenceSeconds > MAX_CADENCE_SECONDS) {
+      Runtime.trap("cadence maximum 604800 seconds (7 days)");
+    };
+    switch (agents.get(agentId)) {
+      case null Runtime.trap("agent not found");
+      case (?a) {
+        a.cadenceSeconds := cadenceSeconds;
+        if (resetNextRun) {
+          a.nextRunAt := Time.now();
+        };
+        appendAudit(
+          caller,
+          "setAgentCadence",
+          Nat.toText(agentId)
+          # " cadence="
+          # Nat.toText(cadenceSeconds)
+          # " reset="
+          # (if (resetNextRun) "true" else "false"),
+        );
+      };
+    };
+  };
+
   public shared ({ caller }) func enqueueJob(agentId : Nat, payload : Text) : async Nat {
     requireAdmin(caller);
     switch (agents.get(agentId)) {
@@ -1206,10 +1241,14 @@ shared(msg) persistent actor class AgentHub() = Self {
       // Captain Capsaicin cross-dapp ambassador
       "llm_route_ambassador", "ambassador_sweep_principal",
       "crumbeatr_canister_id", "swop_backend_canister_id",
+      "swop_social_canister_id",
       "bonsai_registry_canister_id", "bonsai_orbit_canister_id",
       "bonsai_bazaar_canister_id",
       // Canopy wallet principal for Capsaicin on BonsaiOS (CRM / mint / trade)
       "canopy_wallet_principal",
+      // Captain Capsaicin X (OAuth 2.0) — admin-set, worker-read for teasers
+      "x_captain_client_id", "x_captain_client_secret",
+      "x_captain_access_token", "x_captain_refresh_token",
     ];
     let out = List.empty<(Text, Text)>();
     for (name in names.vals()) {

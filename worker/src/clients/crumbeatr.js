@@ -182,11 +182,18 @@ export async function createCrumbeatrClient({
     setAvatar: (bytes) => actor.set_avatar([...bytes]),
 
     // ── Content ─────────────────────────────────────────────────────────────
-    /** Returns new post id. Throws on Err. */
-    async addPost(body, { parent = null, realm = null } = {}) {
+    /** Returns new post id. Throws on Err.
+     * @param {string} body
+     * @param {{ parent?: number|null, realm?: string|null, blobs?: Array<[string, number[]|Uint8Array]> }} [opts]
+     */
+    async addPost(body, { parent = null, realm = null, blobs = [] } = {}) {
+      const blobPairs = (blobs || []).map(([id, bytes]) => [
+        String(id).slice(0, 8),
+        bytes instanceof Uint8Array ? [...bytes] : [...bytes],
+      ]);
       const res = await actor.add_post(
         body,
-        [],
+        blobPairs,
         parent === null ? [] : [BigInt(parent)],
         realm === null ? [] : [realm],
         [],

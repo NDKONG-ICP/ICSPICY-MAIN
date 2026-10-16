@@ -1,0 +1,1364 @@
+{
+  "cards": [
+    {
+      "id": 1,
+      "name": "Blade Grove #1 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00001.png",
+      "thumb": "/thumbs/card_00001.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Undercity Mossline",
+        "weapon": "Cipher staff",
+        "outfit": "Lacquer do",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 117,
+          "DEF": 73,
+          "SPD": 74,
+          "ROOT": 62,
+          "Energy": 69
+        }
+      }
+    },
+    {
+      "id": 2,
+      "name": "Blade Grove #2 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00002.png",
+      "thumb": "/thumbs/card_00002.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Rainy Bark Arcade",
+        "weapon": "Tanto",
+        "outfit": "Softshell ops",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 114,
+          "DEF": 66,
+          "SPD": 70,
+          "ROOT": 59,
+          "Energy": 68
+        }
+      }
+    },
+    {
+      "id": 3,
+      "name": "Blade Grove #3 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00003.png",
+      "thumb": "/thumbs/card_00003.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Hologram Nursery",
+        "weapon": "Rail-glaive",
+        "outfit": "Lacquer do",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 120,
+          "DEF": 70,
+          "SPD": 70,
+          "ROOT": 62,
+          "Energy": 72
+        }
+      }
+    },
+    {
+      "id": 4,
+      "name": "Blade Grove #4 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00004.png",
+      "thumb": "/thumbs/card_00004.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Hologram Nursery",
+        "weapon": "Tanto",
+        "outfit": "Softshell ops",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 109,
+          "DEF": 66,
+          "SPD": 68,
+          "ROOT": 58,
+          "Energy": 68
+        }
+      }
+    },
+    {
+      "id": 5,
+      "name": "Blade Grove #5 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00005.png",
+      "thumb": "/thumbs/card_00005.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Hologram Nursery",
+        "weapon": "Empty hand",
+        "outfit": "Softshell ops",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 107,
+          "DEF": 66,
+          "SPD": 65,
+          "ROOT": 59,
+          "Energy": 69
+        }
+      }
+    },
+    {
+      "id": 6,
+      "name": "Blade Grove #6 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00006.png",
+      "thumb": "/thumbs/card_00006.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Rooftop Grove",
+        "weapon": "Yari-SMG",
+        "outfit": "Patchwork ashigaru",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 111,
+          "DEF": 69,
+          "SPD": 68,
+          "ROOT": 59,
+          "Energy": 67
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "Blade Grove #7 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00007.png",
+      "thumb": "/thumbs/card_00007.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "OS Hub Plaza",
+        "weapon": "Twin wakizashi",
+        "outfit": "Patchwork ashigaru",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 115,
+          "DEF": 66,
+          "SPD": 67,
+          "ROOT": 60,
+          "Energy": 69
+        }
+      }
+    },
+    {
+      "id": 8,
+      "name": "Blade Grove #8 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00008.png",
+      "thumb": "/thumbs/card_00008.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Hologram Nursery",
+        "weapon": "Katana",
+        "outfit": "Exo plate",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 114,
+          "DEF": 66,
+          "SPD": 68,
+          "ROOT": 59,
+          "Energy": 65
+        }
+      }
+    },
+    {
+      "id": 9,
+      "name": "Blade Grove #9 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00009.png",
+      "thumb": "/thumbs/card_00009.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Neon Root Court",
+        "weapon": "Yari-SMG",
+        "outfit": "Mystic robe",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 114,
+          "DEF": 69,
+          "SPD": 69,
+          "ROOT": 61,
+          "Energy": 70
+        }
+      }
+    },
+    {
+      "id": 10,
+      "name": "Blade Grove #10 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00010.png",
+      "thumb": "/thumbs/card_00010.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Rooftop Grove",
+        "weapon": "Yari-SMG",
+        "outfit": "Lacquer do",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 110,
+          "DEF": 67,
+          "SPD": 64,
+          "ROOT": 56,
+          "Energy": 64
+        }
+      }
+    },
+    {
+      "id": 11,
+      "name": "Blade Grove #11 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00011.png",
+      "thumb": "/thumbs/card_00011.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Hologram Nursery",
+        "weapon": "Cipher staff",
+        "outfit": "Lacquer do",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 118,
+          "DEF": 73,
+          "SPD": 74,
+          "ROOT": 64,
+          "Energy": 68
+        }
+      }
+    },
+    {
+      "id": 12,
+      "name": "Blade Grove #12 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00012.png",
+      "thumb": "/thumbs/card_00012.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Rooftop Grove",
+        "weapon": "Rail-glaive",
+        "outfit": "Lacquer do",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 110,
+          "DEF": 65,
+          "SPD": 64,
+          "ROOT": 60,
+          "Energy": 65
+        }
+      }
+    },
+    {
+      "id": 13,
+      "name": "Blade Grove #13 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00013.png",
+      "thumb": "/thumbs/card_00013.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Rainy Bark Arcade",
+        "weapon": "Yari-SMG",
+        "outfit": "Mystic robe",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 109,
+          "DEF": 67,
+          "SPD": 69,
+          "ROOT": 61,
+          "Energy": 64
+        }
+      }
+    },
+    {
+      "id": 14,
+      "name": "Blade Grove #14 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00014.png",
+      "thumb": "/thumbs/card_00014.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Neon Root Court",
+        "weapon": "Twin wakizashi",
+        "outfit": "Patchwork ashigaru",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 117,
+          "DEF": 71,
+          "SPD": 71,
+          "ROOT": 63,
+          "Energy": 73
+        }
+      }
+    },
+    {
+      "id": 15,
+      "name": "Blade Grove #15 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00015.png",
+      "thumb": "/thumbs/card_00015.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Rooftop Grove",
+        "weapon": "Cipher staff",
+        "outfit": "Exo plate",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 118,
+          "DEF": 70,
+          "SPD": 69,
+          "ROOT": 63,
+          "Energy": 68
+        }
+      }
+    },
+    {
+      "id": 16,
+      "name": "Blade Grove #16 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00016.png",
+      "thumb": "/thumbs/card_00016.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Rooftop Grove",
+        "weapon": "Yari-SMG",
+        "outfit": "Lacquer do",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 112,
+          "DEF": 63,
+          "SPD": 67,
+          "ROOT": 60,
+          "Energy": 69
+        }
+      }
+    },
+    {
+      "id": 17,
+      "name": "Blade Grove #17 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00017.png",
+      "thumb": "/thumbs/card_00017.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "OS Hub Plaza",
+        "weapon": "Nodachi",
+        "outfit": "Exo plate",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 118,
+          "DEF": 73,
+          "SPD": 70,
+          "ROOT": 66,
+          "Energy": 71
+        }
+      }
+    },
+    {
+      "id": 18,
+      "name": "Blade Grove #18 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00018.png",
+      "thumb": "/thumbs/card_00018.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Neon Root Court",
+        "weapon": "Yari-SMG",
+        "outfit": "Softshell ops",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 121,
+          "DEF": 72,
+          "SPD": 69,
+          "ROOT": 61,
+          "Energy": 71
+        }
+      }
+    },
+    {
+      "id": 19,
+      "name": "Blade Grove #19 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00019.png",
+      "thumb": "/thumbs/card_00019.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "OS Hub Plaza",
+        "weapon": "Rail-glaive",
+        "outfit": "Softshell ops",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 115,
+          "DEF": 70,
+          "SPD": 67,
+          "ROOT": 59,
+          "Energy": 67
+        }
+      }
+    },
+    {
+      "id": 20,
+      "name": "Blade Grove #20 \u2014 Root Ronin Legend",
+      "front": "/card-assets/fronts/card_00020.png",
+      "thumb": "/thumbs/card_00020.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Legend",
+        "district": "Neon Root Court",
+        "weapon": "Tanto",
+        "outfit": "Exo plate",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 117,
+          "DEF": 72,
+          "SPD": 70,
+          "ROOT": 63,
+          "Energy": 72
+        }
+      }
+    },
+    {
+      "id": 21,
+      "name": "Blade Grove #21 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00021.png",
+      "thumb": "/thumbs/card_00021.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Midnight Shrine Server",
+        "weapon": "Tanto",
+        "outfit": "Lacquer do",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 69,
+          "DEF": 62,
+          "SPD": 122,
+          "ROOT": 54,
+          "Energy": 75
+        }
+      }
+    },
+    {
+      "id": 22,
+      "name": "Blade Grove #22 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00022.png",
+      "thumb": "/thumbs/card_00022.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Undercity Mossline",
+        "weapon": "Rail-glaive",
+        "outfit": "Mystic robe",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 68,
+          "DEF": 62,
+          "SPD": 118,
+          "ROOT": 54,
+          "Energy": 73
+        }
+      }
+    },
+    {
+      "id": 23,
+      "name": "Blade Grove #23 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00023.png",
+      "thumb": "/thumbs/card_00023.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Rooftop Grove",
+        "weapon": "Twin wakizashi",
+        "outfit": "Patchwork ashigaru",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 67,
+          "DEF": 58,
+          "SPD": 121,
+          "ROOT": 52,
+          "Energy": 77
+        }
+      }
+    },
+    {
+      "id": 24,
+      "name": "Blade Grove #24 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00024.png",
+      "thumb": "/thumbs/card_00024.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Midnight Shrine Server",
+        "weapon": "Katana",
+        "outfit": "Mystic robe",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 68,
+          "DEF": 56,
+          "SPD": 116,
+          "ROOT": 52,
+          "Energy": 76
+        }
+      }
+    },
+    {
+      "id": 25,
+      "name": "Blade Grove #25 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00025.png",
+      "thumb": "/thumbs/card_00025.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Neon Root Court",
+        "weapon": "Tanto",
+        "outfit": "Mystic robe",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 66,
+          "DEF": 58,
+          "SPD": 117,
+          "ROOT": 52,
+          "Energy": 71
+        }
+      }
+    },
+    {
+      "id": 26,
+      "name": "Blade Grove #26 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00026.png",
+      "thumb": "/thumbs/card_00026.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Neon Root Court",
+        "weapon": "Cipher staff",
+        "outfit": "Exo plate",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 69,
+          "DEF": 61,
+          "SPD": 119,
+          "ROOT": 54,
+          "Energy": 77
+        }
+      }
+    },
+    {
+      "id": 27,
+      "name": "Blade Grove #27 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00027.png",
+      "thumb": "/thumbs/card_00027.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Midnight Shrine Server",
+        "weapon": "Nodachi",
+        "outfit": "Patchwork ashigaru",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 65,
+          "DEF": 60,
+          "SPD": 118,
+          "ROOT": 54,
+          "Energy": 77
+        }
+      }
+    },
+    {
+      "id": 28,
+      "name": "Blade Grove #28 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00028.png",
+      "thumb": "/thumbs/card_00028.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Undercity Mossline",
+        "weapon": "Rail-glaive",
+        "outfit": "Lacquer do",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 70,
+          "DEF": 61,
+          "SPD": 127,
+          "ROOT": 58,
+          "Energy": 78
+        }
+      }
+    },
+    {
+      "id": 29,
+      "name": "Blade Grove #29 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00029.png",
+      "thumb": "/thumbs/card_00029.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Neon Root Court",
+        "weapon": "Rail-glaive",
+        "outfit": "Softshell ops",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 68,
+          "DEF": 59,
+          "SPD": 120,
+          "ROOT": 54,
+          "Energy": 73
+        }
+      }
+    },
+    {
+      "id": 30,
+      "name": "Blade Grove #30 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00030.png",
+      "thumb": "/thumbs/card_00030.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Neon Root Court",
+        "weapon": "Twin wakizashi",
+        "outfit": "Softshell ops",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 67,
+          "DEF": 57,
+          "SPD": 116,
+          "ROOT": 51,
+          "Energy": 71
+        }
+      }
+    },
+    {
+      "id": 31,
+      "name": "Blade Grove #31 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00031.png",
+      "thumb": "/thumbs/card_00031.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Neon Root Court",
+        "weapon": "Tanto",
+        "outfit": "Lacquer do",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 70,
+          "DEF": 60,
+          "SPD": 122,
+          "ROOT": 55,
+          "Energy": 79
+        }
+      }
+    },
+    {
+      "id": 32,
+      "name": "Blade Grove #32 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00032.png",
+      "thumb": "/thumbs/card_00032.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Mist Wire Torii",
+        "weapon": "Cipher staff",
+        "outfit": "Exo plate",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 72,
+          "DEF": 65,
+          "SPD": 125,
+          "ROOT": 52,
+          "Energy": 81
+        }
+      }
+    },
+    {
+      "id": 33,
+      "name": "Blade Grove #33 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00033.png",
+      "thumb": "/thumbs/card_00033.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Undercity Mossline",
+        "weapon": "Tanto",
+        "outfit": "Patchwork ashigaru",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 68,
+          "DEF": 63,
+          "SPD": 121,
+          "ROOT": 55,
+          "Energy": 78
+        }
+      }
+    },
+    {
+      "id": 34,
+      "name": "Blade Grove #34 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00034.png",
+      "thumb": "/thumbs/card_00034.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Undercity Mossline",
+        "weapon": "Katana",
+        "outfit": "Patchwork ashigaru",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 65,
+          "DEF": 56,
+          "SPD": 116,
+          "ROOT": 52,
+          "Energy": 73
+        }
+      }
+    },
+    {
+      "id": 35,
+      "name": "Blade Grove #35 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00035.png",
+      "thumb": "/thumbs/card_00035.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Mist Wire Torii",
+        "weapon": "Rail-glaive",
+        "outfit": "Mystic robe",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 62,
+          "DEF": 61,
+          "SPD": 119,
+          "ROOT": 53,
+          "Energy": 75
+        }
+      }
+    },
+    {
+      "id": 36,
+      "name": "Blade Grove #36 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00036.png",
+      "thumb": "/thumbs/card_00036.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Rainy Bark Arcade",
+        "weapon": "Tanto",
+        "outfit": "Patchwork ashigaru",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 67,
+          "DEF": 60,
+          "SPD": 113,
+          "ROOT": 51,
+          "Energy": 73
+        }
+      }
+    },
+    {
+      "id": 37,
+      "name": "Blade Grove #37 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00037.png",
+      "thumb": "/thumbs/card_00037.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Mist Wire Torii",
+        "weapon": "Tanto",
+        "outfit": "Patchwork ashigaru",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 74,
+          "DEF": 60,
+          "SPD": 124,
+          "ROOT": 53,
+          "Energy": 80
+        }
+      }
+    },
+    {
+      "id": 38,
+      "name": "Blade Grove #38 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00038.png",
+      "thumb": "/thumbs/card_00038.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Mist Wire Torii",
+        "weapon": "Rail-glaive",
+        "outfit": "Exo plate",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 69,
+          "DEF": 60,
+          "SPD": 118,
+          "ROOT": 51,
+          "Energy": 79
+        }
+      }
+    },
+    {
+      "id": 39,
+      "name": "Blade Grove #39 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00039.png",
+      "thumb": "/thumbs/card_00039.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Undercity Mossline",
+        "weapon": "Cipher staff",
+        "outfit": "Softshell ops",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 67,
+          "DEF": 58,
+          "SPD": 115,
+          "ROOT": 49,
+          "Energy": 71
+        }
+      }
+    },
+    {
+      "id": 40,
+      "name": "Blade Grove #40 \u2014 Neon Kunoichi Legend",
+      "front": "/card-assets/fronts/card_00040.png",
+      "thumb": "/thumbs/card_00040.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Mist Wire Torii",
+        "weapon": "Katana",
+        "outfit": "Mystic robe",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 67,
+          "DEF": 61,
+          "SPD": 123,
+          "ROOT": 53,
+          "Energy": 78
+        }
+      }
+    },
+    {
+      "id": 41,
+      "name": "Blade Grove #41 \u2014 Circuit Sohei Legend",
+      "front": "/card-assets/fronts/card_00041.png",
+      "thumb": "/thumbs/card_00041.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Circuit Sohei",
+        "class": "Sohei",
+        "rank": "Legend",
+        "district": "Undercity Mossline",
+        "weapon": "Katana",
+        "outfit": "Patchwork ashigaru",
+        "ability": "circuit_guard",
+        "stats": {
+          "ATK": 61,
+          "DEF": 131,
+          "SPD": 58,
+          "ROOT": 64,
+          "Energy": 76
+        }
+      }
+    },
+    {
+      "id": 42,
+      "name": "Blade Grove #42 \u2014 Circuit Sohei Legend",
+      "front": "/card-assets/fronts/card_00042.png",
+      "thumb": "/thumbs/card_00042.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Circuit Sohei",
+        "class": "Sohei",
+        "rank": "Legend",
+        "district": "Mist Wire Torii",
+        "weapon": "Tanto",
+        "outfit": "Softshell ops",
+        "ability": "circuit_guard",
+        "stats": {
+          "ATK": 61,
+          "DEF": 130,
+          "SPD": 56,
+          "ROOT": 61,
+          "Energy": 76
+        }
+      }
+    },
+    {
+      "id": 43,
+      "name": "Blade Grove #43 \u2014 Circuit Sohei Legend",
+      "front": "/card-assets/fronts/card_00043.png",
+      "thumb": "/thumbs/card_00043.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Circuit Sohei",
+        "class": "Sohei",
+        "rank": "Legend",
+        "district": "Undercity Mossline",
+        "weapon": "Rail-glaive",
+        "outfit": "Patchwork ashigaru",
+        "ability": "circuit_guard",
+        "stats": {
+          "ATK": 62,
+          "DEF": 131,
+          "SPD": 54,
+          "ROOT": 60,
+          "Energy": 80
+        }
+      }
+    },
+    {
+      "id": 44,
+      "name": "Blade Grove #44 \u2014 Circuit Sohei Legend",
+      "front": "/card-assets/fronts/card_00044.png",
+      "thumb": "/thumbs/card_00044.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Circuit Sohei",
+        "class": "Sohei",
+        "rank": "Legend",
+        "district": "Rainy Bark Arcade",
+        "weapon": "Tanto",
+        "outfit": "Softshell ops",
+        "ability": "circuit_guard",
+        "stats": {
+          "ATK": 64,
+          "DEF": 130,
+          "SPD": 52,
+          "ROOT": 58,
+          "Energy": 75
+        }
+      }
+    },
+    {
+      "id": 151,
+      "name": "Blade Grove #151",
+      "front": "/card-assets/fronts/card_00151.png",
+      "thumb": "/thumbs/card_00151.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Captain",
+        "district": "Rooftop Grove",
+        "weapon": "Yari-SMG",
+        "outfit": "Mystic robe",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 67,
+          "DEF": 47,
+          "SPD": 83,
+          "ROOT": 65,
+          "Energy": 72
+        }
+      }
+    },
+    {
+      "id": 152,
+      "name": "Blade Grove #152",
+      "front": "/card-assets/fronts/card_00152.png",
+      "thumb": "/thumbs/card_00152.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Circuit Sohei",
+        "class": "Sohei",
+        "rank": "Recruit",
+        "district": "Undercity Mossline",
+        "weapon": "Yari-SMG",
+        "outfit": "Patchwork ashigaru",
+        "ability": "circuit_guard",
+        "stats": {
+          "ATK": 75,
+          "DEF": 57,
+          "SPD": 58,
+          "ROOT": 57,
+          "Energy": 65
+        }
+      }
+    },
+    {
+      "id": 153,
+      "name": "Blade Grove #153",
+      "front": "/card-assets/fronts/card_00153.png",
+      "thumb": "/thumbs/card_00153.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Circuit Sohei",
+        "class": "Sohei",
+        "rank": "Warden",
+        "district": "Mist Wire Torii",
+        "weapon": "Twin wakizashi",
+        "outfit": "Patchwork ashigaru",
+        "ability": "circuit_guard",
+        "stats": {
+          "ATK": 70,
+          "DEF": 62,
+          "SPD": 65,
+          "ROOT": 52,
+          "Energy": 52
+        }
+      }
+    },
+    {
+      "id": 154,
+      "name": "Blade Grove #154",
+      "front": "/card-assets/fronts/card_00154.png",
+      "thumb": "/thumbs/card_00154.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Root Ronin",
+        "class": "Ronin",
+        "rank": "Captain",
+        "district": "Midnight Shrine Server",
+        "weapon": "Tanto",
+        "outfit": "Mystic robe",
+        "ability": "blade_flare",
+        "stats": {
+          "ATK": 54,
+          "DEF": 47,
+          "SPD": 58,
+          "ROOT": 58,
+          "Energy": 41
+        }
+      }
+    },
+    {
+      "id": 155,
+      "name": "Blade Grove #155",
+      "front": "/card-assets/fronts/card_00155.png",
+      "thumb": "/thumbs/card_00155.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Data Yamabushi",
+        "class": "Yamabushi",
+        "rank": "Recruit",
+        "district": "Rooftop Grove",
+        "weapon": "Twin wakizashi",
+        "outfit": "Lacquer do",
+        "ability": "root_bind",
+        "stats": {
+          "ATK": 68,
+          "DEF": 75,
+          "SPD": 70,
+          "ROOT": 81,
+          "Energy": 87
+        }
+      }
+    },
+    {
+      "id": 156,
+      "name": "Blade Grove #156",
+      "front": "/card-assets/fronts/card_00156.png",
+      "thumb": "/thumbs/card_00156.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Chrome Ashigaru",
+        "class": "Ashigaru",
+        "rank": "Recruit",
+        "district": "Neon Root Court",
+        "weapon": "Cipher staff",
+        "outfit": "Exo plate",
+        "ability": "ashigaru_volley",
+        "stats": {
+          "ATK": 55,
+          "DEF": 94,
+          "SPD": 55,
+          "ROOT": 64,
+          "Energy": 50
+        }
+      }
+    },
+    {
+      "id": 157,
+      "name": "Blade Grove #157",
+      "front": "/card-assets/fronts/card_00157.png",
+      "thumb": "/thumbs/card_00157.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Captain",
+        "district": "Hologram Nursery",
+        "weapon": "Twin wakizashi",
+        "outfit": "Lacquer do",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 71,
+          "DEF": 78,
+          "SPD": 66,
+          "ROOT": 60,
+          "Energy": 64
+        }
+      }
+    },
+    {
+      "id": 158,
+      "name": "Blade Grove #158",
+      "front": "/card-assets/fronts/card_00158.png",
+      "thumb": "/thumbs/card_00158.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Data Yamabushi",
+        "class": "Yamabushi",
+        "rank": "Recruit",
+        "district": "Undercity Mossline",
+        "weapon": "Katana",
+        "outfit": "Softshell ops",
+        "ability": "root_bind",
+        "stats": {
+          "ATK": 72,
+          "DEF": 56,
+          "SPD": 77,
+          "ROOT": 75,
+          "Energy": 67
+        }
+      }
+    },
+    {
+      "id": 159,
+      "name": "Blade Grove #159",
+      "front": "/card-assets/fronts/card_00159.png",
+      "thumb": "/thumbs/card_00159.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Chrome Ashigaru",
+        "class": "Ashigaru",
+        "rank": "Warden",
+        "district": "Rooftop Grove",
+        "weapon": "Cipher staff",
+        "outfit": "Mystic robe",
+        "ability": "ashigaru_volley",
+        "stats": {
+          "ATK": 48,
+          "DEF": 57,
+          "SPD": 80,
+          "ROOT": 46,
+          "Energy": 49
+        }
+      }
+    },
+    {
+      "id": 160,
+      "name": "Blade Grove #160",
+      "front": "/card-assets/fronts/card_00160.png",
+      "thumb": "/thumbs/card_00160.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Chrome Ashigaru",
+        "class": "Ashigaru",
+        "rank": "Captain",
+        "district": "Neon Root Court",
+        "weapon": "Nodachi",
+        "outfit": "Softshell ops",
+        "ability": "ashigaru_volley",
+        "stats": {
+          "ATK": 95,
+          "DEF": 60,
+          "SPD": 77,
+          "ROOT": 50,
+          "Energy": 65
+        }
+      }
+    },
+    {
+      "id": 161,
+      "name": "Blade Grove #161",
+      "front": "/card-assets/fronts/card_00161.png",
+      "thumb": "/thumbs/card_00161.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Neon Kunoichi",
+        "class": "Kunoichi",
+        "rank": "Legend",
+        "district": "Hologram Nursery",
+        "weapon": "Twin wakizashi",
+        "outfit": "Softshell ops",
+        "ability": "neon_veil",
+        "stats": {
+          "ATK": 84,
+          "DEF": 67,
+          "SPD": 68,
+          "ROOT": 54,
+          "Energy": 53
+        }
+      }
+    },
+    {
+      "id": 162,
+      "name": "Blade Grove #162",
+      "front": "/card-assets/fronts/card_00162.png",
+      "thumb": "/thumbs/card_00162.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Chrome Ashigaru",
+        "class": "Ashigaru",
+        "rank": "Recruit",
+        "district": "Hologram Nursery",
+        "weapon": "Katana",
+        "outfit": "Mystic robe",
+        "ability": "ashigaru_volley",
+        "stats": {
+          "ATK": 79,
+          "DEF": 55,
+          "SPD": 78,
+          "ROOT": 59,
+          "Energy": 88
+        }
+      }
+    },
+    {
+      "id": 163,
+      "name": "Blade Grove #163",
+      "front": "/card-assets/fronts/card_00163.png",
+      "thumb": "/thumbs/card_00163.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Data Yamabushi",
+        "class": "Yamabushi",
+        "rank": "Recruit",
+        "district": "Neon Root Court",
+        "weapon": "Empty hand",
+        "outfit": "Patchwork ashigaru",
+        "ability": "root_bind",
+        "stats": {
+          "ATK": 38,
+          "DEF": 56,
+          "SPD": 61,
+          "ROOT": 82,
+          "Energy": 61
+        }
+      }
+    },
+    {
+      "id": 164,
+      "name": "Blade Grove #164",
+      "front": "/card-assets/fronts/card_00164.png",
+      "thumb": "/thumbs/card_00164.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Circuit Sohei",
+        "class": "Sohei",
+        "rank": "Warden",
+        "district": "Mist Wire Torii",
+        "weapon": "Katana",
+        "outfit": "Mystic robe",
+        "ability": "circuit_guard",
+        "stats": {
+          "ATK": 77,
+          "DEF": 52,
+          "SPD": 61,
+          "ROOT": 50,
+          "Energy": 77
+        }
+      }
+    },
+    {
+      "id": 165,
+      "name": "Blade Grove #165",
+      "front": "/card-assets/fronts/card_00165.png",
+      "thumb": "/thumbs/card_00165.webp",
+      "back": "/card-assets/backs/card_back.png",
+      "playable": {
+        "faction": "Circuit Sohei",
+        "class": "Sohei",
+        "rank": "Captain",
+        "district": "Neon Root Court",
+        "weapon": "Katana",
+        "outfit": "Mystic robe",
+        "ability": "circuit_guard",
+        "stats": {
+          "ATK": 74,
+          "DEF": 48,
+          "SPD": 80,
+          "ROOT": 57,
+          "Energy": 53
+        }
+      }
+    }
+  ],
+  "count": 59,
+  "brand": "BonsaiOS.app",
+  "source": "nft_collection/metadata"
+}

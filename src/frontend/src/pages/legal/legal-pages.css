@@ -1,0 +1,35 @@
+.legal-doc {
+  max-width: 42rem;
+}
+
+.legal-doc h1 {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.legal-doc h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.legal-doc p,
+.legal-doc li {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: hsl(var(--muted-foreground));
+}
+
+.legal-doc ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.legal-doc a {
+  text-decoration: underline;
+  color: hsl(var(--primary));
+}

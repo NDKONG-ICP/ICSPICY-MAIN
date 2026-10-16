@@ -2,8 +2,6 @@
  * Shared carnival / state-fair design tokens and surfaces.
  * Import in hub, GameShell, results, popups, and leaderboard (via arcade-leaderboard.css).
  */
-@import url("https://fonts.googleapis.com/css2?family=Rye&display=swap");
-
 :root {
   --arcade-ink: #2c1810;
   --arcade-ink-muted: rgba(44, 24, 16, 0.88);

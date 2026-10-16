@@ -1,0 +1,706 @@
+{
+  "id": "root_chronicle_s01",
+  "title": "Root Chronicle",
+  "season": 1,
+  "heroArt": "/story/chronicle_hero.webp",
+  "starterSap": 40,
+  "starterCardIds": [
+    152,
+    156,
+    155
+  ],
+  "shopRefreshSap": 5,
+  "recruitSapByRank": {
+    "Recruit": 3,
+    "Warden": 5,
+    "Captain": 8,
+    "Legend": 14
+  },
+  "acts": [
+    {
+      "id": "act_i",
+      "index": 1,
+      "title": "Induction at Blade Grove",
+      "kicker": "ACT I // ROOT INDUCTION",
+      "summary": "Take the Captain oath. Cut the first Null tendril. Learn each tribe’s edge.",
+      "art": "/story/act_i.webp"
+    },
+    {
+      "id": "act_ii",
+      "index": 2,
+      "title": "District Fracture",
+      "kicker": "ACT II // FIVE PILLARS",
+      "summary": "Null Bloom cracks Registry, Cloud, Works, Radio, and Bazaar. Re-anchor each.",
+      "art": "/story/act_ii.webp"
+    },
+    {
+      "id": "act_iii",
+      "index": 3,
+      "title": "Null Bloom Heart",
+      "kicker": "ACT III // HOLLOW ROOT",
+      "summary": "Push into the bloom’s core. Synergy boards. Stamp the airdrop queue.",
+      "art": "/story/act_iii.webp"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "i1_oath",
+      "actId": "act_i",
+      "index": 1,
+      "title": "Captain’s Oath",
+      "district": "Blade Grove Torii",
+      "speaker": "Circuit Sohei",
+      "lore": "The Root Circuit under bonsaios.app is fraying. You swear the Captain oath: prune Null before it hollows Registry, Cloud, Works, Radio, and Bazaar. One Ashigaru scout waits beyond the neon torii.",
+      "art": "/story/node_i1_oath.webp",
+      "enemyIds": [
+        156
+      ],
+      "boardHint": "Recruit from the dock. One Warden is enough to learn the ring.",
+      "rewards": {
+        "sap": 12,
+        "xp": 20,
+        "grantCardIds": [
+          162
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          162
+        ]
+      },
+      "unlocks": [
+        "i2_scout"
+      ],
+      "startsUnlocked": true,
+      "battlefield": "/arena/story/bf_i1_oath.webp"
+    },
+    {
+      "id": "i2_scout",
+      "actId": "act_i",
+      "index": 2,
+      "title": "Null Scout",
+      "district": "Wet Asphalt Approach",
+      "speaker": "Chrome Ashigaru",
+      "lore": "Null Bloom does not announce itself with fireworks. It sends hollow copies that look almost right. Cut the scout pair before they map the grove’s lanes.",
+      "art": "/story/node_i2_scout.webp",
+      "enemyIds": [
+        152,
+        156
+      ],
+      "boardHint": "Two enemies. Fill two board slots if you can.",
+      "rewards": {
+        "sap": 14,
+        "xp": 25,
+        "grantCardIds": [],
+        "packTickets": 0,
+        "airdropMarkIds": []
+      },
+      "unlocks": [
+        "i3_ronin"
+      ],
+      "battlefield": "/arena/story/bf_i2_scout.webp"
+    },
+    {
+      "id": "i3_ronin",
+      "actId": "act_i",
+      "index": 3,
+      "title": "Ronin Edge",
+      "district": "Bazaar Shadow Lane",
+      "speaker": "Root Ronin",
+      "lore": "Ronin sever tendrils at first contact — the same doctrine that keeps Bazaar trades honest. A Captain blade waits to test your flare timing.",
+      "art": "/story/node_i3_ronin.webp",
+      "enemyIds": [
+        154
+      ],
+      "boardHint": "blade_flare chips the next enemy after a strike.",
+      "rewards": {
+        "sap": 15,
+        "xp": 30,
+        "grantCardIds": [
+          154
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          154
+        ]
+      },
+      "unlocks": [
+        "i4_veil"
+      ],
+      "battlefield": "/arena/story/bf_i3_ronin.webp"
+    },
+    {
+      "id": "i4_veil",
+      "actId": "act_i",
+      "index": 4,
+      "title": "Veil Lesson",
+      "district": "Registry Mist Wire",
+      "speaker": "Neon Kunoichi",
+      "lore": "Registry identities ghost when Null peels the veil. Kunoichi survive one lethal and slip intel home. Learn neon_veil before the Districts crack.",
+      "art": "/story/node_i4_veil.webp",
+      "enemyIds": [
+        151,
+        157
+      ],
+      "boardHint": "Two Kunoichi. Expect a second life on the first lethal.",
+      "rewards": {
+        "sap": 16,
+        "xp": 30,
+        "grantCardIds": [
+          151
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          151
+        ]
+      },
+      "unlocks": [
+        "i5_ward"
+      ],
+      "battlefield": "/arena/story/bf_i4_veil.webp"
+    },
+    {
+      "id": "i5_ward",
+      "actId": "act_i",
+      "index": 5,
+      "title": "Circuit Ward",
+      "district": "Cloud Seal Garden",
+      "speaker": "Circuit Sohei",
+      "lore": "Cloud vaults stay sealed only while Sohei wards hold. circuit_guard hardens the line — Null wants those seals soft.",
+      "art": "/story/node_i5_ward.webp",
+      "enemyIds": [
+        152,
+        153,
+        164
+      ],
+      "boardHint": "Three Sohei-leaning foes. Bring HP or finish fast.",
+      "rewards": {
+        "sap": 18,
+        "xp": 35,
+        "grantCardIds": [
+          153
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          153
+        ]
+      },
+      "unlocks": [
+        "i6_bind"
+      ],
+      "battlefield": "/arena/story/bf_i5_ward.webp"
+    },
+    {
+      "id": "i6_bind",
+      "actId": "act_i",
+      "index": 6,
+      "title": "Root Bind Drill",
+      "district": "Works Terrace",
+      "speaker": "Data Yamabushi",
+      "lore": "Works is where creators root files into the vault. Yamabushi bind retaliators so craft is not answered with Null’s counterfeit strikes.",
+      "art": "/story/node_i6_bind.webp",
+      "enemyIds": [
+        155,
+        158,
+        163
+      ],
+      "boardHint": "root_bind can skip retaliation. Watch ROOT thresholds.",
+      "rewards": {
+        "sap": 18,
+        "xp": 35,
+        "grantCardIds": [
+          158
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          158
+        ]
+      },
+      "unlocks": [
+        "i7_gate"
+      ],
+      "battlefield": "/arena/story/bf_i6_bind.webp"
+    },
+    {
+      "id": "i7_gate",
+      "actId": "act_i",
+      "index": 7,
+      "title": "Grove Gate",
+      "district": "Radio Ring Gate",
+      "speaker": "Chrome Ashigaru",
+      "lore": "Ashigaru hold the broadcast ring. Clear the Gate and the Circuit issues your first free pack ticket — grind fuel, not a cash gate.",
+      "art": "/story/grove_gate.webp",
+      "enemyIds": [
+        156,
+        159,
+        160,
+        152
+      ],
+      "boardHint": "Four foes. Synergies matter. Spend Sap on refresh if the dock is thin.",
+      "rewards": {
+        "sap": 25,
+        "xp": 50,
+        "grantCardIds": [
+          159
+        ],
+        "packTickets": 1,
+        "airdropMarkIds": [
+          159
+        ]
+      },
+      "unlocks": [
+        "ii1_registry"
+      ],
+      "battlefield": "/arena/story/bf_i7_gate.webp"
+    },
+    {
+      "id": "ii1_registry",
+      "actId": "act_ii",
+      "index": 1,
+      "title": "Registry Fracture",
+      "district": "Neon Root Court",
+      "speaker": "Neon Kunoichi",
+      "lore": "Profiles flicker. Null Bloom is minting hollow principals. Re-anchor Registry with Kunoichi doctrine — survive, report, cut.",
+      "art": "/story/pillar_registry.webp",
+      "enemyIds": [
+        21,
+        24,
+        151
+      ],
+      "boardHint": "Legend pressure. Veil and follow-ups.",
+      "rewards": {
+        "sap": 22,
+        "xp": 45,
+        "grantCardIds": [
+          157
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          157
+        ]
+      },
+      "unlocks": [
+        "ii2_cloud"
+      ],
+      "battlefield": "/arena/story/bf_ii1_registry.webp"
+    },
+    {
+      "id": "ii2_cloud",
+      "actId": "act_ii",
+      "index": 2,
+      "title": "Cloud Bleed",
+      "district": "Vault Seal Walk",
+      "speaker": "Circuit Sohei",
+      "lore": "Sovereign media vaults weep counterfeit roots. Sohei re-seal Cloud before Null reads what users stored.",
+      "art": "/story/pillar_cloud.webp",
+      "enemyIds": [
+        41,
+        42,
+        165
+      ],
+      "boardHint": "Stacked wards. Bring burst or binds.",
+      "rewards": {
+        "sap": 22,
+        "xp": 45,
+        "grantCardIds": [
+          165
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          165
+        ]
+      },
+      "unlocks": [
+        "ii3_works"
+      ],
+      "battlefield": "/arena/story/bf_ii2_cloud.webp"
+    },
+    {
+      "id": "ii3_works",
+      "actId": "act_ii",
+      "index": 3,
+      "title": "Works Hollow",
+      "district": "Grid / Stage Terrace",
+      "speaker": "Data Yamabushi",
+      "lore": "Drafts and stages desync from the vault. Bind the retaliators. Keep creative roots alive.",
+      "art": "/story/pillar_works.webp",
+      "enemyIds": [
+        155,
+        158,
+        163,
+        43
+      ],
+      "boardHint": "Mix of binds and a Sohei legend.",
+      "rewards": {
+        "sap": 24,
+        "xp": 50,
+        "grantCardIds": [
+          163
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          163
+        ]
+      },
+      "unlocks": [
+        "ii4_radio"
+      ],
+      "battlefield": "/arena/story/bf_ii3_works.webp"
+    },
+    {
+      "id": "ii4_radio",
+      "actId": "act_ii",
+      "index": 4,
+      "title": "Radio Static",
+      "district": "Broadcast Ring",
+      "speaker": "Chrome Ashigaru",
+      "lore": "Signal drops to Null hiss. Ashigaru volleys clear the ring so Radio stays a public root, not a hollow feed.",
+      "art": "/story/pillar_radio.webp",
+      "enemyIds": [
+        156,
+        159,
+        160,
+        162
+      ],
+      "boardHint": "Volley chips. Spread damage.",
+      "rewards": {
+        "sap": 24,
+        "xp": 50,
+        "grantCardIds": [
+          160
+        ],
+        "packTickets": 1,
+        "airdropMarkIds": [
+          160
+        ]
+      },
+      "unlocks": [
+        "ii5_bazaar"
+      ],
+      "battlefield": "/arena/story/bf_ii4_radio.webp"
+    },
+    {
+      "id": "ii5_bazaar",
+      "actId": "act_ii",
+      "index": 5,
+      "title": "Bazaar Spoof",
+      "district": "Listing Corridor",
+      "speaker": "Root Ronin",
+      "lore": "Counterfeit listings bloom. Ronin flare the fakes so Bazaar NFT trade stays sovereign — not a Null mirror market.",
+      "art": "/story/pillar_bazaar.webp",
+      "enemyIds": [
+        1,
+        4,
+        154
+      ],
+      "boardHint": "Legend Ronin. Flare chains hurt.",
+      "rewards": {
+        "sap": 26,
+        "xp": 55,
+        "grantCardIds": [
+          8
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          8
+        ]
+      },
+      "unlocks": [
+        "ii6_crosswire"
+      ],
+      "battlefield": "/arena/story/bf_ii5_bazaar.webp"
+    },
+    {
+      "id": "ii6_crosswire",
+      "actId": "act_ii",
+      "index": 6,
+      "title": "Crosswire Ambush",
+      "district": "Mist Wire Torii",
+      "speaker": "Neon Kunoichi",
+      "lore": "Pillars are re-anchored but Null mixes tribes on one board. Read synergies. Do not fight each blade as if it were alone.",
+      "art": "/story/node_ii6_crosswire.webp",
+      "enemyIds": [
+        22,
+        41,
+        159,
+        155
+      ],
+      "boardHint": "Mixed tribes — expect layered keywords.",
+      "rewards": {
+        "sap": 28,
+        "xp": 60,
+        "grantCardIds": [],
+        "packTickets": 0,
+        "airdropMarkIds": []
+      },
+      "unlocks": [
+        "ii7_seal"
+      ],
+      "battlefield": "/arena/story/bf_ii6_crosswire.webp"
+    },
+    {
+      "id": "ii7_seal",
+      "actId": "act_ii",
+      "index": 7,
+      "title": "Fracture Seal",
+      "district": "Midnight Shrine Server",
+      "speaker": "Circuit Sohei",
+      "lore": "Seal the District fracture. The Circuit issues another pack ticket. Paid packs remain optional acceleration — this clear is free.",
+      "art": "/story/node_ii7_seal.webp",
+      "enemyIds": [
+        32,
+        38,
+        43,
+        160
+      ],
+      "boardHint": "Four strong pieces. Spend Sap wisely.",
+      "rewards": {
+        "sap": 35,
+        "xp": 70,
+        "grantCardIds": [
+          164
+        ],
+        "packTickets": 1,
+        "airdropMarkIds": [
+          164
+        ]
+      },
+      "unlocks": [
+        "iii1_threshold"
+      ],
+      "battlefield": "/arena/story/bf_ii7_seal.webp"
+    },
+    {
+      "id": "iii1_threshold",
+      "actId": "act_iii",
+      "index": 1,
+      "title": "Bloom Threshold",
+      "district": "Null Perimeter",
+      "speaker": "Root Ronin",
+      "lore": "Beyond the sealed Districts: the bloom’s edge. Hollow legends stand where living Wardens should.",
+      "art": "/story/node_iii1_threshold.webp",
+      "enemyIds": [
+        5,
+        25,
+        44
+      ],
+      "boardHint": "Three legends. Full board preferred.",
+      "rewards": {
+        "sap": 30,
+        "xp": 65,
+        "grantCardIds": [
+          12
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          12
+        ]
+      },
+      "unlocks": [
+        "iii2_mirror"
+      ],
+      "battlefield": "/arena/story/bf_iii1_threshold.webp"
+    },
+    {
+      "id": "iii2_mirror",
+      "actId": "act_iii",
+      "index": 2,
+      "title": "Mirror Grove",
+      "district": "Counterfeit Still Yard",
+      "speaker": "Neon Kunoichi",
+      "lore": "Null mirrors your roster’s silhouette. Veil dancers lead. Cut the copies before they learn your tells.",
+      "art": "/story/node_iii2_mirror.webp",
+      "enemyIds": [
+        26,
+        27,
+        28,
+        151
+      ],
+      "boardHint": "Kunoichi wall. Force through veils.",
+      "rewards": {
+        "sap": 32,
+        "xp": 70,
+        "grantCardIds": [
+          161
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          161
+        ]
+      },
+      "unlocks": [
+        "iii3_sealbreak"
+      ],
+      "battlefield": "/arena/story/bf_iii2_mirror.webp"
+    },
+    {
+      "id": "iii3_sealbreak",
+      "actId": "act_iii",
+      "index": 3,
+      "title": "Sealbreak Choir",
+      "district": "Cloud Choir Spire",
+      "speaker": "Circuit Sohei",
+      "lore": "Sohei hollows chant broken seals. Restore the ward or Cloud vaults open to noise.",
+      "art": "/story/node_iii3_sealbreak.webp",
+      "enemyIds": [
+        41,
+        42,
+        43,
+        44
+      ],
+      "boardHint": "Four Sohei legends. Overwhelm or bind.",
+      "rewards": {
+        "sap": 34,
+        "xp": 75,
+        "grantCardIds": [
+          42
+        ],
+        "packTickets": 1,
+        "airdropMarkIds": [
+          42
+        ]
+      },
+      "unlocks": [
+        "iii4_volley"
+      ],
+      "battlefield": "/arena/story/bf_iii3_sealbreak.webp"
+    },
+    {
+      "id": "iii4_volley",
+      "actId": "act_iii",
+      "index": 4,
+      "title": "Volley Storm",
+      "district": "Radio Storm Deck",
+      "speaker": "Chrome Ashigaru",
+      "lore": "Broadcast turns into a storm of chips. Ashigaru doctrine — hold the ring, spend the volley, refuse the hollow feed.",
+      "art": "/story/node_iii4_volley.webp",
+      "enemyIds": [
+        156,
+        159,
+        160,
+        162,
+        7
+      ],
+      "boardHint": "Five enemies. Volleys and a Ronin legend.",
+      "rewards": {
+        "sap": 36,
+        "xp": 80,
+        "grantCardIds": [
+          7
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          7
+        ]
+      },
+      "unlocks": [
+        "iii5_bindwall"
+      ],
+      "battlefield": "/arena/story/bf_iii4_volley.webp"
+    },
+    {
+      "id": "iii5_bindwall",
+      "actId": "act_iii",
+      "index": 5,
+      "title": "Bindwall",
+      "district": "Works Rootcliff",
+      "speaker": "Data Yamabushi",
+      "lore": "Every retaliator is a trap. Yamabushi bind the wall so Works stays a place of making, not Null’s echo chamber.",
+      "art": "/story/node_iii5_bindwall.webp",
+      "enemyIds": [
+        155,
+        158,
+        163,
+        9,
+        29
+      ],
+      "boardHint": "Binds plus legend pressure.",
+      "rewards": {
+        "sap": 38,
+        "xp": 85,
+        "grantCardIds": [
+          29
+        ],
+        "packTickets": 0,
+        "airdropMarkIds": [
+          29
+        ]
+      },
+      "unlocks": [
+        "iii6_synergy"
+      ],
+      "battlefield": "/arena/story/bf_iii5_bindwall.webp"
+    },
+    {
+      "id": "iii6_synergy",
+      "actId": "act_iii",
+      "index": 6,
+      "title": "Synergy Tribunal",
+      "district": "Five-Pillar Ring",
+      "speaker": "Kaizen Doctrine",
+      "lore": "One board, five doctrines. Null Bloom tests whether your Captain reads tribe synergies — or fights as five strangers.",
+      "art": "/story/node_iii6_synergy.webp",
+      "enemyIds": [
+        10,
+        30,
+        41,
+        160,
+        163
+      ],
+      "boardHint": "All five tribes represented. Match their synergies.",
+      "rewards": {
+        "sap": 40,
+        "xp": 90,
+        "grantCardIds": [
+          30
+        ],
+        "packTickets": 1,
+        "airdropMarkIds": [
+          30
+        ]
+      },
+      "unlocks": [
+        "iii7_heart"
+      ],
+      "battlefield": "/arena/story/bf_iii6_synergy.webp"
+    },
+    {
+      "id": "iii7_heart",
+      "actId": "act_iii",
+      "index": 7,
+      "title": "Null Bloom Heart",
+      "district": "Hollow Root Core",
+      "speaker": "Root Circuit",
+      "lore": "The hollow core. Clear it and the Circuit stamps a batch of Wardens for the Blade Grove airdrop queue — playable now, claimable when mint opens. Pack Bay still sells foil acceleration; the war itself stays free.",
+      "art": "/story/hollow_core.webp",
+      "enemyIds": [
+        11,
+        31,
+        43,
+        4,
+        160,
+        158
+      ],
+      "boardHint": "Capstone six. Bring your best board.",
+      "rewards": {
+        "sap": 60,
+        "xp": 120,
+        "grantCardIds": [
+          11,
+          31
+        ],
+        "packTickets": 2,
+        "airdropMarkIds": [
+          11,
+          31,
+          43,
+          4,
+          1,
+          21,
+          41
+        ]
+      },
+      "unlocks": [],
+      "battlefield": "/arena/story/bf_iii7_heart.webp"
+    }
+  ]
+}

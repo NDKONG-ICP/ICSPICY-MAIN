@@ -7,7 +7,9 @@ import {
   SiX,
   SiYoutube,
 } from "react-icons/si";
+import { OnboardingHelpLinks } from "./onboarding/OnboardingHost";
 import { SOCIAL_LINKS } from "../types/index";
+import { LEGAL_POSTAL_ONE_LINE } from "@/lib/legal-contact";
 import { FooterNewsletterSignup } from "./FooterNewsletterSignup";
 
 const SOCIAL_ICONS = [
@@ -40,6 +42,8 @@ const FOOTER_LINKS = [
       { label: "Plant NFTs", to: "/plants" },
       { label: "DAO Governance", to: "/dao" },
       { label: "Community Garden", to: "/community" },
+      { label: "Winter Grow Challenge", to: "/challenge/winter-grow" },
+      { label: "Hedera Drop Studio", to: "/drop" },
       { label: "Photo & Seed Credits", to: "/credits" },
       { label: "My Orders", to: "/orders" },
       { label: "Profile", to: "/profile" },
@@ -54,6 +58,14 @@ const FOOTER_LINKS = [
       { label: "Schedule Builder", to: "/schedule-builder" },
       { label: "CookBook", to: "/cookbook" },
       { label: "My Wallet", to: "/wallet" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy Policy", to: "/privacy" },
+      { label: "Terms of Use", to: "/terms" },
+      { label: "DMCA", to: "/dmca" },
     ],
   },
   {
@@ -98,9 +110,9 @@ export function Footer() {
               using regenerative KNF &amp; JADAM methods in USDA Zone 10a.
             </p>
 
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-2">
-              <MapPin className="w-4 h-4 flex-shrink-0 text-primary" />
-              <span>Port Charlotte, FL</span>
+            <div className="flex items-start gap-1.5 text-sm text-muted-foreground mb-2">
+              <MapPin className="w-4 h-4 flex-shrink-0 text-primary mt-0.5" />
+              <span>{LEGAL_POSTAL_ONE_LINE}</span>
             </div>
 
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
@@ -150,10 +162,12 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground text-center sm:text-left">
-            © {year} IC SPICY. All rights reserved. Port Charlotte, FL. FDACS
-            Registered Nursery.
-          </p>
+          <div className="flex flex-col items-center sm:items-start gap-2">
+            <p className="text-xs text-muted-foreground text-center sm:text-left">
+              © {year} IC SPICY. All rights reserved. {LEGAL_POSTAL_ONE_LINE}.
+            </p>
+            <OnboardingHelpLinks />
+          </div>
           <p className="text-xs text-muted-foreground text-center sm:text-right">
             Built on the{" "}
             <a

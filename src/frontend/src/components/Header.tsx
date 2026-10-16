@@ -1,4 +1,5 @@
 import { ConnectButton } from "@/components/ConnectButton";
+import { HashPackConnectButton } from "@/components/HashPackConnectButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { openOnboarding } from "@/lib/onboarding";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   ChevronDown,
@@ -40,6 +42,8 @@ const PRIMARY_NAV = [
 ] as const;
 
 const MORE_NAV_ALWAYS = [
+  { label: "Winter Grow Challenge", to: "/challenge/winter-grow" },
+  { label: "Drop Studio", to: "/drop" },
   { label: "Garden (Beta)", to: "/garden" },
   { label: "📖 Growing Guides", to: "/guides" },
   { label: "🌱 Grower Directory", to: "/growers" },
@@ -98,15 +102,15 @@ export function Header() {
 
   return (
     <header
-      className="sticky top-0 z-50 bg-card border-b border-border shadow-subtle"
+      className="sticky top-0 z-50 bg-card border-b border-border shadow-subtle overflow-x-hidden"
       data-ocid="header"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full min-w-0">
+        <div className="flex items-center justify-between h-16 gap-2 min-w-0">
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center gap-2 group"
+            className="flex items-center gap-2 group shrink-0 min-w-0"
             data-ocid="header-logo"
           >
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-elevated group-hover:scale-110 transition-smooth">
@@ -208,8 +212,8 @@ export function Header() {
             </DropdownMenu>
           </nav>
 
-          {/* Right cluster */}
-          <div className="flex items-center gap-3">
+          {/* Right cluster — icons only on xs; wallet text buttons from sm+ or menu */}
+          <div className="flex items-center gap-0.5 sm:gap-2 min-w-0 shrink">
             {/* Social icons — desktop */}
             <div
               className="hidden lg:flex items-center gap-2"
@@ -299,9 +303,16 @@ export function Header() {
               )}
             </Link>
 
-            {/* Internet Identity + profile — full row sm+ ; mobile drawer has Connect */}
+            {/* HashPack + II — compact on narrow phones, full labels sm+ */}
             <div
-              className="hidden sm:flex items-center gap-2"
+              className="flex items-center gap-0.5 sm:gap-2 shrink-0 md:hidden"
+              data-ocid="header-wallet-compact"
+            >
+              <HashPackConnectButton compact />
+              <ConnectButton compact />
+            </div>
+            <div
+              className="hidden md:flex items-center gap-2 shrink-0"
               data-ocid="header-wallet"
             >
               {!isInitializing && isAuthenticated && (
@@ -321,6 +332,7 @@ export function Header() {
                   </Button>
                 </Link>
               )}
+              <HashPackConnectButton />
               <ConnectButton />
             </div>
 
@@ -328,7 +340,7 @@ export function Header() {
             <button
               type="button"
               onClick={() => setMobileOpen((v) => !v)}
-              className="md:hidden p-2 rounded-md text-muted-foreground hover:text-foreground transition-smooth"
+              className="md:hidden p-2 rounded-md text-muted-foreground hover:text-foreground transition-smooth shrink-0"
               aria-label="Toggle mobile menu"
               data-ocid="header-mobile-menu"
             >
@@ -350,10 +362,10 @@ export function Header() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden bg-card border-t border-border overflow-hidden"
+            className="md:hidden bg-card border-t border-border flex flex-col max-h-[min(85dvh,calc(100dvh-4rem))]"
             data-ocid="header-mobile-nav"
           >
-            <div className="px-4 py-4 space-y-1">
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-1">
               {mobileLinks.map(({ label, to }) => {
                 const isAdminLink = to === "/admin";
                 return (
@@ -388,7 +400,9 @@ export function Header() {
                 );
               })}
 
-              <div className="pt-3 border-t border-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            </div>
+
+            <div className="shrink-0 px-4 py-3 border-t border-border bg-card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3 flex-wrap">
                   <a
                     href={DOCS_URL}
@@ -413,10 +427,34 @@ export function Header() {
                     </a>
                   ))}
                 </div>
-                <div className="flex justify-end">
-                  <ConnectButton />
+                <div className="flex flex-col items-stretch sm:items-end gap-2">
+                  <div className="flex justify-end gap-2">
+                    <HashPackConnectButton />
+                    <ConnectButton />
+                  </div>
+                  <div className="flex flex-wrap justify-end gap-3 text-xs">
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-primary"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        openOnboarding("homescreen");
+                      }}
+                    >
+                      Add to Home Screen
+                    </button>
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-primary"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        openOnboarding("signin");
+                      }}
+                    >
+                      How to sign in
+                    </button>
+                  </div>
                 </div>
-              </div>
             </div>
           </motion.div>
         )}
