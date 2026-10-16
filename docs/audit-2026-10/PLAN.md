@@ -14,7 +14,7 @@ Severity → phase mapping is in AUDIT.md "Remediation priority".
 Goal: close the three live money/NFT-theft holes and the XSS chain with the
 smallest safe changes.
 
-1. `01-icpay-amount-currency-binding.md` (F-01) — parse + enforce amount/currency/order-id in `verifyICPayPayment` call sites.
+1. `01-remove-icpay.md` (F-01) — remove the ICPay path entirely (owner decision 2026-10-16); retain `icpaySessionsConsumed` as order-paid compat.
 2. `02-order-plant-id-server-derived.md` (F-02) — ignore client `plant_id`; derive from product.
 3. `03-raven-amount-guard.md` (F-03) — remove RAVEN from direct-pay allow-list (fastest safe stop) OR add server quote.
 4. `09-csp-frame-protection.md` (F-09) — deploy a strict CSP + `frame-ancestors` from the asset canister.

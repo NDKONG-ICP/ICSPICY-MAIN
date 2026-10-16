@@ -32,7 +32,7 @@ UX, tooling, observability, testing, docs, and growth.
 |---|-----------|-------|--------|-----|
 | O1 | Public transparency dashboard: ICRC-3 NFT history, treasury audit/burn/buyback logs, order/payment counts | Trust for an RWA + token project | M | ICRC-3 (F-11) |
 | O2 | Canister health monitor (cycles, memory, timer liveness) surfaced in admin + external cron | Reliability | M | — |
-| O3 | Admin "payment reconciliation" view: for each paid order, show the verified ICPay/ICRC-2 amount vs `total_cents` | Detects F-01/F-03 abuse historically | M | F-01 fix |
+| O3 | Admin "payment reconciliation" view: for each paid order, show the verified PayPal/ICRC-2 amount vs `total_cents` (plus historical ICPay entries for the pre-removal period) | Detects F-01/F-03 abuse historically | M | F-01 removal (task 01) |
 | O4 | Structured, queryable audit log with filters (actor, action, time range) instead of a flat append list | Investigations | S | — |
 | O5 | Replace frontend hard-coded `ADMIN_PIDS` with `useAdmins()` (also F-20) | Admin UI tracks real rotation | S | — |
 

@@ -91,7 +91,7 @@ refund the correct bucket on MiniRouter failure (the Hedera studio already does 
 |------|-------------|-----------|
 | 23 | Spec lock: ~~eligibility~~ (DONE = 888 PepperHeads), pack sizes, site ceiling, allowlisted models, ckSOL receiver, disclosure note | — |
 | 24 | Backend: PepperHead holder gate (`isPepperHead` ∩ caller's owned tokens) + free-gen ledger parity (10 × held / 24h) + capability-token issuance | 23; reuse F-04-safe pattern; reuse `lib/icrc7.mo isPepperHead` |
-| 25 | Backend: ckSOL ICRC-2 pay → server-quoted paid credits (fail-closed pricing) | 24; Task 13 (oracle), Task 01 discipline |
+| 25 | Backend: ckSOL ICRC-2 pay → server-quoted paid credits (fail-closed pricing) | 24; Task 13 (oracle); apply the server-side amount-validation discipline from F-01 (never trust client amounts) |
 | 26 | Worker: accept backend capability token only; curated image-model picker; prompt filter + global ceiling | 24; Task 14 (worker hardening), Task 16 (budget) |
 | 27 | Luxury UI route `/bonsai`: glass panels + cinematic bonsai-chili background + model chooser gated on hold | 24–26 |
 | 28 | Owner runbook: ckSOL→SOL→MINI treasury sweep (OWNER-executed; agent writes docs only) | 25 |

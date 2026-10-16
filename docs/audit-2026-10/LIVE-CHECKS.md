@@ -124,5 +124,7 @@ dfx canister --network ic $ADMIN call backend getAuditLog '()' | grep -E \
 - Alert if `getAdmins()` length changes unexpectedly (admin rotation).
 - Daily job: reconcile each `payment_confirmed`/`order_payment_direct` audit entry against
   the ICPay dashboard / ledger inbound transfers and flag amount mismatches (this is the
-  historical detector for F-01/F-03 until the on-chain binding from Task 01 is in place).
+  historical detector for F-01/F-03). Note: ICPay is being removed (Task 01), so after that
+  deploy there are no new ICPay settlements to reconcile — only historical `icpay:` audit
+  entries remain, which this check still surfaces.
 - Header monitor: fail if `www.icspicy.app` ever serves without CSP/`frame-ancestors` again.

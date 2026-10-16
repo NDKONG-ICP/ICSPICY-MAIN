@@ -26,7 +26,7 @@
 
 | ID | Sev | Title | File:line | Status |
 |----|-----|-------|-----------|--------|
-| F-01 | Critical | ICPay verification checks only id+status — no amount, currency, or order binding | `mixins/payment-api.mo:311`, `:744`, `:918`, `:1137` | Confirmed live |
+| F-01 | Critical | ICPay verification checks only id+status — no amount, currency, or order binding | `mixins/payment-api.mo:311`, `:744`, `:918`, `:1137` | Confirmed live — **resolution: remove ICPay (owner decision 2026-10-16), see task 01** |
 | F-02 | Critical | Caller-controlled `OrderItem.plant_id` transfers any plant's NFT for a cheap product's price | `lib/marketplace-order.mo:129`, `lib/product-nft.mo:178`,`:304` | Code only |
 | F-03 | Critical | RAVEN payments bypass all server-side amount validation | `mixins/payment-api.mo:496`,`:537`,`:868` | Code only |
 | F-04 | High | `linkWallet` requires no proof of control; one-to-one guard enables grief-lockout | `main.mo:1494` | Confirmed live (method) |
@@ -85,12 +85,15 @@ minimum ICPay allows (e.g. $0.50), obtains its `paymentId`, then calls
 plant NFT / order settles. The `icpaySessionsConsumed` guard only prevents reusing the
 same `paymentId` twice — it does not bind amount or order.
 
-**Fix.** In `verifyICPayPayment`, additionally parse and return `amount`, `currency`,
-and the ICPay `metadata.order_id` (or token id). At each call site, assert:
-`amount >= expectedMinorUnits(order.total_cents, currency)`, `currency == expected`,
-and `metadata.order_id == orderId` (for orders) / `metadata.sku == "pepperhead"` (for PH).
-Mirror the Stripe discipline already documented in PROJECT_CONTEXT §Payment model.
-See task `01-icpay-amount-currency-binding.md`.
+**Fix (owner decision 2026-10-16): remove ICPay entirely.** Rather than add
+amount/currency/order binding, the ICPay path is being deleted, which eliminates this finding
+outright. PayPal and direct ICRC-2 (OISY/Plug) remain the checkout paths. Note
+`icpaySessionsConsumed` doubles as the order-"paid" ledger (read by `lib/admin-orders.mo`) and
+is **retained as stable compat** so historical paid orders still report correctly; only the
+ICPay write/verify code is removed. See task `01-remove-icpay.md`.
+
+(Superseded alternative, for the record: binding amount/currency/`metadata.order_id` in
+`verifyICPayPayment` per the Stripe discipline — not pursued since ICPay is being removed.)
 
 ---
 
